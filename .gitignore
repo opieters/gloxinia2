@@ -1,0 +1,78 @@
+/mgloxinia.X/dist/default/
+workspace.xml
+venv/
+*.pyc
+
+# ignore for MPLAB IDE 5
+*.d
+*.pre
+*.p1
+*.lst
+*.sym
+*.obj
+*.o
+*.sdb
+*.obj.dmp
+html/
+nbproject/private/
+**/nbproject/Package-*.bash
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+funclist
+nbproject/Makefile-*
+disassembly/
+*.map
+**/nbproject/private/
+**/nbproject/Makefile-*.mk
+**/nbproject/Makefile-genesis.properties
+
+# VS code ignore
+.vscode
+
+# ignore experiments data
+*.pkl
+*.raw.txt
+
+# kicad ignore
+*.dcm
+experiment/trial*/data/data-*.txt
+*.npy
+*.gbr
+*.zip
+*.drl
+*.gbl
+*.gbs
+*.gbo
+*.gm1
+*.gtl
+*.gts
+*.gto
+*.gbp
+*.gtp
+
+# experimentation files
+experiment/*.txt
+experiment/*/*/*.txt
+
+# STL files
+*.stl
+
+# Jupyter notebooks
+**/.ipynb_checkpoints/*
+
+sensor_layout.pdf
+*.log
+*.aux
+*.gz
+
+# PyCharm
+.idea/
+pygloxinia/filter_design/planalta/
+pygloxinia/filter_design/sylvatica/
+src/dicio.X/.generated_files/
+src/planalta.X/.generated_files/
+src/sylvatica.X/.generated_files/
