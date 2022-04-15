@@ -53,6 +53,11 @@ experiment/trial*/data/data-*.txt
 *.gto
 *.gbp
 *.gtp
+*-bak
+*.bak
+*-rescue.lib
+*-rescue.bck
+*-cache.lib
 
 # experimentation files
 experiment/*.txt
@@ -76,3 +81,7 @@ pygloxinia/filter_design/sylvatica/
 src/dicio.X/.generated_files/
 src/planalta.X/.generated_files/
 src/sylvatica.X/.generated_files/
+
+concept/board_pcb_structure.pdf
+concept/front_view.pdf
+_autosave-*
