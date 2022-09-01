@@ -1,0 +1,53 @@
+{
+  "name": "electron-quick-start-typescript",
+  "version": "1.0.0",
+  "description": "A minimal Electron application written with Typescript",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "lint": "eslint -c .eslintrc --ext .ts ./src",
+    "start": "npm run build && electron ./dist/main.js"
+  },
+  "repository": "https://github.com/electron/electron-quick-start-typescript",
+  "keywords": [
+    "Electron",
+    "quick",
+    "start",
+    "tutorial",
+    "demo",
+    "typescript"
+  ],
+  "author": "Olivier Pieters",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^17.0.33",
+    "@types/serialport": "^8.0.2",
+    "@typescript-eslint/eslint-plugin": "^5.23.0",
+    "@typescript-eslint/parser": "^5.23.0",
+    "chart.js": "^3.7.1",
+    "chartjs-adapter-luxon": "^1.1.0",
+    "electron": "^18.2.3",
+    "luxon": "^2.4.0",
+    "serialport": "^10.4.0",
+    "ts-loader": "^9.3.0",
+    "typescript": "^4.6.4"
+  },
+  "files": [
+    "./public/**/*",
+    "*.js",
+    "*.ts"
+  ],
+  "mac": {
+    "icon": "./public/icons/mac/icon.icns",
+    "category": "public.app-category.utilities"
+  },
+  "win": {
+    "icon": "./public/icons/png/icon.png"
+  },
+  "linux": {
+    "icon": "./public/icons/png/icon.png"
+  },
+  "directories": {
+    "buildResources": "public"
+  }
+}
