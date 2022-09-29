@@ -7,28 +7,52 @@
 #include <QAbstractItemView>
 #include <gmessage.h>
 #include <QSerialPortInfo>
+#include <QInputDialog>
+#include <configuresht35dialog.h>
+
 
 GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::GloxiniaConfigurator)
     , serial(new QSerialPort(this))
-    , model(new QStringListModel(this))
+    , model(new GCSystem(this))
     , status(new QLabel)
+    , systemSettings(new SettingsDialog)
+    , sensorSettings(new SensorDialog)
+    , configureSHT35Dialog(new ConfigureSHT35Dialog)
 {
     ui->setupUi(this);
     ui->statusbar->addWidget(status);
 
+    const QStringList headers({tr("Title"), tr("Description")});
+
+    QFile file(":/empty.txt");
+    file.open(QIODevice::ReadOnly);
+
+    this->treeModel = new TreeModel(headers, file.readAll(), this);
+
     connect(serial, &QSerialPort::readyRead, this, &GloxiniaConfigurator::readData);
     connect(ui->actionConnect, &QAction::triggered, this, &GloxiniaConfigurator::openSerialPort);
     connect(ui->actionDisconnect, &QAction::triggered, this, &GloxiniaConfigurator::closeSerialPort);
+    connect(ui->actionConfigure, &QAction::triggered, systemSettings, &SettingsDialog::show);
+    //connect(ui->actionAdd_sensor, &QAction::triggered, sensorSettings, &SensorDialog::show);
+    //connect(ui->actionAdd_sensor, &QAction::triggered, this, &GloxiniaConfigurator::setSensor);
+    connect(ui->actionAddNode, &QAction::triggered, this, &GloxiniaConfigurator::addNode);
+    ui->actionDisconnect->setEnabled(false);
+    ui->actionUpdate->setEnabled(false);
 
-    QStringList list;
-    list << "Example data";
-    model->setStringList(list);
+    ui->messageView->setModel(this->treeModel);
 
-    ui->listView->setModel(model);
+    ui->systemOverview->setModel(this->treeModel);
+    //ui->systemOverview->setModel(this->model);
+    //ui->systemOverview->setColumnCount(1);
+    ui->systemOverview->setHeaderHidden(true);
+    ui->systemOverview->setContextMenuPolicy(Qt::CustomContextMenu);
+    //connect(ui->systemOverview, &QTreeView::customContextMenuRequested,this, &GloxiniaConfigurator::showContextMenu);
 
     updateSerialPortList();
+
+    //addNode(new GCNodeModel(GCNodeModel::DicioNode));
 }
 
 GloxiniaConfigurator::~GloxiniaConfigurator()
@@ -51,6 +75,7 @@ void GloxiniaConfigurator::openSerialPort()
         //m_console->setLocalEchoEnabled(p.localEchoEnabled);
         ui->actionConnect->setEnabled(false);
         ui->actionDisconnect->setEnabled(true);
+        ui->actionUpdate->setEnabled(true);
         ui->actionConfigure->setEnabled(false);
         showStatusMessage(tr("Connected to COM12"));
         /*showStatusMessage(tr("Connected to %1 : %2, %3, %4, %5, %6")
@@ -72,6 +97,7 @@ void GloxiniaConfigurator::closeSerialPort()
     ui->actionConnect->setEnabled(true);
     ui->actionDisconnect->setEnabled(false);
     ui->actionConfigure->setEnabled(true);
+    ui->actionUpdate->setEnabled(false);
     showStatusMessage(tr("Disconnected"));
 }
 
@@ -235,7 +261,7 @@ void GloxiniaConfigurator::updateSerialPortList(void)
         {
             QAction* action = ui->menuPort_selection->addAction(i.portName());
             action->setCheckable(true);
-            connect(action, SIGNAL(triggered()), this, SLOT(GloxiniaConfigurator::setSerialPort()));
+            connect(action,  &QAction::triggered, this, &GloxiniaConfigurator::setSerialPort);
             serialPortActionList.append(action);
         }
     }
@@ -246,7 +272,12 @@ void GloxiniaConfigurator::setSerialPort(void)
     QAction* button = qobject_cast<QAction*>(sender());
     if( button != NULL )
     {
-
+        // disable other buttons
+        for(QAction* i : serialPortActionList){
+            if(i != button){
+                i->setChecked(false);
+            }
+        }
     }
 }
 
@@ -254,4 +285,227 @@ void GloxiniaConfigurator::showStatusMessage(const QString &message)
 {
     status->setText(message);
 }
+/*
+QIcon GloxiniaConfigurator::getSensorIcon(GCSensor* s)
+{
+    if(s == nullptr){
+        return QIcon(":/images/unknown-sensor.png");
+    } else {
+        switch(s->getSensorType()){
+        case GCSensor::Disabeled:
+            return QIcon(":/images/general-sensor.png");
+            break;
+        case GCSensor::SHT35:
+            return QIcon(":/images/temperature-rh-sensor.png");
+            break;
+        case GCSensor::APDS9306:
+            return QIcon(":/images/light-sensor.png");
+            break;
+        }
+    }
 
+    return QIcon(":/images/unknown-sensor.png");
+}*/
+
+/*
+QIcon GloxiniaConfigurator::getNodeIcon(GCNodeModel* n)
+{
+    // TODO: custom icons
+
+    if(n == nullptr){
+        return QIcon(":/images/unknown-sensor.png");
+    } else {
+        switch(n->getType()){
+        case GCNodeModel::DicioNode:
+            return QIcon(":/images/node.png");
+            break;
+        case GCNodeModel::PlanaltaNode:
+            return QIcon(":/images/node.png");
+            break;
+        case GCNodeModel::SylvaticaNode:
+            return QIcon(":/images/node.png");
+            break;
+        }
+    }
+
+    return QIcon(":/images/unknown-sensor.png");
+}
+
+QString GloxiniaConfigurator::getNodeLabel(GCNodeModel* n){
+    QString label;
+    label += tr("Node ");
+    label += QString::number(n->getID());
+
+    return label;
+}
+
+QString GloxiniaConfigurator::getSensorLabel(GCSensor* s){
+    QString label;
+    if(s == nullptr){
+        label += tr("Unconnected port ");
+
+    } else {
+        label += GCSensor::sensorTypeToString(s->getSensorType());
+    }
+
+    return label;
+}*/
+
+void GloxiniaConfigurator::addNode()
+{
+    // add node to the list
+    /*nodeList.append(node);
+
+    // create tree item
+    QTreeWidgetItem* itemNode = new QTreeWidgetItem(ui->systemOverview);
+    QIcon nodeIcon = getNodeIcon(node);
+    QString nodeLabel = getNodeLabel(node);
+    itemNode->setText(0, nodeLabel);
+    itemNode->setIcon(0, nodeIcon);
+    ui->systemOverview->insertTopLevelItem(node->getID(), itemNode);
+
+    // create sensors
+    for(int i = 0; i < node->rowCount(); i++){
+        QTreeWidgetItem* item = new QTreeWidgetItem(itemNode);
+        GCSensor* sensor = node->getSensor(i);
+        QString sensorLabel = getSensorLabel(sensor) + "(" + QString::number(i) + ")";
+        QIcon sensorIcon = getSensorIcon(sensor);
+
+        item->setText(0, sensorLabel);
+        item->setIcon(0, sensorIcon);
+        itemNode->addChild(item);
+
+    }*/
+    //const QModelIndex index = ui->systemOverview->selectionModel();//)->currentIndex();
+    //auto sm = ui->systemOverview->selectionModel();
+    //qInfo() << sm;
+    //QAbstractItemModel *model = ui->systemOverview->model();
+
+    //updateActions();
+    const QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = ui->systemOverview->model();
+
+    if (!model->insertRow(index.row()+1, index.parent()))
+        return;
+
+    updateActions();
+
+    for (int column = 0; column < model->columnCount(index.parent()); ++column) {
+        const QModelIndex child = model->index(index.row() + 1, column, index.parent());
+        model->setData(child, QVariant(tr("[No data]")), Qt::EditRole);
+    }
+}
+
+
+
+void GloxiniaConfigurator::removeNode(uint8_t id)
+{
+    // TODO
+}
+
+/*
+void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
+{
+    QMenu m(tr("Context menu"), this);
+
+    QAction a("Delete", this);
+    connect(&a, &QAction::triggered, this, &GloxiniaConfigurator::removeNode);
+
+    // get item at selected position:
+    QTreeWidgetItem *nd = this->ui->systemOverview->itemAt( pos );
+    // https://stackoverflow.com/questions/14237020/qtreewidget-right-click-menu
+
+    qInfo() << "Index is " << this->ui->systemOverview->indexFromItem(nd);
+
+    m.addAction(&a);
+
+    m.exec(ui->systemOverview->mapToGlobal(pos));
+}*/
+
+/*
+void GloxiniaConfigurator::setSensor(void)
+{
+    QStringList nodeList;
+    for(GCNodeModel* i : this->nodeList){
+        QString label = tr("Node ");
+        label.append(QString::number(i->getID()));
+        nodeList << label;
+    }
+
+    // select node
+    bool ok;
+    QString item = QInputDialog::getItem(this, tr("Select node"), tr("Node:"), nodeList, 0, false, &ok);
+    int nodeIndex = nodeList.indexOf(item);
+
+    if(ok && !item.isEmpty()){
+        // all OK, we go to next screen
+    } else {
+        // TODO: add error dialog?
+        return;
+    }
+
+    GCNodeModel* node = this->nodeList[nodeIndex];
+
+    // select port on the node
+    // TODO
+    int port = 0;
+    GCSensor* sensor = node->getSensor(port);
+
+    QStringList items;
+    //items << "-- select sensor--";
+    items << "SHT35";
+    items << "APDS9306";
+
+    item = QInputDialog::getItem(this, tr("Select sensor type"), tr("Sensor:"), items, 0, false, &ok);
+    int sensorIndex = items.indexOf(item);
+    if(ok && !item.isEmpty()){
+        switch(sensorIndex){
+            case 0:
+                if((sensor != nullptr) && (sensor->getSensorType() == GCSensor::SensorType::SHT35)){
+                    GCSensorSHT35* specific_sensor = static_cast<GCSensorSHT35*>(sensor);
+                    configureSHT35Dialog->setSensorSettings(*specific_sensor);
+                    //free(specific_sensor);
+                }
+                configureSHT35Dialog->show();
+                sensor = new GCSensorSHT35(configureSHT35Dialog->getSensor());
+                sensor = node->replaceSensor(port, sensor);
+                if(sensor != nullptr){
+                    free(sensor);
+                }
+
+                // add sensor to layout
+                QTreeWidgetItem* nodeTreeItem = ui->systemOverview->itemAt(0, node->getID());
+                QTreeWidgetItem* item = new QTreeWidgetItem(nodeTreeItem);
+                QIcon sensorIcon(":/images/temperature-rh-sensor.png");
+                item->setText(0, "SHT35");
+                item->setIcon(0, sensorIcon);
+
+
+
+
+                break;
+        }
+    }
+}*/
+
+void GloxiniaConfigurator::updateActions()
+{
+    const bool hasSelection = !ui->systemOverview->selectionModel()->selection().isEmpty();
+    //removeRowAction->setEnabled(hasSelection);
+    //removeColumnAction->setEnabled(hasSelection);
+
+    const bool hasCurrent = ui->systemOverview->selectionModel()->currentIndex().isValid();
+    //insertRowAction->setEnabled(hasCurrent);
+    //insertColumnAction->setEnabled(hasCurrent);
+
+    if (hasCurrent) {
+        ui->systemOverview->closePersistentEditor(ui->systemOverview->selectionModel()->currentIndex());
+
+        const int row = ui->systemOverview->selectionModel()->currentIndex().row();
+        const int column = ui->systemOverview->selectionModel()->currentIndex().column();
+        if (ui->systemOverview->selectionModel()->currentIndex().parent().isValid())
+            statusBar()->showMessage(tr("Position: (%1,%2)").arg(row).arg(column));
+        else
+            statusBar()->showMessage(tr("Position: (%1,%2) in top level").arg(row).arg(column));
+    }
+}

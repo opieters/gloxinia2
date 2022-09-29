@@ -16,16 +16,10 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="QTreeWidget" name="treeWidget">
-      <column>
-       <property name="text">
-        <string notr="true">1</string>
-       </property>
-      </column>
-     </widget>
+     <widget class="QTreeView" name="systemOverview"/>
     </item>
     <item>
-     <widget class="QListView" name="listView"/>
+     <widget class="QListView" name="messageView"/>
     </item>
    </layout>
   </widget>
@@ -51,10 +45,10 @@
     <property name="title">
      <string>Edit</string>
     </property>
-    <addaction name="actionAdd_sensor"/>
-    <addaction name="actionAdd_module"/>
-    <addaction name="actionEdit_sensor"/>
-    <addaction name="actionEdit_system"/>
+    <addaction name="actionAddSensor"/>
+    <addaction name="actionAddNode"/>
+    <addaction name="actionEditSensor"/>
+    <addaction name="actionEditSystem"/>
    </widget>
    <widget class="QMenu" name="menuSystem">
     <property name="title">
@@ -97,22 +91,22 @@
     <string>Exit</string>
    </property>
   </action>
-  <action name="actionAdd_sensor">
+  <action name="actionAddSensor">
    <property name="text">
     <string>Add sensor</string>
    </property>
   </action>
-  <action name="actionAdd_module">
+  <action name="actionAddNode">
    <property name="text">
-    <string>Add module</string>
+    <string>Add node</string>
    </property>
   </action>
-  <action name="actionEdit_sensor">
+  <action name="actionEditSensor">
    <property name="text">
     <string>Edit sensor</string>
    </property>
   </action>
-  <action name="actionEdit_system">
+  <action name="actionEditSystem">
    <property name="text">
     <string>Edit system</string>
    </property>

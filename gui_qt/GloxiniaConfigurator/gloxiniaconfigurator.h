@@ -6,6 +6,12 @@
 #include <QStringListModel>
 #include <QLabel>
 #include <array>
+#include <gcnode.h>
+#include <settingsdialog.h>
+#include <sensordialog.h>
+#include <configuresht35dialog.h>
+#include <gcsystem.h>
+#include <treemodel.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class GloxiniaConfigurator; }
@@ -19,11 +25,16 @@ public:
     GloxiniaConfigurator(QWidget *parent = nullptr);
     ~GloxiniaConfigurator();
 
+    void removeNode(uint8_t id);
+
 private slots:
     void openSerialPort();
     void closeSerialPort();
     void readData();
     void setSerialPort();
+    void addNode(void);
+    //void showContextMenu(const QPoint &pos);
+    //void setSensor();
     //void writeData(const QByteArray &data);
     //void handleError(QSerialPort::SerialPortError error);
 
@@ -32,7 +43,9 @@ private:
     QSerialPort* serial;
     QLabel* status;
 
-    QStringListModel* model;
+    GCSystem* model;
+    TreeModel* treeModel;
+
 
     std::array<char, 0xff> rawDataBuffer;
     qint32 read_index = 0;
@@ -40,8 +53,20 @@ private:
 
     void showStatusMessage(const QString &message);
     void updateSerialPortList(void);
+    void updateActions();
+
+    //QIcon getSensorIcon(GCSensor* s);
+    //QString getSensorLabel(GCSensor* s);
+    //QIcon getNodeIcon(GCNodeModel* n);
+    //QString getNodeLabel(GCNodeModel* n);
 
     QList<QAction*> serialPortActionList = QList<QAction*>();
+    //QList<GCNodeModel*> nodeList;
+
+    SettingsDialog* systemSettings = nullptr;
+    SensorDialog* sensorSettings = nullptr;
+    ConfigureSHT35Dialog* configureSHT35Dialog;
+    QStringList messageList;
 
 
 };

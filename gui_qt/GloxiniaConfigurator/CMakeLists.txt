@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+ cmake_minimum_required(VERSION 3.5)
 
 project(GloxiniaConfigurator VERSION 0.1 LANGUAGES CXX)
 
@@ -20,14 +20,19 @@ set(TS_FILES GloxiniaConfigurator_en_GB.ts)
 
 set(PROJECT_SOURCES
         main.cpp
-        serialcom.cpp
-        serialcom.h
-        gmessage.h
-        gmessage.cpp
-        gloxiniaconfigurator.cpp
-        gloxiniaconfigurator.h
-        gloxiniaconfigurator.ui
-        settingsdialog.ui
+        serialcom.h serialcom.cpp
+        gmessage.h gmessage.cpp
+        gloxiniaconfigurator.cpp gloxiniaconfigurator.h gloxiniaconfigurator.ui
+        settingsdialog.h settingsdialog.cpp settingsdialog.ui
+        nodedialog.ui
+        sensordialog.h sensordialog.cpp sensordialog.ui
+        configuresht35dialog.h configuresht35dialog.cpp configuresht35dialog.ui
+        gcsystem.h gcsystem.cpp
+        gcnode.h gcnode.cpp
+        gcsensor.h gcsensor.cpp
+        treeitem.h treeitem.cpp
+        treemodel.h treemodel.cpp
+        resources.qrc
         ${TS_FILES}
 )
 
@@ -60,6 +65,8 @@ endif()
 
 target_link_libraries(GloxiniaConfigurator PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(GloxiniaConfigurator PRIVATE Qt${QT_VERSION_MAJOR}::SerialPort)
+
+# resources
 
 set_target_properties(GloxiniaConfigurator PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

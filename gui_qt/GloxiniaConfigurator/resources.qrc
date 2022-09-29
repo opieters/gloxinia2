@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/general-sensor.png</file>
+        <file>images/node.png</file>
+        <file>images/temperature-rh-sensor.png</file>
+        <file>images/temperature-sensor.png</file>
+        <file>images/cube-solid.png</file>
+        <file>images/unknown-sensor.png</file>
+        <file>images/light-sensor.png</file>
+        <file>default.txt</file>
+        <file>empty.txt</file>
+    </qresource>
+</RCC>

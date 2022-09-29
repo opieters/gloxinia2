@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SettingsDialog</class>
- <widget class="QDialog" name="SettingsDialog">
+ <class>SensorDialog</class>
+ <widget class="QDialog" name="SensorDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>110</height>
+    <height>300</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,49 +15,32 @@
   </property>
   <layout class="QFormLayout" name="formLayout">
    <item row="0" column="0">
-    <widget class="QLabel" name="baudrateLabel">
+    <widget class="QLabel" name="sensorLabel">
      <property name="text">
-      <string>Baudrate</string>
+      <string>Sensor type</string>
      </property>
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QLineEdit" name="baudrateEdit">
-     <property name="placeholderText">
-      <string>500000</string>
-     </property>
-     <property name="clearButtonEnabled">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="stopbitsLabel">
-     <property name="text">
-      <string>Stopbits</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QComboBox" name="stopbitsEdit">
+    <widget class="QComboBox" name="sensorSelect">
      <item>
       <property name="text">
-       <string>1 stopbit</string>
+       <string>-- select sensor --</string>
       </property>
      </item>
      <item>
       <property name="text">
-       <string>1.5 stopbits</string>
+       <string>SHT35 (temp. and RH)</string>
       </property>
      </item>
      <item>
       <property name="text">
-       <string>2 stopbits</string>
+       <string>APDS9306 (light)</string>
       </property>
      </item>
     </widget>
    </item>
-   <item row="3" column="0" colspan="2">
+   <item row="1" column="0" colspan="2">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -74,7 +57,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>SettingsDialog</receiver>
+   <receiver>SensorDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -90,7 +73,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>SettingsDialog</receiver>
+   <receiver>SensorDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
