@@ -32,6 +32,7 @@ set(PROJECT_SOURCES
         gcsensor.h gcsensor.cpp
         treeitem.h treeitem.cpp
         treemodel.h treemodel.cpp
+        moduledialog.h moduledialog.cpp moduledialog.ui
         resources.qrc
         ${TS_FILES}
 )

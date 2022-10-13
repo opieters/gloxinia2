@@ -12,6 +12,7 @@
 #include <configuresht35dialog.h>
 #include <gcsystem.h>
 #include <treemodel.h>
+#include <moduledialog.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class GloxiniaConfigurator; }
@@ -33,6 +34,7 @@ private slots:
     void readData();
     void setSerialPort();
     void addNode(void);
+    void addSensor(void);
     //void showContextMenu(const QPoint &pos);
     //void setSensor();
     //void writeData(const QByteArray &data);
@@ -43,7 +45,6 @@ private:
     QSerialPort* serial;
     QLabel* status;
 
-    GCSystem* model;
     TreeModel* treeModel;
 
 
@@ -67,6 +68,7 @@ private:
     SensorDialog* sensorSettings = nullptr;
     ConfigureSHT35Dialog* configureSHT35Dialog;
     QStringList messageList;
+    ModuleDialog* moduleDialog = nullptr;
 
 
 };

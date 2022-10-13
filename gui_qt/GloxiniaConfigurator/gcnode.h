@@ -4,15 +4,20 @@
 #include <QMetaType>
 #include <QStringList>
 
-class GCNode
-{
-enum NodeType {
-    GCSystem,
-    GCModule,
-    GCSensor,
+class GCElement {
+public:
+
 };
 
+class GCNode
+{
 public:
+    enum NodeType {
+        GCDicio,
+        GCPlanalta,
+        GCSylvatica,
+    };
+
     GCNode() = default;
     ~GCNode() = default;
     GCNode(const GCNode&) = default;
@@ -21,12 +26,23 @@ public:
     GCNode(const int nodeID, const NodeType type);
 
     int getID() const;
+    void setID(const int id);
     NodeType getType() const;
+    void setType(const NodeType type);
+    QString getLabel() const;
+    void setLabel(QString label);
 
-friend QDebug operator<<(QDebug dbg, const GCNode&);
-private:
+    friend QDebug operator<<(QDebug dbg, const GCNode&);
+
+    QString toString(void) const;
+
+protected:
     int id;
     NodeType type;
+    QString label;
+
+private:
+    static int getIDNew();
 
 };
 

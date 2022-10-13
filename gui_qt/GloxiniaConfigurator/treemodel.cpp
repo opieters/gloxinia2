@@ -54,15 +54,11 @@
 #include <QtWidgets>
 
 //! [0]
-TreeModel::TreeModel(const QStringList &headers, const QString &data, QObject *parent)
+TreeModel::TreeModel(const QString &data, QObject *parent)
     : QAbstractItemModel(parent)
 {
-    QList<QVariant> rootData;
-    for (const QString &header : headers)
-        rootData << header;
-
-    rootItem = new TreeItem(rootData);
-    setupModelData(data.split('\n'), rootItem);
+    rootItem = new TreeItem("Ëxample", TreeItem::NodeType::Root);
+    //setupModelData(data.split('\n'), rootItem);
 }
 //! [0]
 
@@ -86,12 +82,24 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
     if (!index.isValid())
         return QVariant();
 
-    if (role != Qt::DisplayRole && role != Qt::EditRole)
-        return QVariant();
-
     TreeItem *item = getItem(index);
 
-    return item->data(index.column());
+    if(item == nullptr){
+        return QVariant();
+    }
+
+    switch(role){
+    case Qt::DisplayRole:
+    case Qt::EditRole:
+        return item->data();
+    case Qt::DecorationRole:
+        return item->getIcon();
+    default:
+        return QVariant();
+    }
+
+
+    return QVariant();
 }
 
 //! [3]
@@ -156,8 +164,8 @@ QModelIndex TreeModel::parent(const QModelIndex &index) const
     if (!index.isValid())
         return QModelIndex();
 
-    TreeItem *childItem = getItem(index);
-    TreeItem *parentItem = childItem ? childItem->parent() : nullptr;
+    TreeItem* childItem = getItem(index);
+    TreeItem* parentItem = childItem != nullptr ? childItem->parent() : nullptr;
 
     if (parentItem == rootItem || !parentItem)
         return QModelIndex();

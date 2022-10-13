@@ -15,11 +15,11 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::GloxiniaConfigurator)
     , serial(new QSerialPort(this))
-    , model(new GCSystem(this))
     , status(new QLabel)
     , systemSettings(new SettingsDialog)
     , sensorSettings(new SensorDialog)
     , configureSHT35Dialog(new ConfigureSHT35Dialog)
+    , moduleDialog(new ModuleDialog)
 {
     ui->setupUi(this);
     ui->statusbar->addWidget(status);
@@ -29,14 +29,14 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     QFile file(":/empty.txt");
     file.open(QIODevice::ReadOnly);
 
-    this->treeModel = new TreeModel(headers, file.readAll(), this);
+    this->treeModel = new TreeModel(file.readAll(), this);
 
     connect(serial, &QSerialPort::readyRead, this, &GloxiniaConfigurator::readData);
     connect(ui->actionConnect, &QAction::triggered, this, &GloxiniaConfigurator::openSerialPort);
     connect(ui->actionDisconnect, &QAction::triggered, this, &GloxiniaConfigurator::closeSerialPort);
     connect(ui->actionConfigure, &QAction::triggered, systemSettings, &SettingsDialog::show);
     //connect(ui->actionAdd_sensor, &QAction::triggered, sensorSettings, &SensorDialog::show);
-    //connect(ui->actionAdd_sensor, &QAction::triggered, this, &GloxiniaConfigurator::setSensor);
+    connect(ui->actionAddSensor, &QAction::triggered, this, &GloxiniaConfigurator::addSensor);
     connect(ui->actionAddNode, &QAction::triggered, this, &GloxiniaConfigurator::addNode);
     ui->actionDisconnect->setEnabled(false);
     ui->actionUpdate->setEnabled(false);
@@ -205,10 +205,10 @@ void GloxiniaConfigurator::readData()
                         GMessage((GMessageCode) data[0], data[1], ((uint16_t) data[2] << 8) | data[3], &data[4], read_length);
                         // TODO: process message
 
-                        if(model->insertRow(model->rowCount())){
+                        /*if(model->insertRow(model->rowCount())){
                             QModelIndex index = model->index(model->rowCount() - 1, 0);
                             model->setData(index, "Data received!");
-                        }
+                        }*/
 
                     } else {
                         // incorrect data byte received -> reset state
@@ -390,11 +390,52 @@ void GloxiniaConfigurator::addNode()
 
     updateActions();
 
-    for (int column = 0; column < model->columnCount(index.parent()); ++column) {
-        const QModelIndex child = model->index(index.row() + 1, column, index.parent());
+    const QModelIndex child = model->index(index.row() + 1, 0, index.parent());
+    moduleDialog->setWindowModality(Qt::ApplicationModal);
+    moduleDialog->exec();
+    const GCNode data = moduleDialog->getNode();
+    model->setData(child, QVariant::fromValue(data), Qt::EditRole);
+}
+
+
+void GloxiniaConfigurator::addSensor()
+{
+    const QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = ui->systemOverview->model();
+
+    /*if (model->columnCount(index) == 0)
+    {
+        if (!model->insertColumn(0, index))
+        {
+            return;
+        }
+    }*/
+
+    auto parent = index.parent();
+    bool cond1 = !index.parent().isValid();
+    QVariant data = model->data(index, Qt::EditRole);
+
+    bool cond2 = !model->insertRow(0, index);
+
+    if (cond1 || cond2)
+    {
+        QMessageBox msgBox;
+        msgBox.setText("Cannot add a sensor here. Select/add a node instead.");
+        msgBox.exec();
+        return;
+    }
+
+    for (int column = 0; column < model->columnCount(index); ++column)
+    {
+        const QModelIndex child = model->index(0, column, index);
         model->setData(child, QVariant(tr("[No data]")), Qt::EditRole);
     }
+
+    ui->systemOverview->selectionModel()->setCurrentIndex(model->index(0, 0, index),
+                                            QItemSelectionModel::ClearAndSelect);
+    updateActions();
 }
+
 
 
 

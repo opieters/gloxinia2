@@ -36,7 +36,7 @@ void ConfigureSHT35Dialog::apply(void){
 void ConfigureSHT35Dialog::updateUISettings(void){
     ui->periodicityBox->setCurrentIndex(sensor->getPeriodicity());
     ui->clockStretchingBox->setChecked(sensor->getClockStretching() != 0);
-    ui->addressBox->setCurrentIndex(GCSensorSHT35::i2cAddressToInt(sensor->getI2CAddress()));
+    ui->addressBox->setCurrentIndex(sensor->i2cAddressToInt(sensor->getI2CAddress()));
     ui->rateBox->setCurrentIndex(sensor->getRate());
     ui->repeatabilityBox->setCurrentIndex(sensor->getRepeatability());
 }
