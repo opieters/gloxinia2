@@ -5,7 +5,11 @@
 #include "sensors.h"
 #include "address.h"
 #include "dicio.h"
+#include "sensor_sht35.h"
 
+#ifdef ENABLE_DEBUG
+#include <uart_logging.h>
+#endif
 
 uart_message_t serial_meas_trigger;
 can_message_t can_meas_trigger;
@@ -70,7 +74,8 @@ void config_sensor(uint8_t address, i2c_bus_t i2c_bus, bool write, bool read,
             controller, 
             3, 
             i2c_free_callback, 
-            NULL);
+            NULL, 
+            0);
     } else {
         i2c_init_message(
             config_m, 
@@ -83,60 +88,13 @@ void config_sensor(uint8_t address, i2c_bus_t i2c_bus, bool write, bool read,
             controller, 
             3, 
             i2c_free_callback, 
-            NULL);
+            NULL,
+            0);
     }
     
     i2c_queue_message(config_m);
 }
 
-void register_i2c_message(sensor_config_t* config, i2c_message_t* ref_m, sensor_message_phase_t ref_phase){
-    uint8_t *write_data, *read_data;
-    i2c_message_t *m;
-    
-    // allocate data
-    if(config->n_messages > 0){
-        config->messages = realloc(config->messages, sizeof(i2c_message_t)*(config->n_messages+1));
-        config->phases = realloc(config->phases, sizeof(sensor_message_phase_t)*(config->n_messages+1));
-        config->n_messages++;
-    } else {
-        config->messages = malloc(sizeof(i2c_message_t));
-        config->phases = malloc(sizeof(sensor_message_phase_t));
-        config->n_messages = 1;
-    }
-    
-    m = &config->messages[config->n_messages-1];
-    
-    // allocate data if needed and copy
-    if(ref_m->read_length > 0){
-        read_data = malloc(ref_m->read_length*sizeof(uint8_t));
-        memcpy(read_data, ref_m->read_data, ref_m->read_length);
-    } else {
-        read_data = NULL;
-    }
-    if(ref_m->write_length > 0){
-        write_data = malloc(ref_m->write_length*sizeof(uint8_t));
-        memcpy(write_data, ref_m->write_data, ref_m->write_length);
-    } else {
-        write_data = NULL;
-    }
-    
-    // copy data
-    config->phases[config->n_messages-1] = ref_phase;
-
-    i2c_init_message(
-            m, 
-            ref_m->i2c_bus,
-            ref_m->address, 
-            write_data,
-            ref_m->write_length, 
-            read_data,
-            ref_m->read_length, 
-            ref_m->controller, 
-            ref_m->n_attempts, 
-            i2c_dummy_callback,
-            NULL);
-    
-}
 
 i2c_error_t setup_sensor(uint8_t can_data_lenght){
     //void (*controller)(i2c_message_t* m);
@@ -149,23 +107,12 @@ i2c_error_t setup_sensor(uint8_t can_data_lenght){
     return I2C_NO_ERROR;
 }
 
-
-
-bool sensors_init_plant(void) {
-    bool init_status = true;
-    
-    return init_status;
-}
-
 void sensors_init(void){
-    sensors_reset();
     
     /*i2c_add_reset_callback(I2C2_BUS, sensors_reset_environmental, 
             sensors_init_environmental);*/
     
     delay_ms(1000);
-    
-    sensors_init_plant();
     
     //i2c_add_reset_callback(I2C1_BUS, sensors_reset_plant, sensors_init_plant);
     
@@ -179,15 +126,6 @@ void sensors_init(void){
     }
     
     dicio_set_sensor_callback(sensor_callback);
-    
-    // report about all sensor status to host
-    sensor_status_report();
-    
-}
-
-void sensors_reset(void){
-    // TODO
-    
 }
 
 
@@ -226,8 +164,6 @@ void sensors_error_recover(void){
         
     // make sure I2C queue is empty
     i2c_empty_queue();
-    
-    sensor_status_report();
     
     sensor_error_detected = false;
 }
@@ -270,15 +206,12 @@ void sensor_callback(void){
     }
 }
 
-void sensors_start(void){
-}
-
 
 void send_sensor_status(sensor_config_t* config){
     uint8_t data[DICIO_SENSOR_STATUS_LOG_MESSAGE];
     
-    data[0] = config->global_id;
-    data[1] = config->local_id;
+    data[0] = config->sensor_type;
+    data[1] = config->sensor_id;
     data[2] = config->status;
     
     dicio_send_message(SERIAL_SENSOR_STATUS_CMD, 
@@ -286,8 +219,20 @@ void send_sensor_status(sensor_config_t* config){
             DICIO_SENSOR_STATUS_LOG_MESSAGE);
 }
 
-void sensor_status_report(void){
-}
-
-void sensors_data_init(void){    
+void populate_sht35_config(uint8_t* data, uint8_t len, sensor_sht35_config_t* config){
+    // format:
+    // [sensor_type, sensor_id, address, i2c_bus, ]
+    if(len != 8){
+        return;
+    }
+    config->general.sensor_type = data[0];
+    config->general.sensor_id = data[1];
+    config->address = data[2];
+    config->i2c_bus = data[3];
+    config->repeatability = data[4];
+    config->clock = data[5];
+    config->rate = data[6];
+    config->periodicity = data[7];
+    
+    validate_sht35_config(config);
 }

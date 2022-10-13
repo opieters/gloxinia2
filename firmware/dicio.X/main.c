@@ -1,10 +1,10 @@
 #include <xc.h>
-#include <uart.h>
+#include <uart_logging.h>
 #include "dicio.h"
 #include <utilities.h>
 #include "sensors.h"
 #include "actuators.h"
-#include "uart_processing.h"
+#include <event_controller.h>
 
 #pragma config GWRP = OFF                       // General Segment Write-Protect bit (General Segment may be written)
 #pragma config GSS = OFF                        // General Segment Code-Protect bit (General Segment Code protect is disabled)
@@ -42,19 +42,7 @@
 #pragma config APL = OFF                        // Auxiliary Segment Code-protect bit (Aux Flash Code protect is disabled)
 #pragma config APLK = OFF                       // Auxiliary Segment Key bits (Aux Flash Write Protection and Code Protection is Disabled)
 
-extern volatile uint8_t start_sensors_init;
-uint16_t i;
-
-typedef enum {
-    DICIO_STATE_INIT_DATA,
-    DICIO_STATE_INIT_ALL,
-    DICIO_STATE_WAIT_START,
-    DICIO_STATE_RUNNING,
-            DICIO_STATE_START,
-    DICIO_STATE_STOP,
-} dicio_state_t;
-
-dicio_state_t main_control_state = DICIO_STATE_INIT_ALL;
+static event_t task;
 
 int main ( void ){
 
@@ -82,54 +70,25 @@ int main ( void ){
     while( OSCCONbits.LOCK != 1 );
     
 #ifdef ENABLE_DEBUG
-    uart_init(500000);
-    uart_set_callback(uart_rx_command_cb_dicio);
+    uart_log_init(500000);
     
     uart_simple_print("Configured UART.");
 #endif
     
-    delay_ms(1000);
+    delay_ms(100);
+    
+    dicio_init();
+    
+    task_schedule_t dicio_read_log = {dicio_send_ready_message, 1, 0};
+    schedule_specific_event(dicio_read_log, ID_READY_SCHEDULE);
     
     while(1){
-        switch(main_control_state){
-            case DICIO_STATE_INIT_DATA:
-                actuators_data_init();
-                sensors_data_init();
-
-                delay_ms(1000);
-
-                dicio_init();
-                main_control_state = DICIO_STATE_WAIT_START;
-                break;
-            case DICIO_STATE_WAIT_START:
-                uart_simple_print("Waiting for start command.");
-                while(!start_sensors_init){
-                    dicio_send_ready_message();
-                    delay_ms(1000);
-                }
-                main_control_state = DICIO_STATE_INIT_ALL;
-                break;
-            case DICIO_STATE_INIT_ALL:
-                actuators_init();
-                delay_ms(1000);
-                sensors_init();
-                main_control_state = DICIO_STATE_START;
-                break;
-            case DICIO_STATE_START:
-                sensors_start();
-                actuators_start();
-                main_control_state = DICIO_STATE_RUNNING;
-                break;
-            case DICIO_STATE_RUNNING:
-                dicio_loop();
-                
-                main_control_state = DICIO_STATE_STOP;
-                break;
-            case DICIO_STATE_STOP:
-                main_control_state = DICIO_STATE_INIT_DATA;
-                break;
+        i2c_process_queue();
+        
+        if(n_queued_tasks > 0){
+            task = pop_queued_task();
+            task();
         }
-        delay_ms(1000);
     }
     
     return 0;

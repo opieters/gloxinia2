@@ -4,7 +4,7 @@
 #include <xc.h>
 #include <utilities.h>
 #include <i2c.h>
-#include "sensor_common.h"
+#include <sensor_common.h>
 
 /**
  * Number of sensors of this sensor type. Other sensors are assumed to be 
@@ -47,26 +47,22 @@ extern "C" {
  * Enum listing configuration options of SHT35 sensor.
  */
 typedef enum {
-    S_SHT35_PERIODICITY_NONE,
     S_SHT35_SINGLE_SHOT, 
     S_SHT35_PERIODIC, 
 } sensor_sht35_periodicity_t;
 
 typedef enum {
-    S_SHT35_REPEATABILITY_NONE,
     S_SHT35_HIGH_REPEATABILIBTY, 
     S_SHT35_MEDIUM_REPEATABILITY, 
     S_SHT35_LOW_REPEATABILITY, 
 } sensor_sht35_repeatability_t;
 
 typedef enum {
-    S_SHT35_CLOCK_NONE,
     S_SHT35_ENABLE_CLOCK_STRETCHING, 
     S_SHT35_DISABLE_CLOCK_STRETCHING,
 } sensor_sht35_clock_stretching_t;
 
 typedef enum {
-    S_SHT35_MPS_NONE,
     S_SHT35_0_5_MPS,
     S_SHT35_1_MPS,
     S_SHT35_2_MPS,
@@ -75,7 +71,10 @@ typedef enum {
 } sensor_sht35_sample_rate_t;
 
 typedef struct sensor_sht35_config_s {
-    sensor_general_config_t general;
+    sensor_config_t general;
+    
+    uint8_t address;
+    i2c_bus_t i2c_bus;
 
     sensor_sht35_repeatability_t repeatability;
     sensor_sht35_clock_stretching_t clock;
@@ -114,16 +113,6 @@ void sht35_init_messages_periodic(sensor_sht35_config_t* config);
 
 
 /**
- * @brief Hardware reset of SHT35 sensor.
- * 
- * @details Handles a full hardware reset of the SHT35 sensor. This is done by 
- * toggling a pin of the GPIO expander of the sensor board.
- * 
- */
-void sht35_toggle_reset_pin(void);
-
-
-/**
  * @brief Send SHT35 I2C data over CAN bus.
  * 
  * @details Processes I2C data received by SHT35 sensor and prepares CAN 
@@ -139,6 +128,8 @@ void sht35_i2c_cb_single_shot_m_read(i2c_message_t* m);
 uint8_t sht35_calculate_crc(uint8_t b, uint8_t crc, uint8_t poly);
 
 void sht35_init_read_cb(void (*cb) (void));
+
+void validate_sht35_config(sensor_sht35_config_t* config);
 
 #ifdef	__cplusplus
 }

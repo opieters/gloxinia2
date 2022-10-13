@@ -78,10 +78,7 @@ void toggle_led(void){
     TOGGLE_BIT(blinky_pin.lat_r, blinky_pin.n);
 }
 
-void __attribute__ ( (__interrupt__, no_auto_psv) ) _T1Interrupt( void ){
-    TOGGLE_BIT(blinky_pin.lat_r, blinky_pin.n);
-    _T1IF = 0;
-}
+
 
 void set_error_loop_fn(void (*fn)(void)){
     error_loop_fn = fn;

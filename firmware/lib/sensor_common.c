@@ -2,21 +2,21 @@
 #include <can.h>
 #include "address.h"
 
-static uint8_t local_id = 0;
+static uint8_t sensor_id = 0;
 
 void sensor_init_common_config(sensor_config_t* general, uint8_t length) {
     can_init_message(&general->dlog.can_message,
             controller_address,
             CAN_NO_REMOTE_FRAME,
             CAN_EXTENDED_FRAME,
-            CAN_HEADER(general->global_id, general->local_id),
+            CAN_HEADER(general->sensor_type, general->sensor_id),
             general->tx_data,
             length);
     
     uart_init_message(&general->dlog.uart_message, 
             SERIAL_SENSOR_DATA_CMD,
             controller_address,
-            CAN_HEADER(general->global_id, general->local_id),
+            CAN_HEADER(general->sensor_type, general->sensor_id),
             general->tx_data, 
             length);
     
@@ -35,8 +35,8 @@ void sensor_init_common_config(sensor_config_t* general, uint8_t length) {
             general->error_data, 
             ERROR_DATA_SIZE);
     
-    general->error_data[0] = general->global_id;
-    general->error_data[1] = general->local_id;
+    general->error_data[0] = general->sensor_type;
+    general->error_data[1] = general->sensor_id;
 }
 
 void sensor_update_status(sensor_config_t* config, const i2c_error_t i2c_error){
@@ -119,10 +119,10 @@ void sensor_send_data_no_copy(sensor_log_t* dlog, uint8_t* data, uint8_t length)
     }   
 }
 
-uint8_t sensor_get_local_id(void){
-    return local_id++;
+uint8_t sensor_get_sensor_id(void){
+    return sensor_id++;
 }
 
-void sensor_reset_local_id(void){
-    local_id = 0;
+void sensor_reset_sensor_id(void){
+    sensor_id = 0;
 }

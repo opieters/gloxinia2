@@ -11,27 +11,10 @@
 #include <dac.h>
 #include <spi.h>
 
-#ifdef __SENSOR_SPECIFIC_CONFIG
-
 i2c_error_t sht35_init_sensor(sensor_sht35_config_t* config){  
-    void (*controller)(i2c_message_t*);
     void (*callback)(i2c_message_t* m);
     
-    sht35_toggle_reset_pin();
-    
     sensor_init_common_config(&config->general, SENSOR_SHT35_CAN_DATA_LENGTH);
-    
-    // configure read message
-    switch(config->general.i2c_bus) {
-        case I2C1_BUS:
-            controller = i2c1_read_controller;
-            break;
-        case I2C2_BUS:
-            controller = i2c2_read_controller;
-            break;
-        default:
-            report_error("SHT35: I2C module not supported.");
-    }
     
     switch(config->periodicity){
         case S_SHT35_SINGLE_SHOT:
@@ -44,47 +27,39 @@ i2c_error_t sht35_init_sensor(sensor_sht35_config_t* config){
             report_error("SHT35: periodicity option not supported.");
     }
     
-    i2c_init_message(&config->m_read,
-            I2C_READ_ADDRESS(config->general.address),
+    i2c_init_message(
+            &config->m_read,
+            I2C_READ_ADDRESS(config->address),
+            config->i2c_bus,
+            NULL,
+            0,
             config->m_read_data,
             SENSOR_SHT35_DATA_LENGTH,
-            controller,
+            get_read_controller(config->i2c_bus),
             3,
             callback,
-            NULL,
-            (uint8_t*) config,
-            0,
-            config->general.i2c_bus,
-            NULL);
+            config,
+            0);
     
-    switch(config->general.i2c_bus) {
-        case I2C1_BUS:
-            controller = i2c1_write_controller;
-            break;
-        case I2C2_BUS:
-            controller = i2c2_write_controller;
-            break;
-        default:
-            report_error("SHT35: I2C module not supported.");
-    }
-    
+
     // send break command to stop acquisition if one is ongoing
     config->m_config_data[0] = 0x30;
     config->m_config_data[1] = 0x93;
     
-    i2c_init_message(&config->m_config,
-        I2C_WRITE_ADDRESS(config->general.address),
+    i2c_init_message(
+        &config->m_config,
+        I2C_WRITE_ADDRESS(config->address),
+        config->i2c_bus,
         config->m_config_data,
         SENSOR_SHT35_CONFIG_DATA_LENGTH,
-        controller,
+        NULL,
+        0,
+        get_write_controller(config->i2c_bus),
         3,
         i2c_dummy_callback,
-        NULL,
-        (uint8_t*) config,
-        0,
-        config->general.i2c_bus,
-        NULL);
-
+        config,
+        0);
+    
     i2c_queue_message(&config->m_config);
     
     i2c_empty_queue();
@@ -170,18 +145,19 @@ i2c_error_t sht35_init_sensor(sensor_sht35_config_t* config){
         config->m_fetch_data[0] = 0xE0;
         config->m_fetch_data[1] = 0x00;
         
-        i2c_init_message(&config->m_fetch,
-            I2C_WRITE_ADDRESS(config->general.address),
-            config->m_fetch_data,
-            SENSOR_SHT35_FETCH_DATA_LENGTH,
-            controller,
-            3,
-            sht35_i2c_cb_periodic_m_fetch,
-            NULL,
-            (uint8_t*) config,
-            0,
-            config->general.i2c_bus,
-            NULL);
+        i2c_init_message(
+                &config->m_fetch,
+                I2C_WRITE_ADDRESS(config->address),
+                config->i2c_bus,
+                config->m_fetch_data,
+                SENSOR_SHT35_FETCH_DATA_LENGTH,
+                NULL,
+                0,
+                get_write_controller(config->i2c_bus),
+                3,
+                sht35_i2c_cb_periodic_m_fetch,
+                config,
+                0);
     } else {
         switch (config->clock) {
             case S_SHT35_ENABLE_CLOCK_STRETCHING:
@@ -214,19 +190,19 @@ i2c_error_t sht35_init_sensor(sensor_sht35_config_t* config){
                 break;
         }
     }
-
+    
     i2c_init_message(&config->m_config,
-        I2C_WRITE_ADDRESS(config->general.address),
+        I2C_WRITE_ADDRESS(config->address),
+        config->i2c_bus,
         config->m_config_data,
         SENSOR_SHT35_CONFIG_DATA_LENGTH,
-        controller,
+        NULL,
+        0,
+        get_write_controller(config->i2c_bus),
         3,
         i2c_dummy_callback,
-        NULL,
         (uint8_t*) config,
-        0,
-        config->general.i2c_bus,
-        NULL);
+        0);
 
     i2c_queue_message(&config->m_config);
     
@@ -249,7 +225,7 @@ i2c_error_t sht35_init_sensor(sensor_sht35_config_t* config){
 }
 
 void sht35_i2c_cb_periodic_m_fetch(i2c_message_t* m){
-    sensor_sht35_config_t* config = (sensor_sht35_config_t*) m->processor_data;
+    sensor_sht35_config_t* config = (sensor_sht35_config_t*) m->callback_data;
     
     if(m->error != I2C_NO_ERROR){
         sensor_send_error(&config->general.elog, m);
@@ -262,7 +238,7 @@ void sht35_i2c_cb_periodic_m_fetch(i2c_message_t* m){
 void sht35_i2c_cb_periodic_m_read(i2c_message_t* m){
     // check CRC
     //uint8_t crc_temperature = 0xFF, crc_rh = 0xFF;
-    sensor_sht35_config_t* config = (sensor_sht35_config_t*) m->processor_data;
+    sensor_sht35_config_t* config = (sensor_sht35_config_t*) m->callback_data;
     
     if(m->error == I2C_NO_ERROR){
         /*crc_temperature = sht35_calculate_crc(m->data[0], crc_temperature, SHT35_CRC_POLY);
@@ -279,7 +255,7 @@ void sht35_i2c_cb_periodic_m_read(i2c_message_t* m){
             sensor_send_data(&config->general.dlog, config->general.tx_data, SENSOR_SHT35_CAN_DATA_LENGTH);
 
         }*/
-        sensor_send_data(&config->general.dlog, m->data, SENSOR_SHT35_CAN_DATA_LENGTH);
+        sensor_send_data(&config->general.dlog, m->read_data, SENSOR_SHT35_CAN_DATA_LENGTH);
     } else {
         sensor_send_error(&config->general.elog, m);
     }
@@ -287,16 +263,16 @@ void sht35_i2c_cb_periodic_m_read(i2c_message_t* m){
 
 void sht35_i2c_cb_single_shot_m_config(i2c_message_t* m){
     if(m->error != I2C_NO_ERROR){
-        sensor_sht35_config_t* config = (sensor_sht35_config_t*) m->processor_data;
+        sensor_sht35_config_t* config = (sensor_sht35_config_t*) m->callback_data;
         sensor_send_error(&config->general.elog, m);
     }
 }
 
 void sht35_i2c_cb_single_shot_m_read(i2c_message_t* m){
-    sensor_sht35_config_t* config = (sensor_sht35_config_t*) m->processor_data;
+    sensor_sht35_config_t* config = (sensor_sht35_config_t*) m->callback_data;
     
     if(m->error == I2C_NO_ERROR){         
-        sensor_send_data(&config->general.dlog, m->data, SENSOR_SHT35_CAN_DATA_LENGTH);
+        sensor_send_data(&config->general.dlog, m->read_data, SENSOR_SHT35_CAN_DATA_LENGTH);
     } else {
         sensor_send_error(&config->general.elog, m);
     }
@@ -315,14 +291,10 @@ uint8_t sht35_calculate_crc(uint8_t b, uint8_t crc, uint8_t poly){
     return crc;
 }
 
-void sht35_toggle_reset_pin(void){
-    _ANSB8 = 0;
-    _TRISB8 = 0; // configure as output
-    _LATB8 = 1;
-    delay_ms(100);
-    _LATB8 = 0;
-    delay_ms(100);
-    _LATB8 = 1;
-    delay_ms(100);
+void validate_sht35_config(sensor_sht35_config_t* config){
+    SENSOR_CONFIG_CHECK_EQUAL_SET(config->general.sensor_type, SENSOR_TYPE_SHT35);
+    SENSOR_CONFIG_CHECK_MAX_SET(config->repeatability,S_SHT35_LOW_REPEATABILITY,S_SHT35_HIGH_REPEATABILIBTY);
+    SENSOR_CONFIG_CHECK_MAX_SET(config->clock,S_SHT35_DISABLE_CLOCK_STRETCHING,S_SHT35_ENABLE_CLOCK_STRETCHING);
+    SENSOR_CONFIG_CHECK_MAX_SET(config->rate,S_SHT35_10_MPS,S_SHT35_1_MPS);
+    SENSOR_CONFIG_CHECK_MAX_SET(config->periodicity,S_SHT35_PERIODIC,S_SHT35_SINGLE_SHOT);
 }
-#endif

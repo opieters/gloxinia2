@@ -8,25 +8,9 @@ uart_message_t serial_actuator_trigger;
 can_message_t can_actuator_trigger;
 
 
-
-void actuators_init(void){
-    i2c_empty_queue();
-    
-    actuator_status_report();
-}
-
 void actuator_callback(void) {
 
 }
-
-void actuators_start(void){
-    
-}
-
-void actuators_data_init(void){
-   
-}
-
 bool process_actuator_serial_command(uart_message_t* m){
     return true;
 }
@@ -49,8 +33,4 @@ void actuator_send_status(actuator_general_config_t* config){
     dicio_send_message(SERIAL_ACTUATOR_STATUS_CMD, 
             CAN_HEADER(CAN_MSG_ACTUATOR_STATUS, 0), data, 
             DICIO_ACTUATOR_STATUS_LOG_MESSAGE);
-}
-
-void actuator_status_report(void){
-
 }

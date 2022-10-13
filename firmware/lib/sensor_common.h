@@ -14,6 +14,9 @@ extern "C" {
 #endif /* __cplusplus */
     
 #define ERROR_DATA_SIZE 4
+    
+#define SENSOR_CONFIG_CHECK_EQUAL_SET(X, Y) if((X) != (Y)) {(X) = (Y);}
+#define SENSOR_CONFIG_CHECK_MAX_SET(X, Y, Z) if((X) > (Y)) {(X) = (Z);}
    
 typedef enum {
     SENSOR_STATUS_INACTIVE   = 0,
@@ -40,29 +43,13 @@ typedef enum {
     SENSOR_PHASE_POST_READOUT,
 } sensor_message_phase_t;
 
-/*typedef struct sensor_general_config_s {
-    uint8_t local_id;
-    uint8_t global_id;
-    
-    uint8_t address;
-    i2c_bus_t i2c_bus;
-    
-    sensor_status_t status;
-    
-    sensor_log_t dlog;
-    sensor_elog_t elog;
-
-    uint8_t tx_data[CAN_MAX_N_BYTES];
-    uint8_t error_data[ERROR_DATA_SIZE];
-    
-} sensor_general_config_t;*/
+typedef enum {
+    SENSOR_TYPE_SHT35,
+} sensor_type_t;
 
 typedef struct i2c_sensor_config_s {
-    uint8_t local_id;
-    uint8_t global_id;
-    
-    uint8_t address;
-    i2c_bus_t i2c_bus;
+    uint8_t sensor_id;
+    sensor_type_t sensor_type;
     
     sensor_status_t status;
     
@@ -71,10 +58,6 @@ typedef struct i2c_sensor_config_s {
 
     uint8_t tx_data[CAN_MAX_N_BYTES];
     uint8_t error_data[ERROR_DATA_SIZE];
-    
-    i2c_message_t* messages;
-    sensor_message_phase_t* phases;
-    uint8_t n_messages;
 } sensor_config_t;
 
 /*typedef struct {

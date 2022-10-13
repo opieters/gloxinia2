@@ -73,6 +73,7 @@ extern "C" {
      * use i2c_message_t as argument. 
      */ 
     typedef struct i2c_message_s i2c_message_t;
+    typedef void (*i2c_controller_t)(i2c_message_t*);
     
     /**
      * Struct to store data fields associated with an I2C message.
@@ -96,6 +97,8 @@ extern "C" {
         volatile i2c_mstatus_t status;
         volatile i2c_error_t error;
         void (*callback)(i2c_message_t* m);
+        void* callback_data;
+        uint8_t callback_data_length;
         void (*cancelled_callback)(i2c_message_t* m);
     };
     
@@ -255,7 +258,9 @@ extern "C" {
     void i2c_add_reset_callback(i2c_bus_t i2c_bus, void (*reset)(void), bool (*init)(void));
     void i2c_reset_callback_init(void);
     
-    void i2c_init_message(i2c_message_t* m, uint8_t address,
+    void i2c_init_message(
+        i2c_message_t* m, 
+        uint8_t address,
         i2c_bus_t i2c_bus,
         uint8_t* write_data,
         size_t write_length,
@@ -264,7 +269,8 @@ extern "C" {
         void (*controller)(i2c_message_t* m),
         int8_t n_attempts,
         void (*callback)(i2c_message_t* m),
-        void (*cancelled_callback)(i2c_message_t* m));
+        void* callback_data,
+        uint8_t callback_data_length);
     
     void i2c_init_read_message(
         i2c_message_t* m,
@@ -294,6 +300,9 @@ extern "C" {
     bool i2c_check_message_sent(i2c_message_t* m);
     
     void i2c1_init_slave_timer(void);
+    
+    i2c_controller_t get_write_controller(i2c_bus_t bus);
+    i2c_controller_t get_read_controller(i2c_bus_t bus);
 
 #ifdef	__cplusplus
 }

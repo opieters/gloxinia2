@@ -556,7 +556,7 @@ void i2c1_init_slave(i2c_config_t* config){
     i2c_slave_mr_sw_message = NULL;
     i2c_init_message(
             &i2c_slave_mw_sr_message, 
-            0, I2C1_BUS, i2c_slave_mw_sr_data, 0, NULL, 0, NULL, 0, NULL, NULL);
+            0, I2C1_BUS, i2c_slave_mw_sr_data, 0, NULL, 0, NULL, 0, NULL, NULL, 0);
     n_slave_write_transfers = 0;
     
     // timer for stop condition
@@ -623,7 +623,9 @@ void i2c2_init_slave(i2c_config_t* config){
             NULL, 0, 
             NULL,
             0,
-            NULL, NULL);
+            NULL,
+            NULL,
+            0);
     n_slave_write_transfers = 0;
     
     // init timer to release SCL 
@@ -717,7 +719,8 @@ void i2c2_init_master(i2c_config_t* config) {
     T3CONbits.TON = 1;*/
 }
 
- void i2c_init_message(i2c_message_t* m, uint8_t address,
+ void i2c_init_message(i2c_message_t* m, 
+        uint8_t address,
         i2c_bus_t i2c_bus,
         uint8_t* write_data,
         size_t write_length,
@@ -726,7 +729,8 @@ void i2c2_init_master(i2c_config_t* config) {
         void (*controller)(i2c_message_t* m),
         int8_t n_attempts,
         void (*callback)(i2c_message_t* m),
-        void (*cancelled_callback)(i2c_message_t* m)){
+        void* callback_data,
+        uint8_t callback_data_length){
     m->address = address;
     m->write_data = write_data;
     m->write_length = write_length;
@@ -736,7 +740,8 @@ void i2c2_init_master(i2c_config_t* config) {
     m->status = I2C_MESSAGE_HANDLED;
     m->error = I2C_NO_ERROR;
     m->callback = callback;
-    m->cancelled_callback = cancelled_callback;
+    m->callback_data = callback_data;
+    m->callback_data_length = callback_data_length;
     m->i2c_bus = i2c_bus;
     i2c_reset_message(m, n_attempts);
 }
@@ -940,4 +945,35 @@ void __attribute__ ( (__interrupt__, no_auto_psv) ) _T3Interrupt( void ){
     }
     
     _T3IF = 0;
+}
+
+i2c_controller_t get_write_controller(i2c_bus_t bus){
+    switch(bus) {
+        case I2C1_BUS:
+            return i2c1_write_controller;
+            break;
+        case I2C2_BUS:
+            return i2c2_write_controller;
+            break;
+        default:
+            report_error("I2C module not supported.");
+    }
+    
+    return i2c1_write_controller;
+}
+
+i2c_controller_t get_read_controller(i2c_bus_t bus){
+    // configure read message
+    switch(bus) {
+        case I2C1_BUS:
+            return i2c1_read_controller;
+            break;
+        case I2C2_BUS:
+            return i2c2_read_controller;
+            break;
+        default:
+            report_error("SHT35: I2C module not supported.");
+    }
+    
+    return i2c1_read_controller;
 }
