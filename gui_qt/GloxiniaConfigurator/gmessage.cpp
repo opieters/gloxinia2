@@ -1,14 +1,24 @@
 #include "gmessage.h"
 
 
-GMessage::GMessage(GMessageCode code, uint8_t messageID, uint16_t sensorID, char* data, uint64_t size):code(code), messageID(messageID), sensorID(sensorID){
+GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, char* data, uint64_t size):
+    code(code),
+    messageID(messageID),
+    sensorID(sensorID)
+{
     this->data = std::vector<char>(data, data+size);
 }
-GMessage::GMessage(GMessageCode code, uint8_t messageID, uint16_t sensorID, std::vector<char> data):code(code), messageID(messageID), sensorID(sensorID), data(data){
+GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, std::vector<char> data):
+    code(code),
+    messageID(messageID),
+    sensorID(sensorID),
+    data(data)
+{
 
 }
 
-int GMessage::toBytes(char* data, unsigned int maxLength){
+int GMessage::toBytes(char* data, unsigned int maxLength) const
+{
     if(maxLength < (headerSize +this->data.size())){
         return -1;
     }
@@ -33,97 +43,97 @@ std::ostream& operator << ( std::ostream& outs, const GMessage & m )
 }
 
 
-std::ostream& operator << ( std::ostream& outs, const GMessageCode &code)
+std::ostream& operator << ( std::ostream& outs, const GMessage::Code &code)
 {
     switch(code){
-        case GMessageCode::startMeasurement:
+        case GMessage::Code::startMeasurement:
             outs << "start measurement";
             break;
-        case GMessageCode::stopMeasurement:
+        case GMessage::Code::stopMeasurement:
             outs << "stop measurement";
             break;
-        case GMessageCode::activate_sensor:
+        case GMessage::Code::activate_sensor:
             outs << "activate senosr";
             break;
-        case GMessageCode::deactivate_sensor:
+        case GMessage::Code::deactivate_sensor:
             outs << "deactivate sensor";
             break;
-        case GMessageCode::reset_node:
+        case GMessage::Code::reset_node:
             outs << "reset node";
             break;
-        case GMessageCode::reset_system:
+        case GMessage::Code::reset_system:
             outs << "reset system";
             break;
-        case GMessageCode::text_message:
+        case GMessage::Code::text_message:
             outs << "text message";
             break;
-        case GMessageCode::sensor_data:
+        case GMessage::Code::sensor_data:
             outs << "sensor data";
             break;
-        case GMessageCode::sensor_status:
+        case GMessage::Code::sensor_status:
             outs << "sensor status";
             break;
-        case GMessageCode::measurement_period:
+        case GMessage::Code::measurement_period:
             outs << "measurement period";
             break;
-        case GMessageCode::error_message:
+        case GMessage::Code::error_message:
             outs << "error message";
             break;
-        case GMessageCode::loopback_message:
+        case GMessage::Code::loopback_message:
             outs << "loopback message";
             break;
-        case GMessageCode::actuator_status:
+        case GMessage::Code::actuator_status:
             outs << "actuator status";
             break;
-        case GMessageCode:: hello_message:
+        case GMessage::Code:: hello_message:
             outs << "hello message";
             break;
-            case GMessageCode::init_sampling:
+            case GMessage::Code::init_sampling:
             outs << "init sampling";
             break;
-        case GMessageCode:: init_sensors:
+        case GMessage::Code:: init_sensors:
             outs << "init sensors";
             break;
-        case GMessageCode:: sensor_error:
+        case GMessage::Code:: sensor_error:
             outs << "sensor error";
             break;
-        case GMessageCode::lia_gain:
+        case GMessage::Code::lia_gain:
             outs << "lia gain";
             break;
-        case GMessageCode::unknown :
+        case GMessage::Code::unknown :
             outs << "unkown";
             break;
-        case GMessageCode::meas_trigger :
+        case GMessage::Code::meas_trigger :
             outs << "measurement trigger";
             break;
-        case GMessageCode::sensor_config:
+        case GMessage::Code::sensor_config:
             outs << "sensor config";
             break;
-        case GMessageCode:: actuator_data :
+        case GMessage::Code:: actuator_data :
             outs << "actuator data";
             break;
-        case GMessageCode:: actuator_error:
+        case GMessage::Code:: actuator_error:
             outs << "actuator error";
             break;
-        case GMessageCode::actuator_trigger:
+        case GMessage::Code::actuator_trigger:
             outs << "actuator trigger";
             break;
-        case GMessageCode::actuator_gc_temp :
+        case GMessage::Code::actuator_gc_temp :
             outs << "actuator gc temperature";
             break;
-        case GMessageCode::actuator_gc_rh    :
+        case GMessage::Code::actuator_gc_rh    :
             outs << "actuator gc relative humidity";
             break;
-        case GMessageCode:: sensor_start:
+        case GMessage::Code:: sensor_start:
             outs << "sensor start";
             break;
-        case GMessageCode::actuator_relay:
+        case GMessage::Code::actuator_relay:
             outs << "actuator relay";
             break;
-        case GMessageCode::sensor_actuator_enable:
+        case GMessage::Code::sensor_actuator_enable:
             outs << "sensor actuator enable";
             break;
-        case GMessageCode::actuator_relay_now:
+        case GMessage::Code::actuator_relay_now:
             outs << "actuator relay now";
             break;
         default:
@@ -133,3 +143,22 @@ std::ostream& operator << ( std::ostream& outs, const GMessageCode &code)
 
     return outs;
 }
+
+GMessage::Code GMessage::getCode(void) const
+{
+    return code;
+}
+
+quint8 GMessage::getMessageID(void) const
+{
+    return messageID;
+}
+quint16 GMessage::getSensorID(void) const
+{
+    return sensorID;
+}
+std::vector<char> GMessage::getData(void) const
+{
+    return std::vector<char>(data);
+}
+

@@ -13,8 +13,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
-# load serial port headers
-find_package(Qt6 REQUIRED COMPONENTS SerialPort)
+# load serial port and charts headers
+find_package(Qt6 REQUIRED COMPONENTS SerialPort Charts)
 
 set(TS_FILES GloxiniaConfigurator_en_GB.ts)
 
@@ -27,13 +27,15 @@ set(PROJECT_SOURCES
         nodedialog.ui
         sensordialog.h sensordialog.cpp sensordialog.ui
         configuresht35dialog.h configuresht35dialog.cpp configuresht35dialog.ui
-        gcsystem.h gcsystem.cpp
+        #gcsystem.h gcsystem.cpp
         gcnode.h gcnode.cpp
         gcsensor.h gcsensor.cpp
+        gcsamplepoint.h gcsamplepoint.cpp
         treeitem.h treeitem.cpp
         treemodel.h treemodel.cpp
-        moduledialog.h moduledialog.cpp moduledialog.ui
+        nodedialog.h nodedialog.cpp nodedialog.ui
         resources.qrc
+        exampleConfig.txt
         ${TS_FILES}
 )
 
@@ -66,6 +68,7 @@ endif()
 
 target_link_libraries(GloxiniaConfigurator PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(GloxiniaConfigurator PRIVATE Qt${QT_VERSION_MAJOR}::SerialPort)
+target_link_libraries(GloxiniaConfigurator PRIVATE Qt${QT_VERSION_MAJOR}::Charts)
 
 # resources
 

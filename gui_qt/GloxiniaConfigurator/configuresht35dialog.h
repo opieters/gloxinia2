@@ -27,7 +27,7 @@ private slots:
 private:
     Ui::ConfigureSHT35Dialog *ui;
 
-    GCSensorSHT35* sensor;
+    GCSensorSHT35 sensor;
 };
 
 #endif // CONFIGURESHT35DIALOG_H

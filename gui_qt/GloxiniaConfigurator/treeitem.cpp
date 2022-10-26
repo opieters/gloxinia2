@@ -1,4 +1,6 @@
 #include "treeitem.h"
+#include "gcsensor.h"
+#include "gcnode.h"
 
 TreeItem::TreeItem(const QVariant &data, TreeItem::NodeType nType, TreeItem *parent)
     : itemData(data), nType(nType), parentItem(parent)
@@ -38,7 +40,30 @@ int TreeItem::columnCount() const
 
 QVariant TreeItem::data() const
 {
-    return itemData.toString();
+    return itemData;
+/*
+    GCSensor* s;
+    GCNode* n;
+    switch(nType)
+    {
+        case NodeType::Sensor:
+            s = itemData.value<GCSensor*>();
+            if(s != nullptr){
+                return s->toString();
+            }
+            break;
+        case NodeType::Root:
+            return "Root Node";
+            break;
+        case NodeType::Node:
+            n = itemData.value<GCNode*>();
+            if(n != nullptr){
+                return n->toString();
+            }
+            break;
+    }
+    return "[no data]";
+    return itemData.toString();*/
 }
 
 
@@ -56,9 +81,9 @@ bool TreeItem::insertChildren(int position, int count, int columns)
             return false;
             break;
         case TreeItem::Root:
-            item = new TreeItem(data, TreeItem::Module, this);
+            item = new TreeItem(data, TreeItem::Node, this);
             break;
-        case TreeItem::Module:
+        case TreeItem::Node:
             item = new TreeItem(data, TreeItem::Sensor, this);
             break;
         }
@@ -103,7 +128,7 @@ QIcon TreeItem::getIcon() const
     switch(nType){
         case TreeItem::Root:
         return QIcon(":/images/node.png");
-    case TreeItem::Module:
+    case TreeItem::Node:
         return QIcon(":/images/cube-solid.png");
     case TreeItem::Sensor:
         return QIcon(":/images/unknown-sensor.png");

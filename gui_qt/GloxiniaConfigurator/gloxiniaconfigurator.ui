@@ -14,12 +14,16 @@
    <string>GloxiniaConfigurator</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
+   <layout class="QHBoxLayout" name="hLayout">
     <item>
      <widget class="QTreeView" name="systemOverview"/>
     </item>
     <item>
-     <widget class="QListView" name="messageView"/>
+     <layout class="QVBoxLayout" name="vLayout">
+      <item>
+       <widget class="QListView" name="messageView"/>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -38,23 +42,28 @@
     </property>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
+    <addaction name="actionSelectDataFile"/>
     <addaction name="separator"/>
+    <addaction name="actionClear"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
      <string>Edit</string>
     </property>
-    <addaction name="actionAddSensor"/>
     <addaction name="actionAddNode"/>
+    <addaction name="actionEditNode"/>
+    <addaction name="actionAddSensor"/>
     <addaction name="actionEditSensor"/>
-    <addaction name="actionEditSystem"/>
+    <addaction name="actionDelete"/>
+    <addaction name="separator"/>
+    <addaction name="actionPreferences"/>
    </widget>
    <widget class="QMenu" name="menuSystem">
     <property name="title">
      <string>System</string>
     </property>
-    <widget class="QMenu" name="menuPort_selection">
+    <widget class="QMenu" name="menuPortSelection">
      <property name="title">
       <string>Port selection</string>
      </property>
@@ -63,7 +72,7 @@
     <addaction name="actionUpdate"/>
     <addaction name="actionDisconnect"/>
     <addaction name="actionConfigure"/>
-    <addaction name="menuPort_selection"/>
+    <addaction name="menuPortSelection"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -78,12 +87,12 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
    <property name="text">
-    <string>Open</string>
+    <string>Open Configuration</string>
    </property>
   </action>
   <action name="actionSave">
    <property name="text">
-    <string>Save</string>
+    <string>Save Configuraton</string>
    </property>
   </action>
   <action name="actionExit">
@@ -106,9 +115,9 @@
     <string>Edit sensor</string>
    </property>
   </action>
-  <action name="actionEditSystem">
+  <action name="actionPreferences">
    <property name="text">
-    <string>Edit system</string>
+    <string>Preferences</string>
    </property>
   </action>
   <action name="actionUpdate">
@@ -129,6 +138,26 @@
   <action name="actionConfigure">
    <property name="text">
     <string>Configure</string>
+   </property>
+  </action>
+  <action name="actionDelete">
+   <property name="text">
+    <string>Delete</string>
+   </property>
+  </action>
+  <action name="actionEditNode">
+   <property name="text">
+    <string>Edit node</string>
+   </property>
+  </action>
+  <action name="actionClear">
+   <property name="text">
+    <string>Clear</string>
+   </property>
+  </action>
+  <action name="actionSelectDataFile">
+   <property name="text">
+    <string>Select Data File</string>
    </property>
   </action>
  </widget>

@@ -13,7 +13,7 @@ ConfigureSHT35Dialog::ConfigureSHT35Dialog(QWidget *parent) :
 
     updatePeriodicity();
 
-    sensor = new GCSensorSHT35();
+    sensor = GCSensorSHT35();
 
     updateUISettings();
 }
@@ -24,21 +24,21 @@ ConfigureSHT35Dialog::~ConfigureSHT35Dialog()
 }
 
 void ConfigureSHT35Dialog::apply(void){
-    sensor->setPeriodicity(ui->periodicityBox->currentIndex());
-    sensor->setClockStretching(ui->clockStretchingBox->isChecked());
-    sensor->setI2CAddress(ui->addressBox->currentText().toInt(nullptr, 0));
-    sensor->setRate(ui->rateBox->currentIndex());
-    sensor->setRepeatability(ui->repeatabilityBox->currentIndex());
+    sensor.setPeriodicity(ui->periodicityBox->currentIndex());
+    sensor.setClockStretching(ui->clockStretchingBox->isChecked());
+    sensor.setI2CAddress(ui->addressBox->currentText().toInt(nullptr, 0));
+    sensor.setRate(ui->rateBox->currentIndex());
+    sensor.setRepeatability(ui->repeatabilityBox->currentIndex());
 
     hide();
 }
 
 void ConfigureSHT35Dialog::updateUISettings(void){
-    ui->periodicityBox->setCurrentIndex(sensor->getPeriodicity());
-    ui->clockStretchingBox->setChecked(sensor->getClockStretching() != 0);
-    ui->addressBox->setCurrentIndex(sensor->i2cAddressToInt(sensor->getI2CAddress()));
-    ui->rateBox->setCurrentIndex(sensor->getRate());
-    ui->repeatabilityBox->setCurrentIndex(sensor->getRepeatability());
+    ui->periodicityBox->setCurrentIndex(sensor.getPeriodicity());
+    ui->clockStretchingBox->setChecked(sensor.getClockStretching() != 0);
+    ui->addressBox->setCurrentIndex(sensor.i2cAddressToInt(sensor.getI2CAddress()));
+    ui->rateBox->setCurrentIndex(sensor.getRate());
+    ui->repeatabilityBox->setCurrentIndex(sensor.getRepeatability());
 }
 
 void ConfigureSHT35Dialog::updatePeriodicity(){
@@ -52,10 +52,10 @@ void ConfigureSHT35Dialog::updatePeriodicity(){
 }
 
 GCSensorSHT35* ConfigureSHT35Dialog::getSensor(void){
-    return static_cast<GCSensorSHT35*>(sensor);
+    return new GCSensorSHT35(sensor);
 }
 
 
 void ConfigureSHT35Dialog::setSensorSettings(GCSensorSHT35* s){
-    sensor = static_cast<GCSensorSHT35*>(sensor);
+    sensor = GCSensorSHT35(*s);
 }
