@@ -89,8 +89,11 @@ _autosave-*
 # Exported BOM files
 *.xml
 *.csv
-gui/dist/
-gui/node_modules/
+
+# Electron GUI
+gui_electron/dist/
+gui_electron/node_modules/
+
 firmware/dicio.X/.generated_files/
 firmware/dicio.X/build/
 firmware/dicio.X/dist/
@@ -119,3 +122,6 @@ fp-lib-table
 *.zip
 sym-lib-table
 pcb_design/dicio_pic32/gerber/
+
+# GUI Qt
+gui_qt/build-*
