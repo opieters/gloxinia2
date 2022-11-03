@@ -5,51 +5,59 @@
 #include <vector>
 #include <iostream>
 #include <Qt>
+#include <QString>
 
 
 class GMessage
 {
 public:
 
+    // is two bytes wide in the hardware, see C files for documentation
     enum Code {
-        startMeasurement       = 0x00,
-        stopMeasurement        = 0x01,
-        activate_sensor        = 0x02,
-        deactivate_sensor      = 0x03,
-        reset_node             = 0x04,
-        reset_system           = 0x05,
-        text_message           = 0x06,
-        sensor_data            = 0x07,
-        sensor_status          = 0x08,
-        measurement_period     = 0x09,
-        error_message          = 0x0A,
-        loopback_message       = 0x0B,
-        actuator_status        = 0x0C,
-        hello_message          = 0x0D,
-        init_sampling          = 0x0E,
-        init_sensors           = 0x0F,
-        sensor_error           = 0x10,
-        lia_gain               = 0x11,
-        unknown                = 0x12,
-        meas_trigger           = 0x13,
-        sensor_config          = 0x14,
-        actuator_data          = 0x15,
-        actuator_error         = 0x16,
-        actuator_trigger       = 0x17,
-        actuator_gc_temp       = 0x18,
-        actuator_gc_rh         = 0x19,
-        sensor_start           = 0x1A,
-        actuator_relay         = 0x1B,
-        sensor_actuator_enable = 0x1C,
-        actuator_relay_now     = 0x1D,
-        n_commands             = 0x1F,
+        // CAN code are normal codes
+        CAN_REQUEST_ADDRESS_AVAILABLE   = 0x0001,
+        CAN_ADDRESS_TAKEN               = 0x0002,
+        CAN_UPDATE_ADDRESS              = 0x0003,
+        CAN_DISCOVERY                   = 0x0004,
+
+        // UART-only codes start with MSB set
+        startMeasurement       = 0x8000,
+        stopMeasurement        = 0x8001,
+        activate_sensor        = 0x8002,
+        deactivate_sensor      = 0x8003,
+        reset_node             = 0x8004,
+        reset_system           = 0x8005,
+        text_message           = 0x8006,
+        sensor_data            = 0x8007,
+        sensor_status          = 0x8008,
+        measurement_period     = 0x8009,
+        error_message          = 0x800A,
+        loopback_message       = 0x800B,
+        actuator_status        = 0x800C,
+        hello_message          = 0x800D,
+        init_sampling          = 0x800E,
+        init_sensors           = 0x800F,
+        sensor_error           = 0x8010,
+        lia_gain               = 0x8011,
+        unknown                = 0x8012,
+        meas_trigger           = 0x8013,
+        sensor_config          = 0x8014,
+        actuator_data          = 0x8015,
+        actuator_error         = 0x8016,
+        actuator_trigger       = 0x8017,
+        actuator_gc_temp       = 0x8018,
+        actuator_gc_rh         = 0x8019,
+        sensor_start           = 0x801A,
+        actuator_relay         = 0x801B,
+        sensor_actuator_enable = 0x801C,
+        actuator_relay_now     = 0x801D,
     };
 
     static constexpr uint8_t GMessageStartByte  = 0x01;
     static constexpr uint8_t GMessageStopByte  = 0x04;
-    static constexpr uint8_t headerSize = 7;
+    static constexpr uint8_t headerSize = 8;
 
-    GMessage(GMessage::Code code, quint8 messegaID, quint16 sensorID, char* data, uint64_t size);
+    GMessage(GMessage::Code code, quint8 messegaID, quint16 sensorID, char* data = nullptr, uint64_t size = 0);
     GMessage(GMessage::Code code, quint8 messegaID, quint16 sensorID, std::vector<char> data);
 
     int toBytes(char* data, unsigned int maxLength) const;
@@ -59,6 +67,14 @@ public:
     quint16 getSensorID(void) const;
     std::vector<char> getData(void) const;
 
+    friend std::ostream& operator << ( std::ostream& outs, const GMessage & m );
+
+    QString toString() const;
+
+    static QString codeToString(GMessage::Code c);
+
+    QString toLogString() const;
+
 private:
     GMessage::Code code;
     std::vector<char> data;
@@ -66,7 +82,10 @@ private:
     quint8 messageID;
     quint16 sensorID;
 
-    friend std::ostream& operator << ( std::ostream& outs, const GMessage & m );
+
 };
+
+std::ostream& operator << ( std::ostream& outs, const GMessage::Code &code);
+
 
 #endif // GMESSAGE_H

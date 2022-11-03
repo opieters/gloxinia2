@@ -15,6 +15,7 @@
 #include <treemodel.h>
 #include <nodedialog.h>
 #include <gmessage.h>
+#include <QTimer>
 
 
 QT_BEGIN_NAMESPACE
@@ -40,6 +41,7 @@ private slots:
     void readData();
     void setSerialPort();
 
+    void runDiscovery(void);
     void addNode(void);
     void editNode(void);
     bool removeNode(const QModelIndex& index);
@@ -110,6 +112,7 @@ private:
     void updateActions();
     GCSensor* selectSensor(void);
     void processIncomingGMessage(const GMessage& m);
+    void processCANDiscoveryMessage(const GMessage& m);
 
 
 
@@ -139,6 +142,10 @@ private:
     QFile* dataFile = nullptr;
     QDataStream* dataStream = nullptr;
 
+    /*
+     * Timer for auto discovery
+     */
+    QTimer* discoveryTimer;
 };
 
 #endif // GLOXINIACONFIGURATOR_H

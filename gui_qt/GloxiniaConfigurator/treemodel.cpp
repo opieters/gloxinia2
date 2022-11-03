@@ -413,3 +413,20 @@ QStringList TreeModel::toTextConfig(void)
     return textConfig;
 }
 
+bool TreeModel::checkUniqueNodeID(int id)
+{
+    if(rootItem == nullptr)
+        return true;
+
+    for(int i = 0; i < rootItem->childCount(); i++){
+        TreeItem* node = rootItem->child(i);
+        GCNode* n = node->data().value<GCNode*>();
+        if(n == nullptr)
+            return false;
+        if(id == n->getID()){
+            return false;
+        }
+    }
+
+    return true;
+}

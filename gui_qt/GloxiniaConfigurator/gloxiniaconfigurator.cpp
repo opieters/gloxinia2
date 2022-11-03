@@ -52,12 +52,14 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     connect(ui->actionEditSensor, &QAction::triggered, this, &GloxiniaConfigurator::editSensor);
     connect(ui->actionDelete, &QAction::triggered, this, &GloxiniaConfigurator::removeItems);
     connect(ui->actionPreferences, &QAction::triggered, this, &GloxiniaConfigurator::preferencesMenu);
+    connect(ui->actionRunDiscovery, &QAction::triggered, this, &GloxiniaConfigurator::runDiscovery);
 
     // connect System menu to functions
     connect(ui->actionConnect, &QAction::triggered, this, &GloxiniaConfigurator::openSerialPort);
     //connect(ui->actionUpdate, &QAction::triggered, this, &GloxiniaConfigurator::);
     connect(ui->actionDisconnect, &QAction::triggered, this, &GloxiniaConfigurator::closeSerialPort);
     connect(ui->actionConfigure, &QAction::triggered, systemSettings, &SettingsDialog::show);
+    connect(ui->actionRefreshPorts, &QAction::triggered, this, &GloxiniaConfigurator::updateSerialPortList);
     updateSerialPortList();
 
 
@@ -79,7 +81,7 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     /*
      * for debugging, add some default system state
      */
-    QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
+    /*QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
     this->treeModel->insertRow(index.row()+1, index.parent());
     QModelIndex child = this->treeModel->index(index.row() + 1, 0, index.parent());
     GCNode* data = new GCNode(0, GCNode::GCDicio, "logger");
@@ -95,7 +97,7 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     this->treeModel->insertRow(index.row()+1, index.parent());
     child = this->treeModel->index(index.row() + 1, 0, index.parent());
     data = new GCNode(0, GCNode::GCDicio, "greenhouse 2");
-    this->treeModel->setData(child, QVariant::fromValue(data), Qt::EditRole);
+    this->treeModel->setData(child, QVariant::fromValue(data), Qt::EditRole);*/
 
     //addNode(new GCNodeModel(GCNodeModel::DicioNode));
     QLineSeries *series = new QLineSeries();
@@ -124,6 +126,9 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     messageModel->insertRow(0);
     QModelIndex mIndex = messageModel->index(0, 0);
     messageModel->setData(mIndex, "Application started.");
+
+    discoveryTimer = new QTimer();
+    connect(discoveryTimer, &QTimer::timeout, this, &GloxiniaConfigurator::runDiscovery);
 }
 
 GloxiniaConfigurator::~GloxiniaConfigurator()
@@ -152,6 +157,9 @@ void GloxiniaConfigurator::openSerialPort()
         /*showStatusMessage(tr("Connected to %1 : %2, %3, %4, %5, %6")
                           .arg(p.name).arg(p.stringBaudRate).arg(p.stringDataBits)
                           .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl));*/
+
+        // TODO make timer run/stop based on settings
+        discoveryTimer->start(30*1000); // run every 30 seconds
     } else {
         QMessageBox::critical(this, tr("Error"), serial->errorString());
 
@@ -161,6 +169,8 @@ void GloxiniaConfigurator::openSerialPort()
 
 void GloxiniaConfigurator::closeSerialPort()
 {
+    discoveryTimer->stop();
+
     if (serial->isOpen()){
         serial->close();
     }
@@ -188,8 +198,9 @@ void GloxiniaConfigurator::readData()
                 }
                 if(data[0] == GMessage::GMessageStartByte){
                     readoutState++;
+                } else {
+                    break;
                 }
-                break;
             case 1:
                 n_read = serial->read(data, 1); // read code
                 if(n_read < 0){
@@ -200,8 +211,9 @@ void GloxiniaConfigurator::readData()
                 if(n_read == 1){
                     // we were able to read code -> read id H
                     readoutState++;
+                } else {
+                    break;
                 }
-                break;
             case 2:
                 n_read = serial->read(&data[1], 1); // read id H
                 if(n_read < 0){
@@ -212,8 +224,9 @@ void GloxiniaConfigurator::readData()
                     // we were able to read -> read id M
                     readoutState++;
                     read_length = 0;
+                } else {
+                    break;
                 }
-                break;
             case 3:
                 n_read = serial->read(&data[1], 1); // read id M
                 if(n_read < 0){
@@ -224,8 +237,9 @@ void GloxiniaConfigurator::readData()
                     // we were able to read -> read id L
                     readoutState++;
                     read_length = 0;
+                } else {
+                    break;
                 }
-                break;
             case 4:
                 n_read = serial->read(&data[2], 1); // read id L
                 if(n_read < 0){
@@ -236,8 +250,9 @@ void GloxiniaConfigurator::readData()
                     // we were able to read -> read length
                     readoutState++;
                     read_length = 0;
+                } else {
+                    break;
                 }
-                break;
             case 5:
                 n_read = serial->read(&data[3], 1); // read length
                 if(n_read < 0){
@@ -249,11 +264,13 @@ void GloxiniaConfigurator::readData()
                     read_length = 0;
                     if(data[3] == 0){
                         readoutState += 2;
+                        break;
                     } else {
                         readoutState++;
                     }
+                } else {
+                    break;
                 }
-                break;
             case 6:
                 n_read = serial->read(&data[4+read_length], data[4]-read_length);
                 if(n_read < 0){
@@ -261,14 +278,17 @@ void GloxiniaConfigurator::readData()
                     return;
                 }
                 read_length += n_read;
-                if(read_length == data[3]){
+                if(read_length == data[4]){
                     readoutState++;
+                } else {
+                    break;
                 }
-                break;
             case 7:
                 n_read = serial->read(&data[4+read_length], 1);
                 if(n_read < 0){
                     readoutState = 0;
+                    n_read = 0;
+                    read_length = 0;
                     return;
                 }
                 if(n_read == 1) {
@@ -286,6 +306,11 @@ void GloxiniaConfigurator::readData()
                         // incorrect data byte received -> reset state
                     }
                     readoutState = 0;
+                    n_read = 0;
+                    read_length = 0;
+                    break;
+                } else {
+                    break;
                 }
 
                 break;
@@ -295,10 +320,34 @@ void GloxiniaConfigurator::readData()
         }
     } while(n_read > 0);
 }
+void GloxiniaConfigurator::processCANDiscoveryMessage(const GMessage& m)
+{
+    qInfo() << "Received discovery message";
+
+    if(treeModel->checkUniqueNodeID(m.getMessageID()))
+    {
+        QModelIndex index = QModelIndex();
+        bool success = this->treeModel->insertRow(treeModel->rowCount(), index);
+        QModelIndex child = this->treeModel->index(treeModel->rowCount()-1, 0, index);
+        // TODO: handle different types of nodes
+        GCNode* data = new GCNode(m.getMessageID(), GCNode::GCDicio, "unlabeled node");
+        this->treeModel->setData(child, QVariant::fromValue(data), Qt::EditRole);
+    }
+}
 
 void GloxiniaConfigurator::processIncomingGMessage(const GMessage& m)
 {
     switch(m.getCode()){
+    case GMessage::Code::CAN_REQUEST_ADDRESS_AVAILABLE:
+        break;
+    case GMessage::Code::CAN_ADDRESS_TAKEN:
+        break;
+    case GMessage::Code::CAN_UPDATE_ADDRESS:
+        break;
+    case GMessage::Code::CAN_DISCOVERY:
+        // check if node exists, if not create one and add to model
+        processCANDiscoveryMessage(m);
+        break;
     case GMessage::Code::startMeasurement:
     case GMessage::Code::stopMeasurement:
     case GMessage::Code::activate_sensor:
@@ -333,10 +382,18 @@ void GloxiniaConfigurator::processIncomingGMessage(const GMessage& m)
         // LOG unknown message to log;
         break;
     }
+
+    messageModel->insertRow(0);
+    QModelIndex mIndex = messageModel->index(0, 0);
+    messageModel->setData(mIndex, m.toLogString());
+
+    qInfo() << "Processing" << m.toString();
 }
 
 void GloxiniaConfigurator::updateSerialPortList(void)
 {
+    // TODO: add sort items
+
     auto list = QSerialPortInfo::availablePorts();
 
     // remove items
@@ -387,12 +444,13 @@ void GloxiniaConfigurator::setSerialPort(void)
         for(QAction* i : serialPortActionList){
             if(i != button){
                 i->setChecked(false);
+            } else {
+                i->setChecked(true);
             }
         }
 
         // update configuration and the connected port
-        // TODO: check if this yields the correct name
-        serialPortName = button->objectName();
+        serialPortName = button->text();
     }
 }
 
@@ -465,6 +523,16 @@ QString GloxiniaConfigurator::getSensorLabel(GCSensor* s){
 
     return label;
 }*/
+
+void GloxiniaConfigurator::runDiscovery()
+{
+    qInfo() << "Running discovery broadcast";
+
+    GMessage m(GMessage::Code::CAN_DISCOVERY, 0, 0);
+    char rawData[32];
+    unsigned int length = m.toBytes(rawData, 32);
+    serial->write(rawData, length);
+}
 
 void GloxiniaConfigurator::addNode()
 {

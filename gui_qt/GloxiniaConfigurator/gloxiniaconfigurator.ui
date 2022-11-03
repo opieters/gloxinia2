@@ -33,7 +33,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -51,6 +51,7 @@
     <property name="title">
      <string>Edit</string>
     </property>
+    <addaction name="actionRunDiscovery"/>
     <addaction name="actionAddNode"/>
     <addaction name="actionEditNode"/>
     <addaction name="actionAddSensor"/>
@@ -72,6 +73,7 @@
     <addaction name="actionUpdate"/>
     <addaction name="actionDisconnect"/>
     <addaction name="actionConfigure"/>
+    <addaction name="actionRefreshPorts"/>
     <addaction name="menuPortSelection"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -158,6 +160,16 @@
   <action name="actionSelectDataFile">
    <property name="text">
     <string>Select Data File</string>
+   </property>
+  </action>
+  <action name="actionRefreshPorts">
+   <property name="text">
+    <string>Refresh Ports</string>
+   </property>
+  </action>
+  <action name="actionRunDiscovery">
+   <property name="text">
+    <string>Run discovery</string>
    </property>
   </action>
  </widget>

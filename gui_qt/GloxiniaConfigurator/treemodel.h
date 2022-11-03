@@ -36,6 +36,8 @@ public:
     QStringList toTextConfig(void);
     bool fromTextConfig(const QStringList& config);
 
+    bool checkUniqueNodeID(int id);
+
 private:
     void setupModelData(const QStringList &lines, TreeItem *parent);
     void loadFile(const QStringList &lines, TreeItem *parent);
