@@ -186,7 +186,7 @@ void can_init_dma_channel(void){
     DMA2CONbits.MODE = 0x0; // Operating Mode: Continuous, Ping-Pong modes disabled
     DMA2REQ = 0b00100010; // select RX data ready as IRQ
     DMA2CNT = 7; // 8 DMA Transfers per ECAN message
-    DMA2PAD = (volatile unsigned int)&C1RXD; // ECAN transmit register
+    DMA2PAD = (volatile unsigned int)&C1RXD; // ECAN receive register
     
     // data source to be transferred
     DMA2STAL = (unsigned int) &ecan_message_buffer;
@@ -317,9 +317,17 @@ can_status_t can_send_message_any_ch(can_message_t* m){
     return sent_status;
 }
 
-void can_process_node_message(){
+static void check_address_match(can_message_t* m){
+    if(m->identifier == controller_address){
+        can_message_t rm;
+        can_init_message(&rm, controller_address, CAN_NO_REMOTE_FRAME, CAN_EXTENDED_FRAME, CAN_HEADER(CAN_ADDRESS_TAKEN, 0), NULL, 0);
+        can_send_message_any_ch(&rm);
+    }
+}
+
+inline void can_process_message(){
     can_message_t can_message;
-    uint8_t received_can_data[CAN_MAX_N_BYTES];
+    uint8_t received_can_data[CAN_MAX_N_BYTES], cmd, id;
     can_message.data = received_can_data;
     
     if((C1RXFUL2 > 0) || (C1RXFUL1 > 0)){
@@ -327,158 +335,162 @@ void can_process_node_message(){
         // read and parse message
         can_parse_message(&can_message, ecan_message_buffer[C1FIFObits.FNRB]);
         
+        cmd = (can_cmd_t) CAN_EXTRACT_HEADER_CMD(can_message.extended_identifier);
+        id = CAN_EXTRACT_HEADER_ID(can_message.extended_identifier);
+        
         if(C1FIFObits.FNRB >= 16){
             C1RXFUL2 = C1RXFUL2 & (~(1<<(C1FIFObits.FNRB - 16)));
         } else {
             C1RXFUL1 = C1RXFUL1 & (~(1<<(C1FIFObits.FNRB)));
         }
         
-        if (can_message.data_length >= 1U){
-#ifdef __DEBUG__
-            sprintf(print_buffer, "Received CAN message %d.", can_message.data[0]);
-            uart_print(print_buffer, strlen(print_buffer));
-#endif
-            switch(can_message.data[0]){
-                case CAN_INFO_MSG_TEXT:
-                    break;                    
-                case CAN_INFO_MSG_START_MEAS:
-#ifdef __LOG__
-                    sprintf(print_buffer, "Starting measurements.");
-                    uart_print(print_buffer, strlen(print_buffer));
-#endif
-                    //sensor_setup_mode = 0;
-                    // TODO: fix
-                    //schedule_i2c_sensors();
-                    break;
-                case CAN_INFO_MSG_STOP_MEAS:
-                    // TODO go into sleep mode?
-                    break;
-                case CAN_INFO_MSG_RESET: 
-                {
-                    uint8_t reset_device = 0;
-                    if(can_message.data_length == 2U){
-                        if(can_message.data[1] == controller_address){
-                            reset_device = 1;
-                        }
-                    } else {
-                        reset_device = 1;
-                    } 
-                    if(reset_device){
-#ifdef __DEBUG__
-                        sprintf(print_buffer, "Resetting...");
-                        uart_print(print_buffer, strlen(print_buffer));       
-#endif 
-                        delay_us(10);
-                        asm ("RESET");
-                    }
-                    break; 
+        switch(cmd){
+            case CAN_REQUEST_ADDRESS_AVAILABLE:
+                check_address_match(&can_message);
+                break;
+            case CAN_ADDRESS_TAKEN:
+                if(controller_address == can_message.identifier){
+                    controller_address = 0;
                 }
-                case CAN_MSG_SENSOR_STATUS:
-                    /*if(sensor_setup_mode && (can_message.data_length == 4)){
-                        sensor_type_t sensor_type = (sensor_type_t) can_message.data[1];
-                        uint8_t sensor_id = can_message.data[2];
-                        sensor_state_t sensor_state = (sensor_state_t) can_message.data[3];
-                        uint8_t update_status = 0;
-                        sensor_state_t* active_sensors_list;
-                        
-                        switch(sensor_type){
-                            case sensor_type_sht35:
-                                if(sensor_id < N_SENSOR_SHT35){
-                                    // TODO: fix
-                                    //active_sensors_list = active_sensors_sht35;
-                                    update_status = 1;
-                                }
-                                break;
-                            case sensor_type_bh1721fvc:
-                                if(sensor_id < N_SENSOR_BH1721){
-                                   //active_sensors_list = active_sensors_bh1721fvc;
-                                    update_status = 1;
-                                }
-                                break;
-                            case sensor_type_opt3001q1:
-                                if(sensor_id < N_SENSOR_OPT3001_Q1){
-                                    //active_sensors_list = active_sensors_opt3001_q1;
-                                    update_status = 1;
-                                }
-                                break;
-                            case sensor_type_apds9301:
-                                if(sensor_id < N_SENSOR_APDS9301){
-                                    //active_sensors_list = active_sensors_apds_9301;
-                                    update_status = 1;
-                                }
-                                break;
-                            case sensor_type_lia:
-                                if(sensor_id < N_SENSOR_LIA){
-                                    //TODO: fix
-                                    //active_sensors_list = active_sensors_lia;
-                                    update_status = 1;
-                                }
-                                break;
+                break;
+            case CAN_UPDATE_ADDRESS:
+                if((can_message.identifier == controller_address) && (can_message.data_length == 2)){
+                    set_device_address((can_message.data[0] << 8) | can_message.data[1]);
+                }
+                break;
+            case CAN_INFO_MSG_TEXT:
+                break;                    
+            case CAN_INFO_MSG_START_MEAS:
+#ifdef __LOG__
+                sprintf(print_buffer, "Starting measurements.");
+                uart_print(print_buffer, strlen(print_buffer));
+#endif
+                //sensor_setup_mode = 0;
+                // TODO: fix
+                //schedule_i2c_sensors();
+                break;
+            case CAN_INFO_MSG_STOP_MEAS:
+                // TODO go into sleep mode?
+                break;
+            case CAN_INFO_MSG_RESET: 
+            {
+                uint8_t reset_device = 0;
+                if(can_message.data_length == 2U){
+                    if(can_message.data[1] == controller_address){
+                        reset_device = 1;
+                    }
+                } else {
+                    reset_device = 1;
+                } 
+                if(reset_device){
+#ifdef __DEBUG__
+                    sprintf(print_buffer, "Resetting...");
+                    uart_print(print_buffer, strlen(print_buffer));       
+#endif 
+                    delay_us(10);
+                    asm ("RESET");
+                }
+                break; 
+            }
+            case CAN_MSG_SENSOR_STATUS:
+                /*if(sensor_setup_mode && (can_message.data_length == 4)){
+                    sensor_type_t sensor_type = (sensor_type_t) can_message.data[1];
+                    uint8_t sensor_id = can_message.data[2];
+                    sensor_state_t sensor_state = (sensor_state_t) can_message.data[3];
+                    uint8_t update_status = 0;
+                    sensor_state_t* active_sensors_list;
+
+                    switch(sensor_type){
+                        case sensor_type_sht35:
+                            if(sensor_id < N_SENSOR_SHT35){
+                                // TODO: fix
+                                //active_sensors_list = active_sensors_sht35;
+                                update_status = 1;
+                            }
+                            break;
+                        case sensor_type_bh1721fvc:
+                            if(sensor_id < N_SENSOR_BH1721){
+                               //active_sensors_list = active_sensors_bh1721fvc;
+                                update_status = 1;
+                            }
+                            break;
+                        case sensor_type_opt3001q1:
+                            if(sensor_id < N_SENSOR_OPT3001_Q1){
+                                //active_sensors_list = active_sensors_opt3001_q1;
+                                update_status = 1;
+                            }
+                            break;
+                        case sensor_type_apds9301:
+                            if(sensor_id < N_SENSOR_APDS9301){
+                                //active_sensors_list = active_sensors_apds_9301;
+                                update_status = 1;
+                            }
+                            break;
+                        case sensor_type_lia:
+                            if(sensor_id < N_SENSOR_LIA){
+                                //TODO: fix
+                                //active_sensors_list = active_sensors_lia;
+                                update_status = 1;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+
+                    if(update_status){
+                        switch(sensor_state) {
+                            case sensor_inactive:
+                                active_sensors_list[sensor_id] = sensor_inactive;
+                            case sensor_idle:
+                                active_sensors_list[sensor_id] = sensor_idle;
                             default:
                                 break;
                         }
-                        
-                        if(update_status){
-                            switch(sensor_state) {
-                                case sensor_inactive:
-                                    active_sensors_list[sensor_id] = sensor_inactive;
-                                case sensor_idle:
-                                    active_sensors_list[sensor_id] = sensor_idle;
-                                default:
-                                    break;
-                            }
-                        }
-                    }*/
-                    break;
-                case CAN_INFO_MSG_ACTUATOR_STATUS:
-                    // TODO
-                    break;
-                case CAN_INFO_MSG_INIT_SENSORS:
-                    __init_sensors = 1;
-                    break;
-                case CAN_INFO_MSG_SAMPLE:
-                    //sample_sensors = 1;
-                    break;
-                case CAN_INFO_MSG_INT_ADC:
-                    break;
-                case CAN_INFO_MSG_INIT_DAC:
-                    break;
-                case CAN_INFO_MSG_SCHEDULE_I2C:
-                    break;
-                case CAN_INFO_MSG_HELLO:
-#ifdef __LOG__
-                    sprintf(print_buffer, "Sending HELLO message.");
-                    uart_print(print_buffer, strlen(print_buffer));
-#endif
-                {
-                    can_message_t can_hello;
-                    uint8_t hello_data[1] = {CAN_INFO_MSG_HELLO};
-                    can_hello.data = hello_data;
-                    can_hello.data_length = 1;
-                    can_hello.identifier = controller_address;
-                    can_hello.extended_frame = 0;
-                    can_hello.remote_frame = 0;
-                    can_send_message_any_ch(&can_hello);
-                }
-                    break;
-                case CAN_INFO_LIA_GAIN_SET:
-                    if(can_message.data_length == 4){
-                        if(can_message.data[1] == (controller_address >> 3)){
-                            // TODO
-                            //select_gain_pga113(can_message.data[3]);
-                        }
                     }
-                    break;
-                default:
-                    break;
-            }
-        } else {
-#ifdef __DEBUG__
-            sprintf(print_buffer, "Received CAN message without data.");
-            uart_print(print_buffer, strlen(print_buffer));
+                }*/
+                break;
+            case CAN_INFO_MSG_ACTUATOR_STATUS:
+                // TODO
+                break;
+            case CAN_INFO_MSG_INIT_SENSORS:
+                __init_sensors = 1;
+                break;
+            case CAN_INFO_MSG_SAMPLE:
+                //sample_sensors = 1;
+                break;
+            case CAN_INFO_MSG_INT_ADC:
+                break;
+            case CAN_INFO_MSG_INIT_DAC:
+                break;
+            case CAN_INFO_MSG_SCHEDULE_I2C:
+                break;
+            case CAN_INFO_MSG_HELLO:
+#ifdef __LOG__
+                sprintf(print_buffer, "Sending HELLO message.");
+                uart_print(print_buffer, strlen(print_buffer));
 #endif
+            {
+                can_message_t can_hello;
+                uint8_t hello_data[1] = {CAN_INFO_MSG_HELLO};
+                can_hello.data = hello_data;
+                can_hello.data_length = 1;
+                can_hello.identifier = controller_address;
+                can_hello.extended_frame = 0;
+                can_hello.remote_frame = 0;
+                can_send_message_any_ch(&can_hello);
+            }
+                break;
+            case CAN_INFO_LIA_GAIN_SET:
+                if(can_message.data_length == 4){
+                    if(can_message.data[1] == (controller_address >> 3)){
+                        // TODO
+                        //select_gain_pga113(can_message.data[3]);
+                    }
+                }
+                break;
+            default:
+                break;
         }
-
         // clear buffer
 
         if(C1FIFObits.FBP == C1FIFObits.FNRB){

@@ -20,6 +20,8 @@
 #define CAN_MAX_N_BYTES 8U 
 
 #define CAN_HEADER(cmd, id) (((((uint16_t) (cmd)) & 0xFFU) << 8) | (((uint16_t) (id)) &  0xFFU)) 
+#define CAN_EXTRACT_HEADER_CMD(x) ((uint8_t) (((x) >> 8) & 0xFFU))
+#define CAN_EXTRACT_HEADER_ID(x) ((uint8_t) ((x) & 0xFFU));
 #define CAN_NO_REMOTE_FRAME 0
 #define CAN_REMOTE_FRAME 1
 #define CAN_EXTENDED_FRAME 1
@@ -50,16 +52,20 @@ extern "C" {
     
     /**
      * @brief Possible commands that can be used to exchange information over
-     * the CAN bus that is not sensor data.s
+     * the CAN bus
      */
     
     typedef enum {
-        NO_CAN_CMD                      = 0x00,
-        CAN_DATA_CMD_APDS9301           = 0x01,
-        CAN_DATA_CMD_OPT3001Q1          = 0x02,
-        CAN_DATA_CMD_BH1721FVC          = 0x03,
-        CAN_DATA_CMD_APDS9306           = 0x04,
-        CAN_DATA_CMD_SHT35              = 0x05,
+        NO_CAN_CMD                      = 0x00, // dummy code, not used for now
+        CAN_REQUEST_ADDRESS_AVAILABLE   = 0x01, // check if CAN identifier is already taken. If not, use this identifier as identifier
+        CAN_ADDRESS_TAKEN               = 0x02, // response message when identifier is already taken
+        CAN_UPDATE_ADDRESS              = 0x03, // change the CAN identifier to a new value. Requester must guarantee that the value is not yet taken
+        CAN_DISCOVERY                   = 0x04, // discovery message that is used to identify all nodes in the system
+        CAN_DATA_CMD_APDS9301           = 0x41,
+        CAN_DATA_CMD_OPT3001Q1          = 0x42,
+        CAN_DATA_CMD_BH1721FVC          = 0x43,
+        CAN_DATA_CMD_APDS9306           = 0x44,
+        CAN_DATA_CMD_SHT35              = 0x45,
         CAN_DATA_CMD_SYLVATICA          = 0x06,
         CAN_DATA_CMD_PLANALTA           = 0x07,
         CAN_DATA_CMD_LICOR              = 0x08,
@@ -157,7 +163,7 @@ extern "C" {
     __attribute__((always_inline)) can_status_t can_send_message(can_message_t* message, uint8_t channel);
     can_status_t can_send_message_any_ch(can_message_t* m);
     
-    void can_process_node_message(void);
+    void can_process_message(void);
     void can_process_gateway_message(void);
     
     void deactivate_can_bus(void);

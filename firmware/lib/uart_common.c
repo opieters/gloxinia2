@@ -1,7 +1,7 @@
 #include <uart_common.h>
 
 void uart_init_message(uart_message_t* m, 
-        uint8_t command,
+        serial_cmd_t command,
         uint8_t id,
         uint16_t extended_id,            
         uint8_t* data,

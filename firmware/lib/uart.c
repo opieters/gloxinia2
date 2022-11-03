@@ -47,6 +47,8 @@ uint8_t uart_dma_message_data[128];
 uart_message_t uart_rx_queue[UART_RX_BUFFER_SIZE];
 uint8_t uart_rx_buffer[UART_RX_BUFFER_SIZE][PRINT_BUFFER_LENGTH] __attribute__( (space(xmemory)) );
 
+uart_message_t uart_discovery_m;
+
 void uart_log_init( uint32_t baudrate ) { 
 
 #ifdef ENABLE_DEBUG
@@ -182,40 +184,37 @@ void __attribute__ ( (interrupt, no_auto_psv) ) _U2RXInterrupt( void ) {
             m->command = rx_value;
             m->status = UART_MSG_TRANSFERRED;
             
-            if(rx_value < N_SERIAL_CMD) {
-                uart_rx_state = 2;
-            } else {
-                uart_rx_state = 0;
-                m->status = UART_MSG_ERROR;
-                n_uart_rx_messages++;
-            }
-            
+            uart_rx_state = 2;            
             break;
         case 2:
-            m->id = rx_value;
+            m->command = (m->command << 8) | rx_value;
             uart_rx_state = 3;
-            
             break;
         case 3:
-            m->extended_id = rx_value;
+            m->id = rx_value;
             uart_rx_state = 4;
             
             break;
         case 4:
-            m->extended_id = (m->extended_id << 8) + rx_value;
+            m->extended_id = rx_value;
             uart_rx_state = 5;
+            
             break;
         case 5:
+            m->extended_id = (m->extended_id << 8) + rx_value;
+            uart_rx_state = 6;
+            break;
+        case 6:
             m->length = rx_value;
             if(rx_value > 0){
-                uart_rx_state = 6;
+                uart_rx_state = 7;
                 uart_rx_idx = 0;
             } else {
-                uart_rx_state = 7;
+                uart_rx_state = 8;
             }
             
             break;
-        case 6:
+        case 7:
             // only write data until buffer is full
             if(uart_rx_idx < PRINT_BUFFER_LENGTH){
                 m->data[uart_rx_idx] = rx_value;
@@ -227,11 +226,11 @@ void __attribute__ ( (interrupt, no_auto_psv) ) _U2RXInterrupt( void ) {
             uart_rx_idx++;
             
             if(uart_rx_idx == m->length){
-                uart_rx_state = 7;
+                uart_rx_state = 8;
             }
             
             break;
-        case 7:
+        case 8:
             if(rx_value == UART_CMD_STOP){
                 if(m->status != UART_MSG_ERROR){
                     m->status = UART_MSG_RECEIVED;
@@ -347,6 +346,10 @@ void uart_await_tx(uart_message_t* m){
     while(m->status != UART_MSG_SENT);
 }
 
+void serial_can_update_address_cb(void){
+    // TODO
+}
+
 void uart_rx_callback(){
     can_message_t can_m;
     uint8_t can_data[CAN_MAX_N_BYTES], sensor_index;
@@ -368,6 +371,22 @@ void uart_rx_callback(){
             CAN_NO_REMOTE_FRAME, CAN_EXTENDED_FRAME, m.extended_id, can_data, 0);
     
     switch(m.command){
+        // these messages cannot be sent from UART
+        case SERIAL_CAN_REQUEST_ADDRESS_AVAILABLE:
+        case SERIAL_CAN_ADDRESS_TAKEN:
+            break;
+        case SERIAL_CAN_UPDATE_ADDRESS:
+            serial_can_update_address_cb();
+            break;
+        case SERIAL_CAN_DISCOVERY:
+            can_init_message(&can_m, m.id, 
+                CAN_NO_REMOTE_FRAME, CAN_EXTENDED_FRAME, CAN_HEADER(CAN_DISCOVERY, 0), can_data, 0);
+            can_send_message_any_ch(&can_m);
+            
+            // send message back over UART with address of this node
+            uart_init_message(&uart_discovery_m, SERIAL_CAN_DISCOVERY, controller_address, 0, NULL, 0);
+            uart_queue_message(&uart_discovery_m);
+            break;
         case SERIAL_START_MEAS_CMD:
             can_m.data_length = 1;
             can_data[0] = CAN_INFO_MSG_START_MEAS;
@@ -489,7 +508,8 @@ void uart_rx_callback(){
             
             // prepare data contents
             can_m.data_length = 1;
-            can_data[0] = SERIAL_HELLO_CMD;
+            can_data[0] = SERIAL_HELLO_CMD >> 8;
+            can_data[0] = SERIAL_HELLO_CMD & 0xff;
             
             // broadcast over bus
             can_send_message_any_ch(&can_m);

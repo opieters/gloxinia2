@@ -24,8 +24,51 @@ typedef enum {
     N_UART_MSG_STATUS_T
 } uart_message_status_t;
 
+typedef enum {
+    // CAN COMMANDS, see CAN documentation
+    
+    SERIAL_CAN_REQUEST_ADDRESS_AVAILABLE   = 0x0001,
+    SERIAL_CAN_ADDRESS_TAKEN               = 0x0002,
+    SERIAL_CAN_UPDATE_ADDRESS              = 0x0003,
+    SERIAL_CAN_DISCOVERY                   = 0x0004,
+    
+    // SERIAL COMMANDS
+    SERIAL_START_MEAS_CMD         = 0x8000,
+    SERIAL_STOP_MEAS_CMD          = 0x8001,
+    SERIAL_SENSOR_ACTIVATE_CMD    = 0x8002,
+    SERIAL_SENSOR_DEACTIVATE_CMD  = 0x8003,
+    SERIAL_RESET_NODE_CMD         = 0x8004,
+    SERIAL_RESET_SYSTEM_CMD       = 0x8005,
+    SERIAL_TEXT_MESSAGE_CMD       = 0x8006,
+    SERIAL_SENSOR_DATA_CMD        = 0x8007,
+    SERIAL_SENSOR_STATUS_CMD      = 0x8008,
+    SERIAL_MEAS_PERIOD_CMD        = 0x8009,
+    SERIAL_ERR_MESSAGE_CMD        = 0x800A,
+    SERIAL_LOOP_MESSAGE_CMD       = 0x800B,
+    SERIAL_ACTUATOR_STATUS        = 0x800C,
+    SERIAL_HELLO_CMD              = 0x800D,
+    SERIAL_INIT_SAMPLING_CMD      = 0x800E,
+    SERIAL_INIT_SENSORS_CMD       = 0x800F,
+    SERIAL_SENSOR_ERROR_CMD       = 0x8010,
+    SERIAL_LIA_GAIN_SET_CMD       = 0x8011,
+    SERIAL_UNKNOWN_CMD            = 0x8012,
+    SERIAL_MEAS_TRIGGER_CMD       = 0x8013,
+    SERIAL_SENSOR_CONFIG_CMD      = 0x8014,
+    SERIAL_ACTUATOR_DATA_CMD      = 0x8015,
+    SERIAL_ACTUATOR_ERROR_CMD     = 0x8016,
+    SERIAL_ACTUATOR_TRIGGER_CMD   = 0x8017,
+    SERIAL_ACTUATOR_GC_TEMP       = 0x8018,
+    SERIAL_ACTUATOR_GC_RH         = 0x8019,
+    SERIAL_START_INIT             = 0x801A,
+    SERIAL_ACTUATOR_RELAY         = 0x801B,
+    SERIAL_SENSOR_ACTUATOR_ENABLE = 0x801C,
+    SERIAL_ACTUATOR_RELAY_NOW     = 0x801D,
+    SERIAL_ACTUATOR_STATUS_CMD    = 0x801E,
+    N_SERIAL_CMD                  = 0x801F,
+} serial_cmd_t;
+
 typedef struct {
-    uint8_t command;
+    serial_cmd_t command;
     uint8_t id;
     uint16_t extended_id;            
     uint16_t length;
@@ -33,48 +76,12 @@ typedef struct {
     volatile uart_message_status_t status;
 } uart_message_t;
 
-typedef enum {
-    SERIAL_START_MEAS_CMD         = 0x00,
-    SERIAL_STOP_MEAS_CMD          = 0x01,
-    SERIAL_SENSOR_ACTIVATE_CMD    = 0x02,
-    SERIAL_SENSOR_DEACTIVATE_CMD  = 0x03,
-    SERIAL_RESET_NODE_CMD         = 0x04,
-    SERIAL_RESET_SYSTEM_CMD       = 0x05,
-    SERIAL_TEXT_MESSAGE_CMD       = 0x06,
-    SERIAL_SENSOR_DATA_CMD        = 0x07,
-    SERIAL_SENSOR_STATUS_CMD      = 0x08,
-    SERIAL_MEAS_PERIOD_CMD        = 0x09,
-    SERIAL_ERR_MESSAGE_CMD        = 0x0A,
-    SERIAL_LOOP_MESSAGE_CMD       = 0x0B,
-    SERIAL_ACTUATOR_STATUS        = 0x0C,
-    SERIAL_HELLO_CMD              = 0x0D,
-    SERIAL_INIT_SAMPLING_CMD      = 0x0E,
-    SERIAL_INIT_SENSORS_CMD       = 0x0F,
-    SERIAL_SENSOR_ERROR_CMD       = 0x10,
-    SERIAL_LIA_GAIN_SET_CMD       = 0x11,
-    SERIAL_UNKNOWN_CMD            = 0x12,
-    SERIAL_MEAS_TRIGGER_CMD       = 0x13,
-    SERIAL_SENSOR_CONFIG_CMD      = 0x14,
-    SERIAL_ACTUATOR_DATA_CMD      = 0x15,
-    SERIAL_ACTUATOR_ERROR_CMD     = 0x16,
-    SERIAL_ACTUATOR_TRIGGER_CMD   = 0x17,
-    SERIAL_ACTUATOR_GC_TEMP       = 0x18,
-    SERIAL_ACTUATOR_GC_RH         = 0x19,
-    SERIAL_START_INIT             = 0x1A,
-    SERIAL_ACTUATOR_RELAY         = 0x1B,
-    SERIAL_SENSOR_ACTUATOR_ENABLE = 0x1C,
-    SERIAL_ACTUATOR_RELAY_NOW     = 0x1D,
-    SERIAL_ACTUATOR_STATUS_CMD    = 0x1E,
-    N_SERIAL_CMD                  = 0x1F,
-} serial_cmd_t;
-
-
 #ifdef	__cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
     void uart_init_message(uart_message_t* m, 
-            uint8_t command,
+            serial_cmd_t command,
             uint8_t id,
             uint16_t extended_id,            
             uint8_t* data,

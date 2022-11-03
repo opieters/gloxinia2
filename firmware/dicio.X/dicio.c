@@ -635,14 +635,6 @@ void dicio_init(void){
     i2c2_init(&config.i2c_config[1]);
     
     #ifdef ENABLE_DEBUG        
-        sprintf(print_buffer, "Initialising device address.");
-        uart_print(print_buffer, strlen(print_buffer));
-    #endif
-    get_device_address();
-    sprintf(print_buffer, "Initialised device address to 0x%x.", controller_address);
-    uart_print(print_buffer, strlen(print_buffer));
-    
-    #ifdef ENABLE_DEBUG        
         sprintf(print_buffer, "Initialising ECAN.");
         uart_print(print_buffer, strlen(print_buffer));
     #endif
@@ -653,6 +645,15 @@ void dicio_init(void){
         uart_print(print_buffer, strlen(print_buffer));
     #endif
     detect_can_devices();
+
+    
+    #ifdef ENABLE_DEBUG        
+    sprintf(print_buffer, "Initialising device address.");
+    uart_print(print_buffer, strlen(print_buffer));
+    #endif
+    get_device_address();
+    sprintf(print_buffer, "Initialised device address to 0x%x.", controller_address);
+    uart_print(print_buffer, strlen(print_buffer));
     
     if(controller_address == 0){
         _TRISD0 = 0;
@@ -662,6 +663,8 @@ void dicio_init(void){
         _TRISD0 = 1;
         init_sample_detection();
     }
+    
+    
 }
 
 void dicio_loop(void){

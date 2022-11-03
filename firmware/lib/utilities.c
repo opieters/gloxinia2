@@ -9,6 +9,7 @@
 #include <xc.h>
 #include <utilities.h>
 #include <uart.h>
+#include <can.h>
 
 char print_buffer[PRINT_BUFFER_LENGTH];
 
@@ -28,6 +29,8 @@ void delay_us(uint16_t delay){ //delay x us
 void delay_ms(uint16_t delay){
     while(delay--) {
         delay_us(1000);
+        can_process_message();
+        
     }
 }
 

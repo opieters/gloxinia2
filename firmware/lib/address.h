@@ -13,6 +13,7 @@
 #include <xc.h>
 #include <utilities.h>
 #include <i2c.h>
+#include <stdint.h>
 
 #ifdef	__cplusplus
 extern "C" {
@@ -23,6 +24,8 @@ extern "C" {
     extern volatile uint16_t controller_address;
     
     void get_device_address(void);
+    void set_device_address(uint16_t address);
+    
     
 
 
