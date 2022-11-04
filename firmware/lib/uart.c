@@ -119,7 +119,7 @@ void uart_log_init( uint32_t baudrate ) {
 #endif
     
     uart_init_message(&uart_print_message, 
-            0x06,
+            SERIAL_TEXT_MESSAGE_CMD,
             0,
             0,            
             uart_print_message_data,
@@ -326,18 +326,19 @@ void __attribute__((__interrupt__,no_auto_psv)) _DMA14Interrupt(void){
 void uart_parse_to_buffer(uint8_t* data, uart_message_t* m, const size_t max_length){
     uint16_t i;
     
-    m->length = MIN(m->length, max_length-6-1);
+    m->length = MIN(m->length, max_length-8);
     
     data[0] = UART_CMD_START;
-    data[1] = (uint16_t) m->command;
-    data[2] = m->id;
-    data[3] = (uint8_t) (m->extended_id >> 8);
-    data[4] = (uint8_t) m->extended_id;
-    data[5] = (uint8_t) m->length;
+    data[1] = (uint8_t) (m->command >> 8);
+    data[2] = (uint8_t) m->command;
+    data[3] = m->id;
+    data[4] = (uint8_t) (m->extended_id >> 8);
+    data[5] = (uint8_t) m->extended_id;
+    data[6] = (uint8_t) m->length;
     for(i = 0; i < m->length; i++){
-        data[6+i] = m->data[i];
+        data[7+i] = m->data[i];
     }
-    data[6+m->length] = UART_CMD_STOP;
+    data[7+m->length] = UART_CMD_STOP;
 }
 
 

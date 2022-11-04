@@ -13,6 +13,7 @@
 #include <xc.h>
 #include <stdint.h>
 #include "utilities.h"
+#include <uart.h>
 
 /**
  * @brief Maximum number of bytes that can be sent in a single CAN message.
@@ -21,7 +22,7 @@
 
 #define CAN_HEADER(cmd, id) (((((uint16_t) (cmd)) & 0xFFU) << 8) | (((uint16_t) (id)) &  0xFFU)) 
 #define CAN_EXTRACT_HEADER_CMD(x) ((uint8_t) (((x) >> 8) & 0xFFU))
-#define CAN_EXTRACT_HEADER_ID(x) ((uint8_t) ((x) & 0xFFU));
+#define CAN_EXTRACT_HEADER_ID(x) ((uint8_t) ((x) & 0xFFU))
 #define CAN_NO_REMOTE_FRAME 0
 #define CAN_REMOTE_FRAME 1
 #define CAN_EXTENDED_FRAME 1
@@ -60,7 +61,7 @@ extern "C" {
         CAN_REQUEST_ADDRESS_AVAILABLE   = 0x01, // check if CAN identifier is already taken. If not, use this identifier as identifier
         CAN_ADDRESS_TAKEN               = 0x02, // response message when identifier is already taken
         CAN_UPDATE_ADDRESS              = 0x03, // change the CAN identifier to a new value. Requester must guarantee that the value is not yet taken
-        CAN_DISCOVERY                   = 0x04, // discovery message that is used to identify all nodes in the system
+        CAN_DISCOVERY                   = 0x05, // discovery message that is used to identify all nodes in the system
         CAN_DATA_CMD_APDS9301           = 0x41,
         CAN_DATA_CMD_OPT3001Q1          = 0x42,
         CAN_DATA_CMD_BH1721FVC          = 0x43,
@@ -169,6 +170,8 @@ extern "C" {
     void deactivate_can_bus(void);
     
     void can_parse_message(can_message_t* m, uint16_t* raw_data);
+    
+    void parse_can_to_uart_message(can_message_t* can_message, uart_message_t* uart_message) ;
     
     void can_init_message(can_message_t* m, 
             uint16_t identifier,

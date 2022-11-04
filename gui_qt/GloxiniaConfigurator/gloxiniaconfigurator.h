@@ -113,6 +113,7 @@ private:
     GCSensor* selectSensor(void);
     void processIncomingGMessage(const GMessage& m);
     void processCANDiscoveryMessage(const GMessage& m);
+    void processTextMessage(const GMessage& m);
 
 
 

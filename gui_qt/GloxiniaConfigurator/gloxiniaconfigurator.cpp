@@ -190,58 +190,80 @@ void GloxiniaConfigurator::readData()
     static char data[255+5];
 
     do {
-        switch(readoutState){
+        switch(readoutState)
+        {
             case 0:
+                qInfo() << "Reading start byte";
                 n_read = serial->read(data, 1);
-                if(n_read != 1){
+                if(n_read != 1)
+                {
                     return;
                 }
-                if(data[0] == GMessage::GMessageStartByte){
+                if(data[0] == GMessage::GMessageStartByte)
+                {
                     readoutState++;
                 } else {
                     break;
                 }
             case 1:
-                n_read = serial->read(data, 1); // read code
+                qInfo() << "Reading command byte H";
+                n_read = serial->read(data, 1); // read code H
                 if(n_read < 0){
                     // an error occurred -> return to initial state
                     readoutState = 0;
                     return;
                 }
                 if(n_read == 1){
-                    // we were able to read code -> read id H
+                    // we were able to read code -> read code L
                     readoutState++;
                 } else {
                     break;
                 }
             case 2:
-                n_read = serial->read(&data[1], 1); // read id H
+                qInfo() << "Reading command byte L";
+                n_read = serial->read(&data[1], 1); // read code L
                 if(n_read < 0){
+                    // an error occurred -> return to initial state
                     readoutState = 0;
                     return;
                 }
                 if(n_read == 1){
-                    // we were able to read -> read id M
+                    // we were able to read code -> read id
                     readoutState++;
-                    read_length = 0;
                 } else {
                     break;
                 }
             case 3:
-                n_read = serial->read(&data[1], 1); // read id M
+                qInfo() << "Reading main id byte";
+                n_read = serial->read(&data[2], 1); // read id
                 if(n_read < 0){
                     readoutState = 0;
                     return;
                 }
                 if(n_read == 1){
-                    // we were able to read -> read id L
+                    // we were able to read -> read id H
                     readoutState++;
                     read_length = 0;
                 } else {
                     break;
                 }
             case 4:
-                n_read = serial->read(&data[2], 1); // read id L
+                qInfo() << "Reading ext id byte H";
+                n_read = serial->read(&data[3], 1); // read ext id H
+                if(n_read < 0){
+                    readoutState = 0;
+                    return;
+                }
+                if(n_read == 1){
+                    // we were able to read -> read ext id L
+                    readoutState++;
+                    read_length = 0;
+                } else {
+                    break;
+                }
+            case 5:
+                qInfo() << "Reading ext id byte L";
+                n_read = serial->read(&data[4], 1); // read ext id L
                 if(n_read < 0){
                     readoutState = 0;
                     return;
@@ -253,8 +275,9 @@ void GloxiniaConfigurator::readData()
                 } else {
                     break;
                 }
-            case 5:
-                n_read = serial->read(&data[3], 1); // read length
+            case 6:
+                qInfo() << "Reading length byte";
+                n_read = serial->read(&data[5], 1); // read length
                 if(n_read < 0){
                     readoutState = 0;
                     return;
@@ -262,7 +285,7 @@ void GloxiniaConfigurator::readData()
                 if(n_read == 1){
                     // we were able to read the length -> read data (if any)
                     read_length = 0;
-                    if(data[3] == 0){
+                    if(data[5] == 0){
                         readoutState += 2;
                         break;
                     } else {
@@ -271,31 +294,44 @@ void GloxiniaConfigurator::readData()
                 } else {
                     break;
                 }
-            case 6:
-                n_read = serial->read(&data[4+read_length], data[4]-read_length);
+            case 7:
+                qInfo() << "Reading data" << (int) data[5] ;
+                n_read = serial->read(&data[6+read_length], data[5]-read_length);
                 if(n_read < 0){
                     readoutState = 0;
                     return;
                 }
                 read_length += n_read;
-                if(read_length == data[4]){
+                if(read_length == data[5]){
                     readoutState++;
                 } else {
                     break;
                 }
-            case 7:
-                n_read = serial->read(&data[4+read_length], 1);
-                if(n_read < 0){
+            case 8:
+                qInfo() << "Reading stop byte";
+                n_read = serial->read(&data[6+read_length], 1);
+                if(n_read < 0)
+                {
+                    qInfo() << "ERROR";
                     readoutState = 0;
-                    n_read = 0;
                     read_length = 0;
                     return;
                 }
-                if(n_read == 1) {
-                    if(data[4+read_length] == GMessage::GMessageStopByte){
-                        GMessage m((GMessage::Code) data[0], data[1], ((uint16_t) data[2] << 8) | data[3], &data[4], read_length);
-
-                        processIncomingGMessage(m);
+                if(n_read == 1)
+                {
+                    qInfo() << "Entire message received";
+                    if(data[6+read_length] == GMessage::GMessageStopByte)
+                    {
+                        quint8* udata = (quint8*) data;
+                        qInfo() << "Processing message";
+                        if(read_length == 0)
+                        {
+                            GMessage m((GMessage::Code) (((uint16_t) udata[0] << 8) | udata[1]), udata[2], ((uint16_t) udata[3] << 8) | udata[4], nullptr, read_length);
+                            processIncomingGMessage(m);
+                        } else {
+                            GMessage m((GMessage::Code) (((uint16_t) udata[0] << 8) | udata[1]), udata[2], ((uint16_t) udata[3] << 8) | udata[4], &udata[6], read_length);
+                            processIncomingGMessage(m);
+                        }
 
                         /*if(model->insertRow(model->rowCount())){
                             QModelIndex index = model->index(model->rowCount() - 1, 0);
@@ -306,10 +342,10 @@ void GloxiniaConfigurator::readData()
                         // incorrect data byte received -> reset state
                     }
                     readoutState = 0;
-                    n_read = 0;
                     read_length = 0;
                     break;
                 } else {
+                    qInfo() << "No data received";
                     break;
                 }
 
@@ -320,6 +356,7 @@ void GloxiniaConfigurator::readData()
         }
     } while(n_read > 0);
 }
+
 void GloxiniaConfigurator::processCANDiscoveryMessage(const GMessage& m)
 {
     qInfo() << "Received discovery message";
@@ -335,6 +372,10 @@ void GloxiniaConfigurator::processCANDiscoveryMessage(const GMessage& m)
     }
 }
 
+void GloxiniaConfigurator::processTextMessage(const GMessage& m)
+{
+}
+
 void GloxiniaConfigurator::processIncomingGMessage(const GMessage& m)
 {
     switch(m.getCode()){
@@ -348,13 +389,15 @@ void GloxiniaConfigurator::processIncomingGMessage(const GMessage& m)
         // check if node exists, if not create one and add to model
         processCANDiscoveryMessage(m);
         break;
+    case GMessage::Code::text_message:
+        processTextMessage(m);
+        break;
     case GMessage::Code::startMeasurement:
     case GMessage::Code::stopMeasurement:
     case GMessage::Code::activate_sensor:
     case GMessage::Code::deactivate_sensor:
     case GMessage::Code::reset_node:
     case GMessage::Code::reset_system:
-    case GMessage::Code::text_message:
     case GMessage::Code::sensor_data:
     case GMessage::Code::sensor_status:
     case GMessage::Code::measurement_period:
@@ -379,8 +422,7 @@ void GloxiniaConfigurator::processIncomingGMessage(const GMessage& m)
     case GMessage::Code::sensor_actuator_enable:
     case GMessage::Code::actuator_relay_now:
     default:
-        // LOG unknown message to log;
-        break;
+    break;
     }
 
     messageModel->insertRow(0);
@@ -529,9 +571,9 @@ void GloxiniaConfigurator::runDiscovery()
     qInfo() << "Running discovery broadcast";
 
     GMessage m(GMessage::Code::CAN_DISCOVERY, 0, 0);
-    char rawData[32];
+    quint8 rawData[32];
     unsigned int length = m.toBytes(rawData, 32);
-    serial->write(rawData, length);
+    serial->write((char*) rawData, length);
 }
 
 void GloxiniaConfigurator::addNode()

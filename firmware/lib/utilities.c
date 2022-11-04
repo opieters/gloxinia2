@@ -1,11 +1,3 @@
-/*
- * File:   utilities.c
- * Author: opieters
- *
- * Created on September 19, 2018, 3:30 PM
- */
-
-
 #include <xc.h>
 #include <utilities.h>
 #include <uart.h>
@@ -29,8 +21,6 @@ void delay_us(uint16_t delay){ //delay x us
 void delay_ms(uint16_t delay){
     while(delay--) {
         delay_us(1000);
-        can_process_message();
-        
     }
 }
 

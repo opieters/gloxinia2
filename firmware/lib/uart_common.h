@@ -9,7 +9,7 @@
 #define UART_CMD_STOP  ('\x04')
 
 #define UART_MESSAGE_BUFFER_LENGTH 64U
-#define UART_HEADER_SIZE 7U
+#define UART_HEADER_SIZE 8U
 
 #define UART_RX_BUFFER_SIZE 4U
 
@@ -30,7 +30,7 @@ typedef enum {
     SERIAL_CAN_REQUEST_ADDRESS_AVAILABLE   = 0x0001,
     SERIAL_CAN_ADDRESS_TAKEN               = 0x0002,
     SERIAL_CAN_UPDATE_ADDRESS              = 0x0003,
-    SERIAL_CAN_DISCOVERY                   = 0x0004,
+    SERIAL_CAN_DISCOVERY                   = 0x0005,
     
     // SERIAL COMMANDS
     SERIAL_START_MEAS_CMD         = 0x8000,

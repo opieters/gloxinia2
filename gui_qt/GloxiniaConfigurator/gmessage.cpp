@@ -2,14 +2,14 @@
 #include <QDateTime>
 
 
-GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, char* data, uint64_t size):
+GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, quint8* data, uint64_t size):
     code(code),
     messageID(messageID),
     sensorID(sensorID)
 {
-    this->data = std::vector<char>(data, data+size);
+    this->data = std::vector<quint8>(data, data+size);
 }
-GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, std::vector<char> data):
+GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, std::vector<quint8> data):
     code(code),
     messageID(messageID),
     sensorID(sensorID),
@@ -18,7 +18,7 @@ GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, st
 
 }
 
-int GMessage::toBytes(char* data, unsigned int maxLength) const
+int GMessage::toBytes(quint8* data, unsigned int maxLength) const
 {
     if(maxLength < (headerSize +this->data.size())){
         return -1;
@@ -27,8 +27,8 @@ int GMessage::toBytes(char* data, unsigned int maxLength) const
 
     data[0] = GMessage::GMessageStartByte;
     data[headerSize + this->data.size() - 1] = GMessage::GMessageStopByte;
-    data[1] = (char) (cmd >> 8);
-    data[2] = (char) cmd;
+    data[1] = (quint8) (cmd >> 8);
+    data[2] = (quint8) cmd;
     data[3] = messageID;
     data[4] = sensorID >> 8;
     data[5] = sensorID & 0xff;
@@ -42,7 +42,7 @@ int GMessage::toBytes(char* data, unsigned int maxLength) const
 
 QString GMessage::toString() const{
     QString formattedData;
-    for(char i : data)
+    for(quint8 i : data)
     {
         formattedData.append(QStringLiteral("%1").arg(i, 2, 16, QLatin1Char('0')) + " ");
     }
@@ -161,7 +161,7 @@ QString GMessage::codeToString(GMessage::Code code)
             return "actuator relay now";
             break;
         default:
-            return "unknown";
+            return "unknown (" + QString::number((int) code, 16) + ")";
             break;
     }
 }
@@ -184,9 +184,9 @@ quint16 GMessage::getSensorID(void) const
 {
     return sensorID;
 }
-std::vector<char> GMessage::getData(void) const
+std::vector<quint8> GMessage::getData(void) const
 {
-    return std::vector<char>(data);
+    return std::vector<quint8>(data);
 }
 
 
@@ -194,9 +194,15 @@ QString GMessage::toLogString() const
 {
     QString formattedData;
     QString cTime = QDateTime::currentDateTime().toString("hh:mm:ss");
-    for(char i : data)
+    if(code == text_message)
     {
-        formattedData.append(QStringLiteral("%1").arg(i, 2, 16, QLatin1Char('0')) + " ");
+        std::string s(data.begin(), data.end());
+        formattedData = QString::fromStdString(s);
+    } else {
+        for(quint8 i : data)
+        {
+            formattedData.append(QStringLiteral("%1").arg(i, 2, 16, QLatin1Char('0')) + " ");
+        }
     }
     return "[" + cTime + "] (" + QString::number(messageID) + ", " + QString::number(sensorID) + ") " + GMessage::codeToString(code) + " " + formattedData;
 }

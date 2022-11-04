@@ -18,7 +18,7 @@ public:
         CAN_REQUEST_ADDRESS_AVAILABLE   = 0x0001,
         CAN_ADDRESS_TAKEN               = 0x0002,
         CAN_UPDATE_ADDRESS              = 0x0003,
-        CAN_DISCOVERY                   = 0x0004,
+        CAN_DISCOVERY                   = 0x0005,
 
         // UART-only codes start with MSB set
         startMeasurement       = 0x8000,
@@ -57,15 +57,15 @@ public:
     static constexpr uint8_t GMessageStopByte  = 0x04;
     static constexpr uint8_t headerSize = 8;
 
-    GMessage(GMessage::Code code, quint8 messegaID, quint16 sensorID, char* data = nullptr, uint64_t size = 0);
-    GMessage(GMessage::Code code, quint8 messegaID, quint16 sensorID, std::vector<char> data);
+    GMessage(GMessage::Code code, quint8 messegaID, quint16 sensorID, quint8* data = nullptr, uint64_t size = 0);
+    GMessage(GMessage::Code code, quint8 messegaID, quint16 sensorID, std::vector<quint8> data);
 
-    int toBytes(char* data, unsigned int maxLength) const;
+    int toBytes(quint8* data, unsigned int maxLength) const;
 
     GMessage::Code getCode(void) const;
     quint8 getMessageID(void) const;
     quint16 getSensorID(void) const;
-    std::vector<char> getData(void) const;
+    std::vector<quint8> getData(void) const;
 
     friend std::ostream& operator << ( std::ostream& outs, const GMessage & m );
 
@@ -77,7 +77,7 @@ public:
 
 private:
     GMessage::Code code;
-    std::vector<char> data;
+    std::vector<quint8> data;
 
     quint8 messageID;
     quint16 sensorID;

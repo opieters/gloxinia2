@@ -538,7 +538,7 @@ void detect_can_devices(void){
         uart_print(print_buffer, strlen(print_buffer));
         #endif
 
-        can_disable();
+        //can_disable();
     } else {
         n_connected_can_devices = 1;
         
@@ -646,6 +646,14 @@ void dicio_init(void){
     #endif
     detect_can_devices();
 
+    /*if(controller_address == 0){
+        _TRISD0 = 0;
+        _RP64R = _RPOUT_OC2;
+        init_trigger_generation();
+    } else {
+        _TRISD0 = 1;
+        init_sample_detection();
+    }*/
     
     #ifdef ENABLE_DEBUG        
     sprintf(print_buffer, "Initialising device address.");
@@ -654,17 +662,6 @@ void dicio_init(void){
     get_device_address();
     sprintf(print_buffer, "Initialised device address to 0x%x.", controller_address);
     uart_print(print_buffer, strlen(print_buffer));
-    
-    if(controller_address == 0){
-        _TRISD0 = 0;
-        _RP64R = _RPOUT_OC2;
-        init_trigger_generation();
-    } else {
-        _TRISD0 = 1;
-        init_sample_detection();
-    }
-    
-    
 }
 
 void dicio_loop(void){

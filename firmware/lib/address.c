@@ -27,13 +27,13 @@ extern int16_t n_connected_can_devices;
 void get_device_address(void){
     bool free_address_found = false;
     can_message_t m;
-    int16_t temp_can_address = 1;
+    int16_t temp_can_address = 2;
     
     if(n_connected_can_devices > 0){        
         while(!free_address_found){
             controller_address = temp_can_address;
             // init message
-            can_init_message(&m, controller_address, CAN_NO_REMOTE_FRAME, CAN_EXTENDED_FRAME, CAN_HEADER(CAN_REQUEST_ADDRESS_AVAILABLE,0), NULL, 0);
+            can_init_message(&m, controller_address, CAN_NO_REMOTE_FRAME, CAN_EXTENDED_FRAME, CAN_HEADER(CAN_REQUEST_ADDRESS_AVAILABLE, 0), NULL, 0);
             
             // send message to check for address availability
             can_send_message_any_ch(&m);
