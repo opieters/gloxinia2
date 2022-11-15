@@ -44,52 +44,49 @@
 
 static event_t task;
 
-int main ( void ){
+int main(void) {
 
     // Configure Oscillator to operate the device at 64MHz with internal 
     // crystal
     // Fosc= Fin*M/(N1*N2), Fcy=Fosc/2
     // Fosc= 7.37M*70/(2*2)=128Mhz for 8M input clock
-    PLLFBD = 62;                                // M=70
-    CLKDIVbits.PLLPOST = 0;                     // N1=2
-    CLKDIVbits.PLLPRE = 0;                      // N2=2
-    OSCTUN = 0;                                 // Tune FRC oscillator, if FRC is used
+    PLLFBD = 62; // M=70
+    CLKDIVbits.PLLPOST = 0; // N1=2
+    CLKDIVbits.PLLPRE = 0; // N2=2
+    OSCTUN = 0; // Tune FRC oscillator, if FRC is used
 
     // Disable Watch Dog Timer
     RCONbits.SWDTEN = 0;
 
     // Clock switch to incorporate PLL
-    __builtin_write_OSCCONH( 0x03 );            // Initiate Clock Switch to
+    __builtin_write_OSCCONH(0x03); // Initiate Clock Switch to
 
     // FRC with PLL (NOSC=0b001)
-    __builtin_write_OSCCONL( OSCCON | 0x01 );  // Start clock switching
-    while( OSCCONbits.COSC != 0b011 );
+    __builtin_write_OSCCONL(OSCCON | 0x01); // Start clock switching
+    while (OSCCONbits.COSC != 0b011);
 
     // Wait for Clock switch to occur
     // Wait for PLL to lock
-    while( OSCCONbits.LOCK != 1 );
-    
-#ifdef ENABLE_DEBUG
+    while (OSCCONbits.LOCK != 1);
+
     uart_log_init(500000);
-    
-    uart_simple_print("Configured UART.");
-#endif
-    
+    UART_DEBUG_PRINT("Configured UART.");
+
     delay_ms(100);
-    
+
     dicio_init();
-    
+
     task_schedule_t dicio_read_log = {dicio_send_ready_message, 1, 0};
     schedule_specific_event(dicio_read_log, ID_READY_SCHEDULE);
-    
-    while(1){
+
+    while (1) {
         i2c_process_queue();
-        
-        if(n_queued_tasks > 0){
+
+        if (n_queued_tasks > 0) {
             task = pop_queued_task();
             task();
         }
     }
-    
+
     return 0;
 }

@@ -292,10 +292,7 @@ void run_filter5_5khz(void){
     
     CLEAR_PORT_BIT(gconfig.int_pin);    
     
-    #ifdef ENABLE_DEBUG
-        sprintf(print_buffer, "Output sample.");
-        uart_print(print_buffer, strlen(print_buffer));
-    #endif 
+        UART_DEBUG_PRINT("Output sample.");
     
 }
 

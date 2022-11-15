@@ -422,10 +422,8 @@ void planalta_init_i2c_messages(void){
 void planalta_filter_5khz(void) {
     size_t i;
     
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "LIA at 5kHz activated.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("LIA at 5kHz activated.");
+
     
     // enable PGA
     //_RF1 = 1;
@@ -456,8 +454,7 @@ void planalta_filter_5khz(void) {
     planalta_init_i2c_messages();
     
     for(i = 0; i < PLANALTA_N_ADC_CHANNELS; i++){
-        sprintf(print_buffer, "Channel %x status: %x", i, gconfig.channel_status[i]);
-        uart_print(print_buffer, strlen(print_buffer));
+        UART_DEBUG_PRINT("Channel %x status: %x", i, gconfig.channel_status[i]);
         delay_ms(10);
     }
     

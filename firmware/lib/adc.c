@@ -4,14 +4,10 @@
 #include <device_configuration.h>
 #include <dsp.h>
 #include <fir_common.h>
-
 #include <spi.h>
-
-#ifdef ENABLE_DEBUG
 #include <uart.h>
 #include <stdio.h>
 #include <string.h>
-#endif
 
 unsigned int adc_tx_buffer[ADC_TX_BUFFER_LENGTH] __attribute__((space(dma), eds));
 unsigned int adc_rx_buffer_a[ADC_MAX_BUFFER_LENGTH]__attribute__((space(dma), eds, address(0xD9C0)));
@@ -254,19 +250,14 @@ void init_adc(adc_config_t* config){
     m.status = SPI_TRANSFER_PENDING;
     send_spi_message(&m);
     
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "ADC config set: %04x.", m.write_data[0]);
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("ADC config set: %04x.", m.write_data[0]);
+
     
     write_data[0] = ADC_COMMAND_TO_BITS(ADC_READ_CFR);
     m.status = SPI_TRANSFER_PENDING;
     send_spi_message(&m);
         
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "ADC config read: %04x.", m.read_data[0]);
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("ADC config read: %04x.", m.read_data[0]);
         
     // read all channels once in manual mode
     for(i = 0; i < N_ADC_CHANNELS; i++){
@@ -276,10 +267,7 @@ void init_adc(adc_config_t* config){
         
         covert_uint_to_fract(1, &m.read_data[0], (fractional*) &m.read_data[1]);
     
-#ifdef ENABLE_DEBUG
-        sprintf(print_buffer, "ADC read %x: %04x, %.6f (%.6f)", i, m.read_data[0], ((double) m.read_data[0]) / 0x10000, (double) Fract2Float((fractional) m.read_data[1]));
-        uart_print(print_buffer, strlen(print_buffer));
-#endif
+        UART_DEBUG_PRINT("ADC read %x: %04x, %.6f (%.6f)", i, m.read_data[0], ((double) m.read_data[0]) / 0x10000, (double) Fract2Float((fractional) m.read_data[1]));
     
         delay_ms(10);
     }
@@ -297,10 +285,7 @@ void init_adc(adc_config_t* config){
     // update status config
     write_data[0] = adc_parse_cfr_write(config);
     
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "ADC config set: %04x.", m.write_data[0]);
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("ADC config set: %04x.", m.write_data[0]);
     
     spi_init_message(&m, write_data, read_data, 1, &config->cs_pin);
     send_spi_message(&m);
@@ -309,12 +294,8 @@ void init_adc(adc_config_t* config){
     spi_init_message(&m, write_data, read_data, 1, &config->cs_pin);
     send_spi_message(&m);
         
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "ADC config read: %04x.", m.read_data[0]);
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
-    
-    
+    UART_DEBUG_PRINT("ADC config read: %04x.", m.read_data[0]);
+        
     if(config->deep_powerdown == ADC_DEEP_POWERDOWN_ENABLE){
         config->status = ADC_STATUS_OFF;
     }

@@ -65,29 +65,28 @@
 extern "C" {
 #endif /* __cplusplus */
 
-    
     typedef struct {
         volatile uint16_t* port_r;
         volatile uint16_t* tris_r;
         volatile uint16_t* lat_r;
         uint8_t n;
     } pin_t;
-    
+
     extern char print_buffer[PRINT_BUFFER_LENGTH];
-    
+
     void delay_us(uint16_t delay);
     void delay_ms(uint16_t delay);
-    
+
     void blinky_init(pin_t* pin, short timer_on);
     void toggle_led(void);
-    
+
     void set_error_pin(pin_t* pin);
     void set_error_led(void);
-    
-    
+
+
     void set_error_loop_fn(void (*fn)(void));
     void print_error(char* message, unsigned int length);
-    
+
 
 #ifdef	__cplusplus
 }

@@ -17,8 +17,8 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif 
-   
-    
+
+
     /*
      * Initialises the configuration data vectors of all actuators that support
      * multiple instantiations. 
@@ -40,17 +40,17 @@ extern "C" {
      * Callback runs every 100ms and executes the actuator code
      */
     void actuator_callback(void);
-    
+
     bool process_actuator_serial_command(uart_message_t* m);
-    
+
     void actuators_error_recover(void);
-    
+
     void actuators_error_check(void);
-    
+
     void actuator_status_report(void);
-    
+
     void actuator_send_status(actuator_general_config_t* config);
-    
+
 #ifdef	__cplusplus
 }
 #endif

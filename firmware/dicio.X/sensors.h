@@ -21,26 +21,25 @@ typedef enum {
 
 typedef struct sensor_config2_s {
     sensor_t t;
-    
+
     uint8_t i2c_address;
-    
+
     void (*init_fn)(sensor_config_t* s_cf);
     void (*measure_fn)(sensor_config_t* s_cf);
     void (*post_measure_fn)(sensor_config_t* s_cf);
-    
+
     // TODO: add one wire configuration
 } sensor_config2_t;
 
 typedef union sensor_u {
-    
 } sensor_u_t;
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
-    
+
     //extern uint16_t n_sample_messages;
-    
+
     void sensors_init(void);
     void sensors_start(void);
 

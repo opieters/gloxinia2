@@ -46,10 +46,7 @@ void planalta_input_calibration(planalta_config_t* config){
         adc_config.channel = j;
         config->adc_config.channel_offset[j] = run_calibration(&adc_config, 0);
         
-#ifdef ENABLE_DEBUG
-        sprintf(print_buffer, "Calibration offset CH%d: %04x.", j, config->adc_config.channel_offset[j]);
-        uart_print(print_buffer, strlen(print_buffer));
-#endif
+        UART_DEBUG_PRINT("Calibration offset CH%d: %04x.", j, config->adc_config.channel_offset[j]);
         
         // turn PGA off
         config->pga_config[i].status = PGA_STATUS_OFF;
@@ -97,10 +94,7 @@ void planalta_output_calibration(planalta_config_t* config){
         adc_config.channel = j;
         config->adc_config.channel_offset[j] = run_calibration(&adc_config, 0);
         
-#ifdef ENABLE_DEBUG
-        sprintf(print_buffer, "Calibration offset CH%d: %04x.", j, config->adc_config.channel_offset[j]);
-        uart_print(print_buffer, strlen(print_buffer));
-#endif
+        UART_DEBUG_PRINT("Calibration offset CH%d: %04x.", j, config->adc_config.channel_offset[j]);
     }
     
     init_dac(config, false);

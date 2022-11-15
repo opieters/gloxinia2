@@ -10,29 +10,28 @@ static pin_t* error_pin = NULL;
 
 static void (*error_loop_fn)(void) = NULL;
 
-
-void delay_us(uint16_t delay){ //delay x us
-    while(delay--) {
+void delay_us(uint16_t delay) { //delay x us
+    while (delay--) {
         __asm__ volatile ("repeat #63");
         __asm__ volatile ("nop");
     }
 }
 
-void delay_ms(uint16_t delay){
-    while(delay--) {
+void delay_ms(uint16_t delay) {
+    while (delay--) {
         delay_us(1000);
     }
 }
 
-void blinky_init(pin_t* pin, short timer_on){
-    
+void blinky_init(pin_t* pin, short timer_on) {
+
     blinky_pin = *pin;
-    
+
     CLEAR_BIT(blinky_pin.tris_r, blinky_pin.n);
     CLEAR_BIT(blinky_pin.port_r, blinky_pin.n);
-    
-    if(timer_on == 1){
-        T1CONbits.TON = 0; 
+
+    if (timer_on == 1) {
+        T1CONbits.TON = 0;
 
         T1CONbits.TCS = 0; // use internal instruction cycle as clock source
         T1CONbits.TGATE = 0; // disable gated timer
@@ -48,47 +47,45 @@ void blinky_init(pin_t* pin, short timer_on){
     }
 }
 
-void set_error_pin(pin_t* pin){
+void set_error_pin(pin_t* pin) {
     error_pin = pin;
-    
+
     CLEAR_BIT(error_pin->tris_r, error_pin->n);
     CLEAR_BIT(error_pin->port_r, error_pin->n);
 }
 
-void set_error_led(void){
+void set_error_led(void) {
     T1CONbits.TON = 0;
     _T1IE = 0; // enable interrupt
     _T1IF = 0; // clear interrupt flag
-    
-    if(error_pin != NULL) SET_BIT(error_pin->port_r, error_pin->n);
+
+    if (error_pin != NULL) SET_BIT(error_pin->port_r, error_pin->n);
 }
 
-void toggle_led(void){
+void toggle_led(void) {
     T1CONbits.TON = 0;
     _T1IE = 0; // enable interrupt
     _T1IF = 0; // clear interrupt flag
-    
+
     TOGGLE_BIT(blinky_pin.lat_r, blinky_pin.n);
 }
 
-
-
-void set_error_loop_fn(void (*fn)(void)){
+void set_error_loop_fn(void (*fn)(void)) {
     error_loop_fn = fn;
 }
 
-void print_error(char* message, unsigned int length){
+void print_error(char* message, unsigned int length) {
     set_error_led();
-    
+
     uart_print(message, length);
-    
-    if(error_loop_fn != NULL){
-        while(1){
+
+    if (error_loop_fn != NULL) {
+        while (1) {
             error_loop_fn();
         }
     } else {
-        while(1){
-            uart_simple_print("There was an error.");
+        while (1) {
+            UART_DEBUG_PRINT("There was an error.");
             delay_ms(100);
         }
     }

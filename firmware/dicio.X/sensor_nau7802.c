@@ -527,8 +527,7 @@ bool nau7802_set_register(sensor_nau7802_config_t* config, uint8_t reg, uint8_t 
     nau7802_set_register_nb(config, reg, value, i2c_dummy_callback);
     i2c_empty_queue();
     
-    sprintf(print_buffer, "Set %x -> %x (%d)", reg, value, config->m_config->error);
-    uart_print(print_buffer, strlen(print_buffer));
+    UART_DEBUG_PRINT("Set %x -> %x (%d)", reg, value, config->m_config->error);
     
     return config->m_config->error == I2C_NO_ERROR;
 } 

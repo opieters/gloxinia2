@@ -1,5 +1,3 @@
-// This is a guard condition so that contents of this file are not included
-// more than once.  
 #ifndef __DICIO_H__
 #define	__DICIO_H__ 
 
@@ -30,29 +28,29 @@ typedef struct {
 #ifdef	__cplusplus
 extern "C" {
 #endif
-    
+
     void dicio_init(void);
     void dicio_loop(void);
-    
+
     void dicio_i2c_mw_sr_callback(i2c_message_t* m);
     void dicio_i2c_mr_sw_callback(i2c_message_t* m);
-    
+
     void dicio_init_pins(void);
-    
+
     void dicio_init_clock_sync(void);
     void dicio_start_clock_sync(void);
     void dicio_stop_clock_sync(void);
-    
+
     void dicio_dummy_callback(void);
-    
+
     void dicio_set_sensor_callback(void (*cb)(void));
     void dicio_set_actuator_callback(void (*cb)(void));
-    
-    void dicio_send_message(serial_cmd_t cmd, uint16_t can_ext_id, 
-        uint8_t* data, uint8_t data_length);
-    
+
+    void dicio_send_message(serial_cmd_t cmd, uint16_t can_ext_id,
+            uint8_t* data, uint8_t data_length);
+
     void dicio_send_ready_message(void);
-    
+
 
 
 #ifdef	__cplusplus

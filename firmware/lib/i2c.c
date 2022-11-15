@@ -7,8 +7,8 @@
 #include "device_configuration.h"
 #include "utilities.h"
 
-i2c_mstatus_t (*i2c_transciever_controller)(void);
-i2c_mstatus_t (*i2c_transciever_reset)(void);
+i2c_mstatus_t(*i2c_transciever_controller)(void);
+i2c_mstatus_t(*i2c_transciever_reset)(void);
 //i2c_error_status_t i2c_error = I2C_NO_ERROR;
 
 i2c_message_t* m = NULL;
@@ -18,8 +18,8 @@ volatile uint8_t transfer_done = 0;
 
 volatile uint8_t i2c_transfer;
 
-volatile i2c_bus_status_t i2c1_bus_status = I2C_BUS_DISABLED; 
-volatile i2c_bus_status_t i2c2_bus_status = I2C_BUS_DISABLED; 
+volatile i2c_bus_status_t i2c1_bus_status = I2C_BUS_DISABLED;
+volatile i2c_bus_status_t i2c2_bus_status = I2C_BUS_DISABLED;
 
 i2c_reset_sensor_t i2c_bus_reset[N_I2C_DEVICE_RESET_CALLBACKS];
 
@@ -58,10 +58,10 @@ extern uint8_t i2c_slave_mw_sr_data[I2C_W_MESSAGE_BUFFER_LENGTH];
 i2c_config_t i2c1_config;
 i2c_config_t i2c2_config;
 
-void i2c_add_reset_callback(i2c_bus_t i2c_bus, void (*reset)(void), bool (*init)(void)){
+void i2c_add_reset_callback(i2c_bus_t i2c_bus, void (*reset)(void), bool(*init)(void)) {
     static size_t n_i2c_callbacks = 0;
-    
-    if(n_i2c_callbacks < N_I2C_DEVICE_RESET_CALLBACKS){
+
+    if (n_i2c_callbacks < N_I2C_DEVICE_RESET_CALLBACKS) {
         i2c_bus_reset[n_i2c_callbacks].reset = reset;
         i2c_bus_reset[n_i2c_callbacks].init = init;
         i2c_bus_reset[n_i2c_callbacks].i2c_bus = i2c_bus;
@@ -69,13 +69,13 @@ void i2c_add_reset_callback(i2c_bus_t i2c_bus, void (*reset)(void), bool (*init)
     n_i2c_callbacks++;
 }
 
-void i2c_reset_callback_init(void){
+void i2c_reset_callback_init(void) {
     // make sure this function is only executed once!
     static bool init_done = false;
-    
-    if(init_done == false){
+
+    if (init_done == false) {
         uint16_t i;
-        for(i = 0; i < N_I2C_DEVICE_RESET_CALLBACKS; i++){
+        for (i = 0; i < N_I2C_DEVICE_RESET_CALLBACKS; i++) {
             i2c_bus_reset[i].reset = NULL;
             i2c_bus_reset[i].init = NULL;
             i2c_bus_reset[i].i2c_bus = I2C1_BUS;
@@ -84,49 +84,45 @@ void i2c_reset_callback_init(void){
     }
 }
 
-void dummy_i2c_transciever_reset(i2c_message_t* m){
+void dummy_i2c_transciever_reset(i2c_message_t* m) {
 }
 
-void i2c_dummy_callback(i2c_message_t* m){
+void i2c_dummy_callback(i2c_message_t* m) {
 }
 
-void i2c_free_callback(i2c_message_t* m){
+void i2c_free_callback(i2c_message_t* m) {
     // message cannot be freed here since we are still using the attributes    
     //free(m);
 }
 
 void i2c1_init_master(i2c_config_t* config) {
     uint16_t frequency;
-    
+
     i2c_reset_callback_init();
-    
-#ifdef __LOG__
-    uart_wait();
-    sprintf(print_buffer, "Initialised I2C module 1.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
-    
+
+    UART_DEBUG_PRINT("Initialised I2C module 1.");
+
     transfer_done = 1;
     i2c_transfer = 0;
-    
+
     I2C1CONbits.A10M = 0; // 7-bit slave address
     I2C1CONbits.SCLREL = 1; // release clock
 
-    frequency = FCY/(2*FREQUENCY_SCL) - DELAY_I2C*(FCY/2) - 2;
-    if(frequency>0x1FF){
+    frequency = FCY / (2 * FREQUENCY_SCL) - DELAY_I2C * (FCY / 2) - 2;
+    if (frequency > 0x1FF) {
         frequency = 0x1FF; // max allowed value for this register
     }
     I2C1BRG = frequency;
-    
+
     I2C1ADD = 0x0; // no slave address, this is I2C master
     I2C1MSK = 0x0; // disable address masking for this bit position
-    
+
     I2C1CONbits.I2CEN = 1; // enable I2C module and configure pins as serial port pins
     IEC1bits.MI2C1IE = 1; // enable I2C interrupt
     IFS1bits.MI2C1IF = 0; // clear I2C interrupt flag
-    
+
     i2c1_bus_status = I2C_BUS_ENABLED;
-    
+
     T2CONbits.TON = 0;
     T2CONbits.TCS = 0; // use internal instruction cycle as clock source
     T2CONbits.TGATE = 0; // disable gated timer
@@ -135,7 +131,7 @@ void i2c1_init_master(i2c_config_t* config) {
     PR2 = I2C_TIMER_PERIOD - 1; // set period of ADC_SAMPLE_FREQUENCY
     _T2IF = 0; // clear interrupt flag
     _T2IE = 1; // enable interrupt
-    
+
     /*T3CONbits.TON = 0;
     T3CONbits.TCS = 0; // use internal instruction cycle as clock source
     T3CONbits.TGATE = 0; // disable gated timer
@@ -148,21 +144,19 @@ void i2c1_init_master(i2c_config_t* config) {
     T3CONbits.TON = 1;*/
 }
 
-
-
-void __attribute__ ( (interrupt, no_auto_psv) ) _MI2C1Interrupt( void ){
+void __attribute__((interrupt, no_auto_psv)) _MI2C1Interrupt(void) {
     transfer_done = 1;
     _MI2C1IF = 0;
 }
 
-void __attribute__ ( (interrupt, no_auto_psv) ) _MI2C2Interrupt( void ){
+void __attribute__((interrupt, no_auto_psv)) _MI2C2Interrupt(void) {
     transfer_done = 1;
     _MI2C2IF = 0;
 }
 
-void i2c_auto_queue_message(i2c_message_t* message){
-    if((message->address & 0x01) == 0){
-        switch(message->i2c_bus){
+void i2c_auto_queue_message(i2c_message_t* message) {
+    if ((message->address & 0x01) == 0) {
+        switch (message->i2c_bus) {
             case I2C1_BUS:
                 message->controller = i2c1_write_controller;
                 break;
@@ -174,7 +168,7 @@ void i2c_auto_queue_message(i2c_message_t* message){
                 break;
         }
     } else {
-        switch(message->i2c_bus) {
+        switch (message->i2c_bus) {
             case I2C1_BUS:
                 message->controller = i2c1_read_controller;
                 break;
@@ -186,147 +180,142 @@ void i2c_auto_queue_message(i2c_message_t* message){
                 break;
         }
     }
-    
+
     i2c_queue_message(message);
 }
 
-void i2c_queue_message(i2c_message_t* message){
-    if(n_i2c_queued_messages == I2C_MESSAGE_BUFFER_LENGTH){
+void i2c_queue_message(i2c_message_t* message) {
+    if (n_i2c_queued_messages == I2C_MESSAGE_BUFFER_LENGTH) {
         message->status = I2C_MESSAGE_CANCELED;
         message->error = I2C_QUEUE_FULL;
-        #ifdef __DEBUG__
-            uart_wait();
-            sprintf(print_buffer, "I2C queue full.");
-            uart_print(print_buffer, strlen(print_buffer));
-        #endif
+        UART_DEBUG_PRINT("I2C queue full.");
     } else {
-        if(message->n_attempts < 1){
+        if (message->n_attempts < 1) {
             message->status = I2C_MESSAGE_HANDLED;
             message->error = I2C_ZERO_ATTEMPTS;
         } else {
             message->status = I2C_MESSAGE_QUEUED;
             i2c_message_queue[i2c_queue_valid] = message;
-            i2c_queue_valid = (i2c_queue_valid+1) % I2C_MESSAGE_BUFFER_LENGTH;
+            i2c_queue_valid = (i2c_queue_valid + 1) % I2C_MESSAGE_BUFFER_LENGTH;
             message->error = I2C_NO_ERROR;
             n_i2c_queued_messages++;
-            #ifdef __DEBUG__
-                uart_wait();
-                sprintf(print_buffer, "I2C added message to %x on bus %x.", message->address, message->i2c_bus);
-                uart_print(print_buffer, strlen(print_buffer));
-            #endif
+            UART_DEBUG_PRINT("I2C added message to %x on bus %x.", message->address, message->i2c_bus);
         }
     }
 }
 
-
-uint16_t reset_i2c1_bus(void){
+uint16_t reset_i2c1_bus(void) {
     uint16_t n_reads = 0, data = 0, i;
-    
+
     // disable I2C1 interrupt
     _MI2C1IE = 0;
-    
+
     // disable I2C1 module
     I2C1CONbits.I2CEN = 0;
     delay_us(100);
-    
+
     // SCL line is blocked by slave, so hard reset is needed
-    if(GET_BIT(i2c1_scl_pin.port_r, i2c1_scl_pin.n) == 0){
+    if (GET_BIT(i2c1_scl_pin.port_r, i2c1_scl_pin.n) == 0) {
         return MAX_N_I2C_RST_READS;
     }
-    
+
     // try to get 
-    while((GET_BIT(i2c1_sda_pin.port_r, i2c1_sda_pin.n) == 0) && (n_reads < MAX_N_I2C_RST_READS)){
+    while ((GET_BIT(i2c1_sda_pin.port_r, i2c1_sda_pin.n) == 0) && (n_reads < MAX_N_I2C_RST_READS)) {
         I2C1CONbits.I2CEN = 1;
         delay_us(100);
-        
+
         I2C1CONbits.RCEN = 1;
         i = 0;
-        while((I2C1CONbits.RCEN == 1) && (i < 0xffff)) {i++;};
+        while ((I2C1CONbits.RCEN == 1) && (i < 0xffff)) {
+            i++;
+        };
         data = I2C1TRN;
         n_reads++;
-        
+
         I2C1CONbits.PEN = 1;
         delay_us(100);
-        
+
         I2C1CONbits.I2CEN = 0;
         delay_us(100);
     }
-    
+
     // enable I2C1 module
     I2C1CONbits.I2CEN = 1;
     delay_us(100);
-    
+
     // send stop condition
     I2C1CONbits.PEN = 1;
-    
+
     // re-enable I2C interrupts
     _MI2C1IF = 0;
     _MI2C1IE = 1;
-    
+
     return n_reads;
 }
 
-uint8_t reset_i2c2_bus(void){
+uint8_t reset_i2c2_bus(void) {
     uint16_t n_reads = 0, data = 0, i;
-    
+
     // disable I2C2 interrupt
     _MI2C2IE = 0;
-    
+
     // disable I2C2 module
     I2C2CONbits.I2CEN = 0;
     delay_us(100);
-    
+
     // SCL line is blocked by slave, so hard reset is needed
-    if(GET_BIT(i2c2_scl_pin.port_r, i2c2_scl_pin.n) == 0){
+    if (GET_BIT(i2c2_scl_pin.port_r, i2c2_scl_pin.n) == 0) {
         return MAX_N_I2C_RST_READS;
     }
-    
+
     // try to get 
-    while((GET_BIT(i2c2_sda_pin.port_r, i2c2_sda_pin.n) == 0) && (n_reads < MAX_N_I2C_RST_READS)){
+    while ((GET_BIT(i2c2_sda_pin.port_r, i2c2_sda_pin.n) == 0) && (n_reads < MAX_N_I2C_RST_READS)) {
         I2C2CONbits.I2CEN = 1;
         delay_us(100);
-        
+
         I2C2CONbits.RCEN = 1;
         i = 0;
-        while((I2C2CONbits.RCEN == 1) && (i < 0xffff)) {i++;};
+        while ((I2C2CONbits.RCEN == 1) && (i < 0xffff)) {
+            i++;
+        };
         data = I2C2TRN;
         n_reads++;
-        
+
         I2C2CONbits.PEN = 1;
         delay_us(100);
-        
+
         I2C2CONbits.I2CEN = 0;
         delay_us(100);
     }
-    
+
     // enable I2C1 module
     I2C2CONbits.I2CEN = 1;
     delay_us(100);
-    
+
     // send stop condition
     I2C2CONbits.PEN = 1;
-    
+
     // re-enable I2C interrupts
     _MI2C2IF = 0;
     _MI2C2IE = 1;
-    
+
     return n_reads;
 }
 
-void disable_i2c1_bus(){
+void disable_i2c1_bus() {
     uint16_t i;
     i2c_message_t* m;
-    
+
     // disable I2C1 module
     I2C1CONbits.I2CEN = 0;
     _MI2C1IE = 0;
     _MI2C1IF = 0;
-    
+
     // cancel all I2C1 messages
-    for(i = 0; i < I2C_MESSAGE_BUFFER_LENGTH; i++){
+    for (i = 0; i < I2C_MESSAGE_BUFFER_LENGTH; i++) {
         m = i2c_message_queue[i];
-        if((m != NULL) && (m->i2c_bus == I2C1_BUS)){
-            switch(m->status){
+        if ((m != NULL) && (m->i2c_bus == I2C1_BUS)) {
+            switch (m->status) {
                 case I2C_MESSAGE_TRANSFERRING:
                 case I2C_MESSAGE_PROCESSING:
                 case I2C_MESSAGE_QUEUED:
@@ -338,20 +327,20 @@ void disable_i2c1_bus(){
     }
 }
 
-void disable_i2c2_bus(){
+void disable_i2c2_bus() {
     uint16_t i;
     i2c_message_t* m;
-    
+
     // disable I2C2 module
     I2C2CONbits.I2CEN = 0;
     _MI2C2IE = 0;
     _MI2C2IF = 0;
-    
+
     // cancel all I2C2 messages
-    for(i = 0; i < I2C_MESSAGE_BUFFER_LENGTH; i++){
+    for (i = 0; i < I2C_MESSAGE_BUFFER_LENGTH; i++) {
         m = i2c_message_queue[i];
-        if((m != NULL) && (m->i2c_bus == I2C2_BUS)){
-            switch(m->status){
+        if ((m != NULL) && (m->i2c_bus == I2C2_BUS)) {
+            switch (m->status) {
                 case I2C_MESSAGE_TRANSFERRING:
                 case I2C_MESSAGE_PROCESSING:
                 case I2C_MESSAGE_QUEUED:
@@ -363,112 +352,103 @@ void disable_i2c2_bus(){
     }
 }
 
-void __attribute__ ( (__interrupt__, no_auto_psv) ) _T2Interrupt( void ){  
-    sprintf(print_buffer, "I2C error, cancelling message (%02x) on bus %x.", m->address, m->i2c_bus);
-    uart_print(print_buffer, strlen(print_buffer));
-    
-    if((i2c1_config.status == I2C_STATUS_MASTER_ON) && (m->i2c_bus == I2C1_BUS)){
+void __attribute__((__interrupt__, no_auto_psv)) _T2Interrupt(void) {
+    UART_DEBUG_PRINT("I2C error, cancelling message (%02x) on bus %x.", m->address, m->i2c_bus);
+
+    if ((i2c1_config.status == I2C_STATUS_MASTER_ON) && (m->i2c_bus == I2C1_BUS)) {
         I2C1CONbits.PEN = 1;
-        uart_simple_print("Sending stop on bus 1.");
+        UART_DEBUG_PRINT("Sending stop on bus 1.");
     }
-    
-    if(i2c1_config.status == I2C_STATUS_SLAVE_ON){
+
+    if (i2c1_config.status == I2C_STATUS_SLAVE_ON) {
         I2C1CONbits.SCLREL = 1;
         i2c1_slave_state = I2C_SLAVE_STATE_IDLE;
-        uart_simple_print("Releasing bus 1.");
+        UART_DEBUG_PRINT("Releasing bus 1.");
     }
-    
-    if((i2c2_config.status == I2C_STATUS_MASTER_ON) && (m->i2c_bus == I2C2_BUS)){
+
+    if ((i2c2_config.status == I2C_STATUS_MASTER_ON) && (m->i2c_bus == I2C2_BUS)) {
         I2C2CONbits.PEN = 1;
-        uart_simple_print("Sending stop on bus 2.");
+        UART_DEBUG_PRINT("Sending stop on bus 2.");
     }
-    
-    if(i2c2_config.status == I2C_STATUS_SLAVE_ON){
+
+    if (i2c2_config.status == I2C_STATUS_SLAVE_ON) {
         I2C2CONbits.SCLREL = 1;
         i2c2_slave_state = I2C_SLAVE_STATE_IDLE;
-        uart_simple_print("Releasing bus 2.");
+        UART_DEBUG_PRINT("Releasing bus 2.");
     }
-    
+
     transfer_done = 1;
-    
+
     m->status = I2C_MESSAGE_CANCELED;
     m->n_attempts = 0;
-    
+
     // disable timer
     T2CONbits.TON = 0;
-    
+
     _T2IF = 0;
 }
 
-
-void i2c_process_queue(void){
-    if(transfer_done == 1){
-        if(m != NULL){
-            switch(m->status){
+void i2c_process_queue(void) {
+    if (transfer_done == 1) {
+        if (m != NULL) {
+            switch (m->status) {
                 case I2C_MESSAGE_PROCESSING:
                     m->callback(m); // execute callback
                     m->status = I2C_MESSAGE_HANDLED;
-#ifdef __DEBUG__
-        uart_wait();            
-        uart_simple_print("I2C callback.");
-#endif
+
+                    UART_DEBUG_PRINT("I2C callback.");
                 case I2C_MESSAGE_HANDLED:
                     // check if transfer went OK or max attempts reached
-                    if((m->error == I2C_NO_ERROR) || (m->n_attempts <= 0)){
-#ifdef __DEBUG__
-        uart_wait();
-        uart_simple_print("I2C message handled.");
-#endif
+                    if ((m->error == I2C_NO_ERROR) || (m->n_attempts <= 0)) {
+
+                        UART_DEBUG_PRINT("I2C message handled.");
                         T2CONbits.TON = 0; // disable timer (everything OK!)
-                        
+
                         i2c_queue_idx = (i2c_queue_idx + 1) % I2C_MESSAGE_BUFFER_LENGTH;
                         m = NULL;
                         n_i2c_queued_messages--;
-                        
-                        if(m->callback == i2c_free_callback){
+
+                        if (m->callback == i2c_free_callback) {
                             // TODO when upgraded to new message structure
                             //free(m->read_data);
                             //free(m->write_data);
                             free(m);
                         }
                     } else {
-#ifdef __DEBUG__
-        uart_wait();
-        uart_simple_print("I2C ERROR, restarting.");
-#endif
+
+
+                        UART_DEBUG_PRINT("I2C ERROR, restarting.");
                         m->n_attempts--;
                         m->status = I2C_MESSAGE_TRANSFERRING;
                         m->error = I2C_NO_ERROR;
-                        
+
                         // reset the transfer status (just in case)
                         i2c_transfer_status = 0;
                     }
-                    
+
                     break;
                 case I2C_MESSAGE_QUEUED:
                     m->status = I2C_MESSAGE_TRANSFERRING;
                     TMR2 = 0; // clear timer register
                     // start timer: transfer must finish withing approx. 25ms
-                    T2CONbits.TON = 1; 
-#ifdef __DEBUG__
-        uart_wait();
-        uart_simple_print("I2C message queued.");
-#endif
+                    T2CONbits.TON = 1;
+
+                    UART_DEBUG_PRINT("I2C message queued.");
+
                 case I2C_MESSAGE_TRANSFERRING:
-#ifdef __DEBUG__
-        uart_wait();
-        uart_simple_print("I2C message transferring.");
-#endif
+
+                    UART_DEBUG_PRINT("I2C message transferring.");
+
                     m->controller(m);
                     break;
                 case I2C_MESSAGE_CANCELED:
-                    if(m->i2c_bus == I2C1_BUS){
+                    if (m->i2c_bus == I2C1_BUS) {
                         I2C1CONbits.PEN = 1;
                     } else {
                         I2C2CONbits.PEN = 1;
                     }
-                    
-                    if(m->cancelled_callback != NULL){
+
+                    if (m->cancelled_callback != NULL) {
                         m->cancelled_callback(m);
                     }
 
@@ -480,29 +460,27 @@ void i2c_process_queue(void){
                     break;
                 default:
                     T2CONbits.TON = 0; // disable timer (everything OK!)
-                        
+
                     i2c_queue_idx = (i2c_queue_idx + 1) % I2C_MESSAGE_BUFFER_LENGTH;
                     m = NULL;
                     n_i2c_queued_messages--;
                     m->status = I2C_MESSAGE_CANCELED;
             }
         } else {
-            if(i2c_queue_idx != i2c_queue_valid){
+            if (i2c_queue_idx != i2c_queue_valid) {
                 m = i2c_message_queue[i2c_queue_idx];
-#ifdef __DEBUG__
-                uart_wait();
-                sprintf(print_buffer, "Fetched message from queue: %x on bus %x.", m->address, m->i2c_bus);
-                uart_print(print_buffer, strlen(print_buffer));
-#endif
+
+                UART_DEBUG_PRINT("Fetched message from queue: %x on bus %x.", m->address, m->i2c_bus);
+
             }
         }
     }
 }
 
-void i2c1_init(i2c_config_t* config){
+void i2c1_init(i2c_config_t* config) {
     i2c1_config = *config;
-    
-    switch(config->status){
+
+    switch (config->status) {
         case I2C_STATUS_SLAVE_OFF:
         case I2C_STATUS_SLAVE_ON:
             i2c1_init_slave(config);
@@ -516,15 +494,15 @@ void i2c1_init(i2c_config_t* config){
         default:
             break;
     }
-    
+
     n_i2c1_errors = 0;
-    
+
 }
 
-void i2c1_init_slave(i2c_config_t* config){
+void i2c1_init_slave(i2c_config_t* config) {
     _SI2C1IF = 0;
     _SI2C1IE = 0;
-    
+
     I2C1CONbits.I2CEN = 0; // disable I2C1 module
     I2C1CONbits.I2CSIDL = 0; // continue operation in idle mode
     I2C1CONbits.IPMIEN = 0; // do not acknowledge all addresses
@@ -532,36 +510,36 @@ void i2c1_init_slave(i2c_config_t* config){
     I2C1CONbits.DISSLW = 0; // enable slew rate control
     I2C1CONbits.SMEN = 0; // disable SMBus input thresholds
     I2C1CONbits.GCEN = 0; // general call address is disabled
-    
-    
-    #if defined( I2C_ENABLE_CLOCK_STRETCHING )
-    I2C1CONbits.STREN = 1;  // enable clock stretch
-    I2C1CONbits.SCLREL = 1; // release clock 
-    #endif
 
-    I2C1ADD = config->i2c_address;         // 7-bit I2C slave address must be initialised here.
+
+#if defined( I2C_ENABLE_CLOCK_STRETCHING )
+    I2C1CONbits.STREN = 1; // enable clock stretch
+    I2C1CONbits.SCLREL = 1; // release clock 
+#endif
+
+    I2C1ADD = config->i2c_address; // 7-bit I2C slave address must be initialised here.
     I2C1MSK = 0; // bit match required for all positions
-    
+
     // init callbacks
     i2c_slave_mw_sr_callback = config->mw_sr_cb;
     i2c_slave_mr_sw_callback = config->mr_sw_cb;
-    
+
     // save pin configuration
     i2c1_scl_pin = config->scl_pin;
     i2c1_sda_pin = config->sda_pin;
-    
+
     I2C1CONbits.I2CEN = 1; // enable I2C1 module
-    
+
     // configure internal data variables
     i2c_slave_mr_sw_message = NULL;
     i2c_init_message(
-            &i2c_slave_mw_sr_message, 
+            &i2c_slave_mw_sr_message,
             0, I2C1_BUS, i2c_slave_mw_sr_data, 0, NULL, 0, NULL, 0, NULL, NULL, 0);
     n_slave_write_transfers = 0;
-    
+
     // timer for stop condition
     i2c1_init_slave_timer();
-    
+
     // init timer to release SCL 
     T2CONbits.TON = 0;
     T2CONbits.TCS = 0; // use internal instruction cycle as clock source
@@ -571,21 +549,21 @@ void i2c1_init_slave(i2c_config_t* config){
     PR2 = I2C_TIMER_PERIOD - 1; // set period of ADC_SAMPLE_FREQUENCY
     _T2IF = 0; // clear interrupt flag
     _T2IE = 1; // enable interrupt
-    
+
     _SI2C1IP = 1;
-    
+
     // clear interrupt flag
     _SI2C1IF = 0;
     // enable interrupt
     _SI2C1IE = 1;
-    
-    
+
+
 }
 
-void i2c2_init_slave(i2c_config_t* config){
+void i2c2_init_slave(i2c_config_t* config) {
     _SI2C2IF = 0;
     _SI2C2IE = 0;
-    
+
     I2C2CONbits.I2CEN = 0; // disable I2C2 module
     I2C2CONbits.I2CSIDL = 0; // continue operation in idle mode
     I2C2CONbits.IPMIEN = 0; // do not acknowledge all addresses
@@ -593,41 +571,41 @@ void i2c2_init_slave(i2c_config_t* config){
     I2C2CONbits.DISSLW = 0; // enable slew rate control
     I2C2CONbits.SMEN = 0; // disable SMBus input thresholds
     I2C2CONbits.GCEN = 0; // general call address is disabled
-    
-    
-    #if defined( I2C_ENABLE_CLOCK_STRETCHING )
-    I2C2CONbits.STREN = 1;  // enable clock stretch
-    I2C2CONbits.SCLREL = 1; // release clock 
-    #endif
 
-    I2C2ADD = config->i2c_address;         // 7-bit I2C slave address must be initialised here.
+
+#if defined( I2C_ENABLE_CLOCK_STRETCHING )
+    I2C2CONbits.STREN = 1; // enable clock stretch
+    I2C2CONbits.SCLREL = 1; // release clock 
+#endif
+
+    I2C2ADD = config->i2c_address; // 7-bit I2C slave address must be initialised here.
     I2C2MSK = 0; // bit match required for all positions
-    
+
     // init callbacks
     i2c_slave_mw_sr_callback = config->mw_sr_cb;
     i2c_slave_mr_sw_callback = config->mr_sw_cb;
-    
+
     // save pin configuration
     i2c2_scl_pin = config->scl_pin;
     i2c2_sda_pin = config->sda_pin;
-    
+
     I2C2CONbits.I2CEN = 1; // enable I2C2 module
-    
+
     // configure internal data variables
     i2c_slave_mr_sw_message = NULL;
     i2c_init_message(
-            &i2c_slave_mw_sr_message, 
+            &i2c_slave_mw_sr_message,
             0,
             I2C2_BUS,
-            i2c_slave_mw_sr_data, 0, 
-            NULL, 0, 
+            i2c_slave_mw_sr_data, 0,
+            NULL, 0,
             NULL,
             0,
             NULL,
             NULL,
             0);
     n_slave_write_transfers = 0;
-    
+
     // init timer to release SCL 
     T2CONbits.TON = 0;
     T2CONbits.TCS = 0; // use internal instruction cycle as clock source
@@ -637,18 +615,18 @@ void i2c2_init_slave(i2c_config_t* config){
     PR2 = I2C_TIMER_PERIOD - 1; // set period of ADC_SAMPLE_FREQUENCY
     _T2IF = 0; // clear interrupt flag
     _T2IE = 1; // enable interrupt
-    
+
     // clear interrupt flag
     _SI2C2IF = 0;
     // enable interrupt
     _SI2C2IE = 1;
-    
+
 }
 
-void i2c2_init(i2c_config_t* config){
+void i2c2_init(i2c_config_t* config) {
     i2c2_config = *config;
-    
-    switch(config->status){
+
+    switch (config->status) {
         case I2C_STATUS_SLAVE_OFF:
         case I2C_STATUS_SLAVE_ON:
             i2c2_init_slave(config);
@@ -662,42 +640,40 @@ void i2c2_init(i2c_config_t* config){
         default:
             break;
     }
-    
+
     n_i2c2_errors = 0;
 }
 
 void i2c2_init_master(i2c_config_t* config) {
     uint16_t frequency;
-    
+
     i2c_reset_callback_init();
-    
+
 #ifdef __LOG__
-    uart_wait();
-    sprintf(print_buffer, "Initialised I2C module 2.");
-    uart_print(print_buffer, strlen(print_buffer));
+    UART_DEBUG_PRINT("Initialised I2C module 2.");
 #endif
-    
+
     transfer_done = 1;
     i2c_transfer = 0;
-    
+
     I2C2CONbits.A10M = 0; // 7-bit slave address
     I2C2CONbits.SCLREL = 1; // release clock
-    
-    frequency = FCY/(2*FREQUENCY_SCL) - DELAY_I2C*(FCY/2) - 2;
-    if(frequency>0x1FF){
+
+    frequency = FCY / (2 * FREQUENCY_SCL) - DELAY_I2C * (FCY / 2) - 2;
+    if (frequency > 0x1FF) {
         frequency = 0x1FF; // max allowed value for this register
     }
     I2C2BRG = frequency;
-    
+
     I2C2ADD = 0x0; // no slave address, this is I2C master
     I2C2MSK = 0x0; // disable address masking for this bit position
-    
+
     I2C2CONbits.I2CEN = 1; // enable I2C module and configure pins as serial port pins
     _MI2C2IE = 1; // enable I2C interrupt
     _MI2C2IF = 0; // clear I2C interrupt flag
-    
+
     i2c2_bus_status = I2C_BUS_ENABLED;
-    
+
     T2CONbits.TON = 0;
     T2CONbits.TCS = 0; // use internal instruction cycle as clock source
     T2CONbits.TGATE = 0; // disable gated timer
@@ -706,7 +682,7 @@ void i2c2_init_master(i2c_config_t* config) {
     PR2 = I2C_TIMER_PERIOD - 1; // set timeout value
     _T2IF = 0; // clear interrupt flag
     _T2IE = 1; // enable interrupt
-    
+
     /*T3CONbits.TON = 0;
     T3CONbits.TCS = 0; // use internal instruction cycle as clock source
     T3CONbits.TGATE = 0; // disable gated timer
@@ -719,7 +695,7 @@ void i2c2_init_master(i2c_config_t* config) {
     T3CONbits.TON = 1;*/
 }
 
- void i2c_init_message(i2c_message_t* m, 
+void i2c_init_message(i2c_message_t* m,
         uint8_t address,
         i2c_bus_t i2c_bus,
         uint8_t* write_data,
@@ -730,7 +706,7 @@ void i2c2_init_master(i2c_config_t* config) {
         int8_t n_attempts,
         void (*callback)(i2c_message_t* m),
         void* callback_data,
-        uint8_t callback_data_length){
+        uint8_t callback_data_length) {
     m->address = address;
     m->write_data = write_data;
     m->write_length = write_length;
@@ -746,31 +722,31 @@ void i2c2_init_master(i2c_config_t* config) {
     i2c_reset_message(m, n_attempts);
 }
 
-bool i2c_check_message_sent(i2c_message_t* m){
+bool i2c_check_message_sent(i2c_message_t* m) {
     return (m->status == I2C_MESSAGE_HANDLED) || (m->status == I2C_MESSAGE_CANCELED);
 }
 
-void i2c_reset_message(i2c_message_t* m, uint8_t n_attempts){
+void i2c_reset_message(i2c_message_t* m, uint8_t n_attempts) {
     m->n_attempts = n_attempts;
     m->status = I2C_MESSAGE_HANDLED;
     m->error = I2C_NO_ERROR;
 }
 
-void i2c_set_read_message(i2c_message_t* m){
+void i2c_set_read_message(i2c_message_t* m) {
     i2c_slave_mr_sw_message = m;
     n_slave_write_transfers = 0;
 }
 
-void i2c_empty_queue(void){
-    while(n_i2c_queued_messages > 0){
+void i2c_empty_queue(void) {
+    while (n_i2c_queued_messages > 0) {
         i2c_process_queue();
     }
 }
 
-bool i2c_check_address(uint8_t address){
+bool i2c_check_address(uint8_t address) {
     address &= 0x7C;
-    
-    switch(address){
+
+    switch (address) {
         case 0b0:
             return false;
             break;
@@ -789,25 +765,25 @@ bool i2c_check_address(uint8_t address){
     return true;
 }
 
-void __attribute__ ( (__interrupt__, no_auto_psv) ) _T3Interrupt( void ){
+void __attribute__((__interrupt__, no_auto_psv)) _T3Interrupt(void) {
     size_t i;
     uint16_t j;
     uint8_t dummy;
     bool init_status;
-    
-    if(n_i2c1_errors > I2C_ERROR_TH){
+
+    if (n_i2c1_errors > I2C_ERROR_TH) {
         n_i2c1_errors = 0;
         // try to reset devices using dedicated reset
-        for(i = 0; i < N_I2C_DEVICE_RESET_CALLBACKS; i++){
-            if(i2c_bus_reset[i].reset != NULL){
-                if(i2c_bus_reset[i].i2c_bus == I2C1_BUS){
+        for (i = 0; i < N_I2C_DEVICE_RESET_CALLBACKS; i++) {
+            if (i2c_bus_reset[i].reset != NULL) {
+                if (i2c_bus_reset[i].i2c_bus == I2C1_BUS) {
                     i2c_bus_reset[i].reset();
                 }
             } else {
                 break;
             }
         }
-        
+
         I2C1CONbits.I2CEN = 0;
         //TODO: fix this!!
         // manually generate stop condition
@@ -821,70 +797,72 @@ void __attribute__ ( (__interrupt__, no_auto_psv) ) _T3Interrupt( void ){
         delay_ms(1);
         //_ODCG2 = 1;  // configure I2C pins as open drain output
         //_ODCG3 = 1; // configure I2C pins as open drain outputs
-        
+
         // initialise devices
         init_status = true;
-        for(i = 0; i < N_I2C_DEVICE_RESET_CALLBACKS; i++){
-            if(i2c_bus_reset[i].reset != NULL){
-                if(i2c_bus_reset[i].i2c_bus == I2C1_BUS){
+        for (i = 0; i < N_I2C_DEVICE_RESET_CALLBACKS; i++) {
+            if (i2c_bus_reset[i].reset != NULL) {
+                if (i2c_bus_reset[i].i2c_bus == I2C1_BUS) {
                     init_status = init_status && i2c_bus_reset[i].init();
                 }
             } else {
                 break;
             }
         }
-        
+
         // if init failed, try to read some bytes to free bus
-        if(!init_status){
+        if (!init_status) {
             _MI2C1IE = 0;
-            for(i = 0; i < MAX_N_I2C_RST_READS; i++){
+            for (i = 0; i < MAX_N_I2C_RST_READS; i++) {
                 I2C1CONbits.RCEN = 1;
                 j = 0;
-                while((I2C1CONbits.RCEN == 1) && (j < 0xffff)){j++; }
+                while ((I2C1CONbits.RCEN == 1) && (j < 0xffff)) {
+                    j++;
+                }
                 dummy = I2C1TRN;
             }
             I2C1CONbits.PEN = 1;
             delay_us(10);
             _MI2C1IE = 1;
         }
-        
+
         // init again
         init_status = true;
-        for(i = 0; i < N_I2C_DEVICE_RESET_CALLBACKS; i++){
-            if(i2c_bus_reset[i].reset != NULL){
-                if(i2c_bus_reset[i].i2c_bus == I2C1_BUS){
+        for (i = 0; i < N_I2C_DEVICE_RESET_CALLBACKS; i++) {
+            if (i2c_bus_reset[i].reset != NULL) {
+                if (i2c_bus_reset[i].i2c_bus == I2C1_BUS) {
                     init_status = init_status && i2c_bus_reset[i].init();
                 }
             } else {
                 break;
             }
         }
-        
+
         // if init failed, deactivate bus
-        if(!init_status){
+        if (!init_status) {
             // TODO: disable bus
         }
-        
+
         // cancel all messages in I2C queue
-        while(n_i2c_queued_messages > 0){
+        while (n_i2c_queued_messages > 0) {
             i2c_message_queue[i2c_queue_idx]->status = I2C_MESSAGE_CANCELED;
             transfer_done = 1;
             i2c_process_queue();
         }
     }
-    
-    if(n_i2c2_errors > I2C_ERROR_TH){
+
+    if (n_i2c2_errors > I2C_ERROR_TH) {
         n_i2c2_errors = 0;
-        for(i = 0; i < N_I2C_DEVICE_RESET_CALLBACKS; i++){
-            if(i2c_bus_reset[i].reset != NULL){
-                if(i2c_bus_reset[i].i2c_bus == I2C2_BUS){
+        for (i = 0; i < N_I2C_DEVICE_RESET_CALLBACKS; i++) {
+            if (i2c_bus_reset[i].reset != NULL) {
+                if (i2c_bus_reset[i].i2c_bus == I2C2_BUS) {
                     i2c_bus_reset[i].reset();
                 }
             } else {
                 break;
             }
         }
-        
+
         I2C2CONbits.I2CEN = 0;
         // manually generate stop condition
         _ODCF4 = 0;
@@ -897,58 +875,60 @@ void __attribute__ ( (__interrupt__, no_auto_psv) ) _T3Interrupt( void ){
         delay_ms(1);
         _ODCF4 = 1; // configure I2C pins as open drain output
         _ODCF5 = 1; // configure I2C pins as open drain output
-        
-        
+
+
         // initialise devices
         init_status = true;
-        for(i = 0; i < N_I2C_DEVICE_RESET_CALLBACKS; i++){
-            if(i2c_bus_reset[i].reset != NULL){
-                if(i2c_bus_reset[i].i2c_bus == I2C2_BUS){
+        for (i = 0; i < N_I2C_DEVICE_RESET_CALLBACKS; i++) {
+            if (i2c_bus_reset[i].reset != NULL) {
+                if (i2c_bus_reset[i].i2c_bus == I2C2_BUS) {
                     init_status = init_status && i2c_bus_reset[i].init();
                 }
             } else {
                 break;
             }
         }
-        
-        if(!init_status) {
+
+        if (!init_status) {
             _MI2C2IE = 0;
-            for(i = 0; i < MAX_N_I2C_RST_READS; i++){
+            for (i = 0; i < MAX_N_I2C_RST_READS; i++) {
                 I2C2CONbits.RCEN = 1;
                 j = 0;
-                while((I2C2CONbits.RCEN == 1) && (j < 0xffff)){j++; }
+                while ((I2C2CONbits.RCEN == 1) && (j < 0xffff)) {
+                    j++;
+                }
                 dummy = I2C2TRN;
             }
             I2C2CONbits.PEN = 1;
             delay_us(10);
             _MI2C2IE = 1;
         }
-        
+
         // init again
         init_status = true;
-        for(i = 0; i < N_I2C_DEVICE_RESET_CALLBACKS; i++){
-            if(i2c_bus_reset[i].reset != NULL){
-                if(i2c_bus_reset[i].i2c_bus == I2C2_BUS){
+        for (i = 0; i < N_I2C_DEVICE_RESET_CALLBACKS; i++) {
+            if (i2c_bus_reset[i].reset != NULL) {
+                if (i2c_bus_reset[i].i2c_bus == I2C2_BUS) {
                     init_status = init_status && i2c_bus_reset[i].init();
                 }
             } else {
                 break;
             }
         }
-        
+
         // cancel all messages in I2C queue
-        while(n_i2c_queued_messages > 0){
+        while (n_i2c_queued_messages > 0) {
             i2c_message_queue[i2c_queue_idx]->status = I2C_MESSAGE_CANCELED;
             transfer_done = 1;
             i2c_process_queue();
         }
     }
-    
+
     _T3IF = 0;
 }
 
-i2c_controller_t get_write_controller(i2c_bus_t bus){
-    switch(bus) {
+i2c_controller_t get_write_controller(i2c_bus_t bus) {
+    switch (bus) {
         case I2C1_BUS:
             return i2c1_write_controller;
             break;
@@ -958,13 +938,13 @@ i2c_controller_t get_write_controller(i2c_bus_t bus){
         default:
             report_error("I2C module not supported.");
     }
-    
+
     return i2c1_write_controller;
 }
 
-i2c_controller_t get_read_controller(i2c_bus_t bus){
+i2c_controller_t get_read_controller(i2c_bus_t bus) {
     // configure read message
-    switch(bus) {
+    switch (bus) {
         case I2C1_BUS:
             return i2c1_read_controller;
             break;
@@ -974,6 +954,6 @@ i2c_controller_t get_read_controller(i2c_bus_t bus){
         default:
             report_error("SHT35: I2C module not supported.");
     }
-    
+
     return i2c1_read_controller;
 }

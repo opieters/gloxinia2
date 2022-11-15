@@ -8,11 +8,11 @@ void __attribute__((__interrupt__, no_auto_psv)) _OscillatorFail(void){
         // make sure I2C releases bus
         _T2IF = 1;
         
-        uart_simple_print("Oscillator failure.");
+        UART_DEBUG_PRINT("Oscillator failure.");
         
         set_error_led();
         while (1){
-            uart_simple_print(".");
+            UART_DEBUG_PRINT(".");
         }
 }
 
@@ -22,11 +22,11 @@ void __attribute__((__interrupt__, no_auto_psv)) _AddressError(void){
         // make sure I2C releases bus
         _T2IF = 1;
         
-        uart_simple_print("Address error.");
+        UART_DEBUG_PRINT("Address error.");
         
         set_error_led();
         while (1){
-            uart_simple_print(".");
+            UART_DEBUG_PRINT(".");
         }
 }
 
@@ -36,11 +36,11 @@ void __attribute__((__interrupt__, no_auto_psv)) _StackError(void){
         // make sure I2C releases bus
         _T2IF = 1;
         
-        uart_simple_print("Stack error.");
+        UART_DEBUG_PRINT("Stack error.");
         
         set_error_led();
         while (1){
-            uart_simple_print(".");
+            UART_DEBUG_PRINT(".");
         }
 }
 
@@ -50,11 +50,11 @@ void __attribute__((__interrupt__, no_auto_psv)) _MathError(void){
         // make sure I2C releases bus
         _T2IF = 1;
         
-        uart_simple_print("Math error.");
+        UART_DEBUG_PRINT("Math error.");
         
         set_error_led();
         while (1){
-            uart_simple_print(".");
+            UART_DEBUG_PRINT(".");
         }
 }
 
@@ -66,11 +66,11 @@ void __attribute__((__interrupt__, no_auto_psv)) _DMACError(void){
         // make sure I2C releases bus
         _T2IF = 1;
         
-        uart_simple_print("DMAC error.");
+        UART_DEBUG_PRINT("DMAC error.");
         
         set_error_led();
         while (1){
-            uart_simple_print(".");
+            UART_DEBUG_PRINT(".");
         }
 }
 

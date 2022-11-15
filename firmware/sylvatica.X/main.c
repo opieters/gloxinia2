@@ -3,10 +3,8 @@
 #include "sylvatica.h"
 #include <utilities.h>
 
-#ifdef ENABLE_DEBUG
 #include <stdio.h>
 #include <string.h>
-#endif
 
 #pragma config GWRP = OFF                       // General Segment Write-Protect bit (General Segment may be written)
 #pragma config GSS = OFF                        // General Segment Code-Protect bit (General Segment Code protect is disabled)
@@ -74,12 +72,9 @@ int main(void) {
     while( OSCCONbits.LOCK != 1 );
 
     // UART serial communication (debug + print interface)
-#ifdef ENABLE_DEBUG
     uart_init(500000);
     
-    sprintf(print_buffer, "Configured UART.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Configured UART.");
      
     init_sylvatica();
     

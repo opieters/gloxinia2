@@ -234,10 +234,8 @@ void run_filter5_25khz(void){
 }
 
 void planalta_filter_25khz(void) {
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "LIA at 25kHz activated.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("LIA at 25kHz activated.");
+
     
     // enable PGA
     //_RF1 = 1;
