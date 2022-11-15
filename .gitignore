@@ -125,3 +125,7 @@ pcb_design/dicio_pic32/gerber/
 
 # GUI Qt
 gui_qt/build-*
+
+
+pcb_design/reflexa/gerber/
+*.step
