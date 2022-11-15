@@ -8493,7 +8493,7 @@
     (uuid c4009b0c-278e-45a9-b639-af3372bb175b)
     (property "Reference" "R16" (id 0) (at 44.45 344.17 90))
     (property "Value" "10k" (id 1) (at 44.45 346.71 90))
-    (property "Footprint" "Capacitor_SMD:C_0603_1608Metric" (id 2) (at 44.45 352.298 90)
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric" (id 2) (at 44.45 352.298 90)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 44.45 350.52 0)
@@ -9102,7 +9102,7 @@
       (reference "R15") (unit 1) (value "4.9k") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
     (path "/c4009b0c-278e-45a9-b639-af3372bb175b"
-      (reference "R16") (unit 1) (value "10k") (footprint "Capacitor_SMD:C_0603_1608Metric")
+      (reference "R16") (unit 1) (value "10k") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
     (path "/00000000-0000-0000-0000-00005def4677"
       (reference "R18") (unit 1) (value "60R") (footprint "Resistor_SMD:R_0603_1608Metric")
