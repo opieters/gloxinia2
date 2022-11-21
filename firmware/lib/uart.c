@@ -363,9 +363,10 @@ void uart_rx_callback() {
             serial_can_update_address_cb();
             break;
         case SERIAL_CAN_DISCOVERY:
-            can_init_message(&can_m, m.id,
-                    CAN_NO_REMOTE_FRAME, CAN_EXTENDED_FRAME, CAN_HEADER(CAN_DISCOVERY, 0), can_data, 0);
-            can_send_message_any_ch(&can_m);
+            // TODO
+            //can_init_message(&can_m, m.id,
+            //        CAN_NO_REMOTE_FRAME, CAN_EXTENDED_FRAME, CAN_HEADER(CAN_DISCOVERY, 0), can_data, 0);
+            //can_send_message_any_ch(&can_m);
 
             // send message back over UART with address of this node
             uart_init_message(&uart_discovery_m, SERIAL_CAN_DISCOVERY, controller_address, 0, NULL, 0);
@@ -373,8 +374,8 @@ void uart_rx_callback() {
             break;
         case SERIAL_START_MEAS_CMD:
             can_m.data_length = 1;
-            can_data[0] = CAN_INFO_MSG_START_MEAS;
-            can_send_message_any_ch(&can_m);
+            //can_data[0] = CAN_INFO_MSG_START_MEAS;
+            //can_send_message_any_ch(&can_m);
             delay_ms(1);
 #ifdef __LOG__
             UART_DEBUG_PRINT("Sampling...");
@@ -387,15 +388,15 @@ void uart_rx_callback() {
             break;
         case SERIAL_SENSOR_ACTIVATE_CMD:
             can_m.data_length = 2;
-            can_data[0] = CAN_MSG_SENSOR_STATUS;
+            //can_data[0] = CAN_MSG_SENSOR_STATUS;
             can_data[1] = 1;
-            can_send_message_any_ch(&can_m);
+            //can_send_message_any_ch(&can_m);
             break;
         case SERIAL_SENSOR_DEACTIVATE_CMD:
             can_m.data_length = 2;
-            can_data[0] = CAN_MSG_SENSOR_STATUS;
+            //can_data[0] = CAN_MSG_SENSOR_STATUS;
             can_data[1] = 0;
-            can_send_message_any_ch(&can_m);
+            //can_send_message_any_ch(&can_m);
             break;
         case SERIAL_RESET_NODE_CMD:
             if (m.length == 1) {
@@ -404,9 +405,9 @@ void uart_rx_callback() {
                     asm("RESET");
                 } else {
                     can_m.data_length = 2;
-                    can_data[0] = CAN_INFO_MSG_RESET;
+                    //can_data[0] = CAN_INFO_MSG_RESET;
                     can_data[1] = m.data[0];
-                    can_send_message_any_ch(&can_m);
+                    //can_send_message_any_ch(&can_m);
                 }
             }
             break;
@@ -417,8 +418,8 @@ void uart_rx_callback() {
 
             if (can_bus_active) {
                 can_m.data_length = 1;
-                can_data[0] = CAN_INFO_MSG_RESET;
-                while (can_send_message_any_ch(&can_m) != CAN_NO_ERROR);
+                //can_data[0] = CAN_INFO_MSG_RESET;
+                //while (can_send_message_any_ch(&can_m) != CAN_NO_ERROR);
 
                 while (C1TR01CONbits.TXREQ0 == 1);
                 while (C1TR01CONbits.TXREQ1 == 1);
@@ -492,7 +493,7 @@ void uart_rx_callback() {
             can_data[0] = SERIAL_HELLO_CMD & 0xff;
 
             // broadcast over bus
-            can_send_message_any_ch(&can_m);
+            //can_send_message_any_ch(&can_m);
             break;
         case SERIAL_INIT_SAMPLING_CMD:
             UART_DEBUG_PRINT("Initialising sampling event.");
@@ -501,18 +502,18 @@ void uart_rx_callback() {
             break;
         case SERIAL_INIT_SENSORS_CMD:
             can_m.data_length = 1;
-            can_data[0] = CAN_INFO_MSG_INIT_SENSORS;
+            //can_data[0] = CAN_INFO_MSG_INIT_SENSORS;
 
-            can_send_message_any_ch(&can_m);
+            //can_send_message_any_ch(&can_m);
             break;
         case SERIAL_LIA_GAIN_SET_CMD:
             can_m.data_length = 4;
-            can_data[0] = CAN_INFO_LIA_GAIN_SET;
+            //can_data[0] = CAN_INFO_LIA_GAIN_SET;
             can_data[1] = m.data[0];
             can_data[2] = m.data[1];
             can_data[3] = m.data[2];
 
-            can_send_message_any_ch(&can_m);
+            //can_send_message_any_ch(&can_m);
             break;
         case SERIAL_START_INIT:
             break;
@@ -636,4 +637,8 @@ void uart_rx_callback() {
     m.status = UART_MSG_NONE;
 
     n_uart_rx_messages--;
+}
+
+void uart_send_message(message_t* m){
+    // TODO
 }

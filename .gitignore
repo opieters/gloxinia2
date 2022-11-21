@@ -129,3 +129,4 @@ gui_qt/build-*
 
 pcb_design/reflexa/gerber/
 *.step
+firmware/dicio2.X/.generated_files/

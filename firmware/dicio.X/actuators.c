@@ -1,5 +1,6 @@
 #include "actuators.h"
 #include "dicio.h"
+#include "address.h"
 
 bool actuator_error_detected = false;
 
@@ -24,13 +25,15 @@ void actuators_error_recover(void) {
 }
 
 void actuator_send_status(actuator_general_config_t* config) {
-    uint8_t data[DICIO_ACTUATOR_STATUS_LOG_MESSAGE];
+    message_t m;
+    uint8_t data[1] = {config->status};
+    init_message(&m, controller_address,
+        0,
+        M_ACTUATOR_STATUS,
+        config->local_id,
+        data,
+        DICIO_ACTUATOR_STATUS_LOG_MESSAGE,
+        NO_INTERFACE);
 
-    data[0] = config->global_id;
-    data[1] = config->local_id;
-    data[2] = config->status;
-
-    dicio_send_message(SERIAL_ACTUATOR_STATUS_CMD,
-            CAN_HEADER(CAN_MSG_ACTUATOR_STATUS, 0), data,
-            DICIO_ACTUATOR_STATUS_LOG_MESSAGE);
+    send_message(&m);
 }

@@ -114,14 +114,14 @@ void sensors_init(void) {
 
     //i2c_add_reset_callback(I2C1_BUS, sensors_reset_plant, sensors_init_plant);
 
-    if (controller_address == 0) {
+    /*if (controller_address == 0) {
         uart_init_message(&serial_meas_trigger,
                 SERIAL_MEAS_TRIGGER_CMD,
                 controller_address,
                 CAN_HEADER(CAN_INFO_CMD_MEASUREMENT_START, 0),
                 NULL,
                 0);
-    }
+    }*/
 
     dicio_set_sensor_callback(sensor_callback);
 }
@@ -201,15 +201,13 @@ void sensor_callback(void) {
 }
 
 void send_sensor_status(sensor_config_t* config) {
+    message_t m;
     uint8_t data[DICIO_SENSOR_STATUS_LOG_MESSAGE];
 
-    data[0] = config->sensor_type;
-    data[1] = config->sensor_id;
-    data[2] = config->status;
-
-    dicio_send_message(SERIAL_SENSOR_STATUS_CMD,
-            CAN_HEADER(CAN_MSG_SENSOR_STATUS, 0), data,
-            DICIO_SENSOR_STATUS_LOG_MESSAGE);
+    data[0] = config->status;
+    
+    init_message(&m, controller_address, 0,M_SENSOR_STATUS, config->sensor_id, data, DICIO_SENSOR_STATUS_LOG_MESSAGE, NO_INTERFACE);
+    send_message(&m);
 }
 
 void populate_sht35_config(uint8_t* data, uint8_t len, sensor_sht35_config_t* config) {
@@ -218,7 +216,6 @@ void populate_sht35_config(uint8_t* data, uint8_t len, sensor_sht35_config_t* co
     if (len != 8) {
         return;
     }
-    config->general.sensor_type = data[0];
     config->general.sensor_id = data[1];
     config->address = data[2];
     config->i2c_bus = data[3];

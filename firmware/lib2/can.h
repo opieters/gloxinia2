@@ -53,6 +53,7 @@ extern "C" {
         CAN_TX_PENDING,
         CAN_RX_PENDING,
         CAN_NOT_ENABLED,
+        CAN_ADDRESS_NOT_SET,
     } can_status_t;
 
     typedef enum {
@@ -64,53 +65,14 @@ extern "C" {
         CAN_MODULE_ENABLE = 0,
     } can_module_status_t;
 
-
-    extern volatile uint8_t __init_sensors;
-
-    void can_cmd_info_rx(uint8_t cmd, uint8_t* data, uint8_t length);
-    void can_cmd_info_tx(uint8_t cmd, uint8_t* data, uint8_t length);
-
-    extern volatile uint8_t received_ecan_message;
-
-    /**
-     * @brief Initialises the DMA channel handling ECAN messages.
-     * 
-     * @attention Should be executed only after initialising the ECAN module!
-     */
-    void can_init_dma_channel(void);
-
     /**
      * @brief Initialises ECAN module.
      */
     void can_init(void);
 
     void can_disable(void);
-
-    /**
-     * @brief Places a CAN message in the buffer of the corresponding channel.
-     * 
-     * @details Does not actually handle CAN transfer. This is handled by the
-     * DMA. For now, user configured priorities cannot be assigned to messages.
-     * 
-     * @param message: the ECAN message to transmit
-     * @param channel: the ECAN channel number (0-7) on which to transmit the 
-     * data.
-     * 
-     * @return failure (message in buffer not yet sent) or success in the form 
-     * of a `can_status_t`.
-     */
-    __attribute__((always_inline)) can_status_t can_send_raw_message(can_message_t* message, uint8_t channel);
-    __attribute__((always_inline)) can_status_t can_send_message(message_t* message, uint8_t channel);
-    can_status_t can_send_message_any_ch(message_t* m);
-    can_status_t can_send_raw_message_any_ch(can_message_t* m) ;
-
-
-
-    void deactivate_can_bus(void);
-
-    void can_parse_message(can_message_t* m, uint16_t* raw_data);
-
-    void parse_can_to_uart_message(can_message_t* can_message, uart_message_t* uart_message);
+    
+    void can_reset(void);
 
     void can_init_message(can_message_t* m,
             uint16_t identifier,
@@ -120,11 +82,20 @@ extern "C" {
             uint8_t* data,
             uint8_t data_length);
     
-    void parse_from_can_buffer(message_t* m, uint16_t* raw_data);
+    void parse_from_can_buffer(can_message_t* m, uint16_t* raw_data);
+    void parse_from_can_message(message_t* m, can_message_t* cm);
+    
+    can_status_t can_send_message(can_message_t* message, uint8_t can_channel);
+    can_status_t can_send_message_any_ch(can_message_t* m);
+    can_status_t can_send_fmessage_any_ch(message_t* m);
+    
+    void can_detect_devices(void);
+    
+    void can_message_from_fmessage(can_message_t* cm, message_t* m);
 
 
 #ifdef	__cplusplus
 }
-#endif /* __cplusplus */
+#endif
 
-#endif	/* __CAN_H__ */
+#endif

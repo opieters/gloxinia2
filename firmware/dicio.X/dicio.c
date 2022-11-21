@@ -7,7 +7,7 @@
 #include <uart_logging.h>
 #include "address.h"
 #include <device_configuration.h>
-#include <can.h>
+#include <message.h>
 #include "sensors.h"
 #include "actuators.h"
 #include "event_controller.h"
@@ -60,7 +60,7 @@ static dicio_config_t config = {
     .output_frequency = 8000000,
 };
 
-int16_t n_connected_can_devices;
+int16_t n_connected_devices;
 
 static void (*__sensor_timer_callback)(void) = dicio_dummy_callback;
 static void (*__actuator_timer_callback)(void) = dicio_dummy_callback;
@@ -494,13 +494,18 @@ void dicio_init_pins(void) {
 }
 
 void detect_can_devices(void) {
-    can_message_t m;
+    message_t m;
     bool no_device_found = false;
 
-    can_init_message(&m, controller_address, CAN_NO_REMOTE_FRAME,
-            CAN_EXTENDED_FRAME, CAN_HEADER(CAN_INFO_MSG_HELLO, 0), NULL, 0);
+    init_message(
+            &m, 
+            controller_address, 
+            CAN_NO_REMOTE_FRAME,
+            M_HELL0,
+            0,
+            NULL, 0, CAN_INTERFACE);
 
-    can_send_message_any_ch(&m);
+    send_message(&m);
 
     delay_ms(100);
 
@@ -532,17 +537,17 @@ void detect_can_devices(void) {
 
     // disable CAN if needed
     if (no_device_found) {
-        n_connected_can_devices = 0;
+        n_connected_devices = 0;
 
         deactivate_can_bus();
 
-        UART_DEBUG_PRINT("No CAN devices found.");
+        UART_DEBUG_PRINT("No devices found.");
 
         //can_disable();
     } else {
-        n_connected_can_devices = 1;
+        n_connected_devices = 1;
 
-        UART_DEBUG_PRINT("At least one CAN device found.");
+        UART_DEBUG_PRINT("At least one device found.");
 
     }
 }
@@ -613,7 +618,7 @@ void dicio_init(void) {
 
     UART_DEBUG_PRINT("Initialised blinky.");
 
-    blinky_init(&config.blinky_pin, 1);
+    blinky_init(&config.blinky_pin, 0);
 
     UART_DEBUG_PRINT("Initialising I2C1.");
     i2c1_init(&config.i2c_config[0]);
@@ -685,40 +690,8 @@ void __attribute__((__interrupt__, no_auto_psv)) _OC1Interrupt(void) {
     _OC1IF = 0;
 }
 
-void dicio_send_message(serial_cmd_t cmd, uint16_t can_ext_id,
-        uint8_t* data, uint8_t data_length) {
-    uart_message_t m_uart;
-    can_message_t m_can;
-
-    if (controller_address == 0) {
-        uart_init_message(&m_uart, cmd, controller_address,
-                can_ext_id, data,
-                data_length);
-
-        uart_queue_message(&m_uart);
-        uart_await_tx(&m_uart);
-    } else {
-        can_init_message(&m_can, controller_address, CAN_NO_REMOTE_FRAME,
-                CAN_EXTENDED_FRAME,
-                can_ext_id, data,
-                data_length);
-
-        can_send_message_any_ch(&m_can);
-    }
-}
-
 void dicio_send_ready_message(void) {
-    // transmit message over UART that this module is ready to start
-    uart_message_t m_uart;
 
-    if (controller_address == 0) {
-        uart_init_message(&m_uart, SERIAL_START_INIT, controller_address,
-                CAN_HEADER(NO_CAN_CMD, 0), NULL,
-                0);
-
-        uart_queue_message(&m_uart);
-        uart_await_tx(&m_uart);
-    }
 }
 
 void __attribute__((__interrupt__, no_auto_psv)) _T1Interrupt(void) {

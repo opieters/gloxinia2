@@ -21,21 +21,21 @@
  */
 volatile uint16_t controller_address = 0;
 
-extern int16_t n_connected_can_devices;
+extern int16_t n_connected_devices;
 
 void get_device_address(void) {
     bool free_address_found = false;
-    can_message_t m;
+    message_t m;
     int16_t temp_can_address = 2;
 
-    if (n_connected_can_devices > 0) {
+    if (n_connected_devices > 0) {
         while (!free_address_found) {
             controller_address = temp_can_address;
             // init message
-            can_init_message(&m, controller_address, CAN_NO_REMOTE_FRAME, CAN_EXTENDED_FRAME, CAN_HEADER(CAN_REQUEST_ADDRESS_AVAILABLE, 0), NULL, 0);
+            init_message(&m, controller_address, CAN_NO_REMOTE_FRAME, M_REQUEST_ADDRESS_AVAILABLE, M_REQUEST_ADDRESS_AVAILABLE, NULL, 0, CAN_INTERFACE);
 
             // send message to check for address availability
-            can_send_message_any_ch(&m);
+            send_message(&m);
 
             // wait for one second
             delay_ms(1000);
@@ -57,12 +57,12 @@ void get_device_address(void) {
 }
 
 void set_device_address(uint16_t address) {
-    can_message_t m;
+    message_t m;
 
     controller_address = address;
 
-    can_init_message(&m, controller_address, CAN_NO_REMOTE_FRAME, CAN_EXTENDED_FRAME, CAN_HEADER(CAN_REQUEST_ADDRESS_AVAILABLE, 0), NULL, 0);
+    init_message(&m, controller_address, CAN_NO_REMOTE_FRAME, M_REQUEST_ADDRESS_AVAILABLE, 0, NULL, 0, CAN_INTERFACE);
 
     // send message to check for address availability
-    can_send_message_any_ch(&m);
+    send_message(&m);
 }

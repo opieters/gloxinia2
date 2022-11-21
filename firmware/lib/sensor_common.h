@@ -26,16 +26,6 @@ extern "C" {
         N_SENSOR_STATUS = 4,
     } sensor_status_t;
 
-    typedef struct sensor_log_s {
-        can_message_t can_message;
-        uart_message_t uart_message;
-    } sensor_log_t;
-
-    typedef struct sensor_elog_s {
-        can_message_t can_message;
-        uart_message_t uart_message;
-        uint16_t n_errors;
-    } sensor_elog_t;
 
     typedef enum {
         SENSOR_PHASE_PRE_READOUT,
@@ -48,13 +38,13 @@ extern "C" {
     } sensor_type_t;
 
     typedef struct i2c_sensor_config_s {
-        uint8_t sensor_id;
         sensor_type_t sensor_type;
+        uint8_t sensor_id;
 
         sensor_status_t status;
 
-        sensor_log_t dlog;
-        sensor_elog_t elog;
+        message_t dlog;
+        message_t elog;
 
         uint8_t tx_data[CAN_MAX_N_BYTES];
         uint8_t error_data[ERROR_DATA_SIZE];
@@ -66,10 +56,10 @@ extern "C" {
 
 
     void sensor_update_status(sensor_config_t* config, const i2c_error_t i2c_error);
-    void sensor_send_error(sensor_elog_t* config, i2c_message_t* m);
-    void sensor_send_general_error(sensor_elog_t* config, uint8_t status, uint8_t error);
-    void sensor_send_data(sensor_log_t* config, uint8_t* data, uint8_t length);
-    void sensor_send_data_no_copy(sensor_log_t* config, uint8_t* data, uint8_t length);
+    void sensor_send_error(message_t* config, i2c_message_t* m);
+    void sensor_send_general_error(message_t* config, uint8_t status, uint8_t error);
+    void sensor_send_data(message_t* config, uint8_t* data, uint8_t length);
+    void sensor_send_data_no_copy(message_t* config, uint8_t* data, uint8_t length);
 
     uint8_t sensor_get_local_id(void);
     void sensor_reset_local_id(void);

@@ -6,12 +6,13 @@
 #include <utilities.h>
 #include <stddef.h>
 #include <uart_common.h>
+#include <message.h>
 
 #ifdef __DEBUG__
-#define UART_DEBUG_PRINT(Y, ...) sprintf(print_buffer, (X), __VA_ARGS__); uart_print(print_buffer, strlen(print_buffer));
+#define UART_DEBUG_PRINT(...) sprintf(print_buffer, __VA_ARGS__); uart_print(print_buffer, strlen(print_buffer));
 #else
 
-#define UART_DEBUG_PRINT(Y, ...)
+#define UART_DEBUG_PRINT(...)
 
 #endif
 
@@ -35,6 +36,8 @@ extern "C" {
     void uart_log_init(uint32_t baudrate);
 
     void uart_print(const char* message, size_t lengh);
+    
+    void uart_send_message(message_t* m);
 
 
 #ifdef	__cplusplus

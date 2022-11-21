@@ -2,17 +2,19 @@
 #include <QDateTime>
 
 
-GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, quint8* data, uint64_t size):
-    code(code),
-    messageID(messageID),
-    sensorID(sensorID)
-{
-    this->data = std::vector<quint8>(data, data+size);
-}
-GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, std::vector<quint8> data):
+GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, bool request, quint8* data, uint64_t size):
     code(code),
     messageID(messageID),
     sensorID(sensorID),
+    request(request)
+{
+    this->data = std::vector<quint8>(data, data+size);
+}
+GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, bool request, std::vector<quint8> data):
+    code(code),
+    messageID(messageID),
+    sensorID(sensorID),
+    request(request),
     data(data)
 {
 
@@ -23,16 +25,17 @@ int GMessage::toBytes(quint8* data, unsigned int maxLength) const
     if(maxLength < (headerSize +this->data.size())){
         return -1;
     }
-    quint16 cmd = (quint16) code;
+    quint8 cmd = (quint8) code;
 
     data[0] = GMessage::GMessageStartByte;
     data[headerSize + this->data.size() - 1] = GMessage::GMessageStopByte;
-    data[1] = (quint8) (cmd >> 8);
-    data[2] = (quint8) cmd;
-    data[3] = messageID;
-    data[4] = sensorID >> 8;
-    data[5] = sensorID & 0xff;
-    data[6] = this->data.size();
+    data[1] = (quint8) (messageID >> 8);
+    data[2] = (quint8) messageID;
+    data[3] = cmd;
+    data[4] = request?1:0;
+    data[5] = (quint8) (sensorID >> 8);
+    data[6] = (quint8) (sensorID & 0xff);
+    data[7] = this->data.size();
     for(int i =0; i < this->data.size(); i++){
         data[headerSize-1+i] = this->data[i];
     }
@@ -58,19 +61,25 @@ std::ostream& operator << ( std::ostream& outs, const GMessage & m )
 QString GMessage::codeToString(GMessage::Code code)
 {
     switch(code){
-        case CAN_REQUEST_ADDRESS_AVAILABLE:
+        case REQUEST_ADDRESS_AVAILABLE:
             return "request address available";
             break;
-        case CAN_ADDRESS_TAKEN:
+        case ADDRESS_TAKEN:
             return "address taken";
             break;
-        case CAN_UPDATE_ADDRESS:
+        case UPDATE_ADDRESS:
             return "update address";
             break;
-        case CAN_DISCOVERY:
+    case READY:
+        return "node ready";
+        case DISCOVERY:
             return "node discovery";
             break;
-        case GMessage::Code::startMeasurement:
+    case HELLO:
+        return "hello";
+    case MSG_TEXT:
+        return "text";
+        /*case GMessage::Code::startMeasurement:
             return "start measurement";
             break;
         case GMessage::Code::stopMeasurement:
@@ -159,7 +168,7 @@ QString GMessage::codeToString(GMessage::Code code)
             break;
         case GMessage::Code::actuator_relay_now:
             return "actuator relay now";
-            break;
+            break;*/
         default:
             return "unknown (" + QString::number((int) code, 16) + ")";
             break;
@@ -194,7 +203,7 @@ QString GMessage::toLogString() const
 {
     QString formattedData;
     QString cTime = QDateTime::currentDateTime().toString("hh:mm:ss");
-    if(code == text_message)
+    if(code == MSG_TEXT)
     {
         std::string s(data.begin(), data.end());
         formattedData = QString::fromStdString(s);

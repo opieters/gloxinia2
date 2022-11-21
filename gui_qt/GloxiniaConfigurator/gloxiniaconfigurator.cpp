@@ -160,6 +160,8 @@ void GloxiniaConfigurator::openSerialPort()
 
         // TODO make timer run/stop based on settings
         discoveryTimer->start(30*1000); // run every 30 seconds
+
+        runDiscovery();
     } else {
         QMessageBox::critical(this, tr("Error"), serial->errorString());
 
@@ -184,7 +186,7 @@ void GloxiniaConfigurator::closeSerialPort()
 
 void GloxiniaConfigurator::readData()
 {
-    static short readoutState = 0;
+    static SerialReadoutState readoutState = FindStartByte;
     short n_read = 0;
     static short read_length = 0;
     static char data[255+5];
@@ -192,7 +194,7 @@ void GloxiniaConfigurator::readData()
     do {
         switch(readoutState)
         {
-            case 0:
+            case FindStartByte:
                 qInfo() << "Reading start byte";
                 n_read = serial->read(data, 1);
                 if(n_read != 1)
@@ -201,135 +203,154 @@ void GloxiniaConfigurator::readData()
                 }
                 if(data[0] == GMessage::GMessageStartByte)
                 {
-                    readoutState++;
+                    readoutState = ReadIdH;
                 } else {
                     break;
                 }
-            case 1:
-                qInfo() << "Reading command byte H";
-                n_read = serial->read(data, 1); // read code H
+            case ReadIdH:
+
+                n_read = serial->read(data, 1); // read id H
+                 qInfo() << "Reading id byte H" << (int) data[0];
                 if(n_read < 0){
                     // an error occurred -> return to initial state
-                    readoutState = 0;
+                    readoutState = FindStartByte;
                     return;
                 }
                 if(n_read == 1){
-                    // we were able to read code -> read code L
-                    readoutState++;
+                    // we were able to read code -> read id L
+                    readoutState = ReadIdL;
                 } else {
                     break;
                 }
-            case 2:
-                qInfo() << "Reading command byte L";
-                n_read = serial->read(&data[1], 1); // read code L
+            case ReadIdL:
+
+                n_read = serial->read(&data[1], 1); // read id L
+                qInfo() << "Reading id byte L" << (int) data[1];
                 if(n_read < 0){
                     // an error occurred -> return to initial state
-                    readoutState = 0;
+                    readoutState = FindStartByte;
                     return;
                 }
                 if(n_read == 1){
-                    // we were able to read code -> read id
-                    readoutState++;
+                    // we were able to read code -> read command
+                    readoutState = ReadCommand;
                 } else {
                     break;
                 }
-            case 3:
-                qInfo() << "Reading main id byte";
+            case ReadCommand:
+
                 n_read = serial->read(&data[2], 1); // read id
+                qInfo() << "Reading command byte" << (int) data[2];
                 if(n_read < 0){
-                    readoutState = 0;
+                    readoutState = FindStartByte;
                     return;
                 }
                 if(n_read == 1){
-                    // we were able to read -> read id H
-                    readoutState++;
+                    // we were able to read -> read sensor id H
+                    readoutState = ReadRequest;
                     read_length = 0;
                 } else {
                     break;
                 }
-            case 4:
-                qInfo() << "Reading ext id byte H";
-                n_read = serial->read(&data[3], 1); // read ext id H
+            case ReadRequest:
+
+                n_read = serial->read(&data[3], 1); // read id
+                qInfo() << "Reading request bit" << (int) data[3];
                 if(n_read < 0){
-                    readoutState = 0;
+                    readoutState = FindStartByte;
+                    return;
+                }
+                if(n_read == 1){
+                    // we were able to read -> read sensor id H
+                    readoutState = ReadSensorIdH;
+                    read_length = 0;
+                } else {
+                    break;
+                }
+            case ReadSensorIdH:
+
+                n_read = serial->read(&data[4], 1); // read ext id H
+                qInfo() << "Reading sensor id byte H" << (int) data[4];
+                if(n_read < 0){
+                    readoutState = FindStartByte;
                     return;
                 }
                 if(n_read == 1){
                     // we were able to read -> read ext id L
-                    readoutState++;
+                    readoutState = ReadSensorIdL;
                     read_length = 0;
                 } else {
                     break;
                 }
-            case 5:
-                qInfo() << "Reading ext id byte L";
-                n_read = serial->read(&data[4], 1); // read ext id L
+            case ReadSensorIdL:
+                n_read = serial->read(&data[5], 1); // read ext id L
+                qInfo() << "Reading ext id byte L" << (int) data[5];
                 if(n_read < 0){
-                    readoutState = 0;
+                    readoutState = FindStartByte;
                     return;
                 }
                 if(n_read == 1){
                     // we were able to read -> read length
-                    readoutState++;
+                    readoutState = ReadLength;
                     read_length = 0;
                 } else {
                     break;
                 }
-            case 6:
-                qInfo() << "Reading length byte";
-                n_read = serial->read(&data[5], 1); // read length
+            case ReadLength:
+                n_read = serial->read(&data[6], 1); // read length
+                qInfo() << "Reading length byte" << (int) data[6];
                 if(n_read < 0){
-                    readoutState = 0;
+                    readoutState = FindStartByte;
                     return;
                 }
                 if(n_read == 1){
                     // we were able to read the length -> read data (if any)
                     read_length = 0;
-                    if(data[5] == 0){
-                        readoutState += 2;
+                    if(data[6] == 0){
+                        readoutState = DetectStopByte;
                         break;
                     } else {
-                        readoutState++;
+                        readoutState = ReadData;
                     }
                 } else {
                     break;
                 }
-            case 7:
-                qInfo() << "Reading data" << (int) data[5] ;
-                n_read = serial->read(&data[6+read_length], data[5]-read_length);
+            case ReadData:
+                qInfo() << "Reading data" << (int) data[6] ;
+                n_read = serial->read(&data[7+read_length], data[6]-read_length);
                 if(n_read < 0){
-                    readoutState = 0;
+                    readoutState = FindStartByte;
                     return;
                 }
                 read_length += n_read;
-                if(read_length == data[5]){
-                    readoutState++;
+                if(read_length == data[6]){
+                    readoutState = DetectStopByte;
                 } else {
                     break;
                 }
-            case 8:
+            case DetectStopByte:
                 qInfo() << "Reading stop byte";
-                n_read = serial->read(&data[6+read_length], 1);
+                n_read = serial->read(&data[7+read_length], 1);
                 if(n_read < 0)
                 {
                     qInfo() << "ERROR";
-                    readoutState = 0;
+                    readoutState = FindStartByte;
                     read_length = 0;
                     return;
                 }
                 if(n_read == 1)
                 {
                     qInfo() << "Entire message received";
-                    if(data[6+read_length] == GMessage::GMessageStopByte)
+                    if(data[7+read_length] == GMessage::GMessageStopByte)
                     {
                         quint8* udata = (quint8*) data;
                         qInfo() << "Processing message";
                         if(read_length == 0)
                         {
-                            GMessage m((GMessage::Code) (((uint16_t) udata[0] << 8) | udata[1]), udata[2], ((uint16_t) udata[3] << 8) | udata[4], nullptr, read_length);
+                            GMessage m((GMessage::Code) udata[2], (((uint16_t) udata[0] << 8) | udata[1]), ((uint16_t) udata[4] << 8) | udata[5], udata[3]==0?false:true, nullptr, read_length);
                             processIncomingGMessage(m);
                         } else {
-                            GMessage m((GMessage::Code) (((uint16_t) udata[0] << 8) | udata[1]), udata[2], ((uint16_t) udata[3] << 8) | udata[4], &udata[6], read_length);
+                            GMessage m((GMessage::Code) udata[2],  (((uint16_t) udata[0] << 8) | udata[1]), ((uint16_t) udata[4] << 8) | udata[5], udata[3]==0?false:true, &udata[7], read_length);
                             processIncomingGMessage(m);
                         }
 
@@ -341,7 +362,7 @@ void GloxiniaConfigurator::readData()
                     } else {
                         // incorrect data byte received -> reset state
                     }
-                    readoutState = 0;
+                    readoutState = FindStartByte;
                     read_length = 0;
                     break;
                 } else {
@@ -351,7 +372,7 @@ void GloxiniaConfigurator::readData()
 
                 break;
             default:
-                readoutState = 0;
+                readoutState = FindStartByte;
                 break;
         }
     } while(n_read > 0);
@@ -379,17 +400,17 @@ void GloxiniaConfigurator::processTextMessage(const GMessage& m)
 void GloxiniaConfigurator::processIncomingGMessage(const GMessage& m)
 {
     switch(m.getCode()){
-    case GMessage::Code::CAN_REQUEST_ADDRESS_AVAILABLE:
+    case GMessage::Code::REQUEST_ADDRESS_AVAILABLE:
         break;
-    case GMessage::Code::CAN_ADDRESS_TAKEN:
+    case GMessage::Code::ADDRESS_TAKEN:
         break;
-    case GMessage::Code::CAN_UPDATE_ADDRESS:
+    case GMessage::Code::UPDATE_ADDRESS:
         break;
-    case GMessage::Code::CAN_DISCOVERY:
+    case GMessage::Code::DISCOVERY:
         // check if node exists, if not create one and add to model
         processCANDiscoveryMessage(m);
         break;
-    case GMessage::Code::text_message:
+    /*case GMessage::Code::text_message:
         processTextMessage(m);
         break;
     case GMessage::Code::startMeasurement:
@@ -420,7 +441,7 @@ void GloxiniaConfigurator::processIncomingGMessage(const GMessage& m)
     case GMessage::Code::sensor_start:
     case GMessage::Code::actuator_relay:
     case GMessage::Code::sensor_actuator_enable:
-    case GMessage::Code::actuator_relay_now:
+    case GMessage::Code::actuator_relay_now:*/
     default:
     break;
     }
@@ -568,11 +589,22 @@ QString GloxiniaConfigurator::getSensorLabel(GCSensor* s){
 
 void GloxiniaConfigurator::runDiscovery()
 {
-    qInfo() << "Running discovery broadcast";
-
-    GMessage m(GMessage::Code::CAN_DISCOVERY, 0, 0);
     quint8 rawData[32];
-    unsigned int length = m.toBytes(rawData, 32);
+    unsigned int length;
+
+    // check if there already is a node in the system, if not send address update to finish first assignment
+    /*if(treeModel->rowCount() == 0){
+        qInfo() << "Assiging address of node conncted to computer.";
+        std::vector<uint8_t> data = {(uint8_t) (GMessage::SearchStartAddress >> 8), (uint8_t) GMessage::SearchStartAddress};
+        GMessage m(GMessage::Code::UPDATE_ADDRESS, GMessage::UnsetAddress, GMessage::NoSensorID, false, data);
+        length = m.toBytes(rawData, 32);
+    } else {*/
+        qInfo() << "Running discovery broadcast";
+
+        GMessage m(GMessage::Code::DISCOVERY, 0, 0, true);
+
+        length = m.toBytes(rawData, 32);
+    //}
     serial->write((char*) rawData, length);
 }
 

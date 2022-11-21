@@ -35,6 +35,19 @@ public:
     void clearAll(void);
     void selectDataFile(void);
 
+    enum SerialReadoutState {
+        FindStartByte,
+        ReadIdH,
+        ReadIdL,
+        ReadCommand,
+        ReadRequest,
+        ReadSensorIdH,
+        ReadSensorIdL,
+        ReadLength,
+        ReadData,
+        DetectStopByte
+    };
+
 private slots:
     void openSerialPort();
     void closeSerialPort();

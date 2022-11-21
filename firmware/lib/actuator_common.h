@@ -5,21 +5,12 @@
 #include "can.h"
 #include "uart.h"
 #include "sensor_common.h"
+#include <message.h>
+
 
 #ifdef	__cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-    typedef struct actuator_log_s {
-        can_message_t can_message;
-        uart_message_t uart_message;
-    } actuator_log_t;
-
-    typedef struct actuator_elog_s {
-        can_message_t can_message;
-        uart_message_t uart_message;
-        uint16_t n_errors;
-    } actuator_elog_t;
 
     typedef enum {
         ACTUATOR_STATE_INACTIVE,
@@ -35,8 +26,8 @@ extern "C" {
 
         actuator_state_t status;
 
-        actuator_log_t dlog;
-        actuator_elog_t elog;
+        message_t dlog;
+        message_t elog;
 
         uint8_t tx_data[CAN_MAX_N_BYTES];
         uint8_t error_data[ERROR_DATA_SIZE];
