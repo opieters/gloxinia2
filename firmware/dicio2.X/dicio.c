@@ -5,8 +5,31 @@
 #include <uart.h>
 #include <libpic30.h>
 #include <can.h>
+#include <i2c.h>
+#include <sensor.h>
+
+// TODO REMOVE DEBUG INCLUDES
+#include <sensor_apds9306_065.h>
 
 bool uart_connection_active = false;
+
+i2c_config_t dicio_i2c1_config = {
+    .i2c_address = 0x0,
+    .status = I2C_STATUS_PRIMARY_ON,
+    .pw_sr_cb = I2C_NO_CALLBACK,
+    .pr_sw_cb = I2C_NO_CALLBACK,
+    .scl_pin = PIN_INIT(G, 2),
+    .sda_pin = PIN_INIT(G, 3)
+};
+
+i2c_config_t dicio_i2c2_config = {
+    .i2c_address = 0x0,
+    .status = I2C_STATUS_PRIMARY_ON,
+    .pw_sr_cb = I2C_NO_CALLBACK,
+    .pr_sw_cb = I2C_NO_CALLBACK,
+    .scl_pin = PIN_INIT(F, 5),
+    .sda_pin = PIN_INIT(F, 4)
+};
 
 void dicio_init(void) {
     
@@ -17,6 +40,36 @@ void dicio_init(void) {
     
     can_init();
     UART_DEBUG_PRINT("Initialised ECAN.");
+    
+    i2c1_init(&dicio_i2c1_config);
+    UART_DEBUG_PRINT("Initialised I2C1.");
+    
+    i2c2_init(&dicio_i2c2_config);
+    UART_DEBUG_PRINT("Initialised I2C2.");
+    
+    sensors_init();
+    UART_DEBUG_PRINT("Initialised sensor interface.");
+    
+    event_controller_init();
+    UART_DEBUG_PRINT("Initialised event controller.");
+
+    uart_connection_active = true;
+    message_t m;
+    uint8_t data[] = {
+        SENSOR_TYPE_APDS9306_065, 
+        0,
+        I2C_ADDRESS_SENSOR_APDS9306_065, 
+        I2C2_BUS,
+        SENSOR_APDS9306_065_ALS_MEAS_RATE_100MS,
+        SENSOR_APDS9306_065_ALS_RESOLUTION_20BIT,
+        SENSOR_APDS9306_065_ALS_GAIN_1};
+    
+    message_init(&m, controller_address, MESSAGE_NO_REQUEST, M_SENSOR_CONFIG, 0,
+        data, ARRAY_LENGTH(data));
+    message_process(&m);
+    
+    //task_schedule_t dicio_read_log = {{dicio_send_ready_message, NULL}, 1, 0};
+    //schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);
     
     //UART_DEBUG_PRINT("Detecting if other devices connected using CAN.");
     //can_detect_devices();
@@ -36,8 +89,10 @@ void dicio_init(void) {
 
     __delay_ms(100);
     
-    task_schedule_t dicio_read_log = {dicio_send_ready_message, 1, 0};
-    schedule_specific_event(dicio_read_log, ID_READY_SCHEDULE);
+    task_schedule_t dicio_read_log;
+    task_t dicio_read_log_task = {dicio_send_ready_message, NULL};
+    schedule_init(&dicio_read_log, dicio_read_log_task, 10);
+    schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);
 }
 
 void dicio_init_pins(void) {
@@ -422,7 +477,7 @@ void dicio_init_pins(void) {
 #endif
 }
 
-void dicio_send_ready_message(void) {
+void dicio_send_ready_message(void* data) {
     message_t m;
     
     message_init(&m, controller_address, 0, M_READY, 0, NULL, 0);

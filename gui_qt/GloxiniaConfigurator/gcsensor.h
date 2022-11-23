@@ -13,6 +13,20 @@ public:
     GCSensor(quint8 id = 0);
     ~GCSensor();
 
+    enum sensor_class {
+        NOT_SET = 0x00,
+        SHT35 = 0x01,
+        APDS9306_065 = 0x02,
+        ANALOGUE = 0x03,
+    };
+
+    enum sensor_status {
+        INACTIVE =0x00,
+        IDLE = 0x01,
+        ACTIVE = 0x02,
+        ERROR = 0x03
+    };
+
     //static QString sensorTypeToString(SensorType t);
 
     //SensorType getSensorType(void);

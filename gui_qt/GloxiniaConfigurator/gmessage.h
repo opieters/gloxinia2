@@ -22,6 +22,13 @@ public:
         DISCOVERY                   = 0x05,
         HELLO                       = 0x06,
         MSG_TEXT                    = 0x07,
+        NODE_INFO = 0x08,
+        NODE_RESET = 0x09,
+        SENSOR_STATUS = 0x10,
+        SENSOR_ERROR = 0x11,
+        SENSOR_DATA = 0x12,
+        SENSOR_CONFIG = 0x13,
+        ACTUATOR_STATUS = 0x20,
     };
 
     static constexpr uint8_t GMessageStartByte  = 0x01;

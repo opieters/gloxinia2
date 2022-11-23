@@ -2,6 +2,7 @@
 #include "dicio.h"
 #include <event_controller.h>
 #include <utilities.h>
+#include <i2c.h>
 
 #pragma config GWRP = OFF                       // General Segment Write-Protect bit (General Segment may be written)
 #pragma config GSS = OFF                        // General Segment Code-Protect bit (General Segment Code protect is disabled)
@@ -39,7 +40,7 @@
 #pragma config APL = OFF                        // Auxiliary Segment Code-protect bit (Aux Flash Code protect is disabled)
 #pragma config APLK = OFF                       // Auxiliary Segment Key bits (Aux Flash Write Protection and Code Protection is Disabled)
 
-static event_t task;
+static task_t task;
 
 int main(void) {
 
@@ -69,11 +70,11 @@ int main(void) {
     dicio_init();
 
     while (1) {
-        //i2c_process_queue();
+        i2c_process_queue();
 
         if (n_queued_tasks > 0) {
             task = pop_queued_task();
-            task();
+            task.cb(task.data);
         }
     }
 

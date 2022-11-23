@@ -2,9 +2,14 @@
 #include <address.h>
 #include <libpic30.h>
 
+#include "message.h"
+
 uint16_t ecan_message_buffer[NUM_OF_ECAN_BUFFERS][8] __attribute__((aligned(NUM_OF_ECAN_BUFFERS * 16)));
 
 int16_t n_connected_devices = 0;
+
+// internal functions of message.c
+extern bool uart_connection_active;
 
 
 void can_init(void) {
@@ -449,7 +454,15 @@ void __attribute__((interrupt, no_auto_psv)) _DMA2Interrupt(void) {
         // handle message
         parse_from_can_buffer(&cm, ecan_message_buffer[C1FIFObits.FNRB]);
         parse_from_can_message(&m, &cm);
-        message_process(&m);
+        
+        if((m.identifier == controller_address) || (m.identifier == ADDRESS_GATEWAY) ){
+            message_process(&m);
+        } else {
+            // if the UART connection is active, we forward the message
+            if(uart_connection_active){
+                send_message_uart(&m);
+            }
+        }
         
         // clear buffer full interrupt bit
         if (C1FIFObits.FNRB > 15) {

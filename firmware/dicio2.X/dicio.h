@@ -12,7 +12,7 @@ extern "C" {
 
     void dicio_init(void);
     
-    void dicio_send_ready_message(void);
+    void dicio_send_ready_message(void*);
     
     void dicio_init_pins(void);
 

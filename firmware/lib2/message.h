@@ -16,10 +16,13 @@ typedef enum {
     M_DISCOVERY                  = 0x05, // discovery message that is used to identify all nodes in the system
     M_HELLO                      = 0x06,
     M_MSG_TEXT                   = 0x07,
-    M_SENSOR_STATUS,
-    M_SENSOR_ERROR,
-    M_SENSOR_DATA,
-    M_ACTUATOR_STATUS,
+    M_NODE_INFO                  = 0x08, // get node info ([node type (1), number of connected sensors (1), software version (2)])
+    M_NODE_RESET                 = 0x09,
+    M_SENSOR_STATUS              = 0x10,
+    M_SENSOR_ERROR               = 0x11,
+    M_SENSOR_DATA                = 0x12,
+    M_SENSOR_CONFIG              = 0x13, // configure sensors or read configuration   
+    M_ACTUATOR_STATUS            = 0x20,
 } message_cmd_t;
 
 /*typedef enum {
@@ -41,6 +44,13 @@ typedef enum {
     M_TX_SENT,
     M_ERROR,
 } message_status_t;
+
+typedef enum {
+    M_NODE_UNKNOWN,
+    M_NODE_DICIO,
+    M_NODE_PLANALTA,
+    M_NODE_SYLVATICA,
+} message_node_t;
 
 typedef struct {
     uint16_t identifier;
@@ -67,6 +77,9 @@ extern "C" {
     
     void message_send(message_t* m);
     void message_process(message_t* m);
+    
+    void send_message_uart(message_t* m);
+    void send_message_can(message_t* m);
 
 #ifdef	__cplusplus
 }

@@ -4,14 +4,21 @@
 #include <uart.h>
 #include <address.h>
 #include <event_controller.h>
+#include <i2c.h>
+#include <sensor.h>
 
 // internal functions
 static void cmd_request_address_available(message_t* m);
 static void cmd_address_taken(message_t* m);
 static void cmd_update_address(message_t* m);
 static void cmd_discovery(message_t* m);
+static void cmd_node_info(message_t* m);
+static void cmd_sensor_config(message_t* m);
+static void cmd_sensor_status(message_t* m);
+static void cmd_sensor_error(message_t* m);
+static void cmd_sensor_data(message_t* m);
 
-static void send_message_uart(message_t* m);
+static void address_get_task(void* data);
 
 extern bool uart_connection_active;
 
@@ -37,10 +44,10 @@ void message_reset(message_t* m) {
     }
 }
 
-static void send_message_uart(message_t* m) {
+void send_message_uart(message_t* m) {
     message_t m_uart;
-    
-    if(!uart_connection_active){
+
+    if (!uart_connection_active) {
         return;
     }
 
@@ -49,7 +56,7 @@ static void send_message_uart(message_t* m) {
     uart_queue_message(&m_uart);
 }
 
-static void send_message_can(message_t* m) {
+void send_message_can(message_t* m) {
     can_message_t mc;
 
     // cap length
@@ -77,7 +84,7 @@ void message_send(message_t* m) {
     }
 }
 
-inline void message_process(message_t* m) {
+void message_process(message_t* m) {
     switch (m->command) {
         case M_REQUEST_ADDRESS_AVAILABLE:
             UART_DEBUG_PRINT("CAN_REQUEST_ADDRESS_AVAILABLE");
@@ -98,55 +105,30 @@ inline void message_process(message_t* m) {
         case M_MSG_TEXT:
             send_message_uart(m);
             break;
-            /*case CAN_INFO_MSG_START_MEAS:
-                break;
-            case CAN_INFO_MSG_STOP_MEAS:
-                // TODO go into sleep mode?
-                break;
-            case CAN_INFO_MSG_RESET:
-            {
-                uint8_t reset_device = 0;
-                if (m->data_length == 2U) {
-                    if (m->data[1] == controller_address) {
-                        reset_device = 1;
-                    }
-                } else {
-                    reset_device = 1;
-                }
-                if (reset_device) {
-                    delay_us(10);
-                    asm("RESET");
-                }
-                break;
-            }
-            case CAN_MSG_SENSOR_STATUS:
+        case M_NODE_INFO:
+            cmd_node_info(m);
+            break;
+        case M_SENSOR_STATUS:
+            cmd_sensor_status(m);
+            break;
+        case M_SENSOR_ERROR:
+            cmd_sensor_error(m);
+            break;
+        case M_SENSOR_DATA:
+            cmd_sensor_data(m);
+            break;
+        case M_SENSOR_CONFIG:
+            cmd_sensor_config(m);
+            break;
+        case M_NODE_RESET:
+        {
+            can_disable();
+            i2c1_disable();
+            i2c2_disable();
+            asm("RESET");
 
-                break;
-            case CAN_INFO_MSG_ACTUATOR_STATUS:
-                // TODO
-                break;
-            case CAN_INFO_MSG_INIT_SENSORS:
-                break;
-            case CAN_INFO_MSG_SAMPLE:
-                //sample_sensors = 1;
-                break;
-            case CAN_INFO_MSG_INT_ADC:
-                break;
-            case CAN_INFO_MSG_INIT_DAC:
-                break;
-            case CAN_INFO_MSG_SCHEDULE_I2C:
-                break;
-            case CAN_INFO_MSG_HELLO:
-                UART_DEBUG_PRINT("CAN_INFO_MSG_HELLO");
-                break;
-            case CAN_INFO_LIA_GAIN_SET:
-                if (m->data_length == 4) {
-                    if (m->data[1] == (controller_address >> 3)) {
-                        // TODO
-                        //select_gain_pga113(m->data[3]);
-                    }
-                }
-                break;*/
+            break;
+        }
         default:
             break;
     }
@@ -174,11 +156,11 @@ static void cmd_address_taken(message_t* m) {
         controller_address = ADDRESS_UNSET;
 
         UART_DEBUG_PRINT("Cleared address.");
-        
+
         // if an unsuccessful attempt was made to set the gateway node address,
         // we must report this such that an error can be displayed by the GUI
         // to inform the user that there is a connectivity issue
-        if(uart_connection_active){
+        if (uart_connection_active) {
             message_init(m,
                     m->identifier,
                     0,
@@ -189,57 +171,108 @@ static void cmd_address_taken(message_t* m) {
             message_reset(m);
             uart_queue_message(m);
         }
-        
+
         // new attempt to get address
-        task_schedule_t task_get_address = {address_get, 0, 0, 0};
-        
-        schedule_specific_event(task_get_address, ID_GET_ADDRESS);
+        task_t task_get_address = {address_get_task, NULL};
+
+        push_queued_task(task_get_address);
     }
+}
+
+static void address_get_task(void* data) {
+    address_get();
 }
 
 static void cmd_update_address(message_t* m) {
     if ((m->identifier == controller_address) && (m->length == 2)) {
         address_set((m->data[0] << 8) | m->data[1]);
     }
-    
+
     // report back
     message_init(m, controller_address,
-        MESSAGE_NO_REQUEST,
-        M_DISCOVERY,
-        NO_SENSOR_ID,
-        NULL,
-        0);
-    message_send(m);
-}
-
-static void cmd_discovery(message_t* m) {
-    can_reset();
-    
-    if(m->request_message_bit && (m->identifier == ADDRESS_GATEWAY)){
-        if(controller_address == ADDRESS_UNSET){
-            address_get();
-            return;
-        } else {
-            // forward the message to the other nodes
-            if(m->status == M_RX_FROM_UART){
-                can_send_fmessage_any_ch(m);
-            }
-        }
-    } 
-    if(m->request_message_bit && (m->identifier == ADDRESS_GATEWAY) && (controller_address != ADDRESS_UNSET)){
-        // send message back to gateway
-        message_init(m,
-            controller_address,
             MESSAGE_NO_REQUEST,
             M_DISCOVERY,
             NO_SENSOR_ID,
             NULL,
             0);
-        
+    message_send(m);
+}
+
+static void cmd_discovery(message_t* m) {
+    can_reset();
+
+    if (m->request_message_bit && (m->identifier == ADDRESS_GATEWAY)) {
+        if (controller_address == ADDRESS_UNSET) {
+            address_get();
+            return;
+        } else {
+            // forward the message to the other nodes
+            if (m->status == M_RX_FROM_UART) {
+                can_send_fmessage_any_ch(m);
+            }
+        }
+    }
+    if (m->request_message_bit && (m->identifier == ADDRESS_GATEWAY) && (controller_address != ADDRESS_UNSET)) {
+        // send message back to gateway
+        message_init(m,
+                controller_address,
+                MESSAGE_NO_REQUEST,
+                M_DISCOVERY,
+                NO_SENSOR_ID,
+                NULL,
+                0);
+
         message_send(m);
     }
-    
-    if(!m->request_message_bit){
+
+    if (!m->request_message_bit) {
         send_message_uart(m);
     }
+}
+
+static void cmd_node_info(message_t* m) {
+    uint8_t data[4];
+    message_t i;
+
+#ifdef __DICIO__
+    data[0] = M_NODE_DICIO;
+#elif __SYLVATICA__
+    data[0] = M_NODE_SYLVATICA;
+#elif __PLANALTA__
+    data[0] = M_NODE_PLANALTA;
+#else 
+    data[0] = M_NODE_UNKNOWN;
+#endif
+
+    data[1] = 0;
+    data[2] = __SOFWARE_MAJOR_VERSION__;
+    data[3] = __SOFWARE_MINOR_VERSION__;
+
+    message_init(&i, controller_address,
+            MESSAGE_NO_REQUEST,
+            m->command,
+            NO_SENSOR_ID,
+            data,
+            ARRAY_LENGTH(data));
+    message_send(&i);
+}
+
+static void cmd_sensor_config(message_t* m) {
+    sensor_set_config_from_buffer((uint8_t) m->sensor_identifier, m->data, m->length);
+}
+
+static void cmd_sensor_status(message_t* m) {
+    if(m->identifier == ADDRESS_GATEWAY){
+        
+    } else {
+        
+    }
+}
+
+static void cmd_sensor_error(message_t* m) {
+
+}
+
+static void cmd_sensor_data(message_t* m) {
+
 }

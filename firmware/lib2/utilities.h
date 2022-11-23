@@ -4,6 +4,7 @@
 #include <xc.h>
 #include <stdio.h>
 #include <string.h>
+#include <uart.h>
 
 #ifdef __DEBUG__
 #define DEBUG_BUFFER_DEPTH 8
@@ -15,6 +16,9 @@
 #define DEBUG_BUFFER_LENGTH 0
 #define DEBUG_BUFFER_DEPTH 0
 #endif
+
+#define __SOFWARE_MAJOR_VERSION__ 0
+#define __SOFWARE_MINOR_VERSION__ 1
 
 #define ARRAY_LENGTH(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -29,12 +33,20 @@
 #define SET_PORT_BIT(x)    ((*((x).port_r)) |= 1UL << ((x).n))
 #define TOGGLE_BIT(x, y) ((*(x)) ^= 1UL << (y))
 
+typedef struct {
+    volatile uint16_t* port_r;
+    volatile uint16_t* tris_r;
+    volatile uint16_t* lat_r;
+    uint8_t n;
+} pin_t;
+
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-extern char print_buffer[DEBUG_BUFFER_DEPTH][DEBUG_BUFFER_LENGTH];
-extern uint8_t print_buffer_idx;
+    extern char print_buffer[DEBUG_BUFFER_DEPTH][DEBUG_BUFFER_LENGTH];
+    extern uint8_t print_buffer_idx;
 
 
 #ifdef	__cplusplus

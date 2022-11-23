@@ -2,6 +2,7 @@
 #include <utilities.h>
 #include <libpic30.h>
 #include <address.h>
+#include <can.h>
 
 // UART TX FIFO buffer variables
 volatile uint8_t n_uart_tx_messages = 0;
@@ -38,7 +39,6 @@ volatile uint8_t uart_rx_idx = 0;
 
 // debug message and data
 message_t* uart_print_message = NULL;
-uint8_t uart_print_message_data[128];
 
 void uart_init(uint32_t baudrate) {
     unsigned int i;
@@ -114,8 +114,6 @@ void uart_init(uint32_t baudrate) {
 
 void uart_print(const char* message, size_t length) {
 #ifdef __DEBUG__
-    uint16_t i;
-
     if (U2STAbits.UTXEN == 0) {
         return;
     }
@@ -132,13 +130,8 @@ void uart_print(const char* message, size_t length) {
         0,
         M_MSG_TEXT,
         NO_SENSOR_ID,
-        uart_print_message_data,
-        ARRAY_LENGTH(uart_dma_message_data));
-
-    uart_print_message->length = MIN(length, ARRAY_LENGTH(uart_print_message_data));
-    for (i = 0; i < length; i++) {
-        uart_print_message->data[i] = message[i];
-    }
+        (uint8_t*) message,
+        length);
 
     message_reset(uart_print_message);
     uart_queue_message(uart_print_message);
@@ -323,7 +316,12 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void) {
             
             uart_connection_active = true;
 
-            message_process(m);
+            if((m->identifier == controller_address) || (m->identifier == ADDRESS_GATEWAY)){
+                message_process(m);
+            } else {
+                // forward this message over CAN
+                send_message_can(m);
+            }
 
             break;
         default:

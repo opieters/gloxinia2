@@ -1,5 +1,6 @@
 #include "gmessage.h"
 #include <QDateTime>
+#include "gcsensor.h"
 
 
 GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, bool request, quint8* data, uint64_t size):
@@ -79,99 +80,23 @@ QString GMessage::codeToString(GMessage::Code code)
         return "hello";
     case MSG_TEXT:
         return "text";
-        /*case GMessage::Code::startMeasurement:
-            return "start measurement";
-            break;
-        case GMessage::Code::stopMeasurement:
-            return "stop measurement";
-            break;
-        case GMessage::Code::activate_sensor:
-            return "activate senosr";
-            break;
-        case GMessage::Code::deactivate_sensor:
-            return "deactivate sensor";
-            break;
-        case GMessage::Code::reset_node:
-            return "reset node";
-            break;
-        case GMessage::Code::reset_system:
-            return "reset system";
-            break;
-        case GMessage::Code::text_message:
-            return "text message";
-            break;
-        case GMessage::Code::sensor_data:
-            return "sensor data";
-            break;
-        case GMessage::Code::sensor_status:
-            return "sensor status";
-            break;
-        case GMessage::Code::measurement_period:
-            return "measurement period";
-            break;
-        case GMessage::Code::error_message:
-            return "error message";
-            break;
-        case GMessage::Code::loopback_message:
-            return "loopback message";
-            break;
-        case GMessage::Code::actuator_status:
-            return "actuator status";
-            break;
-        case GMessage::Code:: hello_message:
-            return "hello message";
-            break;
-            case GMessage::Code::init_sampling:
-            return "init sampling";
-            break;
-        case GMessage::Code:: init_sensors:
-            return "init sensors";
-            break;
-        case GMessage::Code:: sensor_error:
-            return "sensor error";
-            break;
-        case GMessage::Code::lia_gain:
-            return "lia gain";
-            break;
-        case GMessage::Code::unknown :
-            return "unkown";
-            break;
-        case GMessage::Code::meas_trigger :
-            return "measurement trigger";
-            break;
-        case GMessage::Code::sensor_config:
-            return "sensor config";
-            break;
-        case GMessage::Code:: actuator_data :
-            return "actuator data";
-            break;
-        case GMessage::Code:: actuator_error:
-            return "actuator error";
-            break;
-        case GMessage::Code::actuator_trigger:
-            return "actuator trigger";
-            break;
-        case GMessage::Code::actuator_gc_temp :
-            return "actuator gc temperature";
-            break;
-        case GMessage::Code::actuator_gc_rh    :
-            return "actuator gc relative humidity";
-            break;
-        case GMessage::Code:: sensor_start:
-            return "sensor start";
-            break;
-        case GMessage::Code::actuator_relay:
-            return "actuator relay";
-            break;
-        case GMessage::Code::sensor_actuator_enable:
-            return "sensor actuator enable";
-            break;
-        case GMessage::Code::actuator_relay_now:
-            return "actuator relay now";
-            break;*/
-        default:
-            return "unknown (" + QString::number((int) code, 16) + ")";
-            break;
+    case  NODE_INFO:
+        return "node info";
+    case NODE_RESET:
+        return "node reset";
+    case SENSOR_STATUS:
+        return "sensor status";
+    case SENSOR_ERROR:
+        return "sensor error";
+    case SENSOR_DATA:
+        return "sensor data";
+    case SENSOR_CONFIG:
+        return "sensor config";
+    case ACTUATOR_STATUS:
+        return "actuator config";
+    default:
+        return "unknown (" + QString::number((int) code, 16) + ")";
+        break;
     }
 }
 
@@ -203,14 +128,35 @@ QString GMessage::toLogString() const
 {
     QString formattedData;
     QString cTime = QDateTime::currentDateTime().toString("hh:mm:ss");
-    if(code == MSG_TEXT)
-    {
-        std::string s(data.begin(), data.end());
-        formattedData = QString::fromStdString(s);
-    } else {
-        for(quint8 i : data)
+    switch(code) {
+        case MSG_TEXT:
         {
-            formattedData.append(QStringLiteral("%1").arg(i, 2, 16, QLatin1Char('0')) + " ");
+            std::string s(data.begin(), data.end());
+            formattedData = QString::fromStdString(s);
+            break;
+        }
+        case SENSOR_STATUS:
+            switch((GCSensor::sensor_status) data[0]){
+            case GCSensor::sensor_status::INACTIVE:
+                formattedData.append("inactive");
+                break;
+                case GCSensor::sensor_status::IDLE:
+                    formattedData.append("idle");
+                break;
+            case GCSensor::sensor_status::ACTIVE:
+                formattedData.append("active");
+                break;
+            case GCSensor::sensor_status::ERROR:
+                formattedData.append("error");
+                break;
+            }
+
+        break;
+        default: {
+            for(quint8 i : data)
+            {
+                formattedData.append(QStringLiteral("%1").arg(i, 2, 16, QLatin1Char('0')) + " ");
+            }
         }
     }
     return "[" + cTime + "] (" + QString::number(messageID) + ", " + QString::number(sensorID) + ") " + GMessage::codeToString(code) + " " + formattedData;
