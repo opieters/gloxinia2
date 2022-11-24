@@ -1,53 +1,3 @@
-/****************************************************************************
-**
-** Copyright (C) 2016 The Qt Company Ltd.
-** Contact: https://www.qt.io/licensing/
-**
-** This file is part of the examples of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:BSD$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** BSD License Usage
-** Alternatively, you may use this file under the terms of the BSD license
-** as follows:
-**
-** "Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions are
-** met:
-**   * Redistributions of source code must retain the above copyright
-**     notice, this list of conditions and the following disclaimer.
-**   * Redistributions in binary form must reproduce the above copyright
-**     notice, this list of conditions and the following disclaimer in
-**     the documentation and/or other materials provided with the
-**     distribution.
-**   * Neither the name of The Qt Company Ltd nor the names of its
-**     contributors may be used to endorse or promote products derived
-**     from this software without specific prior written permission.
-**
-**
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
-
 #include "treemodel.h"
 #include "treeitem.h"
 #include "gcsensor.h"
@@ -59,7 +9,7 @@ TreeModel::TreeModel(QObject *parent)
     : QAbstractItemModel(parent)
 {
     rootItem = new TreeItem("Example", TreeItem::NodeType::Root);
-    //setupModelData(data.split('\n'), rootItem);
+    // setupModelData(data.split('\n'), rootItem);
 }
 
 TreeModel::~TreeModel()
@@ -80,39 +30,61 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
 
     TreeItem *item = getItem(index);
 
-    if(item == nullptr){
+    if (item == nullptr)
+    {
         return QVariant();
     }
 
     QVariant data = item->data();
-    GCSensor* s;
-    GCNode* n;
+    GCSensor *s;
+    GCNode *n;
 
-    switch(role)
+    switch (role)
     {
-        case Qt::DisplayRole:
-            switch(item->getNType())
+    case Qt::DisplayRole:
+        switch (item->getNType())
+        {
+        case TreeItem::NodeType::Sensor:
+            s = data.value<GCSensorSHT35 *>();
+            if (s != nullptr)
             {
-                case TreeItem::NodeType::Sensor:
-                    s = data.value<GCSensor*>();
-                    if(s != nullptr) { return s->toString(); }
-                    break;
-                case TreeItem::NodeType::Root:
-                    return "Root Node";
-                    break;
-                case TreeItem::NodeType::Node:
-                    n = data.value<GCNode*>();
-                    if(n != nullptr) { return n->toString(); }
-                    break;
+                return s->toString();
             }
-        case Qt::EditRole:
-            return item->data();
-        case Qt::DecorationRole:
-            return item->getIcon();
-        default:
-            return QVariant();
+            s = data.value<GCSensorAPDS9306 *>();
+            if (s != nullptr)
+            {
+                return s->toString();
+            }
+            return "Empty interface";
+            break;
+        case TreeItem::NodeType::Root:
+            return "Root Node";
+            break;
+        case TreeItem::NodeType::Node:
+            n = data.value<GCNodeDicio *>();
+            if (n != nullptr)
+            {
+                return n->toString();
+            }
+            n = data.value<GCNodePlanalta *>();
+            if (n != nullptr)
+            {
+                return n->toString();
+            }
+            n = data.value<GCNodeSylvatica *>();
+            if (n != nullptr)
+            {
+                return n->toString();
+            }
+            break;
+        }
+    case Qt::EditRole:
+        return item->data();
+    case Qt::DecorationRole:
+        return item->getIcon();
+    default:
+        return QVariant();
     }
-
 
     return QVariant();
 }
@@ -127,8 +99,9 @@ Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
 
 TreeItem *TreeModel::getItem(const QModelIndex &index) const
 {
-    if (index.isValid()) {
-        TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
+    if (index.isValid())
+    {
+        TreeItem *item = static_cast<TreeItem *>(index.internalPointer());
         if (item)
             return item;
     }
@@ -150,7 +123,6 @@ QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent) con
     return QModelIndex();
 }
 
-
 bool TreeModel::insertRows(int position, int rows, const QModelIndex &parent)
 {
     TreeItem *parentItem = getItem(parent);
@@ -171,16 +143,14 @@ QModelIndex TreeModel::parent(const QModelIndex &index) const
     if (!index.isValid())
         return QModelIndex();
 
-    TreeItem* childItem = getItem(index);
-    TreeItem* parentItem = childItem != nullptr ? childItem->parent() : nullptr;
+    TreeItem *childItem = getItem(index);
+    TreeItem *parentItem = childItem != nullptr ? childItem->parent() : nullptr;
 
     if (parentItem == rootItem || !parentItem)
         return QModelIndex();
 
     return createIndex(parentItem->childNumber(), 0, parentItem);
 }
-
-
 
 bool TreeModel::removeRows(int position, int rows, const QModelIndex &parent)
 {
@@ -224,7 +194,6 @@ bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int rol
     return result;
 }
 
-
 bool TreeModel::fromTextConfig(const QStringList &lines)
 {
     int number = 0;
@@ -236,13 +205,13 @@ bool TreeModel::fromTextConfig(const QStringList &lines)
     int startIdx, stopIdx;
 
     // loop over all lines
-    while(number < lines.count())
+    while (number < lines.count())
     {
         position = 0;
         line = lines[number];
 
         // if the first char is a #, skip
-        if((line.length() > position) && (lines[number].at(position) == '#'))
+        if ((line.length() > position) && (lines[number].at(position) == '#'))
         {
             number++;
             continue;
@@ -253,14 +222,14 @@ bool TreeModel::fromTextConfig(const QStringList &lines)
 
         // look for backslash to escape a space
         int i = 0;
-        while(i < arguments.count())
+        while (i < arguments.count())
         {
-            if((arguments[i].length() > 0) && (arguments[i].at(arguments[i].length()-1) == '\\'))
+            if ((arguments[i].length() > 0) && (arguments[i].at(arguments[i].length() - 1) == '\\'))
             {
-                arguments[i].remove(arguments[i].length()-1, 1);
+                arguments[i].remove(arguments[i].length() - 1, 1);
                 arguments[i].append(" ");
-                arguments[i].append(arguments[i+1]);
-                arguments.remove(i+1);
+                arguments[i].append(arguments[i + 1]);
+                arguments.remove(i + 1);
             }
 
             i++;
@@ -279,30 +248,32 @@ bool TreeModel::fromTextConfig(const QStringList &lines)
             i++;
         }*/
 
-        if(arguments.count() <=1 ){
+        if (arguments.count() <= 1)
+        {
             number++;
             continue;
         }
 
-        if(arguments[arguments.count()-1].at(arguments[arguments.count()-1].length()-1) != ';'){
+        if (arguments[arguments.count() - 1].at(arguments[arguments.count() - 1].length() - 1) != ';')
+        {
             number++;
             continue;
         }
 
         // remove semicolon at the end
-        if(arguments[arguments.count()-1].length() > 1)
-            arguments[arguments.count()-1].remove(arguments[arguments.count()-1].length()-1, 1);
+        if (arguments[arguments.count() - 1].length() > 1)
+            arguments[arguments.count() - 1].remove(arguments[arguments.count() - 1].length() - 1, 1);
         else
-            arguments.remove(arguments.count()-1);
+            arguments.remove(arguments.count() - 1);
 
         // parse actual content
-        if(arguments[0] == "N")
+        if (arguments[0] == "N")
         {
             parseNode(arguments, rootItem);
         }
-        if((arguments[0] == "S") && (rootItem->childCount() > 0))
+        if ((arguments[0] == "S") && (rootItem->childCount() > 0))
         {
-            parseSensor(arguments, rootItem->child(rootItem->childCount() - 1 ));
+            parseSensor(arguments, rootItem->child(rootItem->childCount() - 1));
         }
 
         // move to the next line
@@ -312,9 +283,9 @@ bool TreeModel::fromTextConfig(const QStringList &lines)
     return true;
 }
 
-bool TreeModel::parseNode(const QStringList &args, TreeItem* parent)
+bool TreeModel::parseNode(const QStringList &args, TreeItem *parent)
 {
-    bool success = false;
+    /*bool success = false;
 
     if(parent == nullptr)
         return false;
@@ -335,39 +306,41 @@ bool TreeModel::parseNode(const QStringList &args, TreeItem* parent)
         endInsertRows();
     }
 
-    return success;
-
+    return success;*/
+    return false;
 }
-bool TreeModel::parseSensor(const QStringList &args, TreeItem* parent)
+bool TreeModel::parseSensor(const QStringList &args, TreeItem *parent)
 {
     bool status = false;
-    GCSensor* sensorPointer;
+    GCSensor *sensorPointer;
 
-    if(parent == nullptr)
+    if (parent == nullptr)
         return false;
 
-    if(args.count() < 2){
+    if (args.count() < 2)
+    {
         return false;
     }
 
-    //S SHT35 0 temp/rh 0x44 SS H 0.5 0;
-    if(args[1] == "SHT35")
+    // S SHT35 0 temp/rh 0x44 SS H 0.5 0;
+    if (args[1] == "SHT35")
     {
         GCSensorSHT35 s;
         status = s.fromConfigString(args);
 
-        if(status)
+        if (status)
         {
             sensorPointer = new GCSensorSHT35(s);
             parent->insertChildren(parent->childCount(), 1, rootItem->columnCount());
             parent->child(parent->childCount() - 1)->setData(QVariant::fromValue(sensorPointer));
         }
-    } else if(args[1] == "APDS9306")
+    }
+    else if (args[1] == "APDS9306")
     {
         GCSensorAPDS9306 s;
         status = s.fromConfigString(args);
 
-        if(status)
+        if (status)
         {
             sensorPointer = new GCSensorAPDS9306(s);
             parent->insertChildren(parent->childCount(), 1, rootItem->columnCount());
@@ -378,30 +351,30 @@ bool TreeModel::parseSensor(const QStringList &args, TreeItem* parent)
     return status;
 }
 
-
 QStringList TreeModel::toTextConfig(void)
 {
     QVariant nodeData;
-    TreeItem* nodeItem;
+    TreeItem *nodeItem;
 
     QStringList textConfig;
 
-    for(int i = 0; i < rootItem->childCount(); i++)
+    for (int i = 0; i < rootItem->childCount(); i++)
     {
         nodeItem = rootItem->child(i);
         nodeData = nodeItem->data();
-        GCNode* node = nodeData.value<GCNode*>();
-        if(node == nullptr)
+        GCNode *node = nodeData.value<GCNode *>();
+        if (node == nullptr)
             continue;
 
         textConfig.append(node->toConfigString());
 
         QVariant sensorData;
-        for(int j = 0; j < nodeItem->childCount(); j++){
+        for (int j = 0; j < nodeItem->childCount(); j++)
+        {
             sensorData = nodeItem->child(j)->data();
-            GCSensor* sensor = sensorData.value<GCSensor*>();
+            GCSensor *sensor = sensorData.value<GCSensor *>();
 
-            if(sensor == nullptr)
+            if (sensor == nullptr)
                 continue;
 
             textConfig.append(sensor->toConfigString());
@@ -415,15 +388,34 @@ QStringList TreeModel::toTextConfig(void)
 
 bool TreeModel::checkUniqueNodeID(int id)
 {
-    if(rootItem == nullptr)
+    GCNode *n = nullptr;
+
+    if (rootItem == nullptr)
         return true;
 
-    for(int i = 0; i < rootItem->childCount(); i++){
-        TreeItem* node = rootItem->child(i);
-        GCNode* n = node->data().value<GCNode*>();
-        if(n == nullptr)
+    for (int i = 0; i < rootItem->childCount(); i++)
+    {
+        TreeItem *node = rootItem->child(i);
+        // we cannot cast to GCNode*, since this returns nullptr -> cast to actual type and find correct one later
+        GCNodeDicio *nDicio = node->data().value<GCNodeDicio *>();
+        GCNodeSylvatica *nSylvatica = node->data().value<GCNodeSylvatica *>();
+        GCNodePlanalta *nPlanalta = node->data().value<GCNodePlanalta *>();
+        if (nDicio != nullptr)
+        {
+            n = nDicio;
+        }
+        if (nSylvatica != nullptr)
+        {
+            n = nSylvatica;
+        }
+        if (nPlanalta != nullptr)
+        {
+            n = nPlanalta;
+        }
+        if (n == nullptr)
             return false;
-        if(id == n->getID()){
+        if (id == n->getID())
+        {
             return false;
         }
     }

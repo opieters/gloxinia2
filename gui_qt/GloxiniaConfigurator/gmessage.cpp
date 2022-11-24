@@ -2,7 +2,7 @@
 #include <QDateTime>
 #include "gcsensor.h"
 
-
+/*
 GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, bool request, quint8* data, uint64_t size):
     code(code),
     messageID(messageID),
@@ -10,77 +10,78 @@ GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, bo
     request(request)
 {
     this->data = std::vector<quint8>(data, data+size);
-}
-GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, bool request, std::vector<quint8> data):
-    code(code),
-    messageID(messageID),
-    sensorID(sensorID),
-    request(request),
-    data(data)
+}*/
+GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, bool request, std::vector<quint8> data) : code(code),
+                                                                                                                        messageID(messageID),
+                                                                                                                        sensorID(sensorID),
+                                                                                                                        request(request),
+                                                                                                                        data(data)
 {
-
 }
 
-int GMessage::toBytes(quint8* data, unsigned int maxLength) const
+int GMessage::toBytes(quint8 *data, unsigned int maxLength) const
 {
-    if(maxLength < (headerSize +this->data.size())){
+    if (maxLength < (headerSize + this->data.size()))
+    {
         return -1;
     }
-    quint8 cmd = (quint8) code;
+    quint8 cmd = (quint8)code;
 
     data[0] = GMessage::GMessageStartByte;
     data[headerSize + this->data.size() - 1] = GMessage::GMessageStopByte;
-    data[1] = (quint8) (messageID >> 8);
-    data[2] = (quint8) messageID;
+    data[1] = (quint8)(messageID >> 8);
+    data[2] = (quint8)messageID;
     data[3] = cmd;
-    data[4] = request?1:0;
-    data[5] = (quint8) (sensorID >> 8);
-    data[6] = (quint8) (sensorID & 0xff);
+    data[4] = request ? 1 : 0;
+    data[5] = (quint8)(sensorID >> 8);
+    data[6] = (quint8)(sensorID & 0xff);
     data[7] = this->data.size();
-    for(int i =0; i < this->data.size(); i++){
-        data[headerSize-1+i] = this->data[i];
+    for (int i = 0; i < this->data.size(); i++)
+    {
+        data[headerSize - 1 + i] = this->data[i];
     }
 
     return headerSize + this->data.size();
 }
 
-QString GMessage::toString() const{
+QString GMessage::toString() const
+{
     QString formattedData;
-    for(quint8 i : data)
+    for (quint8 i : data)
     {
         formattedData.append(QStringLiteral("%1").arg(i, 2, 16, QLatin1Char('0')) + " ");
     }
     return "[" + GMessage::codeToString(code) + "] (" + QString::number(messageID) + ", " + QString::number(sensorID) + ")" + formattedData;
 }
 
-std::ostream& operator << ( std::ostream& outs, const GMessage & m )
+std::ostream &operator<<(std::ostream &outs, const GMessage &m)
 {
-  return outs << m.toString().toStdString();
+    return outs << m.toString().toStdString();
 }
-
 
 QString GMessage::codeToString(GMessage::Code code)
 {
-    switch(code){
-        case REQUEST_ADDRESS_AVAILABLE:
-            return "request address available";
-            break;
-        case ADDRESS_TAKEN:
-            return "address taken";
-            break;
-        case UPDATE_ADDRESS:
-            return "update address";
-            break;
+    switch (code)
+    {
+    case REQUEST_ADDRESS_AVAILABLE:
+        return "request address available";
+        break;
+    case ADDRESS_TAKEN:
+        return "address taken";
+        break;
+    case UPDATE_ADDRESS:
+        return "update address";
+        break;
     case READY:
         return "node ready";
-        case DISCOVERY:
-            return "node discovery";
-            break;
+    case DISCOVERY:
+        return "node discovery";
+        break;
     case HELLO:
         return "hello";
     case MSG_TEXT:
         return "text";
-    case  NODE_INFO:
+    case NODE_INFO:
         return "node info";
     case NODE_RESET:
         return "node reset";
@@ -95,12 +96,12 @@ QString GMessage::codeToString(GMessage::Code code)
     case ACTUATOR_STATUS:
         return "actuator config";
     default:
-        return "unknown (" + QString::number((int) code, 16) + ")";
+        return "unknown (" + QString::number((int)code, 16) + ")";
         break;
     }
 }
 
-std::ostream& operator << ( std::ostream& outs, const GMessage::Code &code)
+std::ostream &operator<<(std::ostream &outs, const GMessage::Code &code)
 {
     return outs << GMessage::codeToString(code).toStdString();
 }
@@ -123,41 +124,43 @@ std::vector<quint8> GMessage::getData(void) const
     return std::vector<quint8>(data);
 }
 
-
 QString GMessage::toLogString() const
 {
     QString formattedData;
     QString cTime = QDateTime::currentDateTime().toString("hh:mm:ss");
-    switch(code) {
-        case MSG_TEXT:
+    switch (code)
+    {
+    case MSG_TEXT:
+    {
+        std::string s(data.begin(), data.end());
+        formattedData = QString::fromStdString(s);
+        break;
+    }
+    case SENSOR_STATUS:
+        switch ((GCSensor::sensor_status)data[0])
         {
-            std::string s(data.begin(), data.end());
-            formattedData = QString::fromStdString(s);
+        case GCSensor::sensor_status::INACTIVE:
+            formattedData.append("inactive");
+            break;
+        case GCSensor::sensor_status::IDLE:
+            formattedData.append("idle");
+            break;
+        case GCSensor::sensor_status::ACTIVE:
+            formattedData.append("active");
+            break;
+        case GCSensor::sensor_status::ERROR:
+            formattedData.append("error");
             break;
         }
-        case SENSOR_STATUS:
-            switch((GCSensor::sensor_status) data[0]){
-            case GCSensor::sensor_status::INACTIVE:
-                formattedData.append("inactive");
-                break;
-                case GCSensor::sensor_status::IDLE:
-                    formattedData.append("idle");
-                break;
-            case GCSensor::sensor_status::ACTIVE:
-                formattedData.append("active");
-                break;
-            case GCSensor::sensor_status::ERROR:
-                formattedData.append("error");
-                break;
-            }
 
         break;
-        default: {
-            for(quint8 i : data)
-            {
-                formattedData.append(QStringLiteral("%1").arg(i, 2, 16, QLatin1Char('0')) + " ");
-            }
+    default:
+    {
+        for (quint8 i : data)
+        {
+            formattedData.append(QStringLiteral("%1").arg(i, 2, 16, QLatin1Char('0')) + " ");
         }
+    }
     }
     return "[" + cTime + "] (" + QString::number(messageID) + ", " + QString::number(sensorID) + ") " + GMessage::codeToString(code) + " " + formattedData;
 }

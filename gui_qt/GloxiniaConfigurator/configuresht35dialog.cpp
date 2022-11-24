@@ -2,9 +2,9 @@
 #include "ui_configuresht35dialog.h"
 #include <string>
 
-ConfigureSHT35Dialog::ConfigureSHT35Dialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::ConfigureSHT35Dialog)
+ConfigureSHT35Dialog::ConfigureSHT35Dialog(QWidget *parent) : QDialog(parent),
+                                                              ui(new Ui::ConfigureSHT35Dialog),
+                                                              sensor(GCSensorSHT35())
 {
     ui->setupUi(this);
 
@@ -12,8 +12,6 @@ ConfigureSHT35Dialog::ConfigureSHT35Dialog(QWidget *parent) :
     connect(ui->confirmBox, &QDialogButtonBox::accepted, this, &ConfigureSHT35Dialog::apply);
 
     updatePeriodicity();
-
-    sensor = GCSensorSHT35();
 
     updateUISettings();
 }
@@ -23,7 +21,8 @@ ConfigureSHT35Dialog::~ConfigureSHT35Dialog()
     delete ui;
 }
 
-void ConfigureSHT35Dialog::apply(void){
+void ConfigureSHT35Dialog::apply(void)
+{
     sensor.setPeriodicity(ui->periodicityBox->currentIndex());
     sensor.setClockStretching(ui->clockStretchingBox->isChecked());
     sensor.setI2CAddress(ui->addressBox->currentText().toInt(nullptr, 0));
@@ -33,7 +32,8 @@ void ConfigureSHT35Dialog::apply(void){
     hide();
 }
 
-void ConfigureSHT35Dialog::updateUISettings(void){
+void ConfigureSHT35Dialog::updateUISettings(void)
+{
     ui->periodicityBox->setCurrentIndex(sensor.getPeriodicity());
     ui->clockStretchingBox->setChecked(sensor.getClockStretching() != 0);
     ui->addressBox->setCurrentIndex(sensor.i2cAddressToInt(sensor.getI2CAddress()));
@@ -41,21 +41,29 @@ void ConfigureSHT35Dialog::updateUISettings(void){
     ui->repeatabilityBox->setCurrentIndex(sensor.getRepeatability());
 }
 
-void ConfigureSHT35Dialog::updatePeriodicity(){
+void ConfigureSHT35Dialog::updatePeriodicity()
+{
     int index = ui->periodicityBox->currentIndex();
-    if(index == 0){
+    if (index == 0)
+    {
         // disable sample rate selection
         ui->rateBox->setDisabled(true);
-    } else {
+    }
+    else
+    {
         ui->rateBox->setDisabled(false);
     }
 }
 
-GCSensorSHT35* ConfigureSHT35Dialog::getSensor(void){
-    return new GCSensorSHT35(sensor);
+void ConfigureSHT35Dialog::updateSensor(GCSensorSHT35 *s)
+{
+    s->setRepeatability(sensor.getRepeatability());
+    s->setClockStretching(sensor.getClockStretching());
+    s->setRate(sensor.getRate());
+    s->setPeriodicity(sensor.getPeriodicity());
 }
 
-
-void ConfigureSHT35Dialog::setSensorSettings(GCSensorSHT35* s){
+void ConfigureSHT35Dialog::setSensorSettings(GCSensorSHT35 *s)
+{
     sensor = GCSensorSHT35(*s);
 }

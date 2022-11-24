@@ -2,12 +2,11 @@
 #include <algorithm>
 #include <QList>
 
-GCSensor::GCSensor(quint8 id): interfaceID(id)
+GCSensor::GCSensor(quint8 id) : interfaceID(id)
 {
 }
 
-GCSensor::~GCSensor(){}
-
+GCSensor::~GCSensor() {}
 
 /*QString GCSensor::sensorTypeToString()
 {
@@ -47,8 +46,12 @@ void GCSensor::setLabel(const QString label)
     this->label = label;
 }
 
+quint16 GCSensor::getMeasurementPeriod() const
+{
+    return measurementPeriod;
+}
 
-QDebug operator<<(QDebug dbg, const GCSensor&)
+QDebug operator<<(QDebug dbg, const GCSensor &)
 {
     QDebugStateSaver saver(dbg);
     dbg.nospace() << "Sensor";
@@ -65,13 +68,11 @@ QDataStream &operator<<(QDataStream &out, const GCSensor &myObj)
     return out << "SENSOR";
 }
 
-GCSensorI2C::GCSensorI2C(quint8 i2cAddress, quint8 id):
-    GCSensor(id), i2cAddress(i2cAddress)
+GCSensorI2C::GCSensorI2C(quint8 i2cAddress, quint8 id) : GCSensor(id), i2cAddress(i2cAddress)
 {
-
 }
 
-GCSensorI2C::~GCSensorI2C(){}
+GCSensorI2C::~GCSensorI2C() {}
 
 bool GCSensorI2C::setI2CAddress(const quint8 a)
 {
@@ -81,7 +82,7 @@ bool GCSensorI2C::setI2CAddress(const quint8 a)
 
 int GCSensorI2C::i2cAddressToInt(quint8 a)
 {
-    return (int) a;
+    return (int)a;
 }
 
 const quint8 GCSensorI2C::getI2CAddress(void)
@@ -89,9 +90,7 @@ const quint8 GCSensorI2C::getI2CAddress(void)
     return i2cAddress;
 }
 
-
-GCSensorSHT35::GCSensorSHT35(quint8 i2cAddress, quint8 id) :
-    GCSensorI2C(i2cAddress, id)
+GCSensorSHT35::GCSensorSHT35(quint8 i2cAddress, quint8 id) : GCSensorI2C(i2cAddress, id)
 {
     repeatability = 0;
     clockStretching = 0;
@@ -99,14 +98,12 @@ GCSensorSHT35::GCSensorSHT35(quint8 i2cAddress, quint8 id) :
     periodicity = 0;
 }
 
-
-GCSensorSHT35::~GCSensorSHT35(){}
-
+GCSensorSHT35::~GCSensorSHT35() {}
 
 bool GCSensorSHT35::setI2CAddress(const quint8 a)
 {
     i2cAddress = a;
-    if((i2cAddress != I2CAddressA) && (i2cAddress != I2CAddressB))
+    if ((i2cAddress != I2CAddressA) && (i2cAddress != I2CAddressB))
     {
         i2cAddress = I2CAddressA;
     }
@@ -114,25 +111,24 @@ bool GCSensorSHT35::setI2CAddress(const quint8 a)
 }
 bool GCSensorSHT35::setRepeatability(const quint8 r)
 {
-    repeatability = std::min(r, (quint8) 2);
+    repeatability = std::min(r, (quint8)2);
     return r == repeatability;
 }
 bool GCSensorSHT35::setClockStretching(const quint8 c)
 {
-    clockStretching = std::min(c, (quint8) 1);
+    clockStretching = std::min(c, (quint8)1);
     return c == clockStretching;
 }
 bool GCSensorSHT35::setRate(const quint8 r)
 {
-    rate = std::min(r, (quint8) 4);
+    rate = std::min(r, (quint8)4);
     return r == rate;
 }
 bool GCSensorSHT35::setPeriodicity(const quint8 p)
 {
-    periodicity = std::min(p, (quint8) 1);
+    periodicity = std::min(p, (quint8)1);
     return p == periodicity;
 }
-
 
 const quint8 GCSensorSHT35::getRepeatability(void)
 {
@@ -153,9 +149,9 @@ const quint8 GCSensorSHT35::getPeriodicity(void)
 
 int GCSensorSHT35::i2cAddressToInt(const quint8 a)
 {
-    for(int i = 0; i < GCSensorSHT35::i2cAddresses.size(); i++)
+    for (int i = 0; i < GCSensorSHT35::i2cAddresses.size(); i++)
     {
-        if(i2cAddresses[i] == a)
+        if (i2cAddresses[i] == a)
         {
             return i;
         }
@@ -166,38 +162,32 @@ int GCSensorSHT35::i2cAddressToInt(const quint8 a)
 QString GCSensorSHT35::toString(void) const
 {
     QString dLabel;
-    if(!label.isEmpty()){
+    if (!label.isEmpty())
+    {
         dLabel = label;
-    } else {
+    }
+    else
+    {
         dLabel = "SHT35";
     }
     return "[" + QString::number(interfaceID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ")";
 }
 
-
 QString GCSensorSHT35::toConfigString(void) const
 {
     QString nLabel = label;
     nLabel.replace(' ', "\\ ");
-    return "S SHT35 "
-            + QString::number(interfaceID) + " "
-            + nLabel + " "
-            + QString::number(i2cAddress) + " "
-            + QString::number(repeatability) + " "
-            + QString::number(clockStretching) + " "
-            + QString::number(rate) + " "
-            + QString::number(periodicity) + " ;";
-
+    return "S SHT35 " + QString::number(interfaceID) + " " + nLabel + " " + QString::number(i2cAddress) + " " + QString::number(repeatability) + " " + QString::number(clockStretching) + " " + QString::number(rate) + " " + QString::number(periodicity) + " ;";
 }
 
-bool GCSensorSHT35::fromConfigString(const QStringList& config)
+bool GCSensorSHT35::fromConfigString(const QStringList &config)
 {
     GCSensorSHT35 s;
 
-    if(config.count() != 9)
+    if (config.count() != 9)
         return false;
 
-    if((config[0] != "S") || (config[1] != "SHT35"))
+    if ((config[0] != "S") || (config[1] != "SHT35"))
         return false;
 
     bool success = true;
@@ -209,7 +199,8 @@ bool GCSensorSHT35::fromConfigString(const QStringList& config)
     success = success && s.setRate(config[7].toInt());
     success = success && s.setPeriodicity(config[8].toInt());
 
-    if(success){
+    if (success)
+    {
         this->setInterfaceID(s.getInterfaceID());
         this->setLabel(s.getLabel());
         this->setI2CAddress(s.getI2CAddress());
@@ -222,37 +213,36 @@ bool GCSensorSHT35::fromConfigString(const QStringList& config)
     return success;
 }
 
-
-GCSensorAPDS9306::GCSensorAPDS9306(quint8 i2cAddress, quint8 id):
-    GCSensorI2C(i2cAddress, id){
-
+GCSensorAPDS9306::GCSensorAPDS9306(quint8 i2cAddress, quint8 id) : GCSensorI2C(i2cAddress, id)
+{
 }
 
-GCSensorAPDS9306::~GCSensorAPDS9306(){}
+GCSensorAPDS9306::~GCSensorAPDS9306() {}
 
-bool GCSensorAPDS9306::setI2CAddress(const quint8 a){
+bool GCSensorAPDS9306::setI2CAddress(const quint8 a)
+{
     i2cAddress = a;
     return true;
 }
 
 bool GCSensorAPDS9306::setAlsMeasurementRate(quint8 v)
 {
-    alsMeasurementRate = std::min(v, (quint8) 0b110);
+    alsMeasurementRate = std::min(v, (quint8)0b110);
     return v == alsMeasurementRate;
 }
 bool GCSensorAPDS9306::setAlsResolution(quint8 v)
 {
-    alsResolution = std::min(v, (quint8) 0b101);
+    alsResolution = std::min(v, (quint8)0b101);
     return v == alsResolution;
 }
 bool GCSensorAPDS9306::setAlsGain(quint8 v)
 {
-    alsGain = std::min(v, (quint8) 0b100);
+    alsGain = std::min(v, (quint8)0b100);
     return v == alsGain;
 }
 bool GCSensorAPDS9306::setAlsIVCount(quint8 v)
 {
-    alsIVCount = std::min(v, (quint8) 0b111);
+    alsIVCount = std::min(v, (quint8)0b111);
     return v == alsIVCount;
 }
 bool GCSensorAPDS9306::setAlsTHHigh(quint32 v)
@@ -291,16 +281,20 @@ quint32 GCSensorAPDS9306::getAlsTHLow(void)
     return alsTHLow;
 }
 
-int GCSensorAPDS9306::i2cAddressToInt(quint8 a){
+int GCSensorAPDS9306::i2cAddressToInt(quint8 a)
+{
     return a;
 }
 
 QString GCSensorAPDS9306::toString(void) const
 {
     QString dLabel;
-    if(!label.isEmpty()){
+    if (!label.isEmpty())
+    {
         dLabel = label;
-    } else {
+    }
+    else
+    {
         dLabel = "APDS9306";
     }
     return "[" + QString::number(interfaceID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ")";
@@ -310,28 +304,17 @@ QString GCSensorAPDS9306::toConfigString(void) const
 {
     QString nLabel = label;
     nLabel.replace(' ', "\\ ");
-    return "S APDS9306 "
-            + QString::number(interfaceID) + " "
-            + nLabel + " "
-            + QString::number(i2cAddress) + " "
-            + QString::number(alsMeasurementRate) + " "
-            + QString::number(alsResolution) + " "
-            + QString::number(alsGain) + " "
-            + QString::number(alsIVCount) + " "
-            + QString::number(alsTHHigh) + " "
-            + QString::number(alsTHLow) + " "
-            + ";";
-
+    return "S APDS9306 " + QString::number(interfaceID) + " " + nLabel + " " + QString::number(i2cAddress) + " " + QString::number(alsMeasurementRate) + " " + QString::number(alsResolution) + " " + QString::number(alsGain) + " " + QString::number(alsIVCount) + " " + QString::number(alsTHHigh) + " " + QString::number(alsTHLow) + " " + ";";
 }
 
-bool GCSensorAPDS9306::fromConfigString(const QStringList& config)
+bool GCSensorAPDS9306::fromConfigString(const QStringList &config)
 {
     GCSensorAPDS9306 s;
 
-    if(config.count() != 11)
+    if (config.count() != 11)
         return false;
 
-    if((config[0] != "S") || (config[1] != "SHT35"))
+    if ((config[0] != "S") || (config[1] != "SHT35"))
         return false;
 
     bool success = true;
@@ -345,7 +328,8 @@ bool GCSensorAPDS9306::fromConfigString(const QStringList& config)
     success = success && s.setAlsTHHigh(config[9].toInt());
     success = success && s.setAlsTHLow(config[10].toInt());
 
-    if(success){
+    if (success)
+    {
         this->setInterfaceID(s.getInterfaceID());
         this->setLabel(s.getLabel());
         this->setI2CAddress(s.getI2CAddress());
@@ -358,5 +342,4 @@ bool GCSensorAPDS9306::fromConfigString(const QStringList& config)
     }
 
     return success;
-
 }

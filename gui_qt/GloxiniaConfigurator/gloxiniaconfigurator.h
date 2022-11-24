@@ -17,9 +17,11 @@
 #include <gmessage.h>
 #include <QTimer>
 
-
 QT_BEGIN_NAMESPACE
-namespace Ui { class GloxiniaConfigurator; }
+namespace Ui
+{
+    class GloxiniaConfigurator;
+}
 QT_END_NAMESPACE
 
 class GloxiniaConfigurator : public QMainWindow
@@ -35,7 +37,8 @@ public:
     void clearAll(void);
     void selectDataFile(void);
 
-    enum SerialReadoutState {
+    enum SerialReadoutState
+    {
         FindStartByte,
         ReadIdH,
         ReadIdL,
@@ -55,53 +58,53 @@ private slots:
     void setSerialPort();
 
     void runDiscovery(void);
-    void addNode(void);
+    // void addNode(void);
     void editNode(void);
-    bool removeNode(const QModelIndex& index);
+    bool removeNode(const QModelIndex &index);
 
     void addSensor(void);
     void editSensor(void);
-    bool removeSensor(const QModelIndex& index);
+    bool removeSensor(const QModelIndex &index);
 
     void removeItems();
 
     void showContextMenu(const QPoint &pos);
 
     void preferencesMenu(void);
-    //void setSensor();
-    //void writeData(const QByteArray &data);
-    //void handleError(QSerialPort::SerialPortError error);
+    // void setSensor();
+    // void writeData(const QByteArray &data);
+    // void handleError(QSerialPort::SerialPortError error);
 
 private:
     /*
      * UI main object
      */
-    Ui::GloxiniaConfigurator* ui;
+    Ui::GloxiniaConfigurator *ui;
 
     /*
      * status bar information
      */
-    QLabel* status;
+    QLabel *status;
 
     /*
      * This widget is used to plot incoming sensor data
      */
-    QChart* chart;
+    QChart *chart;
 
     /*
      * This model stores the system configuration (i.e. which nodes and sensors are connected and their respective numbers).
      */
-    TreeModel* treeModel;
+    TreeModel *treeModel;
 
     /*
      * This model stores the message log (i.e. messages received over the serial connection and UI logging messages)
      */
-    QStringListModel* messageModel;
+    QStringListModel *messageModel;
 
     /*
      * Serial port used for communication with the system
      */
-    QSerialPort* serial;
+    QSerialPort *serial;
 
     /*
      * Menu selected serial port that will be used for communication
@@ -111,7 +114,7 @@ private:
     /*
      * Stores a list of actions for the UI, each representing an option in the serial port selection list
      */
-    QList<QAction*> serialPortActionList = QList<QAction*>();
+    QList<QAction *> serialPortActionList = QList<QAction *>();
 
     std::array<char, 0xff> rawDataBuffer;
     qint32 read_index = 0;
@@ -123,43 +126,48 @@ private:
     void showStatusMessage(const QString &message);
     void updateSerialPortList(void);
     void updateActions();
-    GCSensor* selectSensor(void);
-    void processIncomingGMessage(const GMessage& m);
-    void processCANDiscoveryMessage(const GMessage& m);
-    void processTextMessage(const GMessage& m);
+    GCSensor *selectSensor(void);
 
+    // message handling
+    void processIncomingGMessage(const GMessage &m);
+    void processCANDiscoveryMessage(const GMessage &m);
+    void processTextMessage(const GMessage &m);
+    void processNodeInfoMessage(const GMessage &m);
 
+    void sendSerialMessage(const GMessage &m);
 
     /*
      * Dialog screen to edit the system settings
      */
-    SettingsDialog* systemSettings = nullptr;
+    SettingsDialog *systemSettings = nullptr;
 
     /*
      * Node configuration screen
      */
-    NodeDialog* nodeDialog = nullptr;
+    NodeDicioDialog *nodeDicioDialog = nullptr;
 
     /*
      * General sensor type selection screen
      */
-    SensorDialog* sensorSettings = nullptr;
+    SensorDialog *sensorSettings = nullptr;
 
     /*
      * Configuration screen for SHT35 sensor
      */
-    ConfigureSHT35Dialog* configureSHT35Dialog;
+    ConfigureSHT35Dialog *configureSHT35Dialog;
 
     /*
      * The file stores the sensor data
      */
-    QFile* dataFile = nullptr;
-    QDataStream* dataStream = nullptr;
+    QFile *dataFile = nullptr;
+    QDataStream *dataStream = nullptr;
 
     /*
      * Timer for auto discovery
      */
-    QTimer* discoveryTimer;
+    QTimer *discoveryTimer;
+
+    void addSHT35Sensor(void);
 };
 
 #endif // GLOXINIACONFIGURATOR_H

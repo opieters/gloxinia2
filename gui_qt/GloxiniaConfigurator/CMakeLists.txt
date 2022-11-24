@@ -24,16 +24,18 @@ set(PROJECT_SOURCES
         gmessage.h gmessage.cpp
         gloxiniaconfigurator.cpp gloxiniaconfigurator.h gloxiniaconfigurator.ui
         settingsdialog.h settingsdialog.cpp settingsdialog.ui
-        nodedialog.ui
         sensordialog.h sensordialog.cpp sensordialog.ui
         configuresht35dialog.h configuresht35dialog.cpp configuresht35dialog.ui
+        gcmessagehandling.cpp
+        gcfileoperations.cpp
+        gcserialcommunication.cpp
+        nodediciodialog.h nodediciodialog.cpp nodediciodialog.ui
         #gcsystem.h gcsystem.cpp
         gcnode.h gcnode.cpp
         gcsensor.h gcsensor.cpp
         gcsamplepoint.h gcsamplepoint.cpp
         treeitem.h treeitem.cpp
         treemodel.h treemodel.cpp
-        nodedialog.h nodedialog.cpp nodedialog.ui
         resources.qrc
         exampleConfig.txt
         ${TS_FILES}

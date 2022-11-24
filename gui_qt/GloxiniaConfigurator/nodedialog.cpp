@@ -1,69 +1,72 @@
 #include "nodedialog.h"
-#include "ui_nodedialog.h"
+#include "ui_NodeDicioDialog.h"
 
-
-NodeDialog::NodeDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::NodeDialog),
-    nodeConfig(new GCNode())
+NodeDicioDialog::NodeDicioDialog(QWidget *parent) : QDialog(parent),
+                                                    ui(new Ui::NodeDicioDialog),
+                                                    nodeConfig(nullptr)
 {
     ui->setupUi(this);
 
-    setWindowFlags(Qt::Window
-        | Qt::WindowMinimizeButtonHint
-        | Qt::WindowMaximizeButtonHint);
+    setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
 
     ui->idEdit->setValidator(new QIntValidator(0, 100, this));
 
-    connect(ui->okBox, &QDialogButtonBox::accepted, this, &NodeDialog::apply);
-    connect(ui->idBox, &QCheckBox::stateChanged, this, &NodeDialog::updateAutoID);
+    connect(ui->okBox, &QDialogButtonBox::accepted, this, &NodeDicioDialog::apply);
+    connect(ui->idBox, &QCheckBox::stateChanged, this, &NodeDicioDialog::updateAutoID);
 
     ui->idBox->setCheckState(Qt::Checked);
 
     updateUISettings();
 }
 
-NodeDialog::~NodeDialog()
+NodeDicioDialog::~NodeDicioDialog()
 {
     delete ui;
-    delete nodeConfig;
+    if (nodeConfig != nullptr)
+        delete nodeConfig;
 }
 
-
-void NodeDialog::updateUISettings()
+void NodeDicioDialog::updateUISettings()
 {
     ui->typeBox->setCurrentIndex(nodeConfig->getType());
-    if(nodeConfig->getID() == 0){
+    if (nodeConfig->getID() == 0)
+    {
         ui->idBox->setCheckState(Qt::Checked);
     }
     ui->idEdit->setText(QString::number(nodeConfig->getID()));
     ui->altEdit->setText(nodeConfig->getLabel());
 }
-void NodeDialog::setNodeSettings(GCNode* s)
+void NodeDicioDialog::setNodeSettings(GCNode *s)
 {
-    delete nodeConfig;
-    nodeConfig = new GCNode(*s);
+    if (nodeConfig != nullptr)
+    {
+        delete nodeConfig;
+    }
+    nodeConfig = s;
     updateUISettings();
 }
 
-void NodeDialog::apply()
+void NodeDicioDialog::apply()
 {
     nodeConfig->setID(ui->idEdit->displayText().toInt(nullptr, 0));
     nodeConfig->setLabel(ui->altEdit->displayText());
-    nodeConfig->setType((GCNode::NodeType) ui->typeBox->currentIndex());
+    nodeConfig->setType((GCNode::NodeType)ui->typeBox->currentIndex());
 }
 
-GCNode* NodeDialog::getNode()
+GCNode *NodeDicioDialog::getNode()
 {
     return new GCNode(*nodeConfig);
 }
 
-void NodeDialog::updateAutoID(void)
+void NodeDicioDialog::updateAutoID(void)
 {
-    if(ui->idBox->isChecked()){
+    if (ui->idBox->isChecked())
+    {
         ui->idEdit->setText(QString("0"));
         ui->idEdit->setDisabled(true);
-    } else {
+    }
+    else
+    {
         ui->idEdit->setDisabled(false);
     }
 }

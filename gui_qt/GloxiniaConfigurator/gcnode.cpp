@@ -2,33 +2,27 @@
 
 #include <QDebug>
 
-GCNode::GCNode(const int nodeID, const NodeType type, const QString label)
-    : id(nodeID), type(type), label(label)
+GCNode::GCNode(const int nodeID, const QString label)
+    : id(nodeID), label(label)
 {
-    if(id == 0){
+    if (id == 0)
+    {
         id = getIDNew();
     }
 
-    qInfo() << "Generating node with id " << id;
-
+    qInfo() << "Generating node with id" << id << "and label" << label;
 }
-
 
 QDebug operator<<(QDebug dbg, const GCNode &n)
 {
     QDebugStateSaver saver(dbg);
-    dbg.nospace() << "Node(" << n.id << n.type << ")";
+    dbg.nospace() << "Node(" << n.id << ")";
     return dbg;
 }
 
 int GCNode::getID() const
 {
     return id;
-}
-
-GCNode::NodeType GCNode::getType() const
-{
-    return type;
 }
 
 QString GCNode::getLabel() const
@@ -47,9 +41,14 @@ void GCNode::setID(const int id)
     this->id = id;
 }
 
-void GCNode::setType(const NodeType type)
+void GCNode::setSoftwareVersion(uint8_t major, uint8_t minor)
 {
-    this->type = type;
+    majorSoftwareVersion = major;
+    minorSoftwareVersion = minor;
+}
+void GCNode::setHardwareVersion(uint8_t v)
+{
+    hardwareVersion = v;
 }
 
 QString GCNode::toString(void) const
@@ -66,7 +65,7 @@ int GCNode::getIDNew()
 QString GCNode::toConfigString(void) const
 {
     QString typeLabel;
-    switch(type)
+    /*switch(type)
     {
     case GCDicio:
         typeLabel = "D";
@@ -77,39 +76,65 @@ QString GCNode::toConfigString(void) const
     case GCPlanalta:
         typeLabel = "P";
         break;
-    }
+    }*/
 
     QString nodeLabel = label;
     nodeLabel.replace(' ', "\\ ");
 
-    return "N "
-            + typeLabel + " "
-            + QString::number(id) + " "
-            + nodeLabel + " ;";
+    return "N " + typeLabel + " " + QString::number(id) + " " + nodeLabel + " ;";
 }
-bool GCNode::fromConfigString(const QStringList& config)
+bool GCNode::fromConfigString(const QStringList &config)
 {
     int id = config[2].toInt();
     QString label = config[3];
 
     GCNode::NodeType t;
-    if(config[1] == "D")
+    if (config[1] == "D")
     {
         t = GCNode::NodeType::GCDicio;
-    } else if(config[1] == "S")
+    }
+    else if (config[1] == "S")
     {
         t = GCNode::NodeType::GCSylvatica;
-    } else if(config[1] == "P")
+    }
+    else if (config[1] == "P")
     {
-         t = GCNode::NodeType::GCPlanalta;
-    } else {
+        t = GCNode::NodeType::GCPlanalta;
+    }
+    else
+    {
         return false;
     }
 
     this->label = label;
     this->id = id;
-    this->type = t;
 
     return true;
 }
 
+GCNodeDicio::GCNodeDicio(const int nodeID, const QString label) : GCNode(nodeID, label)
+{
+}
+
+const unsigned int GCNodeDicio::getNInterfaces(void) const
+{
+    return 4;
+}
+
+GCNodePlanalta::GCNodePlanalta(const int nodeID, const QString label) : GCNode(nodeID, label)
+{
+}
+
+const unsigned int GCNodePlanalta::getNInterfaces(void) const
+{
+    return 4;
+}
+
+GCNodeSylvatica::GCNodeSylvatica(const int nodeID, const QString label) : GCNode(nodeID, label)
+{
+}
+
+const unsigned int GCNodeSylvatica::getNInterfaces(void) const
+{
+    return 8;
+}

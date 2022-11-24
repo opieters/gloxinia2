@@ -13,23 +13,23 @@ class NodeDicioDialog : public QDialog
 {
     Q_OBJECT
 
-private slots:
-    void updateAutoID(void);
-    void apply();
-
 public:
     explicit NodeDicioDialog(QWidget *parent = nullptr);
     ~NodeDicioDialog();
 
     void updateUISettings();
-    void setNodeSettings(GCNodeDicio *s);
+    void setNodeSettings(GCNodeDicio *const n);
 
-    void updateNode(GCNodeDicio *node) const;
+    void updateNode(GCNodeDicio *n) const;
+
+private slots:
+    void updateAutoID(void);
+    void apply();
 
 private:
     Ui::NodeDicioDialog *ui;
 
-    GCNodeDicio *nodeConfig;
+    GCNodeDicio *config;
 };
 
 #endif // NODEDICIODIALOG_H

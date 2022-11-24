@@ -9,50 +9,52 @@ class GCSensor
 {
 
 public:
-
     GCSensor(quint8 id = 0);
     ~GCSensor();
 
-    enum sensor_class {
+    enum sensor_class
+    {
         NOT_SET = 0x00,
         SHT35 = 0x01,
         APDS9306_065 = 0x02,
         ANALOGUE = 0x03,
     };
 
-    enum sensor_status {
-        INACTIVE =0x00,
+    enum sensor_status
+    {
+        INACTIVE = 0x00,
         IDLE = 0x01,
         ACTIVE = 0x02,
         ERROR = 0x03
     };
 
-    //static QString sensorTypeToString(SensorType t);
+    // static QString sensorTypeToString(SensorType t);
 
-    //SensorType getSensorType(void);
+    // SensorType getSensorType(void);
     quint8 getInterfaceID(void);
 
     void setInterfaceID(quint8 id);
 
     QString getLabel(void) const;
     void setLabel(const QString label);
+    quint16 getMeasurementPeriod(void) const;
 
-    friend QDebug operator<<(QDebug dbg, const GCSensor&);
+    friend QDebug operator<<(QDebug dbg, const GCSensor &);
 
     virtual QString toString(void) const = 0;
     virtual QString toConfigString(void) const = 0;
-    virtual bool fromConfigString(const QStringList& config) = 0;
+    virtual bool fromConfigString(const QStringList &config) = 0;
 
     friend QDataStream &operator<<(QDataStream &out, const GCSensor &myObj);
     friend QDataStream &operator>>(QDataStream &in, GCSensor &myObj);
-protected:
-    //SensorType sensorType;
-    quint8 interfaceID;
 
+protected:
+    quint8 interfaceID;
+    quint16 measurementPeriod;
     QString label;
 };
 
-Q_DECLARE_METATYPE(GCSensor*)
+Q_DECLARE_METATYPE(GCSensor *)
 
 class GCSensorI2C : public GCSensor
 {
@@ -68,18 +70,25 @@ public:
 
     virtual QString toString(void) const = 0;
     virtual QString toConfigString(void) const = 0;
-    virtual bool fromConfigString(const QStringList& config) = 0;
+    virtual bool fromConfigString(const QStringList &config) = 0;
+
 protected:
     quint8 i2cAddress;
 };
 
-Q_DECLARE_METATYPE(GCSensorI2C*)
+Q_DECLARE_METATYPE(GCSensorI2C *)
 
 class GCSensorSHT35 : public GCSensorI2C
 {
 public:
+    enum Register
+    {
+        MEASUREMENT = 0x00,
+        CONFIG = 0x01,
+    };
+
     GCSensorSHT35(quint8 i2cAddress = I2CAddressA, quint8 id = 0);
-    GCSensorSHT35(const GCSensorSHT35& s) = default;
+    GCSensorSHT35(const GCSensorSHT35 &s) = default;
     ~GCSensorSHT35();
 
     static constexpr quint8 I2CAddressA = 0x44;
@@ -101,7 +110,7 @@ public:
 
     QString toString(void) const override;
     QString toConfigString(void) const override;
-    bool fromConfigString(const QStringList& config) override;
+    bool fromConfigString(const QStringList &config) override;
 
 protected:
     quint8 repeatability;
@@ -110,13 +119,13 @@ protected:
     quint8 periodicity;
 };
 
-Q_DECLARE_METATYPE(GCSensorSHT35*)
+Q_DECLARE_METATYPE(GCSensorSHT35 *)
 
 class GCSensorAPDS9306 : public GCSensorI2C
 {
 public:
     GCSensorAPDS9306(quint8 i2cAddress = 0x52, quint8 id = 0);
-    GCSensorAPDS9306(const GCSensorAPDS9306& s) = default;
+    GCSensorAPDS9306(const GCSensorAPDS9306 &s) = default;
     ~GCSensorAPDS9306();
 
     bool setI2CAddress(const quint8 a) override;
@@ -138,7 +147,7 @@ public:
 
     QString toString(void) const override;
     QString toConfigString(void) const override;
-    bool fromConfigString(const QStringList& config) override;
+    bool fromConfigString(const QStringList &config) override;
 
 private:
     quint8 alsMeasurementRate;
@@ -148,9 +157,8 @@ private:
 
     quint32 alsTHHigh;
     quint32 alsTHLow;
-
 };
 
-Q_DECLARE_METATYPE(GCSensorAPDS9306*)
+Q_DECLARE_METATYPE(GCSensorAPDS9306 *)
 
 #endif // GCSENSOR_H

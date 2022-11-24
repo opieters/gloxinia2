@@ -5,8 +5,9 @@
 #include <gcsensor.h>
 #include <QFileSystemModel >
 
-namespace Ui {
-class ConfigureSHT35Dialog;
+namespace Ui
+{
+    class ConfigureSHT35Dialog;
 }
 
 class ConfigureSHT35Dialog : public QDialog
@@ -18,12 +19,13 @@ public:
     ~ConfigureSHT35Dialog();
 
     void updateUISettings();
-    void setSensorSettings(GCSensorSHT35* s);
+    void setSensorSettings(GCSensorSHT35 *s);
     void apply();
 
-    GCSensorSHT35* getSensor();
+    void updateSensor(GCSensorSHT35 *s);
 private slots:
     void updatePeriodicity(void);
+
 private:
     Ui::ConfigureSHT35Dialog *ui;
 

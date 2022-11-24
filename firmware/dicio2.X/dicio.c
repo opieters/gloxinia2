@@ -19,8 +19,7 @@ i2c_config_t dicio_i2c1_config = {
     .pw_sr_cb = I2C_NO_CALLBACK,
     .pr_sw_cb = I2C_NO_CALLBACK,
     .scl_pin = PIN_INIT(G, 2),
-    .sda_pin = PIN_INIT(G, 3)
-};
+    .sda_pin = PIN_INIT(G, 3)};
 
 i2c_config_t dicio_i2c2_config = {
     .i2c_address = 0x0,
@@ -28,51 +27,51 @@ i2c_config_t dicio_i2c2_config = {
     .pw_sr_cb = I2C_NO_CALLBACK,
     .pr_sw_cb = I2C_NO_CALLBACK,
     .scl_pin = PIN_INIT(F, 5),
-    .sda_pin = PIN_INIT(F, 4)
-};
+    .sda_pin = PIN_INIT(F, 4)};
 
-void dicio_init(void) {
-    
+void dicio_init(void)
+{
+
     dicio_init_pins();
-    
+
     uart_init(500000);
     UART_DEBUG_PRINT("Configured UART.");
-    
+
     can_init();
     UART_DEBUG_PRINT("Initialised ECAN.");
-    
+
     i2c1_init(&dicio_i2c1_config);
     UART_DEBUG_PRINT("Initialised I2C1.");
-    
+
     i2c2_init(&dicio_i2c2_config);
     UART_DEBUG_PRINT("Initialised I2C2.");
-    
+
     sensors_init();
     UART_DEBUG_PRINT("Initialised sensor interface.");
-    
+
     event_controller_init();
     UART_DEBUG_PRINT("Initialised event controller.");
 
     uart_connection_active = true;
     message_t m;
     uint8_t data[] = {
-        SENSOR_TYPE_APDS9306_065, 
+        SENSOR_TYPE_APDS9306_065,
         0,
-        I2C_ADDRESS_SENSOR_APDS9306_065, 
+        I2C_ADDRESS_SENSOR_APDS9306_065,
         I2C2_BUS,
         SENSOR_APDS9306_065_ALS_MEAS_RATE_100MS,
         SENSOR_APDS9306_065_ALS_RESOLUTION_20BIT,
         SENSOR_APDS9306_065_ALS_GAIN_1};
-    
+
     message_init(&m, controller_address, MESSAGE_NO_REQUEST, M_SENSOR_CONFIG, 0,
-        data, ARRAY_LENGTH(data));
+                 data, ARRAY_LENGTH(data));
     message_process(&m);
-    
-    //task_schedule_t dicio_read_log = {{dicio_send_ready_message, NULL}, 1, 0};
-    //schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);
-    
-    //UART_DEBUG_PRINT("Detecting if other devices connected using CAN.");
-    //can_detect_devices();
+
+    // task_schedule_t dicio_read_log = {{dicio_send_ready_message, NULL}, 1, 0};
+    // schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);
+
+    // UART_DEBUG_PRINT("Detecting if other devices connected using CAN.");
+    // can_detect_devices();
 
     /*if(controller_address == 0){
         _TRISD0 = 0;
@@ -83,19 +82,20 @@ void dicio_init(void) {
         init_sample_detection();
     }*/
 
-    //UART_DEBUG_PRINT("Initialising device address.");
-    //address_get();
-    //UART_DEBUG_PRINT("Initialised device address to 0x%x.", controller_address);
+    // UART_DEBUG_PRINT("Initialising device address.");
+    // address_get();
+    // UART_DEBUG_PRINT("Initialised device address to 0x%x.", controller_address);
 
     __delay_ms(100);
-    
+
     task_schedule_t dicio_read_log;
     task_t dicio_read_log_task = {dicio_send_ready_message, NULL};
     schedule_init(&dicio_read_log, dicio_read_log_task, 10);
-    schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);
+    // schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);
 }
 
-void dicio_init_pins(void) {
+void dicio_init_pins(void)
+{
 #ifdef __dsPIC33EP256MU806__
     /*****************************
      * I2C2 pin configuration (HW interface I2C1)
@@ -114,11 +114,11 @@ void dicio_init_pins(void) {
     _LATD10 = 1;
     __delay_ms(1);
 
-    _ODCD9 = 1; // configure I2C pins as open drain output
+    _ODCD9 = 1;  // configure I2C pins as open drain output
     _ODCD10 = 1; // configure I2C pins as open drain outputs
 
-    _ANSE2 = 0; // configure nINT2 as digital pin
-    _TRISE2 = 1; // configure nINT2 as digital input pin    
+    _ANSE2 = 0;  // configure nINT2 as digital pin
+    _TRISE2 = 1; // configure nINT2 as digital input pin
 
     /*****************************
      * I2C1 pin configuration (hardware interface I2C2)
@@ -140,9 +140,8 @@ void dicio_init_pins(void) {
     _ODCF4 = 1; // configure I2C pins as open drain output
     _ODCF5 = 1; // configure I2C pins as open drain output
 
-    _ANSB4 = 0; // configure nINT2 as digital pin
-    _TRISB4 = 1; // configure nINT2 as digital input pin 
-
+    _ANSB4 = 0;  // configure nINT2 as digital pin
+    _TRISB4 = 1; // configure nINT2 as digital input pin
 
     /**
      * UART connection to debug port
@@ -169,7 +168,6 @@ void dicio_init_pins(void) {
     _TRISG8 = 1; // U1 RX
     _U1RXR = 120;
 
-
     /*
      * ECAN pin configuration
      * CAN TX -> D3/RP67
@@ -190,21 +188,20 @@ void dicio_init_pins(void) {
     _ANSB10 = 0; // CAN C2
     _TRISB10 = 1;
     _CNPDB10 = 1; // enable pull-down
-    _ANSB14 = 0; // TERM
+    _ANSB14 = 0;  // TERM
     _TRISB14 = 0;
     _LATB14 = 0;
     _ANSB9 = 0; // SYNC
     _TRISB9 = 1;
 
-
-    /* 
+    /*
      * SPI connection to memory interface
      * SCLK -> D1/RP65
      * SDO -> D0/RP64
      * SDI -> D6/RP70
      * nCS -> D11/RPI75
      */
-    _TRISD6 = 1; // SDI1 
+    _TRISD6 = 1; // SDI1
     _SDI1R = 70;
     _TRISD1 = 0; // SCK1
     _RP65R = _RPOUT_SCK1;
@@ -227,7 +224,7 @@ void dicio_init_pins(void) {
     _ANSE1 = 0; // nHOLD
     _TRISE1 = 0;
     _LATE1 = 1;
-    _TRISF0 = 0; // nRESET 
+    _TRISF0 = 0; // nRESET
     _LATF0 = 1;
     _TRISD5 = 0; // nSQICS1
     _LATD5 = 1;
@@ -244,7 +241,7 @@ void dicio_init_pins(void) {
     _TRISF1 = 0; // SO
     _RP97R = _RPOUT_SDO3;
 
-    /* 
+    /*
      * one wire interfaces (1W)
      * 0W1 -> E6/RPI86
      * OW2 -> B3/RPI35
@@ -269,7 +266,7 @@ void dicio_init_pins(void) {
      * AS1 -> E4/AN28
      * AS2 -> B1/AN2
      * AS3 -> E3/AN27
-     * AS4 -> B0/AN0 
+     * AS4 -> B0/AN0
      */
     _ANSE4 = 1; // AS1
     _ANSB1 = 1; // AS2
@@ -320,12 +317,11 @@ void dicio_init_pins(void) {
     _ODCG2 = 1; // configure I2C pins as open drain output
     _ODCG3 = 1; // configure I2C pins as open drain outputs
 
-
-    _ANSC13 = 0; // configure nINT1 as digital pin
-    _TRISC13 = 1; // configure nINT1 as digital input pin    
-    _ANSC14 = 0; // configure nRST1 as digital pin
+    _ANSC13 = 0;  // configure nINT1 as digital pin
+    _TRISC13 = 1; // configure nINT1 as digital input pin
+    _ANSC14 = 0;  // configure nRST1 as digital pin
     //_ODCC14 = 1; // nRST1 cannot be configured as open-drain pin -> set as input
-    _TRISC14 = 1; // configure nRST1 as digital input pin   
+    _TRISC14 = 1; // configure nRST1 as digital input pin
     _LATC14 = 1;
 
     /*
@@ -343,13 +339,12 @@ void dicio_init_pins(void) {
     _ODCF4 = 1; // configure I2C pins as open drain output
     _ODCF5 = 1; // configure I2C pins as open drain output
 
-    _ANSB15 = 0; // configure nINT1 as digital pin
-    _TRISB15 = 1; // configure nINT2 as digital input pin 
+    _ANSB15 = 0;  // configure nINT1 as digital pin
+    _TRISB15 = 1; // configure nINT2 as digital input pin
     _ODCD8 = 1;
     _CNPUD8 = 1;
-    _TRISD8 = 0; // configure nRST2 as digital output pin   
+    _TRISD8 = 0; // configure nRST2 as digital output pin
     _LATD8 = 1;
-
 
     /*
      * Address selection
@@ -388,7 +383,6 @@ void dicio_init_pins(void) {
     _TRISD10 = 1; // U1 RX
     _U1RXR = 74;
 
-
     /*
      * UART to peripheral (not used currently)
      */
@@ -414,7 +408,7 @@ void dicio_init_pins(void) {
     /*
      * SPI1 configuration
      */
-    _TRISD11 = 1; // SDI1 
+    _TRISD11 = 1; // SDI1
     _SDI1R = 75;
     _TRISF6 = 0; // SCK1
     _RP102R = _RPOUT_SCK1;
@@ -453,7 +447,7 @@ void dicio_init_pins(void) {
     _TRISF1 = 1; // E3
 
     /*
-     * control pins: default config is digital input 
+     * control pins: default config is digital input
      */
     _ANSD6 = 0; // D0
     _TRISD6 = 1;
@@ -472,14 +466,15 @@ void dicio_init_pins(void) {
     _TRISD9 = 1;
 
     // reset sensors
-    //CLEAR_BIT(config.rst_sensor_pin.tris_r, config.rst_sensor_pin.n);
-    //SET_BIT(config.rst_sensor_pin.lat_r, config.rst_sensor_pin.n);
+    // CLEAR_BIT(config.rst_sensor_pin.tris_r, config.rst_sensor_pin.n);
+    // SET_BIT(config.rst_sensor_pin.lat_r, config.rst_sensor_pin.n);
 #endif
 }
 
-void dicio_send_ready_message(void* data) {
+void dicio_send_ready_message(void *data)
+{
     message_t m;
-    
+
     message_init(&m, controller_address, 0, M_READY, 0, NULL, 0);
     message_send(&m);
 }

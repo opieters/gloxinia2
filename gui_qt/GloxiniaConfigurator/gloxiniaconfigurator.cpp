@@ -15,18 +15,8 @@
 #include <QValueAxis>
 #include <QFileDialog>
 
-
 GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::GloxiniaConfigurator)
-    , serial(new QSerialPort(this))
-    , status(new QLabel)
-    , systemSettings(new SettingsDialog)
-    , sensorSettings(new SensorDialog)
-    , configureSHT35Dialog(new ConfigureSHT35Dialog)
-    , nodeDialog(new NodeDialog)
-    , chart(new QChart)
-    , messageModel(new QStringListModel)
+    : QMainWindow(parent), ui(new Ui::GloxiniaConfigurator), serial(new QSerialPort(this)), status(new QLabel), systemSettings(new SettingsDialog), sensorSettings(new SensorDialog), configureSHT35Dialog(new ConfigureSHT35Dialog), nodeDicioDialog(new NodeDicioDialog), chart(new QChart), messageModel(new QStringListModel)
 {
     ui->setupUi(this);
     ui->statusbar->addWidget(status);
@@ -44,9 +34,8 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     connect(ui->actionSelectDataFile, &QAction::triggered, this, &GloxiniaConfigurator::selectDataFile);
     connect(ui->actionClear, &QAction::triggered, this, &GloxiniaConfigurator::clearAll);
 
-
     // connect Edit menu to functions
-    connect(ui->actionAddNode, &QAction::triggered, this, &GloxiniaConfigurator::addNode);
+    // connect(ui->actionAddNode, &QAction::triggered, this, &GloxiniaConfigurator::addNode);
     connect(ui->actionAddSensor, &QAction::triggered, this, &GloxiniaConfigurator::addSensor);
     connect(ui->actionEditNode, &QAction::triggered, this, &GloxiniaConfigurator::editNode);
     connect(ui->actionEditSensor, &QAction::triggered, this, &GloxiniaConfigurator::editSensor);
@@ -56,12 +45,11 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
 
     // connect System menu to functions
     connect(ui->actionConnect, &QAction::triggered, this, &GloxiniaConfigurator::openSerialPort);
-    //connect(ui->actionUpdate, &QAction::triggered, this, &GloxiniaConfigurator::);
+    // connect(ui->actionUpdate, &QAction::triggered, this, &GloxiniaConfigurator::);
     connect(ui->actionDisconnect, &QAction::triggered, this, &GloxiniaConfigurator::closeSerialPort);
     connect(ui->actionConfigure, &QAction::triggered, systemSettings, &SettingsDialog::show);
     connect(ui->actionRefreshPorts, &QAction::triggered, this, &GloxiniaConfigurator::updateSerialPortList);
     updateSerialPortList();
-
 
     ui->actionDisconnect->setEnabled(false);
     ui->actionUpdate->setEnabled(false);
@@ -70,13 +58,11 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
 
     ui->systemOverview->setModel(this->treeModel);
     ui->systemOverview->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    //ui->systemOverview->setModel(this->model);
-    //ui->systemOverview->setColumnCount(1);
+    // ui->systemOverview->setModel(this->model);
+    // ui->systemOverview->setColumnCount(1);
     ui->systemOverview->setHeaderHidden(true);
     ui->systemOverview->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->systemOverview, &QTreeView::customContextMenuRequested, this, &GloxiniaConfigurator::showContextMenu);
-
-
 
     /*
      * for debugging, add some default system state
@@ -99,7 +85,7 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     data = new GCNode(0, GCNode::GCDicio, "greenhouse 2");
     this->treeModel->setData(child, QVariant::fromValue(data), Qt::EditRole);*/
 
-    //addNode(new GCNodeModel(GCNodeModel::DicioNode));
+    // addNode(new GCNodeModel(GCNodeModel::DicioNode));
     QLineSeries *series = new QLineSeries();
     chart->addSeries(series);
     chart->legend()->hide();
@@ -128,393 +114,15 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     messageModel->setData(mIndex, "Application started.");
 
     discoveryTimer = new QTimer();
-    connect(discoveryTimer, &QTimer::timeout, this, &GloxiniaConfigurator::runDiscovery);
+    // connect(discoveryTimer, &QTimer::timeout, this, &GloxiniaConfigurator::runDiscovery);
+
+    serialPortName = "COM12";
+    openSerialPort();
 }
 
 GloxiniaConfigurator::~GloxiniaConfigurator()
 {
     delete ui;
-}
-
-// https://code.qt.io/cgit/qt/qtserialport.git/tree/examples/serialport/terminal/mainwindow.cpp?h=5.15
-void GloxiniaConfigurator::openSerialPort()
-{
-    //const SettingsDialog::Settings p = m_settings->settings();
-    serial->setPortName(serialPortName);
-    serial->setBaudRate(500000);
-    serial->setDataBits(QSerialPort::Data8);
-    serial->setParity(QSerialPort::NoParity);
-    serial->setStopBits(QSerialPort::OneStop);
-    serial->setFlowControl(QSerialPort::NoFlowControl);
-    if (serial->open(QIODevice::ReadWrite)) {
-        //m_console->setEnabled(true);
-        //m_console->setLocalEchoEnabled(p.localEchoEnabled);
-        ui->actionConnect->setEnabled(false);
-        ui->actionDisconnect->setEnabled(true);
-        ui->actionUpdate->setEnabled(true);
-        ui->actionConfigure->setEnabled(false);
-        showStatusMessage(tr("Connected to ") + serialPortName);
-        /*showStatusMessage(tr("Connected to %1 : %2, %3, %4, %5, %6")
-                          .arg(p.name).arg(p.stringBaudRate).arg(p.stringDataBits)
-                          .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl));*/
-
-        // TODO make timer run/stop based on settings
-        discoveryTimer->start(30*1000); // run every 30 seconds
-
-        runDiscovery();
-    } else {
-        QMessageBox::critical(this, tr("Error"), serial->errorString());
-
-        showStatusMessage(tr("Open error"));
-    }
-}
-
-void GloxiniaConfigurator::closeSerialPort()
-{
-    discoveryTimer->stop();
-
-    if (serial->isOpen()){
-        serial->close();
-    }
-    //m_console->setEnabled(false);
-    ui->actionConnect->setEnabled(true);
-    ui->actionDisconnect->setEnabled(false);
-    ui->actionConfigure->setEnabled(true);
-    ui->actionUpdate->setEnabled(false);
-    showStatusMessage(tr("Disconnected"));
-}
-
-void GloxiniaConfigurator::readData()
-{
-    static SerialReadoutState readoutState = FindStartByte;
-    short n_read = 0;
-    static short read_length = 0;
-    static char data[255+5];
-
-    do {
-        switch(readoutState)
-        {
-            case FindStartByte:
-                qInfo() << "Reading start byte";
-                n_read = serial->read(data, 1);
-                if(n_read != 1)
-                {
-                    return;
-                }
-                if(data[0] == GMessage::GMessageStartByte)
-                {
-                    readoutState = ReadIdH;
-                } else {
-                    break;
-                }
-            case ReadIdH:
-
-                n_read = serial->read(data, 1); // read id H
-                 qInfo() << "Reading id byte H" << (int) data[0];
-                if(n_read < 0){
-                    // an error occurred -> return to initial state
-                    readoutState = FindStartByte;
-                    return;
-                }
-                if(n_read == 1){
-                    // we were able to read code -> read id L
-                    readoutState = ReadIdL;
-                } else {
-                    break;
-                }
-            case ReadIdL:
-
-                n_read = serial->read(&data[1], 1); // read id L
-                qInfo() << "Reading id byte L" << (int) data[1];
-                if(n_read < 0){
-                    // an error occurred -> return to initial state
-                    readoutState = FindStartByte;
-                    return;
-                }
-                if(n_read == 1){
-                    // we were able to read code -> read command
-                    readoutState = ReadCommand;
-                } else {
-                    break;
-                }
-            case ReadCommand:
-
-                n_read = serial->read(&data[2], 1); // read id
-                qInfo() << "Reading command byte" << (int) data[2];
-                if(n_read < 0){
-                    readoutState = FindStartByte;
-                    return;
-                }
-                if(n_read == 1){
-                    // we were able to read -> read sensor id H
-                    readoutState = ReadRequest;
-                    read_length = 0;
-                } else {
-                    break;
-                }
-            case ReadRequest:
-
-                n_read = serial->read(&data[3], 1); // read id
-                qInfo() << "Reading request bit" << (int) data[3];
-                if(n_read < 0){
-                    readoutState = FindStartByte;
-                    return;
-                }
-                if(n_read == 1){
-                    // we were able to read -> read sensor id H
-                    readoutState = ReadSensorIdH;
-                    read_length = 0;
-                } else {
-                    break;
-                }
-            case ReadSensorIdH:
-
-                n_read = serial->read(&data[4], 1); // read ext id H
-                qInfo() << "Reading sensor id byte H" << (int) data[4];
-                if(n_read < 0){
-                    readoutState = FindStartByte;
-                    return;
-                }
-                if(n_read == 1){
-                    // we were able to read -> read ext id L
-                    readoutState = ReadSensorIdL;
-                    read_length = 0;
-                } else {
-                    break;
-                }
-            case ReadSensorIdL:
-                n_read = serial->read(&data[5], 1); // read ext id L
-                qInfo() << "Reading ext id byte L" << (int) data[5];
-                if(n_read < 0){
-                    readoutState = FindStartByte;
-                    return;
-                }
-                if(n_read == 1){
-                    // we were able to read -> read length
-                    readoutState = ReadLength;
-                    read_length = 0;
-                } else {
-                    break;
-                }
-            case ReadLength:
-                n_read = serial->read(&data[6], 1); // read length
-                qInfo() << "Reading length byte" << (int) data[6];
-                if(n_read < 0){
-                    readoutState = FindStartByte;
-                    return;
-                }
-                if(n_read == 1){
-                    // we were able to read the length -> read data (if any)
-                    read_length = 0;
-                    if(data[6] == 0){
-                        readoutState = DetectStopByte;
-                        break;
-                    } else {
-                        readoutState = ReadData;
-                    }
-                } else {
-                    break;
-                }
-            case ReadData:
-                qInfo() << "Reading data" << (int) data[6] ;
-                n_read = serial->read(&data[7+read_length], data[6]-read_length);
-                if(n_read < 0){
-                    readoutState = FindStartByte;
-                    return;
-                }
-                read_length += n_read;
-                if(read_length == data[6]){
-                    readoutState = DetectStopByte;
-                } else {
-                    break;
-                }
-            case DetectStopByte:
-                qInfo() << "Reading stop byte";
-                n_read = serial->read(&data[7+read_length], 1);
-                if(n_read < 0)
-                {
-                    qInfo() << "ERROR";
-                    readoutState = FindStartByte;
-                    read_length = 0;
-                    return;
-                }
-                if(n_read == 1)
-                {
-                    qInfo() << "Entire message received";
-                    if(data[7+read_length] == GMessage::GMessageStopByte)
-                    {
-                        quint8* udata = (quint8*) data;
-                        qInfo() << "Processing message";
-                        if(read_length == 0)
-                        {
-                            GMessage m((GMessage::Code) udata[2], (((uint16_t) udata[0] << 8) | udata[1]), ((uint16_t) udata[4] << 8) | udata[5], udata[3]==0?false:true, nullptr, read_length);
-                            processIncomingGMessage(m);
-                        } else {
-                            GMessage m((GMessage::Code) udata[2],  (((uint16_t) udata[0] << 8) | udata[1]), ((uint16_t) udata[4] << 8) | udata[5], udata[3]==0?false:true, &udata[7], read_length);
-                            processIncomingGMessage(m);
-                        }
-
-                        /*if(model->insertRow(model->rowCount())){
-                            QModelIndex index = model->index(model->rowCount() - 1, 0);
-                            model->setData(index, "Data received!");
-                        }*/
-
-                    } else {
-                        // incorrect data byte received -> reset state
-                    }
-                    readoutState = FindStartByte;
-                    read_length = 0;
-                    break;
-                } else {
-                    qInfo() << "No data received";
-                    break;
-                }
-
-                break;
-            default:
-                readoutState = FindStartByte;
-                break;
-        }
-    } while(n_read > 0);
-}
-
-void GloxiniaConfigurator::processCANDiscoveryMessage(const GMessage& m)
-{
-    qInfo() << "Received discovery message";
-
-    if(treeModel->checkUniqueNodeID(m.getMessageID()))
-    {
-        QModelIndex index = QModelIndex();
-        bool success = this->treeModel->insertRow(treeModel->rowCount(), index);
-        QModelIndex child = this->treeModel->index(treeModel->rowCount()-1, 0, index);
-        // TODO: handle different types of nodes
-        GCNode* data = new GCNode(m.getMessageID(), GCNode::GCDicio, "unlabeled node");
-        this->treeModel->setData(child, QVariant::fromValue(data), Qt::EditRole);
-    }
-}
-
-void GloxiniaConfigurator::processTextMessage(const GMessage& m)
-{
-}
-
-void GloxiniaConfigurator::processIncomingGMessage(const GMessage& m)
-{
-    switch(m.getCode()){
-    case GMessage::Code::REQUEST_ADDRESS_AVAILABLE:
-        break;
-    case GMessage::Code::ADDRESS_TAKEN:
-        break;
-    case GMessage::Code::UPDATE_ADDRESS:
-        break;
-    case GMessage::Code::DISCOVERY:
-        // check if node exists, if not create one and add to model
-        processCANDiscoveryMessage(m);
-        break;
-    /*case GMessage::Code::text_message:
-        processTextMessage(m);
-        break;
-    case GMessage::Code::startMeasurement:
-    case GMessage::Code::stopMeasurement:
-    case GMessage::Code::activate_sensor:
-    case GMessage::Code::deactivate_sensor:
-    case GMessage::Code::reset_node:
-    case GMessage::Code::reset_system:
-    case GMessage::Code::sensor_data:
-    case GMessage::Code::sensor_status:
-    case GMessage::Code::measurement_period:
-    case GMessage::Code::error_message:
-    case GMessage::Code::loopback_message:
-    case GMessage::Code::actuator_status:
-    case GMessage::Code::hello_message:
-    case GMessage::Code::init_sampling:
-    case GMessage::Code::init_sensors:
-    case GMessage::Code::sensor_error:
-    case GMessage::Code::lia_gain:
-    case GMessage::Code::unknown:
-    case GMessage::Code::meas_trigger:
-    case GMessage::Code::sensor_config:
-    case GMessage::Code::actuator_data:
-    case GMessage::Code::actuator_error:
-    case GMessage::Code::actuator_trigger:
-    case GMessage::Code::actuator_gc_temp:
-    case GMessage::Code::actuator_gc_rh:
-    case GMessage::Code::sensor_start:
-    case GMessage::Code::actuator_relay:
-    case GMessage::Code::sensor_actuator_enable:
-    case GMessage::Code::actuator_relay_now:*/
-    default:
-    break;
-    }
-
-    messageModel->insertRow(0);
-    QModelIndex mIndex = messageModel->index(0, 0);
-    messageModel->setData(mIndex, m.toLogString());
-
-    qInfo() << "Processing" << m.toString();
-}
-
-void GloxiniaConfigurator::updateSerialPortList(void)
-{
-    // TODO: add sort items
-
-    auto list = QSerialPortInfo::availablePorts();
-
-    // remove items
-     for(QAction* i : serialPortActionList)
-     {
-        bool serialPortFound = false;
-        for(const QSerialPortInfo &j : list)
-        {
-            if(j.portName() == i->text())
-            {
-                serialPortFound = true;
-                break;
-            }
-        }
-        if(!serialPortFound)
-        {
-            ui->menuPortSelection->removeAction(i);
-        }
-    }
-
-    // add new items
-    for(const QSerialPortInfo &i : list)
-    {
-        bool serialPortFound = false;
-        for(QAction* j : serialPortActionList)
-        {
-            if(i.portName() == j->text()){
-                serialPortFound = true;
-                break;
-            }
-        }
-        if(!serialPortFound)
-        {
-            QAction* action = ui->menuPortSelection->addAction(i.portName());
-            action->setCheckable(true);
-            connect(action,  &QAction::triggered, this, &GloxiniaConfigurator::setSerialPort);
-            serialPortActionList.append(action);
-        }
-    }
-}
-
-void GloxiniaConfigurator::setSerialPort(void)
-{
-    QAction* button = qobject_cast<QAction*>(sender());
-    if( button != NULL )
-    {
-        // disable other buttons
-        for(QAction* i : serialPortActionList){
-            if(i != button){
-                i->setChecked(false);
-            } else {
-                i->setChecked(true);
-            }
-        }
-
-        // update configuration and the connected port
-        serialPortName = button->text();
-    }
 }
 
 void GloxiniaConfigurator::showStatusMessage(const QString &message)
@@ -599,16 +207,16 @@ void GloxiniaConfigurator::runDiscovery()
         GMessage m(GMessage::Code::UPDATE_ADDRESS, GMessage::UnsetAddress, GMessage::NoSensorID, false, data);
         length = m.toBytes(rawData, 32);
     } else {*/
-        qInfo() << "Running discovery broadcast";
+    qInfo() << "Running discovery broadcast";
 
-        GMessage m(GMessage::Code::DISCOVERY, 0, 0, true);
+    GMessage m(GMessage::Code::DISCOVERY, 0, 0, true, std::vector<quint8>());
 
-        length = m.toBytes(rawData, 32);
+    length = m.toBytes(rawData, 32);
     //}
-    serial->write((char*) rawData, length);
+    serial->write((char *)rawData, length);
 }
 
-void GloxiniaConfigurator::addNode()
+/*void GloxiniaConfigurator::addNode()
 {
     const QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
     QAbstractItemModel *model = ui->systemOverview->model();
@@ -628,22 +236,23 @@ void GloxiniaConfigurator::addNode()
     updateActions();
 
     const QModelIndex child = model->index(index.row() + 1, 0, index.parent());
-    nodeDialog->setWindowModality(Qt::ApplicationModal);
-    nodeDialog->exec();
-    GCNode* data = nodeDialog->getNode();
+    nodeDicioDialog->setWindowModality(Qt::ApplicationModal);
+    nodeDicioDialog->exec();
+    GCNode* data = nodeDicioDialog->getNode();
     model->setData(child, QVariant::fromValue(data), Qt::EditRole);
 
     //ui->systemOverview->selectionModel()->setCurrentIndex(index, QItemSelectionModel::ClearAndSelect);
 
     //updateActions();
-}
+}*/
 
-bool GloxiniaConfigurator::removeNode(const QModelIndex& index)
+bool GloxiniaConfigurator::removeNode(const QModelIndex &index)
 {
 
     QAbstractItemModel *model = ui->systemOverview->model();
 
-    if(index.isValid() && !index.parent().isValid()){
+    if (index.isValid() && !index.parent().isValid())
+    {
         return model->removeRow(index.row(), index.parent());
     }
 
@@ -651,31 +260,36 @@ bool GloxiniaConfigurator::removeNode(const QModelIndex& index)
     QModelIndex mIndex = messageModel->index(0, 0);
     messageModel->setData(mIndex, "Could not remove node.");
 
-
     return false;
 
-
     // get item at selected position:
-    QItemSelectionModel* selectionModel = this->ui->systemOverview->selectionModel();
+    QItemSelectionModel *selectionModel = this->ui->systemOverview->selectionModel();
 
     const QModelIndexList indexes = selectionModel->selectedIndexes();
 
-    GCSensor* s;
-    GCNode* n;
+    GCSensor *s;
+    GCNode *n;
     bool containsNode = false, containsSensor = false;
 
-    for (const QModelIndex &index : indexes) {
+    for (const QModelIndex &index : indexes)
+    {
         QString text = QString("(%1,%2)").arg(index.row()).arg(index.column());
         QVariant data = ui->systemOverview->model()->data(index, Qt::EditRole);
-        s = data.value<GCSensor*>();
-        n = data.value<GCNode*>();
-        if(s != nullptr){ containsSensor = true; }
-        if(n != nullptr){ containsNode = true; }
+        s = data.value<GCSensor *>();
+        n = data.value<GCNode *>();
+        if (s != nullptr)
+        {
+            containsSensor = true;
+        }
+        if (n != nullptr)
+        {
+            containsNode = true;
+        }
     }
 
     // https://stackoverflow.com/questions/14237020/qtreewidget-right-click-menu
 
-    //qInfo() << "Index is " << this->ui->systemOverview->indexFromItem(nd);
+    // qInfo() << "Index is " << this->ui->systemOverview->indexFromItem(nd);
 }
 
 void GloxiniaConfigurator::editNode()
@@ -685,18 +299,34 @@ void GloxiniaConfigurator::editNode()
     QAbstractItemModel *model = ui->systemOverview->model();
 
     // node is selected -> run menu
-    if(index.isValid() && !index.parent().isValid()){
+    if (index.isValid() && !index.parent().isValid())
+    {
         QVariant data = model->data(index, Qt::EditRole);
-        GCNode* nodeData = data.value<GCNode*>();
+        GCNodeDicio *nDicio = data.value<GCNodeDicio *>();
+        GCNodePlanalta *nPlanalta = data.value<GCNodePlanalta *>();
+        GCNodeSylvatica *nSylvatica = data.value<GCNodeSylvatica *>();
 
-        nodeDialog->setNodeSettings(nodeData);
-        nodeDialog->setWindowModality(Qt::ApplicationModal);
-        nodeDialog->exec();
-        delete nodeData;
-        model->setData(index, QVariant::fromValue(nodeDialog->getNode()), Qt::EditRole);
+        if (nDicio != nullptr)
+        {
+            nodeDicioDialog->setNodeSettings(nDicio);
+            nodeDicioDialog->setWindowModality(Qt::ApplicationModal);
+            nodeDicioDialog->exec();
+            nodeDicioDialog->updateNode(nDicio);
+            model->setData(index, QVariant::fromValue(nDicio), Qt::EditRole);
+            return;
+        }
+
+        if (nPlanalta != nullptr)
+        {
+            // TODO
+        }
+
+        if (nSylvatica != nullptr)
+        {
+            // TODO
+        }
     }
 }
-
 
 void GloxiniaConfigurator::addSensor()
 {
@@ -704,7 +334,8 @@ void GloxiniaConfigurator::addSensor()
     QAbstractItemModel *model = ui->systemOverview->model();
 
     // node is selected -> add sensor as child
-    if(index.isValid() && !index.parent().isValid()){
+    if (index.isValid() && !index.parent().isValid())
+    {
 
         if (!model->insertRow(0, index))
         {
@@ -717,34 +348,34 @@ void GloxiniaConfigurator::addSensor()
         for (int column = 0; column < model->columnCount(index); ++column)
         {
             const QModelIndex child = model->index(0, column, index);
-            GCSensor* sensor = selectSensor();
+            GCSensor *sensor = selectSensor();
             model->setData(child, QVariant::fromValue(sensor), Qt::EditRole);
-            //model->setData(child, QVariant::fromValue(GCNode()), Qt::EditRole);
+            // model->setData(child, QVariant::fromValue(GCNode()), Qt::EditRole);
         }
 
         ui->systemOverview->selectionModel()->setCurrentIndex(model->index(0, 0, index),
-                                                QItemSelectionModel::ClearAndSelect);
+                                                              QItemSelectionModel::ClearAndSelect);
         updateActions();
 
         return;
-
     }
 
     // sensor is selected -> add sensor as new row
-    if(index.isValid() && index.parent().isValid()){
-        if (!model->insertRow(index.row()+1, index.parent()))
+    if (index.isValid() && index.parent().isValid())
+    {
+        if (!model->insertRow(index.row() + 1, index.parent()))
             return;
 
         updateActions();
 
         const QModelIndex child = model->index(index.row() + 1, 0, index.parent());
         selectSensor();
-        GCSensor* sensor = selectSensor();
+        GCSensor *sensor = selectSensor();
         model->setData(child, QVariant::fromValue(sensor), Qt::EditRole);
-        //model->setData(child, QVariant::fromValue(GCNode()), Qt::EditRole);
+        // model->setData(child, QVariant::fromValue(GCNode()), Qt::EditRole);
 
         ui->systemOverview->selectionModel()->setCurrentIndex(model->index(0, 0, index),
-                                                QItemSelectionModel::ClearAndSelect);
+                                                              QItemSelectionModel::ClearAndSelect);
         updateActions();
 
         return;
@@ -756,12 +387,12 @@ void GloxiniaConfigurator::addSensor()
     return;
 }
 
-
-bool GloxiniaConfigurator::removeSensor(const QModelIndex& index)
+bool GloxiniaConfigurator::removeSensor(const QModelIndex &index)
 {
     QAbstractItemModel *model = ui->systemOverview->model();
 
-    if(index.isValid() && index.parent().isValid()){
+    if (index.isValid() && index.parent().isValid())
+    {
         return model->removeRow(index.row(), index.parent());
     }
 
@@ -778,13 +409,13 @@ void GloxiniaConfigurator::removeItems()
 
     for (const QModelIndex &index : indexes)
     {
-        if(!removeSensor(index))
+        if (!removeSensor(index))
         {
             nodeIndices.append(index);
         }
     }
 
-    for(const QModelIndex &index : nodeIndices)
+    for (const QModelIndex &index : nodeIndices)
     {
         removeNode(index);
     }
@@ -794,32 +425,101 @@ void GloxiniaConfigurator::editSensor()
 {
     const QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
     QAbstractItemModel *model = ui->systemOverview->model();
+    GCSensorSHT35 *sensorSHT35;
+    GCSensorAPDS9306 *sensorAPDS9306;
+
+    quint8 rawData[32];
+    unsigned int length;
+
+    std::vector<quint8> mData;
+
+    GMessage m;
 
     // sensor is selected -> run menu
-    if(index.isValid() && index.parent().isValid()){
+    if (index.isValid() && index.parent().isValid())
+    {
         QVariant data = model->data(index, Qt::EditRole);
-        GCSensorSHT35* sensorSHT35 = data.value<GCSensorSHT35*>();
-        GCSensorAPDS9306* sensorAPDS9306 = data.value<GCSensorAPDS9306*>();
+        sensorSHT35 = data.value<GCSensorSHT35 *>();
+        sensorAPDS9306 = data.value<GCSensorAPDS9306 *>();
 
-        if(sensorSHT35 != nullptr)
+        if (sensorSHT35 != nullptr)
         {
             configureSHT35Dialog->setSensorSettings(sensorSHT35);
             configureSHT35Dialog->setWindowModality(Qt::ApplicationModal);
             configureSHT35Dialog->exec();
-            delete sensorSHT35;
-            model->setData(index, QVariant::fromValue(configureSHT35Dialog->getSensor()), Qt::EditRole);
+            configureSHT35Dialog->updateSensor(sensorSHT35);
+            model->setData(index, QVariant::fromValue(sensorSHT35), Qt::EditRole);
+            return;
         }
 
-        if(sensorAPDS9306 != nullptr)
+        if (sensorAPDS9306 != nullptr)
         {
             // TODO
+            return;
+        }
+
+        // there is no sensor in the system (nullptr) -> we need to select a sensor
+        QStringList items;
+        // items << "-- select sensor--";
+        items << "SHT35";
+        items << "APDS9306 065";
+
+        bool ok;
+        GCSensor *sensor = nullptr;
+
+        QString item = QInputDialog::getItem(this, tr("Select sensor type"), tr("Sensor:"), items, 0, false, &ok);
+        int sensorIndex = items.indexOf(item);
+
+        // using the index, we pop-up the sensor configuration dialog and add it at the relevant location
+        int result;
+        if (ok && !item.isEmpty())
+        {
+            switch (sensorIndex)
+            {
+            case 0:
+                configureSHT35Dialog->setWindowModality(Qt::ApplicationModal);
+                result = configureSHT35Dialog->exec();
+                if (result == QDialog::Rejected)
+                {
+                    return;
+                }
+                sensorSHT35 = new GCSensorSHT35();
+                sensorSHT35->setInterfaceID((quint8)index.row());
+                configureSHT35Dialog->updateSensor(sensorSHT35);
+                model->setData(index, QVariant::fromValue(sensorSHT35), Qt::EditRole);
+
+                // update hardware configuration
+                mData = std::vector<quint8>(5);
+                mData[0] = (quint8)GCSensor::sensor_class::SHT35;
+                mData[1] = GCSensorSHT35::Register::MEASUREMENT;
+                mData[2] = GCSensor::sensor_status::IDLE;
+                mData[3] = (quint8)sensorSHT35->getMeasurementPeriod() >> 8;
+                mData[4] = (quint8)sensorSHT35->getMeasurementPeriod() & 0xff;
+                m = GMessage(GMessage::Code::SENSOR_CONFIG, (quint8)index.parent().row(), sensorSHT35->getInterfaceID(), true, mData);
+                sendSerialMessage(m);
+                mData = std::vector<quint8>(8);
+                mData[0] = (quint8)GCSensor::sensor_class::SHT35;
+                mData[1] = GCSensorSHT35::Register::CONFIG;
+                mData[2] = sensorSHT35->getI2CAddress();
+                mData[3] = 1; // TODO: really needed?
+                mData[4] = sensorSHT35->getRepeatability();
+                mData[5] = sensorSHT35->getClockStretching();
+                mData[6] = sensorSHT35->getRate();
+                mData[7] = sensorSHT35->getPeriodicity();
+                m = GMessage(GMessage::Code::SENSOR_CONFIG, (quint8)index.parent().row(), sensorSHT35->getInterfaceID(), true, mData);
+                sendSerialMessage(m);
+                qInfo() << "Send SHT35 config" << m.toString();
+                break;
+            default:
+                sensor = nullptr;
+                break;
+            }
         }
     }
 }
 
 void GloxiniaConfigurator::preferencesMenu(void)
 {
-
 }
 
 void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
@@ -832,12 +532,14 @@ void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
     bool nodeCurrent = false, sensorCurrent = false;
 
     // node is selected -> add sensor as child
-    if(index.isValid() && !index.parent().isValid()){
+    if (index.isValid() && !index.parent().isValid())
+    {
         nodeCurrent = true;
     }
 
     // sensor is selected -> add sensor as new row
-    if(index.isValid() && index.parent().isValid()){
+    if (index.isValid() && index.parent().isValid())
+    {
         sensorCurrent = true;
     }
 
@@ -847,9 +549,9 @@ void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
     connect(&mDelete, &QAction::triggered, this, &GloxiniaConfigurator::removeItems);
     m.addAction(&mDelete);
 
-    QAction mAddNode("Add node", this);
-    connect(&mAddNode, &QAction::triggered, this, &GloxiniaConfigurator::addNode);
-    m.addAction(&mAddNode);
+    // QAction mAddNode("Add node", this);
+    // connect(&mAddNode, &QAction::triggered, this, &GloxiniaConfigurator::addNode);
+    // m.addAction(&mAddNode);
 
     QAction mAddSensor("Add sensor", this);
     connect(&mAddSensor, &QAction::triggered, this, &GloxiniaConfigurator::addSensor);
@@ -863,37 +565,40 @@ void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
     connect(&mEditSensor, &QAction::triggered, this, &GloxiniaConfigurator::editSensor);
     m.addAction(&mEditSensor);
 
-    if(sensorCurrent){
-        mAddNode.setEnabled(false);
+    if (sensorCurrent)
+    {
+        // mAddNode.setEnabled(false);
         mEditNode.setEnabled(false);
     }
 
-    if(nodeCurrent){
+    if (nodeCurrent)
+    {
         mEditSensor.setEnabled(false);
     }
 
     m.exec(ui->systemOverview->mapToGlobal(pos));
 }
 
-
-GCSensor* GloxiniaConfigurator::selectSensor(void)
+GCSensor *GloxiniaConfigurator::selectSensor(void)
 {
     QStringList items;
-    //items << "-- select sensor--";
+    // items << "-- select sensor--";
     items << "SHT35";
     items << "APDS9306";
 
     bool ok;
-    GCSensor* sensor = nullptr;
+    GCSensor *sensor = nullptr;
 
     QString item = QInputDialog::getItem(this, tr("Select sensor type"), tr("Sensor:"), items, 0, false, &ok);
     int sensorIndex = items.indexOf(item);
-    if(ok && !item.isEmpty()){
-        switch(sensorIndex){
+    if (ok && !item.isEmpty())
+    {
+        switch (sensorIndex)
+        {
         case 0:
             configureSHT35Dialog->setWindowModality(Qt::ApplicationModal);
             configureSHT35Dialog->exec();
-            sensor = configureSHT35Dialog->getSensor();
+            // sensor = configureSHT35Dialog->getSensor();
             break;
         default:
             sensor = nullptr;
@@ -901,20 +606,20 @@ GCSensor* GloxiniaConfigurator::selectSensor(void)
         }
     }
     return sensor;
-
 }
 
 void GloxiniaConfigurator::updateActions()
 {
     const bool hasSelection = !ui->systemOverview->selectionModel()->selection().isEmpty();
-    //removeRowAction->setEnabled(hasSelection);
-    //removeColumnAction->setEnabled(hasSelection);
+    // removeRowAction->setEnabled(hasSelection);
+    // removeColumnAction->setEnabled(hasSelection);
 
     const bool hasCurrent = ui->systemOverview->selectionModel()->currentIndex().isValid();
-    //addNode->setEnabled(hasCurrent);
-    //insertColumnAction->setEnabled(hasCurrent);
+    // addNode->setEnabled(hasCurrent);
+    // insertColumnAction->setEnabled(hasCurrent);
 
-    if (hasCurrent) {
+    if (hasCurrent)
+    {
         ui->systemOverview->closePersistentEditor(ui->systemOverview->selectionModel()->currentIndex());
 
         const int row = ui->systemOverview->selectionModel()->currentIndex().row();
@@ -924,102 +629,4 @@ void GloxiniaConfigurator::updateActions()
         else
             statusBar()->showMessage(tr("Position: (%1,%2) in top level").arg(row).arg(column));
     }
-}
-
-
-void GloxiniaConfigurator::saveToFile(void)
-{
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Configuration"), "", tr("Gloxinia Config File (*.gcf);;All Files (*)"));
-
-    // save only if filename is non-empty
-    if(fileName.isEmpty())
-        return;
-
-    QFile file(fileName);
-    if(!file.open(QIODevice::WriteOnly))
-    {
-        QMessageBox::information(this, tr("Unable to open file"), file.errorString());
-        return;
-    }
-
-    QTextStream out(&file); // QDataStream is also possible for serialised data
-    //out.setVersion(QDataStream::Qt_6_3);
-
-    QStringList textConfig = treeModel->toTextConfig();
-    for(QString i : textConfig)
-    {
-        out << i << "\n";
-    }
-
-    // TODO: update status bar with message indicating the file was saved
-}
-void GloxiniaConfigurator::loadFromFile(void)
-{
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Gloxinia Configuration"), "", tr("Gloxinia Config File (*.gcf);;All Files (*)"));
-
-    // load only if filename is non-empty
-    if(fileName.isEmpty())
-        return;
-
-    QFile file(fileName);
-    if(!file.open(QIODevice::ReadOnly))
-    {
-        QMessageBox::information(this, tr("Unable to open file"), file.errorString());
-        return;
-    }
-
-    QTextStream in(&file); // QDataStream is also possible for serialised data
-    //out.setVersion(QDataStream::Qt_6_3);
-
-    QString textConfigFull = file.readAll();
-    QStringList textConfig = textConfigFull.split("\n");
-
-    clearAll();
-
-    // TODO: read file version
-    // TODO: read filenames where data is created
-
-    bool ok = treeModel->fromTextConfig(textConfig);
-
-    //if(ok)
-    // TODO: update status bar with message indicating the file was saved
-
-}
-
-void GloxiniaConfigurator::clearAll(void)
-{
-    // remove all items from the tree
-    qInfo() << "Number of rows:" << treeModel->rowCount();
-    treeModel->removeRows(0, treeModel->rowCount());
-}
-
-void GloxiniaConfigurator::selectDataFile(void)
-{
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Open Data File"), "", tr("Comma Seperated Values (*.csv);;All Files (*)"));
-
-    // save only if filename is non-empty
-    if(fileName.isEmpty())
-        return;
-
-    if(dataFile != nullptr)
-    {
-        dataFile->close();
-        delete dataFile;
-    }
-
-    if(dataStream != nullptr)
-    {
-        delete dataStream;
-    }
-
-    dataFile = new QFile(fileName);
-    if(!dataFile->open(QIODevice::WriteOnly))
-    {
-        QMessageBox::information(this, tr("Unable to open file"), dataFile->errorString());
-        return;
-    }
-
-    // create a new datastream
-    dataStream = new QDataStream(dataFile);
-    dataStream->setVersion(QDataStream::Qt_6_3);
 }
