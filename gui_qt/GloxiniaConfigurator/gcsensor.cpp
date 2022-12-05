@@ -297,15 +297,14 @@ QList<GMessage> GCSensorSHT35::getConfigurationMessages()
     mData[3] = (quint8) measurementPeriod & 0xff;
     mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, false, mData));
 
-    mData = std::vector<quint8>(8);
+    mData = std::vector<quint8>(7);
     mData[0] = (quint8)GCSensor::sensor_class::SHT35;
     mData[1] = GCSensorSHT35::Register::CONFIG;
     mData[2] = i2cAddress;
-    mData[3] = 1; // TODO: really needed?
-    mData[4] = repeatability;
-    mData[5] = clockStretching;
-    mData[6] = rate;
-    mData[7] = periodicity;
+    mData[3] = repeatability;
+    mData[4] = clockStretching;
+    mData[5] = rate;
+    mData[6] = periodicity;
     mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, false, mData));
 
     return mList;
