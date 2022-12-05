@@ -49,7 +49,8 @@ public:
     void setUseGlobalPeriodFlag(bool flag);
     void setStatus(GCSensorStatus s);
 
-    virtual void startMeasurement(void);
+    static GCSensor* fromQVariant(const QVariant data);
+
     virtual void stopMeasurement(void);
     virtual void saveData(std::vector<quint8>& data) = 0;
     virtual void printHeader(void) = 0;

@@ -93,6 +93,18 @@ void GCSensor::setStatus(GCSensorStatus s)
     status = s;
 }
 
+GCSensor* GCSensor::fromQVariant(const QVariant data)
+{
+    GCSensorSHT35 *sensorSHT35 = data.value<GCSensorSHT35 *>();
+    GCSensorAPDS9306 *sensorAPDS9306 = data.value<GCSensorAPDS9306 *>();
+
+    if(sensorSHT35 != nullptr)
+        return sensorSHT35;
+    if(sensorAPDS9306 != nullptr)
+        return sensorAPDS9306;
+    return nullptr;
+}
+
 QDebug operator<<(QDebug dbg, const GCSensor &)
 {
     QDebugStateSaver saver(dbg);
