@@ -3,6 +3,7 @@
 
 #include <xc.h>
 #include <can.h>
+#include <i2c.h>
 #include <sensor_sht35.h>
 #include <sensor_apds9306_065.h>
 #include <sensor_analog.h>
@@ -44,6 +45,7 @@ extern "C" {
     void sensors_init(void);
     void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t* buffer, uint8_t length);
     void sensor_get_config(uint8_t interface_id, uint8_t reg, uint8_t* buffer, uint8_t* length);
+    i2c_bus_t sensor_get_i2c_bus(uint8_t interface_id);
     void sensor_error_handle(sensor_interface_t* intf);
     void sensor_i2c_error_handle(sensor_interface_t* intf, i2c_message_t* m, uint8_t location);
     void sensor_start(void);

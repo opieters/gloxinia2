@@ -18,6 +18,16 @@ void sensors_init(void)
     
 }
 
+i2c_bus_t sensor_get_i2c_bus(uint8_t interface_id)
+{
+    if(interface_id < (N_SENSOR_INTERFACES/2))
+    {
+        return I2C1_BUS;
+    } else {
+        return I2C2_BUS;
+    }
+}
+
 void sensor_get_config(uint8_t interface_id, uint8_t reg, uint8_t* buffer, uint8_t* length){
     sensor_interface_t* intf = &sensor_interfaces[interface_id];
     sensor_type_t stype = intf->sensor_type;
@@ -121,7 +131,7 @@ void sensor_set_status(uint8_t interface_id, sensor_status_t status){
                     default:
                         break;
                     }
-                  schedule_event(&intf->measure);
+                    schedule_event(&intf->measure);
                 }
                 intf->status = SENSOR_STATUS_ACTIVE;
                 break;

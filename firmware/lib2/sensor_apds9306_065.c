@@ -79,7 +79,7 @@ sensor_status_t sensor_apds9306_065_config(struct sensor_interface_s* intf, uint
                 return SENSOR_STATUS_ERROR;
             }
             config->address = buffer[1];
-            config->i2c_bus = (i2c_bus_t) buffer[2];
+            config->i2c_bus = sensor_get_i2c_bus(intf->sensor_id);
             config->meas_rate = (sensor_apds9306_065_als_meas_rate_t) buffer[3];
             config->meas_resolution = (sensor_apds9306_065_als_resolution_t) buffer[4];
             config->gain = (sensor_apds9306_065_als_gain_t) buffer[5];
