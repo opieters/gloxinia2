@@ -32,10 +32,8 @@ typedef enum
     UART_RX_STATE_DETECT_STOP
 } uart_rx_state_t;
 
-message_t uart_rx_queue[UART_RX_BUFFER_SIZE];
-uint8_t uart_rx_buffer[UART_RX_BUFFER_SIZE][PRINT_BUFFER_LENGTH] __attribute__((space(xmemory)));
-volatile size_t n_uart_rx_messages = 0;
-volatile size_t uart_rx_read_idx = 0; // current or previous read index
+message_t uart_rx_m;
+uint8_t uart_rx_buffer[PRINT_BUFFER_LENGTH] __attribute__((space(xmemory)));
 volatile uart_rx_state_t uart_rx_state = 0;
 volatile uint8_t uart_rx_idx = 0;
 
@@ -98,11 +96,13 @@ void uart_init(uint32_t baudrate)
     _DMA14IP = 7;
 
     // RX buffer
-    for (i = 0; i < UART_RX_BUFFER_SIZE; i++)
+    /*for (i = 0; i < UART_RX_BUFFER_SIZE; i++)
     {
         uart_rx_queue[i].status = M_RX_FROM_UART;
         uart_rx_queue[i].data = uart_rx_buffer[i];
-    }
+    }*/
+    uart_rx_m.status = M_RX_FROM_UART;
+    uart_rx_m.data = uart_rx_buffer;
 
     // TX buffer
     for (i = 0; i < TXIE; i++)
@@ -256,12 +256,13 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
 {
 
     register uint8_t rx_value = U2RXREG;
-    register message_t *m = &(uart_rx_queue[(n_uart_rx_messages + uart_rx_read_idx) % UART_RX_BUFFER_SIZE]);
+    //register message_t *m = &(uart_rx_queue[(n_uart_rx_messages + uart_rx_read_idx) % UART_RX_BUFFER_SIZE]);
+    register message_t *m = &uart_rx_m;
 
-    if (n_uart_rx_messages == UART_RX_BUFFER_SIZE)
-    {
-        _U2RXIF = 0;
-    }
+    //if (n_uart_rx_messages == UART_RX_BUFFER_SIZE)
+    //{
+    //    _U2RXIF = 0;
+    //}
 
     switch (uart_rx_state)
     {
@@ -269,6 +270,7 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
         if (rx_value == UART_CMD_START)
         {
             uart_rx_state = UART_RX_STATE_READ_IDH;
+            m->data = uart_rx_buffer;
         }
         break;
     case UART_RX_STATE_READ_IDH:
@@ -343,7 +345,7 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
             m->status = M_ERROR;
         }
 
-        n_uart_rx_messages++;
+        //n_uart_rx_messages++;
         uart_rx_state = UART_RX_STATE_FIND_START_BYTE;
 
         uart_connection_active = true;
