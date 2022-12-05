@@ -51,12 +51,14 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
 
     // connect Edit menu to functions
     // connect(ui->actionAddNode, &QAction::triggered, this, &GloxiniaConfigurator::addNode);
-    connect(ui->actionAddSensor, &QAction::triggered, this, &GloxiniaConfigurator::addSensor);
+    //connect(ui->actionAddSensor, &QAction::triggered, this, &GloxiniaConfigurator::addSensor);
     connect(ui->actionEditNode, &QAction::triggered, this, &GloxiniaConfigurator::editNode);
     connect(ui->actionEditSensor, &QAction::triggered, this, &GloxiniaConfigurator::editSensor);
     connect(ui->actionDelete, &QAction::triggered, this, &GloxiniaConfigurator::removeItems);
     connect(ui->actionPreferences, &QAction::triggered, this, &GloxiniaConfigurator::preferencesMenu);
     connect(ui->actionRunDiscovery, &QAction::triggered, this, &GloxiniaConfigurator::runDiscovery);
+    connect(ui->actionStartMeasuring, &QAction::triggered, this, &GloxiniaConfigurator::startMeasuring);
+    connect(ui->actionStopMeasuring, &QAction::triggered, this, &GloxiniaConfigurator::stopMeasuring);
 
     // connect System menu to functions
     connect(ui->actionConnect, &QAction::triggered, this, &GloxiniaConfigurator::openSerialPort);
@@ -265,6 +267,73 @@ void GloxiniaConfigurator::runDiscovery()
 
     //updateActions();
 }*/
+
+void GloxiniaConfigurator::startMeasuring(void)
+{
+    // loop over all nodes and sensors and trigger measurement
+    for(int i = 0; i < treeModel->rowCount(); i++)
+    {
+        QModelIndex index = treeModel->index(i, 0);
+        QVariant data = treeModel->data(index, Qt::EditRole);
+        GCNode* node = GCNode::fromQVariant(data);
+
+        if(node == nullptr)
+            continue;
+
+        for(int j = 0; j < treeModel->rowCount(index); j++)
+        {
+            QModelIndex sIndex = treeModel->index(j, 0, index);
+            QVariant sData = treeModel->data(sIndex, Qt::EditRole);
+            GCSensor* sensor = GCSensor::fromQVariant(sData);
+
+            if(sensor == nullptr)
+                continue;
+
+            if(sensor->startMeasurement())
+            {
+                GMessage mStart = sensor->getStartMessage();
+
+                sendSerialMessage(mStart);
+                qInfo() << "Sending sensor start" << mStart.toString();
+                QThread::msleep(1); // TODO: needed??
+            }
+
+        }
+    }
+}
+void GloxiniaConfigurator::stopMeasuring(void)
+{
+    // loop over all nodes and sensora and cancel measurement
+    for(int i = 0; i < treeModel->rowCount(); i++)
+    {
+        QModelIndex index = treeModel->index(i, 0);
+        QVariant data = treeModel->data(index, Qt::EditRole);
+        GCNode* node = GCNode::fromQVariant(data);
+
+        if(node == nullptr)
+            continue;
+
+        for(int j = 0; j < treeModel->rowCount(index); j++)
+        {
+            QModelIndex sIndex = treeModel->index(j, 0, index);
+            QVariant sData = treeModel->data(sIndex, Qt::EditRole);
+            GCSensor* sensor = GCSensor::fromQVariant(sData);
+
+            if(sensor == nullptr)
+                continue;
+
+            if(sensor->startMeasurement())
+            {
+                GMessage mStart = sensor->getStartMessage();
+
+                sendSerialMessage(mStart);
+                qInfo() << "Sending sensor start" << mStart.toString();
+                QThread::msleep(1); // TODO: needed??
+            }
+
+        }
+    }
+}
 
 bool GloxiniaConfigurator::removeNode(const QModelIndex &index)
 {

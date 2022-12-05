@@ -65,6 +65,8 @@ private slots:
     // void addNode(void);
     void editNode(void);
     bool removeNode(const QModelIndex &index);
+    void startMeasuring(void);
+    void stopMeasuring(void);
 
     void addSensor(void);
     void editSensor(void);
