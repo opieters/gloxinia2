@@ -7,7 +7,7 @@
 #include <gmessage.h>
 #include <QSerialPortInfo>
 #include <QInputDialog>
-#include <configuresht35dialog.h>
+#include <sensorsht35dialog.h>
 #include <QLineSeries>
 #include <QDateTimeAxis>
 #include <QChartView>

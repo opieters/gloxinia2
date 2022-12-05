@@ -82,6 +82,12 @@ void GloxiniaConfigurator::processTextMessage(const GMessage &m)
 {
 }
 
+void GloxiniaConfigurator::processSensorData(const GMessage& m)
+{
+    // find sensor in the model
+    GCSensor* sensor = treeModel->getSensor(m.getMessageID(), m.getSensorID());
+}
+
 void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
 {
     switch (m.getCode())
@@ -101,6 +107,9 @@ void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
         break;
     case GMessage::Code::NODE_INFO:
         processNodeInfoMessage(m);
+        break;
+    case GMessage::Code::SENSOR_DATA:
+        processSensorData(m);
         break;
     default:
         break;

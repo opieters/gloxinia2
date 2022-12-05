@@ -10,7 +10,11 @@
 #include <gcnode.h>
 #include <settingsdialog.h>
 #include <sensordialog.h>
-#include <configuresht35dialog.h>
+#include <sensormeasurementdialog.h>
+#include <globalmeasurementpolicydialog.h>
+#include <sensoranaloguedialog.h>
+#include <sensorapds9306_065dialog.h>
+#include <sensorsht35dialog.h>
 #include <gcsystem.h>
 #include <treemodel.h>
 #include <nodedialog.h>
@@ -133,6 +137,7 @@ private:
     void processCANDiscoveryMessage(const GMessage &m);
     void processTextMessage(const GMessage &m);
     void processNodeInfoMessage(const GMessage &m);
+    void processSensorData(const GMessage& m);
 
     void sendSerialMessage(const GMessage &m);
 
@@ -150,11 +155,14 @@ private:
      * General sensor type selection screen
      */
     SensorDialog *sensorSettings = nullptr;
-
     /*
-     * Configuration screen for SHT35 sensor
+     * Configuration screens for sensors
      */
-    ConfigureSHT35Dialog *configureSHT35Dialog;
+    SensorMeasurementDialog* sensorMeasurementDialog;
+    GlobalMeasurementPolicyDialog* globalMeasurementPolicyDialog;
+    SensorAnalogueDialog *sensorAnalogueDialog;
+    SensorAPDS9306_065Dialog *sensorAPDS9306_065Dialog;
+    SensorSHT35Dialog *sensorSHT35Dialog;
 
     /*
      * The file stores the sensor data

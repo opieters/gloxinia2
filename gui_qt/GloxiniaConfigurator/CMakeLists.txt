@@ -25,7 +25,11 @@ set(PROJECT_SOURCES
         gloxiniaconfigurator.cpp gloxiniaconfigurator.h gloxiniaconfigurator.ui
         settingsdialog.h settingsdialog.cpp settingsdialog.ui
         sensordialog.h sensordialog.cpp sensordialog.ui
-        configuresht35dialog.h configuresht35dialog.cpp configuresht35dialog.ui
+        sensormeasurementdialog.h sensormeasurementdialog.cpp sensormeasurementdialog.ui
+        sensoranaloguedialog.h sensoranaloguedialog.cpp sensoranaloguedialog.ui
+        sensorapds9306_065dialog.h sensorapds9306_065dialog.cpp sensorapds9306_065dialog.ui
+        sensorsht35dialog.h sensorsht35dialog.cpp sensorsht35dialog.ui
+        globalmeasurementpolicydialog.h globalmeasurementpolicydialog.cpp globalmeasurementpolicydialog.ui
         gcmessagehandling.cpp
         gcfileoperations.cpp
         gcserialcommunication.cpp

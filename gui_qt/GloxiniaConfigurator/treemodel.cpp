@@ -186,6 +186,7 @@ bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int rol
     // TODO: free memory here if value is non-null pointer?
     bool result = item->setData(value);
 
+
     if (result)
     {
         emit dataChanged(index, index, {Qt::DisplayRole, Qt::EditRole});
@@ -384,6 +385,13 @@ QStringList TreeModel::toTextConfig(void)
     }
 
     return textConfig;
+}
+
+GCSensor* TreeModel::getSensor(int nodeID, int sensorID)
+{
+    TreeItem* nodeItem = rootItem->child(nodeID);
+
+    return nullptr; // TODO: implement or remove function
 }
 
 bool TreeModel::checkUniqueNodeID(int id)

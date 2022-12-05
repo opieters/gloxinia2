@@ -8,7 +8,7 @@
 #include <gmessage.h>
 #include <QSerialPortInfo>
 #include <QInputDialog>
-#include <configuresht35dialog.h>
+#include <sensorsht35dialog.h>
 #include <QLineSeries>
 #include <QDateTimeAxis>
 #include <QChartView>
@@ -79,7 +79,6 @@ void GloxiniaConfigurator::readData()
         switch (readoutState)
         {
         case FindStartByte:
-            qInfo() << "Reading start byte";
             n_read = serial->read(data, 1);
             if (n_read != 1)
             {
@@ -96,7 +95,6 @@ void GloxiniaConfigurator::readData()
         case ReadIdH:
 
             n_read = serial->read(data, 1); // read id H
-            qInfo() << "Reading id byte H" << (int)data[0];
             if (n_read < 0)
             {
                 // an error occurred -> return to initial state
@@ -115,7 +113,6 @@ void GloxiniaConfigurator::readData()
         case ReadIdL:
 
             n_read = serial->read(&data[1], 1); // read id L
-            qInfo() << "Reading id byte L" << (int)data[1];
             if (n_read < 0)
             {
                 // an error occurred -> return to initial state
@@ -134,7 +131,6 @@ void GloxiniaConfigurator::readData()
         case ReadCommand:
 
             n_read = serial->read(&data[2], 1); // read id
-            qInfo() << "Reading command byte" << (int)data[2];
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
@@ -153,7 +149,6 @@ void GloxiniaConfigurator::readData()
         case ReadRequest:
 
             n_read = serial->read(&data[3], 1); // read id
-            qInfo() << "Reading request bit" << (int)data[3];
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
@@ -172,7 +167,6 @@ void GloxiniaConfigurator::readData()
         case ReadSensorIdH:
 
             n_read = serial->read(&data[4], 1); // read ext id H
-            qInfo() << "Reading sensor id byte H" << (int)data[4];
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
@@ -190,7 +184,6 @@ void GloxiniaConfigurator::readData()
             }
         case ReadSensorIdL:
             n_read = serial->read(&data[5], 1); // read ext id L
-            qInfo() << "Reading ext id byte L" << (int)data[5];
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
@@ -208,7 +201,6 @@ void GloxiniaConfigurator::readData()
             }
         case ReadLength:
             n_read = serial->read(&data[6], 1); // read length
-            qInfo() << "Reading length byte" << (int)data[6];
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
@@ -233,7 +225,6 @@ void GloxiniaConfigurator::readData()
                 break;
             }
         case ReadData:
-            qInfo() << "Reading data" << (int)data[6];
             n_read = serial->read(&data[7 + read_length], data[6] - read_length);
             if (n_read < 0)
             {
@@ -250,22 +241,18 @@ void GloxiniaConfigurator::readData()
                 break;
             }
         case DetectStopByte:
-            qInfo() << "Reading stop byte";
             n_read = serial->read(&data[7 + read_length], 1);
             if (n_read < 0)
             {
-                qInfo() << "ERROR";
                 readoutState = FindStartByte;
                 read_length = 0;
                 return;
             }
             if (n_read == 1)
             {
-                qInfo() << "Entire message received";
                 if (data[7 + read_length] == GMessage::GMessageStopByte)
                 {
                     quint8 *udata = (quint8 *)data;
-                    qInfo() << "Processing message";
                     if (read_length == 0)
                     {
                         GMessage m((GMessage::Code)udata[2], (((uint16_t)udata[0] << 8) | udata[1]), ((uint16_t)udata[4] << 8) | udata[5], udata[3] == 0 ? false : true);
@@ -292,7 +279,6 @@ void GloxiniaConfigurator::readData()
             }
             else
             {
-                qInfo() << "No data received";
                 break;
             }
 

@@ -1,5 +1,6 @@
 #include "gloxiniaconfigurator.h"
 #include "./ui_gloxiniaconfigurator.h"
+#include "qthread.h"
 
 #include <QMessageBox>
 #include <QStringList>
@@ -8,15 +9,29 @@
 #include <gmessage.h>
 #include <QSerialPortInfo>
 #include <QInputDialog>
-#include <configuresht35dialog.h>
+#include <sensorsht35dialog.h>
 #include <QLineSeries>
 #include <QDateTimeAxis>
 #include <QChartView>
 #include <QValueAxis>
 #include <QFileDialog>
+#include <QThread>
 
 GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::GloxiniaConfigurator), serial(new QSerialPort(this)), status(new QLabel), systemSettings(new SettingsDialog), sensorSettings(new SensorDialog), configureSHT35Dialog(new ConfigureSHT35Dialog), nodeDicioDialog(new NodeDicioDialog), chart(new QChart), messageModel(new QStringListModel)
+    : QMainWindow(parent),
+      ui(new Ui::GloxiniaConfigurator),
+      serial(new QSerialPort(this)),
+      status(new QLabel),
+      systemSettings(new SettingsDialog),
+      sensorSettings(new SensorDialog),
+      sensorMeasurementDialog(new SensorMeasurementDialog),
+      globalMeasurementPolicyDialog(new GlobalMeasurementPolicyDialog),
+      sensorAnalogueDialog(new SensorAnalogueDialog),
+      sensorAPDS9306_065Dialog(new SensorAPDS9306_065Dialog),
+      sensorSHT35Dialog(new SensorSHT35Dialog),
+      nodeDicioDialog(new NodeDicioDialog),
+      chart(new QChart),
+      messageModel(new QStringListModel)
 {
     ui->setupUi(this);
     ui->statusbar->addWidget(status);
@@ -63,6 +78,11 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     ui->systemOverview->setHeaderHidden(true);
     ui->systemOverview->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->systemOverview, &QTreeView::customContextMenuRequested, this, &GloxiniaConfigurator::showContextMenu);
+
+    // connect sample period settings dialogs
+    sensorMeasurementDialog->setGlobalPeriodDialog(globalMeasurementPolicyDialog);
+    sensorSHT35Dialog->setPeriodDialog(sensorMeasurementDialog);
+
 
     /*
      * for debugging, add some default system state
@@ -297,6 +317,7 @@ void GloxiniaConfigurator::editNode()
 
     const QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
     QAbstractItemModel *model = ui->systemOverview->model();
+    int result;
 
     // node is selected -> run menu
     if (index.isValid() && !index.parent().isValid())
@@ -310,7 +331,10 @@ void GloxiniaConfigurator::editNode()
         {
             nodeDicioDialog->setNodeSettings(nDicio);
             nodeDicioDialog->setWindowModality(Qt::ApplicationModal);
-            nodeDicioDialog->exec();
+            result = nodeDicioDialog->exec();
+            if(result == QDialog::Rejected){
+                return;
+            }
             nodeDicioDialog->updateNode(nDicio);
             model->setData(index, QVariant::fromValue(nDicio), Qt::EditRole);
             return;
@@ -427,13 +451,9 @@ void GloxiniaConfigurator::editSensor()
     QAbstractItemModel *model = ui->systemOverview->model();
     GCSensorSHT35 *sensorSHT35;
     GCSensorAPDS9306 *sensorAPDS9306;
+    int result;
 
-    quint8 rawData[32];
-    unsigned int length;
-
-    std::vector<quint8> mData;
-
-    GMessage m;
+    QList<GMessage> configMs;
 
     // sensor is selected -> run menu
     if (index.isValid() && index.parent().isValid())
@@ -442,74 +462,112 @@ void GloxiniaConfigurator::editSensor()
         sensorSHT35 = data.value<GCSensorSHT35 *>();
         sensorAPDS9306 = data.value<GCSensorAPDS9306 *>();
 
+        // selected sensor is SHT35 -> edit parameters of this sensor
         if (sensorSHT35 != nullptr)
         {
-            configureSHT35Dialog->setSensorSettings(sensorSHT35);
-            configureSHT35Dialog->setWindowModality(Qt::ApplicationModal);
-            configureSHT35Dialog->exec();
-            configureSHT35Dialog->updateSensor(sensorSHT35);
+            sensorSHT35Dialog->setSensorSettings(sensorSHT35);
+            sensorSHT35Dialog->setWindowModality(Qt::ApplicationModal);
+            result = sensorSHT35Dialog->exec();
+            if(result == QDialog::Rejected){
+                return;
+            }
+            sensorSHT35Dialog->updateSensor(sensorSHT35);
             model->setData(index, QVariant::fromValue(sensorSHT35), Qt::EditRole);
             return;
         }
 
+        // selected sensor is APDS9306 065 -> edit parameters of this sensor
         if (sensorAPDS9306 != nullptr)
         {
-            // TODO
+            sensorAPDS9306_065Dialog->setSensorSettings(sensorAPDS9306);
+            sensorAPDS9306_065Dialog->setWindowModality(Qt::ApplicationModal);
+            result = sensorAPDS9306_065Dialog->exec();
+            if(result == QDialog::Rejected){
+                return;
+            }
+            sensorAPDS9306_065Dialog->updateSensor(sensorAPDS9306);
+            model->setData(index, QVariant::fromValue(sensorAPDS9306), Qt::EditRole);
             return;
         }
 
         // there is no sensor in the system (nullptr) -> we need to select a sensor
         QStringList items;
-        // items << "-- select sensor--";
+        items << "-- select sensor--";
         items << "SHT35";
         items << "APDS9306 065";
 
         bool ok;
         GCSensor *sensor = nullptr;
+        GCNode *node = nullptr;
+        QVariant nodeData = model->data(index.parent(), Qt::EditRole);
+        GCNodeDicio *nodeD = nodeData.value<GCNodeDicio*>();
+        GCNodeSylvatica *nodeS = nodeData.value<GCNodeSylvatica*>();
+        GCNodePlanalta *nodeP = nodeData.value<GCNodePlanalta*>();
 
+        if(nodeD != nullptr){
+            node = nodeD;
+        }
+        if(nodeS != nullptr){
+            node = nodeS;
+        }
+        if(nodeP != nullptr){
+            node = nodeP;
+        }
+
+        if(node == nullptr)
+        {
+            // TODO: something went wrong, display error message to the user
+        }
+
+        // request sensor type from user
         QString item = QInputDialog::getItem(this, tr("Select sensor type"), tr("Sensor:"), items, 0, false, &ok);
         int sensorIndex = items.indexOf(item);
 
         // using the index, we pop-up the sensor configuration dialog and add it at the relevant location
-        int result;
         if (ok && !item.isEmpty())
         {
             switch (sensorIndex)
             {
-            case 0:
-                configureSHT35Dialog->setWindowModality(Qt::ApplicationModal);
-                result = configureSHT35Dialog->exec();
+            case 1:
+                sensorSHT35Dialog->setWindowModality(Qt::ApplicationModal);
+                result = sensorSHT35Dialog->exec();
                 if (result == QDialog::Rejected)
                 {
                     return;
                 }
-                sensorSHT35 = new GCSensorSHT35();
+                sensorSHT35 = new GCSensorSHT35(node);
+                sensorSHT35Dialog->updateSensor(sensorSHT35);
                 sensorSHT35->setInterfaceID((quint8)index.row());
-                configureSHT35Dialog->updateSensor(sensorSHT35);
                 model->setData(index, QVariant::fromValue(sensorSHT35), Qt::EditRole);
 
                 // update hardware configuration
-                mData = std::vector<quint8>(5);
-                mData[0] = (quint8)GCSensor::sensor_class::SHT35;
-                mData[1] = GCSensorSHT35::Register::MEASUREMENT;
-                mData[2] = GCSensor::sensor_status::IDLE;
-                mData[3] = (quint8)sensorSHT35->getMeasurementPeriod() >> 8;
-                mData[4] = (quint8)sensorSHT35->getMeasurementPeriod() & 0xff;
-                m = GMessage(GMessage::Code::SENSOR_CONFIG, (quint8)index.parent().row(), sensorSHT35->getInterfaceID(), true, mData);
-                sendSerialMessage(m);
-                mData = std::vector<quint8>(8);
-                mData[0] = (quint8)GCSensor::sensor_class::SHT35;
-                mData[1] = GCSensorSHT35::Register::CONFIG;
-                mData[2] = sensorSHT35->getI2CAddress();
-                mData[3] = 1; // TODO: really needed?
-                mData[4] = sensorSHT35->getRepeatability();
-                mData[5] = sensorSHT35->getClockStretching();
-                mData[6] = sensorSHT35->getRate();
-                mData[7] = sensorSHT35->getPeriodicity();
-                m = GMessage(GMessage::Code::SENSOR_CONFIG, (quint8)index.parent().row(), sensorSHT35->getInterfaceID(), true, mData);
-                sendSerialMessage(m);
-                qInfo() << "Send SHT35 config" << m.toString();
+                configMs = sensorSHT35->getConfigurationMessages();
+
+                for(const GMessage &m : configMs){
+                    sendSerialMessage(m);
+                    qInfo() << "Send SHT35 config" << m.toString();
+
+                }
                 break;
+            case 2:
+                sensorAPDS9306_065Dialog->setWindowModality(Qt::ApplicationModal);
+                result = sensorAPDS9306_065Dialog->exec();
+                if (result == QDialog::Rejected)
+                {
+                    return;
+                }
+                sensorAPDS9306 = new GCSensorAPDS9306(node);
+                sensorAPDS9306_065Dialog->updateSensor(sensorAPDS9306);
+                sensorAPDS9306->setInterfaceID((quint8)index.row());
+                model->setData(index, QVariant::fromValue(sensorAPDS9306), Qt::EditRole);
+
+                configMs = sensorAPDS9306->getConfigurationMessages();
+
+                for(const GMessage &m : configMs){
+                    sendSerialMessage(m);
+                    qInfo() << "Send APDS9306 065 config" << m.toString();
+                    QThread::msleep(10);
+                }
             default:
                 sensor = nullptr;
                 break;
@@ -596,8 +654,8 @@ GCSensor *GloxiniaConfigurator::selectSensor(void)
         switch (sensorIndex)
         {
         case 0:
-            configureSHT35Dialog->setWindowModality(Qt::ApplicationModal);
-            configureSHT35Dialog->exec();
+            sensorSHT35Dialog->setWindowModality(Qt::ApplicationModal);
+            sensorSHT35Dialog->exec();
             // sensor = configureSHT35Dialog->getSensor();
             break;
         default:

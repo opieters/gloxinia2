@@ -137,18 +137,24 @@ QString GMessage::toLogString() const
         break;
     }
     case SENSOR_STATUS:
-        switch ((GCSensor::sensor_status)data[0])
+        switch ((GCSensor::GCSensorStatus)data[0])
         {
-        case GCSensor::sensor_status::INACTIVE:
+        case GCSensor::GCSensorStatus::INACTIVE:
             formattedData.append("inactive");
             break;
-        case GCSensor::sensor_status::IDLE:
+        case GCSensor::GCSensorStatus::IDLE:
             formattedData.append("idle");
             break;
-        case GCSensor::sensor_status::ACTIVE:
+        case GCSensor::GCSensorStatus::ACTIVE:
             formattedData.append("active");
             break;
-        case GCSensor::sensor_status::ERROR:
+        case GCSensor::GCSensorStatus::RUNNING:
+            formattedData.append("running");
+            break;
+        case GCSensor::GCSensorStatus::STOPPED:
+            formattedData.append("stopped");
+            break;
+        case GCSensor::GCSensorStatus::ERROR:
             formattedData.append("error");
             break;
         }

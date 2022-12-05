@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SensorDialog</class>
- <widget class="QDialog" name="SensorDialog">
+ <class>NodeDicioDialog</class>
+ <widget class="QDialog" name="NodeDicioDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>72</height>
+    <height>124</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,33 +15,27 @@
   </property>
   <layout class="QFormLayout" name="formLayout">
    <item row="0" column="0">
-    <widget class="QLabel" name="sensorLabel">
+    <widget class="QLabel" name="idLabel">
      <property name="text">
-      <string>Sensor type</string>
+      <string>ID</string>
      </property>
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QComboBox" name="sensorSelect">
-     <item>
-      <property name="text">
-       <string>-- select sensor --</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>SHT35 (temp. and RH)</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>APDS9306 (light)</string>
-      </property>
-     </item>
+    <widget class="QSpinBox" name="idEdit"/>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="altLabel">
+     <property name="text">
+      <string>Label</string>
+     </property>
     </widget>
    </item>
-   <item row="1" column="0" colspan="2">
-    <widget class="QDialogButtonBox" name="buttonBox">
+   <item row="1" column="1">
+    <widget class="QLineEdit" name="altEdit"/>
+   </item>
+   <item row="2" column="0" colspan="2">
+    <widget class="QDialogButtonBox" name="okBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
@@ -55,9 +49,9 @@
  <resources/>
  <connections>
   <connection>
-   <sender>buttonBox</sender>
+   <sender>okBox</sender>
    <signal>accepted()</signal>
-   <receiver>SensorDialog</receiver>
+   <receiver>NodeDicioDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -71,9 +65,9 @@
    </hints>
   </connection>
   <connection>
-   <sender>buttonBox</sender>
+   <sender>okBox</sender>
    <signal>rejected()</signal>
-   <receiver>SensorDialog</receiver>
+   <receiver>NodeDicioDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

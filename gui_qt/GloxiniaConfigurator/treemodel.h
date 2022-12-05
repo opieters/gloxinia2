@@ -4,6 +4,7 @@
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
+#include <gcsensor.h>
 
 class TreeItem;
 
@@ -37,6 +38,8 @@ public:
     bool fromTextConfig(const QStringList& config);
 
     bool checkUniqueNodeID(int id);
+
+    GCSensor* getSensor(int nodeID, int sensorID);
 
 private:
     void setupModelData(const QStringList &lines, TreeItem *parent);
