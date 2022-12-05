@@ -87,11 +87,11 @@ extern "C" {
     
     can_status_t can_send_message(can_message_t* message, uint8_t can_channel);
     can_status_t can_send_message_any_ch(can_message_t* m);
-    can_status_t can_send_fmessage_any_ch(message_t* m);
+    can_status_t can_send_fmessage_any_ch(const message_t* m);
     
     void can_detect_devices(void);
     
-    void can_message_from_fmessage(can_message_t* cm, message_t* m);
+    void can_message_from_fmessage(can_message_t* cm, const message_t* m);
 
 
 #ifdef	__cplusplus

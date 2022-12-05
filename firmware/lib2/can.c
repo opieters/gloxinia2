@@ -355,7 +355,7 @@ can_status_t can_send_message_any_ch(can_message_t* m) {
     return sent_status;
 }
 
-void can_message_from_fmessage(can_message_t* cm, message_t* m){
+void can_message_from_fmessage(can_message_t* cm, const message_t* m){
     cm->identifier = m->identifier;
     cm->remote_frame = m->request_message_bit;
     cm->extended_frame = CAN_EXTENDED_FRAME;
@@ -365,7 +365,7 @@ void can_message_from_fmessage(can_message_t* cm, message_t* m){
 }
 
 
-can_status_t can_send_fmessage_any_ch(message_t* m) {
+can_status_t can_send_fmessage_any_ch(const message_t* m) {
     can_message_t cm;
     static uint16_t i = 0;
     uint16_t n_attempts = 0;

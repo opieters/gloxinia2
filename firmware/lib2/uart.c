@@ -9,8 +9,8 @@ volatile uint8_t n_uart_tx_messages = 0;
 volatile uint8_t uart_tx_queue_idx = 0;
 volatile uint8_t uart_tx_queue_valid = 0;
 volatile uint8_t uart_tx_ongoing = 0;
-message_t uart_tx_queue[TXIE];
-uint8_t uart_tx_data[TXIE][UART_TX_DATA_BUFFER_SIZE];
+message_t uart_tx_queue[UART_FIFO_TX_BUFFER_SIZE];
+uint8_t uart_tx_data[UART_FIFO_TX_BUFFER_SIZE][UART_TX_DATA_BUFFER_SIZE];
 
 // DMA buffer
 uint8_t uart_dma_message_data[128];
@@ -105,10 +105,10 @@ void uart_init(uint32_t baudrate)
     uart_rx_m.data = uart_rx_buffer;
 
     // TX buffer
-    for (i = 0; i < TXIE; i++)
+    for (i = 0; i < UART_FIFO_TX_BUFFER_SIZE; i++)
     {
         uart_tx_queue[i].data = uart_tx_data[i];
-        uart_tx_queue[i].length = TXIE;
+        uart_tx_queue[i].length = UART_FIFO_TX_BUFFER_SIZE;
         uart_tx_queue[i].status = M_TX_SENT;
     }
     n_uart_tx_messages = 0;
@@ -175,7 +175,7 @@ void uart_queue_message(message_t *m)
         }
     }
 
-    uart_tx_queue_idx = (uart_tx_queue_idx + 1) % TXIE;
+    uart_tx_queue_idx = (uart_tx_queue_idx + 1) % UART_FIFO_TX_BUFFER_SIZE;
     n_uart_tx_messages++;
 
     process_uart_tx_queue();
@@ -236,14 +236,14 @@ void __attribute__((__interrupt__, no_auto_psv)) _DMA14Interrupt(void)
 {
     // finish the current transfer
     // uart_tx_queue[uart_tx_queue_valid].status = M_TX_SENT;
-    uart_tx_queue_valid = (uart_tx_queue_valid + 1) % TXIE;
+    uart_tx_queue_valid = (uart_tx_queue_valid + 1) % UART_FIFO_TX_BUFFER_SIZE;
     n_uart_tx_messages--;
 
     // check if another message is available
     uart_tx_ongoing = 0;
     process_uart_tx_queue();
 
-    _DMA14IF = 0; // Clear the DMA0 Interrupt Flag
+    _DMA14IF = 0; // Clear the DMA14 Interrupt Flag
 }
 
 void __attribute__((interrupt, no_auto_psv)) _U2ErrInterrupt(void)
@@ -352,6 +352,7 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
 
         if ((m->identifier == controller_address) || (m->identifier == ADDRESS_GATEWAY))
         {
+            send_message_uart(m);
             message_process(m);
         }
         else

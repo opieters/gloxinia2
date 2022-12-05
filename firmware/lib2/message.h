@@ -82,10 +82,10 @@ extern "C"
     void message_reset(message_t *m);
 
     void message_send(message_t *m);
-    void message_process(message_t *m);
+    void message_process(const message_t *m);
 
-    void send_message_uart(message_t *m);
-    void send_message_can(message_t *m);
+    void send_message_uart(const message_t *m);
+    void send_message_can(const message_t *m);
 
 #ifdef __cplusplus
 }

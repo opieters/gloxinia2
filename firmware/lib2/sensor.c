@@ -95,7 +95,11 @@ void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t *buffer, uint8_
     if(intf->status == SENSOR_STATUS_INACTIVE)
         intf->status = status;
     if(status == SENSOR_STATUS_ERROR)
+    {
         intf->status = status;
+        UART_DEBUG_PRINT("ERROR when configuring");
+    }
+        
 
     // we report the status back to the central
     message_init(&m, controller_address, MESSAGE_NO_REQUEST, M_SENSOR_STATUS,

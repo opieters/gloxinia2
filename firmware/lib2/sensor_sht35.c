@@ -62,7 +62,7 @@ sensor_status_t sensor_sht35_config(struct sensor_interface_s *intf, uint8_t *bu
             
             // load configuration from buffer into data structure
             config->address = buffer[1];
-            config->i2c_bus = I2C2_BUS; // TODO: this should not be configurable since the bus is fixed
+            config->i2c_bus = sensor_get_i2c_bus(intf->sensor_id);
             config->repeatability = (sensor_sht35_repeatability_t)buffer[2];
             config->clock = (sensor_sht35_clock_stretching_t)buffer[3];
             config->rate = (sensor_sht35_sample_rate_t)buffer[4];

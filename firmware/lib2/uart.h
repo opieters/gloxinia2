@@ -17,7 +17,7 @@
 #define PRINT_BUFFER_LENGTH 64 // max length of message data
 
 // UART FIFO TX buffer
-#define TXIE 16U
+#define UART_FIFO_TX_BUFFER_SIZE 16U
 #define UART_TX_DATA_BUFFER_SIZE 16
 
 

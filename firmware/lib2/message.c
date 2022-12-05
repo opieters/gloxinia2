@@ -8,16 +8,16 @@
 #include <sensor.h>
 
 // internal functions
-static void cmd_request_address_available(message_t *m);
-static void cmd_address_taken(message_t *m);
-static void cmd_update_address(message_t *m);
-static void cmd_discovery(message_t *m);
-static void cmd_node_info(message_t *m);
-static void cmd_sensor_config(message_t *m);
-static void cmd_sensor_status(message_t *m);
-static void cmd_sensor_error(message_t *m);
-static void cmd_sensor_data(message_t *m);
-static void cmd_sensor_start(message_t* m);
+static void cmd_request_address_available(const message_t *m);
+static void cmd_address_taken(const message_t *m);
+static void cmd_update_address(const message_t *m);
+static void cmd_discovery(const message_t *m);
+static void cmd_node_info(const message_t *m);
+static void cmd_sensor_config(const message_t *m);
+static void cmd_sensor_status(const message_t *m);
+static void cmd_sensor_error(const message_t *m);
+static void cmd_sensor_data(const message_t *m);
+static void cmd_sensor_start(const message_t* m);
 
 static void address_get_task(void *data);
 
@@ -48,7 +48,7 @@ void message_reset(message_t *m)
     }
 }
 
-void send_message_uart(message_t *m)
+void send_message_uart(const message_t *m)
 {
     message_t m_uart;
 
@@ -62,13 +62,13 @@ void send_message_uart(message_t *m)
     uart_queue_message(&m_uart);
 }
 
-void send_message_can(message_t *m)
+void send_message_can(const message_t *m)
 {
     can_message_t mc;
 
     // cap length
-    m->length = MIN(8, m->length);
-    can_init_message(&mc, m->identifier, m->request_message_bit, CAN_EXTENDED_FRAME, CAN_HEADER(m->command, m->sensor_identifier), m->data, m->length);
+    mc.data_length = MIN(8, m->length);
+    can_init_message(&mc, m->identifier, m->request_message_bit, CAN_EXTENDED_FRAME, CAN_HEADER(m->command, m->sensor_identifier), m->data, mc.data_length);
     can_send_message_any_ch(&mc);
 }
 
@@ -96,7 +96,7 @@ void message_send(message_t *m)
     }
 }
 
-void message_process(message_t *m)
+void message_process(const message_t *m)
 {
     switch (m->command)
     {
@@ -151,7 +151,7 @@ void message_process(message_t *m)
     }
 }
 
-static void cmd_request_address_available(message_t *m)
+static void cmd_request_address_available(const message_t *m)
 {
     if (m->identifier == controller_address)
     {
@@ -172,7 +172,7 @@ static void cmd_request_address_available(message_t *m)
     }
 }
 
-static void cmd_address_taken(message_t *m)
+static void cmd_address_taken(const message_t *m)
 {
     if (controller_address == m->identifier)
     {
@@ -185,15 +185,16 @@ static void cmd_address_taken(message_t *m)
         // to inform the user that there is a connectivity issue
         if (uart_connection_active)
         {
-            message_init(m,
+            message_t m_address;
+            message_init(&m_address,
                          m->identifier,
                          0,
                          M_ADDRESS_TAKEN,
                          NO_SENSOR_ID,
                          NULL,
                          0);
-            message_reset(m);
-            uart_queue_message(m);
+            message_reset(&m_address);
+            uart_queue_message(&m_address);
         }
 
         // new attempt to get address
@@ -208,7 +209,7 @@ static void address_get_task(void *data)
     address_get();
 }
 
-static void cmd_update_address(message_t *m)
+static void cmd_update_address(const message_t *m)
 {
     if ((m->identifier == controller_address) && (m->length == 2))
     {
@@ -216,16 +217,17 @@ static void cmd_update_address(message_t *m)
     }
 
     // report back
-    message_init(m, controller_address,
+    message_t m_address;
+    message_init(&m_address, controller_address,
                  MESSAGE_NO_REQUEST,
                  M_DISCOVERY,
                  NO_SENSOR_ID,
                  NULL,
                  0);
-    message_send(m);
+    message_send(&m_address);
 }
 
-static void cmd_discovery(message_t *m)
+static void cmd_discovery(const message_t *m)
 {
     can_reset();
 
@@ -248,7 +250,8 @@ static void cmd_discovery(message_t *m)
     if (m->request_message_bit && (m->identifier == ADDRESS_GATEWAY) && (controller_address != ADDRESS_UNSET))
     {
         // send message back to gateway
-        message_init(m,
+        message_t m_discovery;
+        message_init(&m_discovery,
                      controller_address,
                      MESSAGE_NO_REQUEST,
                      M_DISCOVERY,
@@ -256,7 +259,7 @@ static void cmd_discovery(message_t *m)
                      NULL,
                      0);
 
-        message_send(m);
+        message_send(&m_discovery);
     }
 
     if (!m->request_message_bit)
@@ -265,7 +268,7 @@ static void cmd_discovery(message_t *m)
     }
 }
 
-static void cmd_node_info(message_t *m)
+static void cmd_node_info(const message_t *m)
 {
     if ((m->identifier != controller_address) && (!m->request_message_bit))
     {
@@ -298,7 +301,7 @@ static void cmd_node_info(message_t *m)
     message_send(&i);
 }
 
-static void cmd_sensor_config(message_t *m)
+static void cmd_sensor_config(const message_t *m)
 {
     if(m->request_message_bit){
         // send config
@@ -323,7 +326,7 @@ static void cmd_sensor_config(message_t *m)
     }
 }
 
-static void cmd_sensor_status(message_t *m)
+static void cmd_sensor_status(const message_t *m)
 {
     if (m->identifier == ADDRESS_GATEWAY)
     {
@@ -334,15 +337,15 @@ static void cmd_sensor_status(message_t *m)
     }
 }
 
-static void cmd_sensor_error(message_t *m)
+static void cmd_sensor_error(const message_t *m)
 {
 }
 
-static void cmd_sensor_data(message_t *m)
+static void cmd_sensor_data(const message_t *m)
 {
 }
 
-static void cmd_sensor_start(message_t* m)
+static void cmd_sensor_start(const message_t* m)
 {
     sensor_start();
 }
