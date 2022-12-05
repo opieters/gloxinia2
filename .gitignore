@@ -130,3 +130,5 @@ gui_qt/build-*
 pcb_design/reflexa/gerber/
 *.step
 firmware/dicio2.X/.generated_files/
+firmware/sylvatica2.X/.generated_files/
+firmware/dicio2.X/debug/default/queuelogs/debugtool
