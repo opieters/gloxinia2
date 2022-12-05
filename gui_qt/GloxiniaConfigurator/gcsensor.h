@@ -51,6 +51,11 @@ public:
 
     static GCSensor* fromQVariant(const QVariant data);
 
+    static QString statusToString(GCSensorStatus s);
+
+    virtual bool startMeasurement(void);
+    GMessage getStartMessage(void);
+    GMessage getStopMessage(void);
     virtual void stopMeasurement(void);
     virtual void saveData(std::vector<quint8>& data) = 0;
     virtual void printHeader(void) = 0;
