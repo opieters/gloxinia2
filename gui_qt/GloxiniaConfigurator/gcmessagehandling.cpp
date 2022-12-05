@@ -1,5 +1,43 @@
 #include "gloxiniaconfigurator.h"
 
+void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
+{
+    switch (m.getCode())
+    {
+    case GMessage::Code::REQUEST_ADDRESS_AVAILABLE:
+        break;
+    case GMessage::Code::ADDRESS_TAKEN:
+        break;
+    case GMessage::Code::UPDATE_ADDRESS:
+        break;
+    case GMessage::Code::DISCOVERY:
+        // check if node exists, if not create one and add to model
+        processCANDiscoveryMessage(m);
+        break;
+    case GMessage::Code::MSG_TEXT:
+        // processTextMessage(m);
+        break;
+    case GMessage::Code::NODE_INFO:
+        processNodeInfoMessage(m);
+        break;
+    case GMessage::Code::SENSOR_DATA:
+        processSensorData(m);
+        break;
+    case GMessage::Code::SENSOR_STATUS:
+        processSensorStatus(m);
+        break;
+    default:
+        break;
+    }
+
+    // add line for now
+    messageModel->insertRow(0);
+    QModelIndex mIndex = messageModel->index(0, 0);
+    messageModel->setData(mIndex, m.toLogString());
+
+    qInfo() << "Processing" << m.toString();
+}
+
 void GloxiniaConfigurator::processCANDiscoveryMessage(const GMessage &m)
 {
     qInfo() << "Received discovery message";
@@ -84,44 +122,34 @@ void GloxiniaConfigurator::processTextMessage(const GMessage &m)
 
 void GloxiniaConfigurator::processSensorData(const GMessage& m)
 {
-    // find sensor in the model
-    GCSensor* sensor = treeModel->getSensor(m.getMessageID(), m.getSensorID());
+
 }
 
-void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
+void GloxiniaConfigurator::processSensorStatus(const GMessage& m)
 {
-    switch (m.getCode())
+    // check if there is any data
+    if(m.getData().size() < 1)
     {
-    case GMessage::Code::REQUEST_ADDRESS_AVAILABLE:
-        break;
-    case GMessage::Code::ADDRESS_TAKEN:
-        break;
-    case GMessage::Code::UPDATE_ADDRESS:
-        break;
-    case GMessage::Code::DISCOVERY:
-        // check if node exists, if not create one and add to model
-        processCANDiscoveryMessage(m);
-        break;
-    case GMessage::Code::MSG_TEXT:
-        // processTextMessage(m);
-        break;
-    case GMessage::Code::NODE_INFO:
-        processNodeInfoMessage(m);
-        break;
-    case GMessage::Code::SENSOR_DATA:
-        processSensorData(m);
-        break;
-    default:
-        break;
+        qDebug() << "Sensor status message with insufficient data";
+        return;
     }
 
-    // add line for now
-    messageModel->insertRow(0);
-    QModelIndex mIndex = messageModel->index(0, 0);
-    messageModel->setData(mIndex, m.toLogString());
+    // find sensor in the model
+    GCSensor* sensor = treeModel->getSensor(m.getMessageID(), m.getSensorID());
 
-    qInfo() << "Processing" << m.toString();
+    if(sensor == nullptr)
+    {
+        qDebug() << "Unable to find sensor at (" << m.getMessageID() << "," << m.getSensorID() << ")";
+        return; // TODO: report error here
+    }
+
+    // store update
+    GCSensor::GCSensorStatus status = (GCSensor::GCSensorStatus) m.getData().at(0);
+    sensor->setStatus(status);
+
+    qDebug() << "Updated sensor status at (" << m.getMessageID() << "," << m.getSensorID() << ")";
 }
+
 
 void GloxiniaConfigurator::sendSerialMessage(const GMessage &m)
 {
