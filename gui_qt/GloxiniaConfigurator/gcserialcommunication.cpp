@@ -24,7 +24,7 @@ void GloxiniaConfigurator::openSerialPort()
     serial->setDataBits(QSerialPort::Data8);
     serial->setParity(QSerialPort::NoParity);
     serial->setStopBits(QSerialPort::OneStop);
-    serial->setFlowControl(QSerialPort::NoFlowControl);
+    serial->setFlowControl(QSerialPort::HardwareControl);
     if (serial->open(QIODevice::ReadWrite))
     {
         // m_console->setEnabled(true);

@@ -162,4 +162,5 @@ void GloxiniaConfigurator::sendSerialMessage(const GMessage &m)
 
     length = m.toBytes(rawData, 32);
     serial->write((char *)rawData, length);
+    serial->flush();
 }

@@ -615,7 +615,6 @@ void GloxiniaConfigurator::editSensor()
                 for(const GMessage &m : configMs){
                     sendSerialMessage(m);
                     qInfo() << "Send SHT35 config" << m.toString();
-
                 }
                 break;
             case 2:
@@ -635,7 +634,7 @@ void GloxiniaConfigurator::editSensor()
                 for(const GMessage &m : configMs){
                     sendSerialMessage(m);
                     qInfo() << "Send APDS9306 065 config" << m.toString();
-                    QThread::msleep(10);
+
                 }
             default:
                 sensor = nullptr;

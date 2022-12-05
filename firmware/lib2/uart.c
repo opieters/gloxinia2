@@ -3,6 +3,7 @@
 #include <libpic30.h>
 #include <address.h>
 #include <can.h>
+#include <event_controller.h>
 
 // UART TX FIFO buffer variables
 volatile uint8_t n_uart_tx_messages = 0;
@@ -32,9 +33,12 @@ typedef enum
     UART_RX_STATE_DETECT_STOP
 } uart_rx_state_t;
 
-message_t uart_rx_m;
-uint8_t uart_rx_buffer[PRINT_BUFFER_LENGTH] __attribute__((space(xmemory)));
+message_t uart_rx_queue[UART_FIFO_RX_BUFFER_SIZE];
+uint8_t uart_rx_data[UART_FIFO_RX_BUFFER_SIZE][CAN_MAX_N_BYTES];
+task_t uart_rx_tasks[UART_FIFO_RX_BUFFER_SIZE];
+//uint8_t uart_rx_buffer[PRINT_BUFFER_LENGTH] __attribute__((space(xmemory)));
 volatile uart_rx_state_t uart_rx_state = 0;
+volatile uint8_t uart_rx_data_idx = 0;
 volatile uint8_t uart_rx_idx = 0;
 
 // debug message and data
@@ -52,7 +56,7 @@ void uart_init(uint32_t baudrate)
     U2MODEbits.URXINV = 0;
     U2BRG = ((FCY / baudrate) / 16) - 1; // BAUD Rate Setting for 9600
 
-    U2MODEbits.UEN = 0b00; // do not use flow control
+    U2MODEbits.UEN = 0b10; // use flow control
 
     //  Configure UART for DMA transfers
     U2STAbits.UTXISEL0 = 0; // Interrupt after one Tx character is transmitted
@@ -96,13 +100,10 @@ void uart_init(uint32_t baudrate)
     _DMA14IP = 7;
 
     // RX buffer
-    /*for (i = 0; i < UART_RX_BUFFER_SIZE; i++)
+    for (i = 0; i < UART_RX_BUFFER_SIZE; i++)
     {
         uart_rx_queue[i].status = M_RX_FROM_UART;
-        uart_rx_queue[i].data = uart_rx_buffer[i];
-    }*/
-    uart_rx_m.status = M_RX_FROM_UART;
-    uart_rx_m.data = uart_rx_buffer;
+    }
 
     // TX buffer
     for (i = 0; i < UART_FIFO_TX_BUFFER_SIZE; i++)
@@ -257,7 +258,8 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
 
     register uint8_t rx_value = U2RXREG;
     //register message_t *m = &(uart_rx_queue[(n_uart_rx_messages + uart_rx_read_idx) % UART_RX_BUFFER_SIZE]);
-    register message_t *m = &uart_rx_m;
+    static message_t *m;
+    
 
     //if (n_uart_rx_messages == UART_RX_BUFFER_SIZE)
     //{
@@ -270,7 +272,8 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
         if (rx_value == UART_CMD_START)
         {
             uart_rx_state = UART_RX_STATE_READ_IDH;
-            m->data = uart_rx_buffer;
+            m = &uart_rx_queue[uart_rx_idx];
+            m->data = uart_rx_data[uart_rx_idx];
         }
         break;
     case UART_RX_STATE_READ_IDH:
@@ -304,7 +307,7 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
         if (rx_value > 0)
         {
             uart_rx_state = UART_RX_STATE_READ_DATA;
-            uart_rx_idx = 0;
+            uart_rx_data_idx = 0;
         }
         else
         {
@@ -314,9 +317,9 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
         break;
     case UART_RX_STATE_READ_DATA:
         // only write data until buffer is full
-        if (uart_rx_idx < PRINT_BUFFER_LENGTH)
+        if (uart_rx_data_idx < PRINT_BUFFER_LENGTH)
         {
-            m->data[uart_rx_idx] = rx_value;
+            m->data[uart_rx_data_idx] = rx_value;
         }
         else
         {
@@ -324,9 +327,9 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
             m->status = M_ERROR;
         }
 
-        uart_rx_idx++;
+        uart_rx_data_idx++;
 
-        if (uart_rx_idx == m->length)
+        if (uart_rx_data_idx == m->length)
         {
             uart_rx_state = UART_RX_STATE_DETECT_STOP;
         }
@@ -353,13 +356,20 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
         if ((m->identifier == controller_address) || (m->identifier == ADDRESS_GATEWAY))
         {
             send_message_uart(m);
-            message_process(m);
+            
+            // schedule processing task
+            task_t task = uart_rx_tasks[uart_rx_idx];
+            task.cb =(void*) message_process;
+            task.data = (void*) &uart_rx_queue[uart_rx_idx];
+            push_queued_task(task);
         }
         else
         {
             // forward this message over CAN
             send_message_can(m);
         }
+        
+        uart_rx_idx++;
 
         break;
     default:
