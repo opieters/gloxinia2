@@ -94,7 +94,7 @@ void GloxiniaConfigurator::readData()
             }
         case ReadIdH:
 
-            n_read = serial->read(data, 1); // read id H
+            n_read = serial->read(&data[1], 1); // read id H
             if (n_read < 0)
             {
                 // an error occurred -> return to initial state
@@ -112,7 +112,7 @@ void GloxiniaConfigurator::readData()
             }
         case ReadIdL:
 
-            n_read = serial->read(&data[1], 1); // read id L
+            n_read = serial->read(&data[2], 1); // read id L
             if (n_read < 0)
             {
                 // an error occurred -> return to initial state
@@ -130,7 +130,7 @@ void GloxiniaConfigurator::readData()
             }
         case ReadCommand:
 
-            n_read = serial->read(&data[2], 1); // read id
+            n_read = serial->read(&data[3], 1); // read id
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
@@ -148,7 +148,7 @@ void GloxiniaConfigurator::readData()
             }
         case ReadRequest:
 
-            n_read = serial->read(&data[3], 1); // read id
+            n_read = serial->read(&data[4], 1); // read id
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
@@ -166,7 +166,7 @@ void GloxiniaConfigurator::readData()
             }
         case ReadSensorIdH:
 
-            n_read = serial->read(&data[4], 1); // read ext id H
+            n_read = serial->read(&data[5], 1); // read ext id H
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
@@ -183,7 +183,7 @@ void GloxiniaConfigurator::readData()
                 break;
             }
         case ReadSensorIdL:
-            n_read = serial->read(&data[5], 1); // read ext id L
+            n_read = serial->read(&data[6], 1); // read ext id L
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
@@ -200,7 +200,7 @@ void GloxiniaConfigurator::readData()
                 break;
             }
         case ReadLength:
-            n_read = serial->read(&data[6], 1); // read length
+            n_read = serial->read(&data[7], 1); // read length
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
@@ -210,7 +210,7 @@ void GloxiniaConfigurator::readData()
             {
                 // we were able to read the length -> read data (if any)
                 read_length = 0;
-                if (data[6] == 0)
+                if (data[7] == 0)
                 {
                     readoutState = DetectStopByte;
                     break;
@@ -225,14 +225,14 @@ void GloxiniaConfigurator::readData()
                 break;
             }
         case ReadData:
-            n_read = serial->read(&data[7 + read_length], data[6] - read_length);
+            n_read = serial->read(&data[8 + read_length], data[7] - read_length);
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
                 return;
             }
             read_length += n_read;
-            if (read_length == data[6])
+            if (read_length == data[7])
             {
                 readoutState = DetectStopByte;
             }
@@ -241,7 +241,7 @@ void GloxiniaConfigurator::readData()
                 break;
             }
         case DetectStopByte:
-            n_read = serial->read(&data[7 + read_length], 1);
+            n_read = serial->read(&data[8 + read_length], 1);
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
@@ -250,17 +250,17 @@ void GloxiniaConfigurator::readData()
             }
             if (n_read == 1)
             {
-                if (data[7 + read_length] == GMessage::GMessageStopByte)
+                if (data[8 + read_length] == GMessage::GMessageStopByte)
                 {
                     quint8 *udata = (quint8 *)data;
                     if (read_length == 0)
                     {
-                        GMessage m((GMessage::Code)udata[2], (((uint16_t)udata[0] << 8) | udata[1]), ((uint16_t)udata[4] << 8) | udata[5], udata[3] == 0 ? false : true);
+                        GMessage m((GMessage::Code)udata[3], (((uint16_t)udata[1] << 8) | udata[2]), ((uint16_t)udata[5] << 8) | udata[6], udata[4] == 0 ? false : true);
                         processIncomingGMessage(m);
                     }
                     else
                     {
-                        GMessage m((GMessage::Code)udata[2], (((uint16_t)udata[0] << 8) | udata[1]), ((uint16_t)udata[4] << 8) | udata[5], udata[3] == 0 ? false : true, std::vector<quint8>(&data[7], &data[7 + read_length]));
+                        GMessage m((GMessage::Code)udata[3], (((uint16_t)udata[1] << 8) | udata[2]), ((uint16_t)udata[5] << 8) | udata[6], udata[4] == 0 ? false : true, std::vector<quint8>(&data[8], &data[8 + read_length]));
                         processIncomingGMessage(m);
                     }
 
