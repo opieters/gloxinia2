@@ -31,6 +31,8 @@ public:
     void setSoftwareVersion(uint8_t major, uint8_t minor);
     void setHardwareVersion(uint8_t v);
 
+    static GCNode* fromQVariant(const QVariant data);
+
     friend QDebug operator<<(QDebug dbg, const GCNode &);
 
     QString toString(void) const;

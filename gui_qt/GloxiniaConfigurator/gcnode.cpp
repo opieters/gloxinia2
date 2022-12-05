@@ -1,4 +1,5 @@
 #include "gcnode.h"
+#include "qvariant.h"
 
 #include <QDebug>
 
@@ -110,6 +111,22 @@ bool GCNode::fromConfigString(const QStringList &config)
     this->id = id;
 
     return true;
+}
+
+GCNode* GCNode::fromQVariant(const QVariant data)
+{
+    GCNodeDicio *nDicio = data.value<GCNodeDicio *>();
+    GCNodePlanalta *nPlanalta = data.value<GCNodePlanalta *>();
+    GCNodeSylvatica *nSylvatica = data.value<GCNodeSylvatica *>();
+
+    if(nDicio != nullptr)
+        return nDicio;
+    if(nPlanalta != nullptr)
+        return nPlanalta;
+    if(nSylvatica != nullptr)
+        return nullptr;
+
+    return nullptr;
 }
 
 GCNodeDicio::GCNodeDicio(const int nodeID, const QString label) : GCNode(nodeID, label)
