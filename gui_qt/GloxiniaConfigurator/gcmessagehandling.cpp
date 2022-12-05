@@ -2,32 +2,36 @@
 
 void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
 {
-    switch (m.getCode())
+
+    if(!m.getRequest())
     {
-    case GMessage::Code::REQUEST_ADDRESS_AVAILABLE:
-        break;
-    case GMessage::Code::ADDRESS_TAKEN:
-        break;
-    case GMessage::Code::UPDATE_ADDRESS:
-        break;
-    case GMessage::Code::DISCOVERY:
-        // check if node exists, if not create one and add to model
-        processCANDiscoveryMessage(m);
-        break;
-    case GMessage::Code::MSG_TEXT:
-        // processTextMessage(m);
-        break;
-    case GMessage::Code::NODE_INFO:
-        processNodeInfoMessage(m);
-        break;
-    case GMessage::Code::SENSOR_DATA:
-        processSensorData(m);
-        break;
-    case GMessage::Code::SENSOR_STATUS:
-        processSensorStatus(m);
-        break;
-    default:
-        break;
+        switch (m.getCode())
+        {
+        case GMessage::Code::REQUEST_ADDRESS_AVAILABLE:
+            break;
+        case GMessage::Code::ADDRESS_TAKEN:
+            break;
+        case GMessage::Code::UPDATE_ADDRESS:
+            break;
+        case GMessage::Code::DISCOVERY:
+            // check if node exists, if not create one and add to model
+            processCANDiscoveryMessage(m);
+            break;
+        case GMessage::Code::MSG_TEXT:
+            // processTextMessage(m);
+            break;
+        case GMessage::Code::NODE_INFO:
+            processNodeInfoMessage(m);
+            break;
+        case GMessage::Code::SENSOR_DATA:
+            processSensorData(m);
+            break;
+        case GMessage::Code::SENSOR_STATUS:
+            processSensorStatus(m);
+            break;
+        default:
+            break;
+        }
     }
 
     // add line for now
