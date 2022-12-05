@@ -41,6 +41,11 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif /* __cplusplus */
+    
+    typedef enum {
+        sensor_sht35_gloxinia_register_general = 0x00,
+        sensor_sht35_gloxinia_register_config = 0x01,
+    } sensor_sht35_gloxinia_register_t;
 
     /**
      * Enum listing configuration options of SHT35 sensor.
@@ -89,8 +94,10 @@ extern "C" {
 
     struct sensor_interface_s;
     sensor_status_t sensor_sht35_config(struct sensor_interface_s* intf, uint8_t* buffer, uint8_t length);
+    void sensor_sht35_get_config(struct sensor_interface_s* intf, uint8_t reg, uint8_t* buffer, uint8_t* length);
     
     void sht35_init_sensor(struct sensor_interface_s* intf);
+    void sensor_sht35_activate(struct sensor_interface_s* intf);
     
     void sensor_sht35_measure(void* data);
         /**
@@ -106,7 +113,7 @@ extern "C" {
     void sht35_i2c_cb_single_shot_m_config(i2c_message_t* m);
     void sht35_i2c_cb_single_shot_m_read(i2c_message_t* m);
     
-    void validate_sht35_config(sensor_sht35_config_t* config);
+    bool validate_sht35_config(sensor_sht35_config_t* config);
     
     uint8_t sht35_calculate_crc(uint8_t b, uint8_t crc, uint8_t poly);
 

@@ -6,33 +6,76 @@
 static void sht35_config_phase1_cb(i2c_message_t *m);
 static void sht35_config_phase2_cb(i2c_message_t *m);
 
+void sensor_sht35_get_config(struct sensor_interface_s* intf, uint8_t reg, uint8_t* buffer, uint8_t* length){
+    sensor_sht35_config_t *config = &intf->config.sht35;
+    
+    buffer[0] = SENSOR_TYPE_SHT35;
+    buffer[1] = reg;
+    
+    switch(reg){
+        case sensor_sht35_gloxinia_register_general:
+            intf->measure.task.cb = sensor_sht35_measure;
+            intf->measure.task.data = (void *)intf;
+
+            buffer[2] = intf->measure.period >> 8;
+            buffer[3] = intf->measure.period & 0x0ff;
+            *length = 4;
+            break;
+        case sensor_sht35_gloxinia_register_config:
+            buffer[2] = config->address;
+            buffer[3] = config->repeatability;
+            buffer[4] = config->clock;
+            buffer[5] = config->rate;
+            buffer[6] = config->periodicity;
+            *length = 7;
+            break;
+        default:
+            *length = 0;
+    }
+}
+
 sensor_status_t sensor_sht35_config(struct sensor_interface_s *intf, uint8_t *buffer, uint8_t length)
 {
-    if (length < 6)
+    if (length < 1)
     {
         return SENSOR_STATUS_ERROR;
     }
 
     UART_DEBUG_PRINT("Configuring SHT35 sensor");
 
-    intf->measure.task.cb = sensor_sht35_measure;
-    intf->measure.task.data = (void *)intf;
-
     sensor_sht35_config_t *config = &intf->config.sht35;
+    
+    switch(buffer[0]){
+        case sensor_sht35_gloxinia_register_general:
+            if (length != 3){ return SENSOR_STATUS_ERROR; }
+            
+            intf->measure.task.cb = sensor_sht35_measure;
+            intf->measure.task.data = (void *)intf;
 
-    // load configuration from buffer into data structure
-    config->address = buffer[0];
-    config->i2c_bus = (i2c_bus_t)buffer[1]; // TODO: this should not be configurable since the bus is fixed
-    config->repeatability = (sensor_sht35_repeatability_t)buffer[2];
-    config->clock = (sensor_sht35_clock_stretching_t)buffer[3];
-    config->rate = (sensor_sht35_sample_rate_t)buffer[4];
-    config->periodicity = (sensor_sht35_periodicity_t)buffer[5];
+            schedule_init(&intf->measure, intf->measure.task, (((uint16_t)buffer[1]) << 8) | buffer[2]);
 
-    // validate configuration
-    validate_sht35_config(config);
+            return SENSOR_STATUS_ACTIVE;
+            
+            break;
+        case sensor_sht35_gloxinia_register_config:
+            if(length != 6) { return SENSOR_STATUS_ERROR; }
+            
+            // load configuration from buffer into data structure
+            config->address = buffer[1];
+            config->i2c_bus = I2C2_BUS; // TODO: this should not be configurable since the bus is fixed
+            config->repeatability = (sensor_sht35_repeatability_t)buffer[2];
+            config->clock = (sensor_sht35_clock_stretching_t)buffer[3];
+            config->rate = (sensor_sht35_sample_rate_t)buffer[4];
+            config->periodicity = (sensor_sht35_periodicity_t)buffer[5];
 
-    // start sensor initialisation (async)
-    sht35_init_sensor(intf);
+            // validate configuration
+            if(!validate_sht35_config(config)){
+                return SENSOR_STATUS_ERROR;
+            } else {
+                // start sensor initialisation (async) only when configuration is OK
+                sht35_init_sensor(intf);
+            }
+    }
 
     return SENSOR_STATUS_IDLE;
 }
@@ -320,6 +363,10 @@ static void sht35_config_phase2_cb(i2c_message_t *m)
     message_send(&m_status);
 }
 
+void sensor_sht35_activate(sensor_interface_t* intf){
+    intf->status = SENSOR_STATUS_RUNNING;
+}
+
 void sht35_i2c_cb_periodic_m_fetch(i2c_message_t *m)
 {
     struct sensor_interface_s *intf = (struct sensor_interface_s *)m->callback_data;
@@ -465,10 +512,26 @@ uint8_t sht35_calculate_crc(uint8_t b, uint8_t crc, uint8_t poly)
     return crc;
 }
 
-void validate_sht35_config(sensor_sht35_config_t *config)
+bool validate_sht35_config(sensor_sht35_config_t *config)
 {
+    sensor_sht35_config_t original = *config;
     SENSOR_CONFIG_CHECK_MAX_SET(config->repeatability, S_SHT35_LOW_REPEATABILITY, S_SHT35_HIGH_REPEATABILIBTY);
     SENSOR_CONFIG_CHECK_MAX_SET(config->clock, S_SHT35_DISABLE_CLOCK_STRETCHING, S_SHT35_ENABLE_CLOCK_STRETCHING);
     SENSOR_CONFIG_CHECK_MAX_SET(config->rate, S_SHT35_10_MPS, S_SHT35_1_MPS);
     SENSOR_CONFIG_CHECK_MAX_SET(config->periodicity, S_SHT35_PERIODIC, S_SHT35_SINGLE_SHOT);
+    
+    if(config->repeatability != original.repeatability){
+        return false;
+    }
+    if(config->clock != original.clock){
+        return false;
+    }
+    if(config->rate != original.rate){
+        return false;
+    }
+    if(config->periodicity != original.periodicity){
+        return false;
+    }
+    
+    return true;
 }

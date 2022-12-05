@@ -23,6 +23,7 @@ typedef enum
     M_SENSOR_ERROR = 0x11,
     M_SENSOR_DATA = 0x12,
     M_SENSOR_CONFIG = 0x13, // configure sensors or read configuration
+    M_SENSOR_START = 0x14,
     M_ACTUATOR_STATUS = 0x20,
 } message_cmd_t;
 

@@ -11,6 +11,13 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif /* __cplusplus */
+    
+    typedef enum {
+        sensor_apds9306_065_gloxinia_register_general = 0x00,
+        sensor_apds9306_065_gloxinia_register_config = 0x01,
+        sensor_apds9306_065_gloxinia_register_als_th_high = 0x02,
+        sensor_apds9306_065_gloxinia_register_als_th_low = 0x03,
+    } sensor_apds9306_065_gloxinia_register_t;
 
 typedef enum {
     SENSOR_APDS9306_065_R_MAIN_CTRL        = 0x00,
@@ -110,8 +117,10 @@ struct sensor_interface_s;
  * @return i2c_status_t indicating status of the I2C transfer.
  */
 sensor_status_t sensor_apds9306_065_config(struct sensor_interface_s* intf, uint8_t* buffer, uint8_t length);
+void sensor_apds9306_065_get_config(struct sensor_interface_s* intf, uint8_t reg, uint8_t* buffer, uint8_t* length);
 
 void sensor_apds9306_065_init_sensor(struct sensor_interface_s* intf);
+void sensor_apds9306_065_activate(struct sensor_interface_s* intf);
 
 /**
  * @brief Send APDS9306-065 I2C data over CAN bus.
@@ -123,7 +132,7 @@ void sensor_apds9306_065_init_sensor(struct sensor_interface_s* intf);
  */
 void sensor_apds9306_065_i2c_cb(i2c_message_t* m);
 
-void validate_sensor_apds9306_065_config(sensor_apds9306_065_config_t* config);
+bool validate_sensor_apds9306_065_config(sensor_apds9306_065_config_t* config);
 
 void sensor_apds9306_065_measure(void* data);
 

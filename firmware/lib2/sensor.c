@@ -1,7 +1,7 @@
 #include <sensor.h>
 #include <address.h>
 
-static sensor_interface_t sensor_interfaces[N_SENSOR_INTERFACES];
+sensor_interface_t sensor_interfaces[N_SENSOR_INTERFACES];
 
 void sensors_init(void)
 {
@@ -11,7 +11,33 @@ void sensors_init(void)
     {
         task_t task = {task_dummy, NULL};
         schedule_init(&sensor_interfaces->measure, task, 0);
+        
+        sensor_interfaces[i].sensor_id = i;
     }
+    
+    
+}
+
+void sensor_get_config(uint8_t interface_id, uint8_t reg, uint8_t* buffer, uint8_t* length){
+    sensor_interface_t* intf = &sensor_interfaces[interface_id];
+    sensor_type_t stype = intf->sensor_type;
+    
+    switch(stype){
+        case SENSOR_TYPE_SHT35:
+            sensor_sht35_get_config(intf, reg, buffer, length);
+            break;
+        case SENSOR_TYPE_APDS9306_065:
+            sensor_apds9306_065_get_config(intf, reg, buffer, length);
+            break;
+        case SENSOR_TYPE_ANALOGUE:
+            //TODO
+            break;
+        case SENSOR_NOT_SET:
+        default:
+            *length = 0;
+            break;
+    }
+    
 }
 
 void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t *buffer, uint8_t length)
@@ -19,7 +45,7 @@ void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t *buffer, uint8_
     sensor_interface_t *intf;
     sensor_type_t stype;
     message_t m;
-    uint8_t data[2];
+    uint8_t data[1];
 
     // input validation
     if (length < 2)
@@ -32,51 +58,34 @@ void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t *buffer, uint8_
     }
 
     intf = &sensor_interfaces[interface_id];
-    stype = (sensor_type_t)buffer[0];
+    stype = (sensor_type_t) buffer[0];
 
     intf->sensor_type = stype;
 
-    int status = 0;
+    sensor_status_t status = SENSOR_STATUS_ERROR;
 
-    // register 0 contains the measurement period, and status fields
-    if (buffer[1] == 0)
+    switch (stype)
     {
-        if (length != 5)
-        {
-            return;
-        }
-
-        intf->status = (sensor_status_t)buffer[2];
-        schedule_init(&sensor_interfaces->measure, sensor_interfaces->measure.task, (((uint16_t)buffer[3]) << 8) | buffer[4]);
+    case SENSOR_NOT_SET:
+        break;
+    case SENSOR_TYPE_SHT35:
+        status = sensor_sht35_config(intf, &buffer[1], length - 1);
+        break;
+    case SENSOR_TYPE_APDS9306_065:
+        status = sensor_apds9306_065_config(intf, &buffer[1], length - 1);
+        break;
+    case SENSOR_TYPE_ANALOGUE:
+        // TODO
+        break;
+    default:
+        break;
     }
-    else
-    {
-        switch (stype)
-        {
-        case SENSOR_NOT_SET:
-            break;
-        case SENSOR_TYPE_SHT35:
-            status = sensor_sht35_config(intf, &buffer[1], length - 1);
-            break;
-        case SENSOR_TYPE_APDS9306_065:
-            status = sensor_apds9306_065_config(intf, &buffer[1], length - 1);
-            break;
-        case SENSOR_TYPE_ANALOGUE:
-            // TODO
-            break;
-        default:
-            break;
-        }
 
-        if (status == SENSOR_STATUS_ERROR)
-        {
-            intf->status = SENSOR_STATUS_ERROR;
-        }
-        else
-        {
-            intf->status = SENSOR_STATUS_IDLE;
-        }
-    }
+    // update sensor status based on variables
+    if(intf->status == SENSOR_STATUS_INACTIVE)
+        intf->status = status;
+    if(status == SENSOR_STATUS_ERROR)
+        intf->status = status;
 
     // we report the status back to the central
     message_init(&m, controller_address, MESSAGE_NO_REQUEST, M_SENSOR_STATUS,
@@ -84,6 +93,57 @@ void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t *buffer, uint8_
     data[0] = intf->status;
 
     message_send(&m);
+}
+
+void sensor_set_status(uint8_t interface_id, sensor_status_t status){
+    sensor_interface_t* intf = &sensor_interfaces[interface_id];
+    
+    message_t m_status;
+    uint8_t data[1];
+    
+    switch(status){
+        case SENSOR_STATUS_ACTIVE:
+                if((intf->status == SENSOR_STATUS_IDLE) || (intf->status == SENSOR_STATUS_STOPPED))
+                {
+                    switch (intf->sensor_type)
+                    {
+                    case SENSOR_NOT_SET:
+                        break;
+                    case SENSOR_TYPE_SHT35:
+                        sensor_sht35_activate(intf);
+                        break;
+                    case SENSOR_TYPE_APDS9306_065:
+                        sensor_apds9306_065_activate(intf);
+                        break;
+                    case SENSOR_TYPE_ANALOGUE:
+                        // TODO
+                        break;
+                    default:
+                        break;
+                    }
+                  schedule_event(&intf->measure);
+                }
+                intf->status = SENSOR_STATUS_ACTIVE;
+                break;
+        case SENSOR_STATUS_STOPPED:
+            if(intf->status == SENSOR_STATUS_RUNNING)
+                schedule_remove_event(intf->measure.id);
+            intf->status = SENSOR_STATUS_STOPPED;
+            break;
+        case SENSOR_STATUS_INACTIVE:
+            intf->status = status;
+            break;
+        case SENSOR_STATUS_RUNNING:
+        case SENSOR_STATUS_IDLE:
+        case SENSOR_STATUS_ERROR:
+            break;
+        default:
+            break;
+    }
+    
+    message_init(&m_status, controller_address, MESSAGE_NO_REQUEST,
+             M_SENSOR_STATUS, intf->sensor_id, data, ARRAY_LENGTH(data));
+    data[0] = intf->status;
 }
 
 void sensor_error_handle(sensor_interface_t *intf)
@@ -116,21 +176,36 @@ void sensor_i2c_error_handle(sensor_interface_t *intf, i2c_message_t *m, uint8_t
     schedule_remove_event(intf->measure.id);
 }
 
-void sensor_start(uint8_t sensor_id)
+void sensor_start(void)
 {
-    // check input
-    if (sensor_id >= N_SENSOR_INTERFACES)
+    for(int i = 0; i < N_SENSOR_INTERFACES; i++)
     {
-        return;
-    }
+        // check if init was done correctly
+        if (sensor_interfaces[i].measure.task.cb == task_dummy)
+        {
+            continue;
+        }
 
-    // check if init was done correctly
-    if (sensor_interfaces[sensor_id].measure.task.cb == task_dummy)
+        if(sensor_interfaces[i].status != SENSOR_STATUS_ACTIVE)
+        {
+            continue;
+        }
+
+        sensor_interfaces[i].status = SENSOR_STATUS_RUNNING;
+
+        schedule_event(&sensor_interfaces[i].measure);
+    }
+}
+
+i2c_bus_t sensor_i2c_get_bus(uint8_t sensor_interface_n){
+#ifdef __DICIO__
+    if(sensor_interface_n < 2)
     {
-        return;
+        return I2C1_BUS;
+    } else {
+        return I2C2_BUS;
     }
-
-    sensor_interfaces[sensor_id].status = SENSOR_STATUS_RUNNING;
-
-    schedule_event(&sensor_interfaces[sensor_id].measure);
+#else
+#error "This board is not yet supported"
+#endif
 }

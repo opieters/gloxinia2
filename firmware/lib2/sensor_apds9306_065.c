@@ -5,10 +5,54 @@
 static void sensor_apds9306_065_config_phase1_cb(i2c_message_t* m);
 static void sensor_apds9306_065_config_phase2_cb(i2c_message_t* m);
 static void sensor_apds9306_065_config_phase3_cb(i2c_message_t* m);
+static void sensor_apds9306_065_config_phase4(sensor_interface_t* intf);
 static void sensor_apds9306_065_config_phase4_cb(i2c_message_t* m);
+static void sensor_apds9306_065_config_phase5(sensor_interface_t* intf);
 static void sensor_apds9306_065_config_phase5_cb(i2c_message_t* m);
 static void sensor_apds9306_065_config_phase6_cb(i2c_message_t* m);
 static void sensor_apds9306_065_config_phase7_cb(i2c_message_t* m);
+
+void sensor_apds9306_065_get_config(struct sensor_interface_s* intf, uint8_t reg, uint8_t* buffer, uint8_t* length){
+    sensor_apds9306_065_config_t* config = &intf->config.apds9306_065;
+    int i;
+    uint32_t temp;
+
+    buffer[0] = SENSOR_TYPE_APDS9306_065;
+    buffer[1] = reg;
+
+    switch (reg) {
+        case sensor_apds9306_065_gloxinia_register_general:
+            buffer[2] = (uint8_t) (intf->measure.period >> 8);
+            buffer[3] = (uint8_t) intf->measure.period;
+            *length = 4;
+            break;
+        case sensor_apds9306_065_gloxinia_register_config:
+            buffer[2] = config->address;
+            buffer[3] = config->meas_rate;
+            buffer[4] = config->meas_resolution;
+            buffer[5] = config->gain;
+            *length = 6;
+            break;
+        case sensor_apds9306_065_gloxinia_register_als_th_high:
+            temp = config->als_threshold_high;
+            for (i = 0; i < 4; i++) {
+                buffer[5-i] = (uint8_t) (temp & 0xff);
+                temp = temp >> 8;
+            }
+            *length = 6;
+            break;
+        case sensor_apds9306_065_gloxinia_register_als_th_low:
+            temp = config->als_threshold_low;
+            for (i = 0; i < 4; i++) {
+                buffer[5-i] = (uint8_t) (temp & 0xff);
+                temp = temp >> 8;
+            }
+            *length = 6;
+            break;
+        default:
+            break;
+    }
+}
 
 sensor_status_t sensor_apds9306_065_config(struct sensor_interface_s* intf, uint8_t* buffer, uint8_t length) {
     sensor_apds9306_065_config_t* config = &intf->config.apds9306_065;
@@ -17,12 +61,20 @@ sensor_status_t sensor_apds9306_065_config(struct sensor_interface_s* intf, uint
     if (length < 1) {
         return SENSOR_STATUS_ERROR;
     }
-    
-    intf->measure.task.cb = sensor_apds9306_065_measure;
-    intf->measure.task.data = (void*) intf;
 
     switch (buffer[0]) {
-        case 0:
+        case sensor_apds9306_065_gloxinia_register_general:
+            if (length != 3){ return SENSOR_STATUS_ERROR; }
+
+            intf->measure.task.cb = sensor_apds9306_065_measure;
+            intf->measure.task.data = (void*) intf;
+            
+            schedule_init(&intf->measure, intf->measure.task, (((uint16_t)buffer[1]) << 8) | buffer[2]);
+            
+            return SENSOR_STATUS_ACTIVE;
+            
+            break;
+        case sensor_apds9306_065_gloxinia_register_config:
             if (length != 6) {
                 return SENSOR_STATUS_ERROR;
             }
@@ -31,8 +83,13 @@ sensor_status_t sensor_apds9306_065_config(struct sensor_interface_s* intf, uint
             config->meas_rate = (sensor_apds9306_065_als_meas_rate_t) buffer[3];
             config->meas_resolution = (sensor_apds9306_065_als_resolution_t) buffer[4];
             config->gain = (sensor_apds9306_065_als_gain_t) buffer[5];
+            if(!validate_sensor_apds9306_065_config(config)){
+                return SENSOR_STATUS_ERROR;
+            } else {
+                sensor_apds9306_065_init_sensor(intf);
+            }
             break;
-        case 1:
+        case sensor_apds9306_065_gloxinia_register_als_th_high:
             if (length != 5) {
                 return SENSOR_STATUS_ERROR;
             }
@@ -40,8 +97,9 @@ sensor_status_t sensor_apds9306_065_config(struct sensor_interface_s* intf, uint
             for (i = 0; i < 4; i++) {
                 config->als_threshold_high = (config->als_threshold_high << 8) | buffer[i + 1];
             }
+            sensor_apds9306_065_config_phase4(intf);
             break;
-        case 2:
+        case sensor_apds9306_065_gloxinia_register_als_th_low:
             if (length != 5) {
                 return SENSOR_STATUS_ERROR;
             }
@@ -49,14 +107,11 @@ sensor_status_t sensor_apds9306_065_config(struct sensor_interface_s* intf, uint
             for (i = 0; i < 4; i++) {
                 config->als_threshold_low = (config->als_threshold_low << 8) | buffer[1 + i];
             }
+            sensor_apds9306_065_config_phase5(intf);
             break;
         default:
             break;
     }
-
-    validate_sensor_apds9306_065_config(config);
-
-    sensor_apds9306_065_init_sensor(intf);
 
     return SENSOR_STATUS_IDLE;
 }
@@ -165,7 +220,7 @@ static void sensor_apds9306_065_config_phase3_cb(i2c_message_t* m) {
             0,
             i2c_get_write_controller(config->i2c_bus),
             3,
-            sensor_apds9306_065_config_phase4_cb,
+            NULL,
             intf,
             0);
     config->m_config2_data[0] = SENSOR_APDS9306_065_R_INT_PERSISTENCE;
@@ -174,15 +229,8 @@ static void sensor_apds9306_065_config_phase3_cb(i2c_message_t* m) {
     i2c_queue_message(&config->m_config2);
 }
 
-static void sensor_apds9306_065_config_phase4_cb(i2c_message_t* m) {
-    sensor_interface_t* intf = (sensor_interface_t*) m->callback_data;
+static void sensor_apds9306_065_config_phase4(sensor_interface_t* intf) {
     sensor_apds9306_065_config_t* config = &intf->config.apds9306_065;
-
-    if (m->error != I2C_NO_ERROR) {
-        intf->status = SENSOR_STATUS_ERROR;
-        sensor_i2c_error_handle(intf, m,  4);
-        return;
-    }
 
     // configure high threshold
     i2c_init_message(&config->m_config1,
@@ -194,7 +242,7 @@ static void sensor_apds9306_065_config_phase4_cb(i2c_message_t* m) {
             0,
             i2c_get_write_controller(config->i2c_bus),
             3,
-            sensor_apds9306_065_config_phase5_cb,
+            sensor_apds9306_065_config_phase4_cb,
             intf,
             0);
     config->m_config1_data[0] = SENSOR_APDS9306_065_R_ALS_THRES_UP_0;
@@ -205,16 +253,29 @@ static void sensor_apds9306_065_config_phase4_cb(i2c_message_t* m) {
     i2c_queue_message(&config->m_config1);
 }
 
+static void sensor_apds9306_065_config_phase4_cb(i2c_message_t* m) {
+    sensor_interface_t* intf = (sensor_interface_t*) m->callback_data;
+
+    if (m->error != I2C_NO_ERROR) {
+        intf->status = SENSOR_STATUS_ERROR;
+        sensor_i2c_error_handle(intf, m,  4);
+        return;
+    }
+}
+
 static void sensor_apds9306_065_config_phase5_cb(i2c_message_t* m) {
     sensor_interface_t* intf = (sensor_interface_t*) m->callback_data;
-    sensor_apds9306_065_config_t* config = &intf->config.apds9306_065;
 
     if (m->error != I2C_NO_ERROR) {
         intf->status = SENSOR_STATUS_ERROR;
         sensor_i2c_error_handle(intf, m,  5);
         return;
     }
+}
 
+static void sensor_apds9306_065_config_phase5(sensor_interface_t* intf) {
+    sensor_apds9306_065_config_t* config = &intf->config.apds9306_065;
+    
     // configure low threshold
     i2c_init_message(&config->m_config2,
             I2C_WRITE_ADDRESS(config->address),
@@ -225,7 +286,7 @@ static void sensor_apds9306_065_config_phase5_cb(i2c_message_t* m) {
             0,
             i2c_get_write_controller(config->i2c_bus),
             3,
-            sensor_apds9306_065_config_phase6_cb,
+            sensor_apds9306_065_config_phase5_cb,
             intf,
             0);
     config->m_config2_data[0] = SENSOR_APDS9306_065_R_ALS_THRES_LOW_0;
@@ -238,14 +299,35 @@ static void sensor_apds9306_065_config_phase5_cb(i2c_message_t* m) {
 
 static void sensor_apds9306_065_config_phase6_cb(i2c_message_t* m) {
     sensor_interface_t* intf = (sensor_interface_t*) m->callback_data;
-    sensor_apds9306_065_config_t* config = &intf->config.apds9306_065;
 
     if (m->error != I2C_NO_ERROR) {
         intf->status = SENSOR_STATUS_ERROR;
         sensor_i2c_error_handle(intf, m,  6);
         return;
     }
+}
 
+static void sensor_apds9306_065_config_phase7_cb(i2c_message_t* m) {
+    sensor_interface_t* intf = (sensor_interface_t*) m->callback_data;
+
+    if (m->error != I2C_NO_ERROR) {
+        intf->status = SENSOR_STATUS_ERROR;
+        sensor_i2c_error_handle(intf, m,  7);
+        return;
+    } else {
+        intf->status = SENSOR_STATUS_ACTIVE;
+    }
+}
+
+void sensor_apds9306_065_activate(struct sensor_interface_s* intf){
+    sensor_apds9306_065_config_t* config = &intf->config.apds9306_065;
+    message_t m_status;
+    uint8_t data[1];
+    
+    if((intf->status != SENSOR_STATUS_IDLE) && (intf->status != SENSOR_STATUS_STOPPED)){
+        return;
+    }
+    
     // activate sensor
     i2c_init_message(&config->m_config1,
             I2C_WRITE_ADDRESS(config->address),
@@ -264,22 +346,7 @@ static void sensor_apds9306_065_config_phase6_cb(i2c_message_t* m) {
     config->m_config1_data[1] = (1 << 1); // turn sensor on
 
     i2c_queue_message(&config->m_config1);
-}
-
-static void sensor_apds9306_065_config_phase7_cb(i2c_message_t* m) {
-    sensor_interface_t* intf = (sensor_interface_t*) m->callback_data;
-    sensor_apds9306_065_config_t* config = &intf->config.apds9306_065;
-    message_t m_status;
-    uint8_t data[1];
-
-    if (m->error != I2C_NO_ERROR) {
-        intf->status = SENSOR_STATUS_ERROR;
-        sensor_i2c_error_handle(intf, m,  7);
-        return;
-    } else {
-        intf->status = SENSOR_STATUS_ACTIVE;
-    }
-
+    
     // initialise message to read PD value
     // initialise measurement messages
     config->m_read_address[0] = SENSOR_APDS9306_065_R_ALS_DATA_0; // select DATA register
@@ -296,6 +363,9 @@ static void sensor_apds9306_065_config_phase7_cb(i2c_message_t* m) {
             sensor_apds9306_065_i2c_cb,
             intf,
             0);
+    
+    if(intf->status != SENSOR_STATUS_ERROR)
+        intf->status = SENSOR_STATUS_RUNNING;
 
     message_init(&m_status, controller_address, MESSAGE_NO_REQUEST, M_SENSOR_STATUS,
             intf->sensor_id, data, ARRAY_LENGTH(data));
@@ -324,13 +394,33 @@ void sensor_apds9306_065_i2c_cb(i2c_message_t* m) {
     }
 }
 
-void validate_sensor_apds9306_065_config(sensor_apds9306_065_config_t* config) {
+bool validate_sensor_apds9306_065_config(sensor_apds9306_065_config_t* config) {
+    sensor_apds9306_065_config_t original = *config;
+    
     SENSOR_CONFIG_CHECK_MAX_SET(config->meas_rate, SENSOR_APDS9306_065_ALS_MEAS_RATE_2000MS, SENSOR_APDS9306_065_ALS_MEAS_RATE_2000MS);
     SENSOR_CONFIG_CHECK_MAX_SET(config->meas_resolution, SENSOR_APDS9306_065_ALS_RESOLUTION_13BIT, SENSOR_APDS9306_065_ALS_RESOLUTION_13BIT);
     SENSOR_CONFIG_CHECK_MAX_SET(config->gain, SENSOR_APDS9306_065_ALS_GAIN_18, SENSOR_APDS9306_065_ALS_GAIN_18);
     // max 24 bits wide
     SENSOR_CONFIG_CHECK_MAX_SET(config->als_threshold_high, 0xffffff, 0xffffff);
     SENSOR_CONFIG_CHECK_MAX_SET(config->als_threshold_low, 0xffffff, 0xffffff);
+    
+    if(config->meas_rate != original.meas_rate){
+        return false;
+    }
+    if(config->meas_resolution != original.meas_resolution){
+        return false;
+    }
+    if(config->gain != original.gain){
+        return false;
+    }
+    if(config->als_threshold_high != original.als_threshold_high){
+        return false;
+    }
+    if(config->als_threshold_low != original.als_threshold_low){
+        return false;
+    }
+    
+    return true;
 }
 
 void sensor_apds9306_065_measure(void* data) {

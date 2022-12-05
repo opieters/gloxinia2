@@ -18,11 +18,12 @@ typedef enum {
 } sensor_type_t;
 
 typedef enum {
-    SENSOR_STATUS_INACTIVE = 0,
-    SENSOR_STATUS_IDLE = 1,
-    SENSOR_STATUS_ACTIVE = 2,
-    SENSOR_STATUS_RUNNING = 3,
-    SENSOR_STATUS_ERROR = 4,
+    SENSOR_STATUS_INACTIVE = 0, // sensor not configured
+    SENSOR_STATUS_IDLE = 1, // sensor configured, but not runnning
+    SENSOR_STATUS_ACTIVE = 2, // sensor start requested, but not yet fully active in hardware
+    SENSOR_STATUS_RUNNING = 3, // sensor measurement campaign started
+    SENSOR_STATUS_STOPPED = 4, // sensor stopped measurement campaign
+    SENSOR_STATUS_ERROR = 5, // an error occurred, sensor campaign stopped/not started
 } sensor_status_t;
 
 #ifdef	__cplusplus

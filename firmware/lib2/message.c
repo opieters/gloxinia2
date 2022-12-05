@@ -17,6 +17,7 @@ static void cmd_sensor_config(message_t *m);
 static void cmd_sensor_status(message_t *m);
 static void cmd_sensor_error(message_t *m);
 static void cmd_sensor_data(message_t *m);
+static void cmd_sensor_start(message_t* m);
 
 static void address_get_task(void *data);
 
@@ -129,6 +130,9 @@ void message_process(message_t *m)
         break;
     case M_SENSOR_DATA:
         cmd_sensor_data(m);
+        break;
+    case M_SENSOR_START:
+        cmd_sensor_start(m);
         break;
     case M_SENSOR_CONFIG:
         cmd_sensor_config(m);
@@ -296,13 +300,34 @@ static void cmd_node_info(message_t *m)
 
 static void cmd_sensor_config(message_t *m)
 {
-    sensor_set_config_from_buffer((uint8_t)m->sensor_identifier, m->data, m->length);
+    if(m->request_message_bit){
+        // send config
+        uint8_t reg = 0, length;
+        uint8_t buffer[8];
+        message_t m_sensor;
+        do {
+            sensor_get_config(m->sensor_identifier, reg, buffer, &length);
+            reg++;
+            if(length > 0){
+                message_init(&m_sensor, controller_address,
+                     MESSAGE_NO_REQUEST,
+                     m->command,
+                     m->sensor_identifier,
+                     buffer,
+                     length);
+                message_send(&m_sensor);
+            }
+        } while(length > 0);
+    } else {
+        sensor_set_config_from_buffer((uint8_t)m->sensor_identifier, m->data, m->length);
+    }
 }
 
 static void cmd_sensor_status(message_t *m)
 {
     if (m->identifier == ADDRESS_GATEWAY)
     {
+        sensor_set_status(m->sensor_identifier, m->data[0]);
     }
     else
     {
@@ -315,4 +340,9 @@ static void cmd_sensor_error(message_t *m)
 
 static void cmd_sensor_data(message_t *m)
 {
+}
+
+static void cmd_sensor_start(message_t* m)
+{
+    sensor_start();
 }
