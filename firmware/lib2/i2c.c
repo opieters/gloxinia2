@@ -167,7 +167,7 @@ void i2c_queue_message(i2c_message_t* message) {
             i2c_queue_valid = (i2c_queue_valid + 1) % I2C_MESSAGE_BUFFER_LENGTH;
             message->error = I2C_NO_ERROR;
             n_i2c_queued_messages++;
-            UART_DEBUG_PRINT("I2C added message to %x on bus %x.", message->address, message->i2c_bus);
+            //UART_DEBUG_PRINT("I2C added message to %x on bus %x.", message->address, message->i2c_bus);
         }
     }
 }
@@ -182,12 +182,12 @@ void i2c_process_queue(void) {
                     }
                     m->status = I2C_MESSAGE_HANDLED;
 
-                    UART_DEBUG_PRINT("I2C callback.");
+                    //UART_DEBUG_PRINT("I2C callback.");
                 case I2C_MESSAGE_HANDLED:
                     // check if transfer went OK or max attempts reached
                     if ((m->error == I2C_NO_ERROR) || (m->n_attempts <= 0)) {
 
-                        UART_DEBUG_PRINT("I2C message handled.");
+                        //UART_DEBUG_PRINT("I2C message handled.");
                         T2CONbits.TON = 0; // disable timer (everything OK!)
 
                         i2c_queue_idx = (i2c_queue_idx + 1) % I2C_MESSAGE_BUFFER_LENGTH;
@@ -203,7 +203,7 @@ void i2c_process_queue(void) {
                     } else {
 
 
-                        UART_DEBUG_PRINT("I2C ERROR, restarting.");
+                        //UART_DEBUG_PRINT("I2C ERROR, restarting.");
                         m->n_attempts--;
                         m->status = I2C_MESSAGE_TRANSFERRING;
                         m->error = I2C_NO_ERROR;
@@ -219,11 +219,11 @@ void i2c_process_queue(void) {
                     // start timer: transfer must finish within approx. 25ms
                     T2CONbits.TON = 1;
 
-                    UART_DEBUG_PRINT("I2C message queued.");
+                    //UART_DEBUG_PRINT("I2C message queued.");
 
                 case I2C_MESSAGE_TRANSFERRING:
 
-                    UART_DEBUG_PRINT("I2C message transferring.");
+                    //UART_DEBUG_PRINT("I2C message transferring.");
 
                     m->controller(m);
                     break;
@@ -256,7 +256,7 @@ void i2c_process_queue(void) {
             if (i2c_queue_idx != i2c_queue_valid) {
                 m = i2c_message_queue[i2c_queue_idx];
 
-                UART_DEBUG_PRINT("Fetched message from queue: %x on bus %x.", m->address, m->i2c_bus);
+                //UART_DEBUG_PRINT("Fetched message from queue: %x on bus %x.", m->address, m->i2c_bus);
 
             }
         }
