@@ -387,9 +387,55 @@ QStringList TreeModel::toTextConfig(void)
     return textConfig;
 }
 
+GCNode* TreeModel::getNode(int nodeID)
+{
+    for(int i = 0; i < rootItem->childCount(); i++)
+    {
+        QVariant data = rootItem->child(i)->data();
+        GCNode* node = GCNode::fromQVariant(data);
+
+        if(node == nullptr)
+            continue;
+
+        if(node->getID() == nodeID){
+            return node;
+        }
+    }
+
+    return nullptr;
+}
+
 GCSensor* TreeModel::getSensor(int nodeID, int sensorID)
 {
-    TreeItem* nodeItem = rootItem->child(nodeID);
+    TreeItem* nodeItem, *sensorItem;
+    GCNode* node;
+    GCSensor* sensor;
+
+    for(int i = 0; i < rootItem->childCount(); i++)
+    {
+        nodeItem = rootItem->child(i);
+        node = GCNode::fromQVariant(nodeItem->data());
+        if(node == nullptr)
+            continue;
+        if(node->getID() == nodeID)
+            break;
+        else
+            node = nullptr;
+    }
+
+    if(node == nullptr)
+        return nullptr;
+
+    for(int i = 0; i < nodeItem->childCount(); i++)
+    {
+        sensorItem = nodeItem->child(i);
+        sensor = GCSensor::fromQVariant(sensorItem->data());
+        if(sensor == nullptr)
+            continue;
+        if(sensor->getInterfaceID() == sensorID)
+            return sensor;
+    }
+
 
     return nullptr; // TODO: implement or remove function
 }

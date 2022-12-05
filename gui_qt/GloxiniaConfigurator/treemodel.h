@@ -39,6 +39,7 @@ public:
 
     bool checkUniqueNodeID(int id);
 
+    GCNode* getNode(int nodeID);
     GCSensor* getSensor(int nodeID, int sensorID);
 
 private:
