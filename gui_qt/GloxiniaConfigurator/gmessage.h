@@ -48,6 +48,7 @@ public:
     quint8 getMessageID(void) const;
     quint16 getSensorID(void) const;
     std::vector<quint8> getData(void) const;
+    bool getRequest(void) const;
 
     friend std::ostream &operator<<(std::ostream &outs, const GMessage &m);
 

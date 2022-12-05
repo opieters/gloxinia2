@@ -124,6 +124,11 @@ std::vector<quint8> GMessage::getData(void) const
     return std::vector<quint8>(data);
 }
 
+bool GMessage::getRequest(void) const
+{
+    return request;
+}
+
 QString GMessage::toLogString() const
 {
     QString formattedData;
