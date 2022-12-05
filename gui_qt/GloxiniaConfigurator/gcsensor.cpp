@@ -9,23 +9,6 @@ GCSensor::GCSensor(GCNode* node, quint8 id) : node(node), interfaceID(id)
 
 GCSensor::~GCSensor() {}
 
-/*QString GCSensor::sensorTypeToString()
-{
-    switch(t){
-    case Disabeled:
-        return QString("Disabeled sensor port");
-    case SHT35:
-        return QString("SHT35");
-    case APDS9306:
-        return QString("APDS9306");
-    }
-    return QString("Unknown sensor type");
-}*/
-
-/*GCSensor::SensorType GCSensor::getSensorType(void)
-{
-    return sensorType;
-}*/
 
 quint8 GCSensor::getInterfaceID(void)
 {
@@ -66,16 +49,31 @@ void GCSensor::setUseGlobalPeriodFlag(bool flag)
     useGlobalPeriod = flag;
 }
 
-void GCSensor::startMeasurement(void)
+bool GCSensor::startMeasurement(void)
 {
     file = new QFile(filePath);
     if(!file->open(QIODevice::WriteOnly)){
         // TODO: pop-up error that file could not be openened for saving
         delete file;
         file = nullptr;
+        status = GCSensorStatus::ERROR;
+        return false;
     }
 
     printHeader();
+    status = GCSensorStatus::ACTIVE;
+    return true;
+}
+
+GMessage GCSensor::getStartMessage(void)
+{
+    std::vector<quint8> data = {GCSensor::GCSensorStatus::ACTIVE};
+    return GMessage(GMessage::Code::SENSOR_STATUS, this->node->getID(), this->getInterfaceID(), false, data);
+}
+GMessage GCSensor::getStopMessage(void)
+{
+    std::vector<quint8> data = {GCSensor::GCSensorStatus::STOPPED};
+    return GMessage(GMessage::Code::SENSOR_STATUS, this->node->getID(), this->getInterfaceID(), false, data);
 }
 
 void GCSensor::stopMeasurement(void)
@@ -86,6 +84,7 @@ void GCSensor::stopMeasurement(void)
     file->close();
     delete file;
     file = nullptr;
+    status = GCSensorStatus::STOPPED;
 }
 
 void GCSensor::setStatus(GCSensorStatus s)
@@ -103,6 +102,26 @@ GCSensor* GCSensor::fromQVariant(const QVariant data)
     if(sensorAPDS9306 != nullptr)
         return sensorAPDS9306;
     return nullptr;
+}
+
+QString GCSensor::statusToString(GCSensorStatus s)
+{
+    switch(s){
+    case INACTIVE:
+        return "inactive";
+    case IDLE:
+        return "idle";
+    case ACTIVE:
+        return "active";
+    case RUNNING:
+        return "running";
+    case STOPPED:
+        return "stopped";
+    case ERROR:
+        return "error";
+    }
+
+    return "";
 }
 
 QDebug operator<<(QDebug dbg, const GCSensor &)
@@ -224,7 +243,7 @@ QString GCSensorSHT35::toString(void) const
     {
         dLabel = "SHT35";
     }
-    return "[" + QString::number(interfaceID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ")";
+    return "[" + QString::number(interfaceID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ") - " + statusToString(status);
 }
 
 QString GCSensorSHT35::toConfigString(void) const
