@@ -73,6 +73,14 @@ extern "C" {
         S_SHT35_4_MPS,
         S_SHT35_10_MPS
     } sensor_sht35_sample_rate_t;
+    
+    typedef enum {
+        S_SHT35_ERROR_FETCH_PERIODIC,
+        S_SHT35_ERROR_READOUT_PERIODIC,
+        S_SHT35_ERROR_READOUT_SINGLE_SHOT,
+        S_SHT35_ERROR_PHASE1_CB,
+        S_SHT35_ERROR_PHASE2_CB
+    } sensor_sht35_error_t;
 
     typedef struct sensor_sht35_config_s {
         uint8_t address;
