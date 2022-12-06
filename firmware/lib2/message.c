@@ -328,12 +328,13 @@ static void cmd_sensor_config(const message_t *m)
 
 static void cmd_sensor_status(const message_t *m)
 {
-    if (m->identifier == ADDRESS_GATEWAY)
+    if (m->request_message_bit)
     {
-        sensor_set_status(m->sensor_identifier, m->data[0]);
+        sensor_send_status(m->sensor_identifier);
     }
     else
     {
+        sensor_set_status(m->sensor_identifier, m->data[0]);
     }
 }
 
