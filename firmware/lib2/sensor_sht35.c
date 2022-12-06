@@ -54,7 +54,7 @@ sensor_status_t sensor_sht35_config(struct sensor_interface_s *intf, uint8_t *bu
 
             schedule_init(&intf->measure, intf->measure.task, (((uint16_t)buffer[1]) << 8) | buffer[2]);
 
-            return SENSOR_STATUS_ACTIVE;
+            return SENSOR_STATUS_IDLE;
             
             break;
         case sensor_sht35_gloxinia_register_config:
@@ -178,6 +178,18 @@ static void sht35_config_phase1_cb(i2c_message_t *m)
 {
     struct sensor_interface_s *intf = (struct sensor_interface_s *)m->callback_data;
     sensor_sht35_config_t *config = (sensor_sht35_config_t *)&intf->config.sht35;
+    
+    if (m->error != I2C_NO_ERROR)
+    {
+        intf->log_data[0] = m->status;
+        intf->log_data[1] = m->error;
+        intf->log_data[2] = S_SHT35_ERROR_PHASE1_CB;
+        sensor_error_log(intf, intf->log_data, 3);
+        
+        intf->status = SENSOR_STATUS_ERROR;
+        sensor_error_handle(intf);
+        return;
+    }
 
     if (config->periodicity == S_SHT35_PERIODIC)
     {
@@ -336,6 +348,18 @@ static void sht35_config_phase2_cb(i2c_message_t *m)
     sensor_sht35_config_t *config = (sensor_sht35_config_t *)&intf->config.sht35;
     message_t m_status;
     uint8_t data[1];
+    
+    if (m->error != I2C_NO_ERROR)
+    {
+        intf->log_data[0] = m->status;
+        intf->log_data[1] = m->error;
+        intf->log_data[2] = S_SHT35_ERROR_PHASE2_CB;
+        sensor_error_log(intf, intf->log_data, 3);
+        
+        intf->status = SENSOR_STATUS_ERROR;
+        sensor_error_handle(intf);
+        return;
+    }
 
     switch (config->periodicity)
     {
@@ -353,7 +377,7 @@ static void sht35_config_phase2_cb(i2c_message_t *m)
     }
     else
     {
-        intf->status = SENSOR_STATUS_ACTIVE;
+        intf->status = SENSOR_STATUS_IDLE;
     }
 
     message_init(&m_status, controller_address, MESSAGE_NO_REQUEST, M_SENSOR_STATUS,
@@ -376,16 +400,13 @@ void sht35_i2c_cb_periodic_m_fetch(i2c_message_t *m)
     {
         intf->log_data[0] = m->status;
         intf->log_data[1] = m->error;
-        intf->log_data[2] = 1;
+        intf->log_data[2] = S_SHT35_ERROR_FETCH_PERIODIC;
 
-        message_init(&intf->log,
-                     controller_address,
-                     MESSAGE_NO_REQUEST,
-                     M_SENSOR_STATUS,
-                     intf->sensor_id,
-                     intf->log_data,
-                     3);
-        message_send(&intf->log);
+        sensor_error_log(intf, intf->log_data, 3);
+        
+        intf->status = SENSOR_STATUS_ERROR;
+        sensor_error_handle(intf);
+        
     }
     else
     {
@@ -417,7 +438,7 @@ void sht35_i2c_cb_periodic_m_read(i2c_message_t *m)
             message_init(&intf->log,
                          controller_address,
                          MESSAGE_NO_REQUEST,
-                         M_SENSOR_STATUS,
+                         M_SENSOR_DATA,
                          intf->sensor_id,
                          m->read_data,
                          SENSOR_SHT35_CAN_DATA_LENGTH);
@@ -428,16 +449,12 @@ void sht35_i2c_cb_periodic_m_read(i2c_message_t *m)
     {
         intf->log_data[0] = m->status;
         intf->log_data[1] = m->error;
-        intf->log_data[2] = 1;
+        intf->log_data[2] = S_SHT35_ERROR_READOUT_PERIODIC;
 
-        message_init(&intf->log,
-                     controller_address,
-                     MESSAGE_NO_REQUEST,
-                     M_SENSOR_STATUS,
-                     intf->sensor_id,
-                     intf->log_data,
-                     3);
-        message_send(&intf->log);
+        sensor_error_log(intf, intf->log_data, 3);
+        
+        intf->status = SENSOR_STATUS_ERROR;
+        sensor_error_handle(intf);
     }
 }
 
@@ -451,46 +468,55 @@ void sht35_i2c_cb_single_shot_m_config(i2c_message_t *m)
         intf->log_data[1] = m->error;
         intf->log_data[2] = 1;
 
-        message_init(&intf->log,
-                     controller_address,
-                     MESSAGE_NO_REQUEST,
-                     M_SENSOR_STATUS,
-                     intf->sensor_id,
-                     intf->log_data,
-                     3);
-        message_send(&intf->log);
+        sensor_error_log(intf, intf->log_data, 3);
+        
+        intf->status = SENSOR_STATUS_ERROR;
+        sensor_error_handle(intf);
     }
 }
 
 void sht35_i2c_cb_single_shot_m_read(i2c_message_t *m)
 {
     struct sensor_interface_s *intf = (struct sensor_interface_s *)m->callback_data;
-
+    uint8_t crc_temperature = 0xFF, crc_rh = 0xFF;
+    
     if (m->error == I2C_NO_ERROR)
     {
-        message_init(&intf->log,
-                     controller_address,
-                     MESSAGE_NO_REQUEST,
-                     M_SENSOR_STATUS,
-                     intf->sensor_id,
-                     m->read_data,
-                     SENSOR_SHT35_CAN_DATA_LENGTH);
-        message_send(&intf->log);
+        crc_temperature = sht35_calculate_crc(m->read_data[0], crc_temperature, SHT35_CRC_POLY);
+        crc_temperature = sht35_calculate_crc(m->read_data[1], crc_temperature, SHT35_CRC_POLY);
+
+        crc_rh = sht35_calculate_crc(m->read_data[3], crc_rh, SHT35_CRC_POLY);
+        crc_rh = sht35_calculate_crc(m->read_data[4], crc_rh, SHT35_CRC_POLY);
+
+        if ((crc_temperature != m->read_data[2]) || (crc_rh != m->read_data[5]))
+        {
+            m->error = I2C_INCORRECT_DATA;
+        }
+        else
+        {
+            message_init(&intf->log,
+                         controller_address,
+                         MESSAGE_NO_REQUEST,
+                         M_SENSOR_DATA,
+                         intf->sensor_id,
+                         m->read_data,
+                         SENSOR_SHT35_CAN_DATA_LENGTH);
+            message_send(&intf->log);
+            
+            intf->status = SENSOR_STATUS_ERROR;
+            sensor_error_handle(intf);
+        }
     }
-    else
+    if (m->error != I2C_NO_ERROR)
     {
         intf->log_data[0] = m->status;
         intf->log_data[1] = m->error;
-        intf->log_data[2] = 1;
+        intf->log_data[2] = S_SHT35_ERROR_READOUT_SINGLE_SHOT;
 
-        message_init(&intf->log,
-                     controller_address,
-                     MESSAGE_NO_REQUEST,
-                     M_SENSOR_STATUS,
-                     intf->sensor_id,
-                     intf->log_data,
-                     3);
-        message_send(&intf->log);
+        sensor_error_log(intf, intf->log_data, 3);
+        
+        intf->status = SENSOR_STATUS_ERROR;
+        sensor_error_handle(intf);
     }
 }
 
