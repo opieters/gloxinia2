@@ -24,6 +24,7 @@ set(PROJECT_SOURCES
         gmessage.h gmessage.cpp
         gloxiniaconfigurator.cpp gloxiniaconfigurator.h gloxiniaconfigurator.ui
         settingsdialog.h settingsdialog.cpp settingsdialog.ui
+        measurementsettingsdialog.h measurementsettingsdialog.cpp measurementsettingsdialog.ui
         sensordialog.h sensordialog.cpp sensordialog.ui
         sensormeasurementdialog.h sensormeasurementdialog.cpp sensormeasurementdialog.ui
         sensoranaloguedialog.h sensoranaloguedialog.cpp sensoranaloguedialog.ui
