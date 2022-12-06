@@ -109,6 +109,25 @@ void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t *buffer, uint8_
     message_send(&m);
 }
 
+void sensor_send_status(uint8_t interface_id)
+{
+    message_t m;
+    uint8_t data[1];
+    
+    if(interface_id >= N_SENSOR_INTERFACES)
+        return;
+    
+    data[0] = sensor_interfaces[interface_id].status;
+    
+    message_init(&m, controller_address,
+                  MESSAGE_NO_REQUEST,
+                  M_SENSOR_STATUS,
+                  interface_id,
+                  data,
+                  ARRAY_LENGTH(data) );
+    message_send(&m);
+}
+
 void sensor_set_status(uint8_t interface_id, sensor_status_t status){
     sensor_interface_t* intf = &sensor_interfaces[interface_id];
     
@@ -119,6 +138,7 @@ void sensor_set_status(uint8_t interface_id, sensor_status_t status){
         case SENSOR_STATUS_ACTIVE:
                 if((intf->status == SENSOR_STATUS_IDLE) || (intf->status == SENSOR_STATUS_STOPPED))
                 {
+                    intf->status = SENSOR_STATUS_ACTIVE;
                     switch (intf->sensor_type)
                     {
                     case SENSOR_NOT_SET:
@@ -137,7 +157,6 @@ void sensor_set_status(uint8_t interface_id, sensor_status_t status){
                     }
                     schedule_event(&intf->measure);
                 }
-                intf->status = SENSOR_STATUS_ACTIVE;
                 break;
         case SENSOR_STATUS_STOPPED:
             if(intf->status == SENSOR_STATUS_RUNNING)
@@ -158,6 +177,19 @@ void sensor_set_status(uint8_t interface_id, sensor_status_t status){
     message_init(&m_status, controller_address, MESSAGE_NO_REQUEST,
              M_SENSOR_STATUS, intf->sensor_id, data, ARRAY_LENGTH(data));
     data[0] = intf->status;
+    message_send(&m_status);
+}
+
+void sensor_error_log(sensor_interface_t* intf, uint8_t* data, uint8_t length)
+{
+    message_init(&intf->log,
+                 controller_address,
+                 MESSAGE_NO_REQUEST,
+                 M_SENSOR_ERROR,
+                 intf->sensor_id,
+                 data,
+                 length);
+    message_send(&intf->log);
 }
 
 void sensor_error_handle(sensor_interface_t *intf)
@@ -168,6 +200,7 @@ void sensor_error_handle(sensor_interface_t *intf)
     message_init(&m_status, controller_address, MESSAGE_NO_REQUEST,
                  M_SENSOR_STATUS, intf->sensor_id, data, ARRAY_LENGTH(data));
     data[0] = intf->status;
+    message_send(&m_status);
 
     schedule_remove_event(intf->measure.id);
 }

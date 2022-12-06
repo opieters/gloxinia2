@@ -46,9 +46,11 @@ extern "C" {
     void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t* buffer, uint8_t length);
     void sensor_get_config(uint8_t interface_id, uint8_t reg, uint8_t* buffer, uint8_t* length);
     i2c_bus_t sensor_get_i2c_bus(uint8_t interface_id);
+    void sensor_error_log(sensor_interface_t* intf, uint8_t* data, uint8_t length);
     void sensor_error_handle(sensor_interface_t* intf);
     void sensor_i2c_error_handle(sensor_interface_t* intf, i2c_message_t* m, uint8_t location);
     void sensor_start(void);
+    void sensor_send_status(uint8_t interface_id);
     void sensor_set_status(uint8_t interface_id, sensor_status_t s);
 
 
