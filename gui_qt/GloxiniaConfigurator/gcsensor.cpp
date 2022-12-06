@@ -10,7 +10,12 @@ GCSensor::GCSensor(GCNode* node, quint8 id) : node(node), interfaceID(id)
 {
 }
 
-GCSensor::~GCSensor() {}
+GCSensor::~GCSensor() {
+    if(file != nullptr){
+        file->flush();
+        delete file;
+    }
+}
 
 
 quint8 GCSensor::getInterfaceID(void)
@@ -332,6 +337,7 @@ void GCSensorSHT35::printHeader(void)
     file->write("# SHT35 is a temperature and humidity sensor. The raw data is processed and stored in degree Celsius and percent. The printed format is sufficient for the accuracy reported in the datasheet. The data is stored in the `temp` (C) and `rh` (%) columns. Each value is timestamped.\n");
     file->write("# The sensor also produces a checksum to check for data integrity. A boolean value (0=error and 1=OK) is stored in the `checksum` column to report the status. Error correction is not possible using the checksum.");
     file->write("time; temp; rh; checksum\n");
+    file->flush();
 }
 void GCSensorSHT35::saveData(std::vector<quint8>& data)
 {
