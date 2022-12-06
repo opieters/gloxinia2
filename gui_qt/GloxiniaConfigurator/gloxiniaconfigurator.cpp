@@ -1,7 +1,5 @@
 #include "gloxiniaconfigurator.h"
 #include "./ui_gloxiniaconfigurator.h"
-#include "qthread.h"
-
 #include <QMessageBox>
 #include <QStringList>
 #include <QStringListModel>
@@ -31,7 +29,8 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
       sensorSHT35Dialog(new SensorSHT35Dialog),
       nodeDicioDialog(new NodeDicioDialog),
       chart(new QChart),
-      messageModel(new QStringListModel)
+      messageModel(new QStringListModel),
+      measurementSettings(new MeasurementSettingsDialog)
 {
     ui->setupUi(this);
     ui->statusbar->addWidget(status);
@@ -59,12 +58,13 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     connect(ui->actionRunDiscovery, &QAction::triggered, this, &GloxiniaConfigurator::runDiscovery);
     connect(ui->actionStartMeasuring, &QAction::triggered, this, &GloxiniaConfigurator::startMeasuring);
     connect(ui->actionStopMeasuring, &QAction::triggered, this, &GloxiniaConfigurator::stopMeasuring);
+    connect(ui->actionMeasurementSettings, &QAction::triggered, this, &GloxiniaConfigurator::editMeasurementSettings);
 
     // connect System menu to functions
     connect(ui->actionConnect, &QAction::triggered, this, &GloxiniaConfigurator::openSerialPort);
     // connect(ui->actionUpdate, &QAction::triggered, this, &GloxiniaConfigurator::);
     connect(ui->actionDisconnect, &QAction::triggered, this, &GloxiniaConfigurator::closeSerialPort);
-    connect(ui->actionConfigure, &QAction::triggered, systemSettings, &SettingsDialog::show);
+    connect(ui->actionConfigureSerial, &QAction::triggered, systemSettings, &SettingsDialog::show);
     connect(ui->actionRefreshPorts, &QAction::triggered, this, &GloxiniaConfigurator::updateSerialPortList);
     updateSerialPortList();
 
@@ -138,8 +138,19 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     discoveryTimer = new QTimer();
     // connect(discoveryTimer, &QTimer::timeout, this, &GloxiniaConfigurator::runDiscovery);
 
-    serialPortName = "COM12";
+    // TODO: make this configurable
+    settings.serialPortName = "COM12";
+    settings.projectName = "myproject";
+    settings.projectDir = "C:/Users/opieters/Documents/GloxiniaConfigurator/";
+
+    QDir documents(settings.projectDir);
+    documents.mkpath(settings.projectName);
+
+    // create project directory and alert user if this is not possible
+    GCSensor::setSensorFileDir(settings.projectDir);
     openSerialPort();
+
+    // TODO: load user settings from file QStandardPaths::ConfigLocation
 }
 
 GloxiniaConfigurator::~GloxiniaConfigurator()
@@ -295,11 +306,13 @@ void GloxiniaConfigurator::startMeasuring(void)
 
                 sendSerialMessage(mStart);
                 qInfo() << "Sending sensor start" << mStart.toString();
-                QThread::msleep(1); // TODO: needed??
             }
 
         }
     }
+
+    GMessage mStart = GMessage(GMessage::Code::SENSOR_START, GMessage::ComputerAddress, GMessage::NoSensorID, true);
+    sendSerialMessage(mStart);
 }
 void GloxiniaConfigurator::stopMeasuring(void)
 {
@@ -324,15 +337,21 @@ void GloxiniaConfigurator::stopMeasuring(void)
 
             if(sensor->startMeasurement())
             {
-                GMessage mStart = sensor->getStartMessage();
+                GMessage mStop = sensor->getStopMessage();
 
-                sendSerialMessage(mStart);
-                qInfo() << "Sending sensor start" << mStart.toString();
-                QThread::msleep(1); // TODO: needed??
+                sendSerialMessage(mStop);
+                qInfo() << "Sending sensor start" << mStop.toString();
             }
 
         }
     }
+}
+
+void GloxiniaConfigurator::editMeasurementSettings(void)
+{
+    nodeDicioDialog->setWindowModality(Qt::ApplicationModal);
+    measurementSettings->exec();
+    measurementSettings->getSettings();
 }
 
 bool GloxiniaConfigurator::removeNode(const QModelIndex &index)
@@ -604,9 +623,8 @@ void GloxiniaConfigurator::editSensor()
                 {
                     return;
                 }
-                sensorSHT35 = new GCSensorSHT35(node);
+                sensorSHT35 = new GCSensorSHT35(node, (quint8)index.row());
                 sensorSHT35Dialog->updateSensor(sensorSHT35);
-                sensorSHT35->setInterfaceID((quint8)index.row());
                 model->setData(index, QVariant::fromValue(sensorSHT35), Qt::EditRole);
 
                 // update hardware configuration
@@ -624,9 +642,8 @@ void GloxiniaConfigurator::editSensor()
                 {
                     return;
                 }
-                sensorAPDS9306 = new GCSensorAPDS9306(node);
+                sensorAPDS9306 = new GCSensorAPDS9306(node, (quint8)index.row());
                 sensorAPDS9306_065Dialog->updateSensor(sensorAPDS9306);
-                sensorAPDS9306->setInterfaceID((quint8)index.row());
                 model->setData(index, QVariant::fromValue(sensorAPDS9306), Qt::EditRole);
 
                 configMs = sensorAPDS9306->getConfigurationMessages();
@@ -646,6 +663,7 @@ void GloxiniaConfigurator::editSensor()
 
 void GloxiniaConfigurator::preferencesMenu(void)
 {
+
 }
 
 void GloxiniaConfigurator::showContextMenu(const QPoint &pos)

@@ -32,7 +32,7 @@ private:
     Ui::SensorSHT35Dialog *ui;
     SensorMeasurementDialog *mDialog = nullptr;
 
-    GCSensorSHT35 sensor = GCSensorSHT35();
+    GCSensorSHT35* sensor;
 };
 
 #endif // SENSORSHT35DIALOG_H

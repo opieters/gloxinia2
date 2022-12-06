@@ -93,6 +93,10 @@ QString GMessage::codeToString(GMessage::Code code)
         return "sensor data";
     case SENSOR_CONFIG:
         return "sensor config";
+    case SENSOR_START:
+        return "sensor start";
+    case SENSOR_STOP:
+        return "sensor stop";
     case ACTUATOR_STATUS:
         return "actuator config";
     default:

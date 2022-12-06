@@ -19,7 +19,7 @@
 void GloxiniaConfigurator::openSerialPort()
 {
     // const SettingsDialog::Settings p = m_settings->settings();
-    serial->setPortName(serialPortName);
+    serial->setPortName(settings.serialPortName);
     serial->setBaudRate(500000);
     serial->setDataBits(QSerialPort::Data8);
     serial->setParity(QSerialPort::NoParity);
@@ -32,8 +32,8 @@ void GloxiniaConfigurator::openSerialPort()
         ui->actionConnect->setEnabled(false);
         ui->actionDisconnect->setEnabled(true);
         ui->actionUpdate->setEnabled(true);
-        ui->actionConfigure->setEnabled(false);
-        showStatusMessage(tr("Connected to ") + serialPortName);
+        ui->actionConfigureSerial->setEnabled(false);
+        showStatusMessage(tr("Connected to ") + settings.serialPortName);
         /*showStatusMessage(tr("Connected to %1 : %2, %3, %4, %5, %6")
                           .arg(p.name).arg(p.stringBaudRate).arg(p.stringDataBits)
                           .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl));*/
@@ -62,7 +62,7 @@ void GloxiniaConfigurator::closeSerialPort()
     // m_console->setEnabled(false);
     ui->actionConnect->setEnabled(true);
     ui->actionDisconnect->setEnabled(false);
-    ui->actionConfigure->setEnabled(true);
+    ui->actionConfigureSerial->setEnabled(true);
     ui->actionUpdate->setEnabled(false);
     showStatusMessage(tr("Disconnected"));
 }
@@ -355,6 +355,6 @@ void GloxiniaConfigurator::setSerialPort(void)
         }
 
         // update configuration and the connected port
-        serialPortName = button->text();
+        settings.serialPortName = button->text();
     }
 }

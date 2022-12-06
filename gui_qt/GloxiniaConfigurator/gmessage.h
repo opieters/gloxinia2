@@ -28,6 +28,8 @@ public:
         SENSOR_ERROR = 0x11,
         SENSOR_DATA = 0x12,
         SENSOR_CONFIG = 0x13,
+        SENSOR_START = 0x14,
+        SENSOR_STOP = 0x15,
         ACTUATOR_STATUS = 0x20,
     };
 

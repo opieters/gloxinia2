@@ -20,6 +20,7 @@
 #include <nodedialog.h>
 #include <gmessage.h>
 #include <QTimer>
+#include <measurementsettingsdialog.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -33,6 +34,12 @@ class GloxiniaConfigurator : public QMainWindow
     Q_OBJECT
 
 public:
+    struct Settings {
+        QString serialPortName; // Menu selected serial port that will be used for communication
+        QString projectDir;
+        QString projectName;
+    };
+
     GloxiniaConfigurator(QWidget *parent = nullptr);
     ~GloxiniaConfigurator();
 
@@ -67,6 +74,7 @@ private slots:
     bool removeNode(const QModelIndex &index);
     void startMeasuring(void);
     void stopMeasuring(void);
+    void editMeasurementSettings(void);
 
     void addSensor(void);
     void editSensor(void);
@@ -82,6 +90,8 @@ private slots:
     // void handleError(QSerialPort::SerialPortError error);
 
 private:
+    Settings settings;
+
     /*
      * UI main object
      */
@@ -111,11 +121,6 @@ private:
      * Serial port used for communication with the system
      */
     QSerialPort *serial;
-
-    /*
-     * Menu selected serial port that will be used for communication
-     */
-    QString serialPortName;
 
     /*
      * Stores a list of actions for the UI, each representing an option in the serial port selection list
@@ -148,6 +153,7 @@ private:
      * Dialog screen to edit the system settings
      */
     SettingsDialog *systemSettings = nullptr;
+    MeasurementSettingsDialog *measurementSettings = nullptr;
 
     /*
      * Node configuration screen
@@ -158,6 +164,8 @@ private:
      * General sensor type selection screen
      */
     SensorDialog *sensorSettings = nullptr;
+
+
     /*
      * Configuration screens for sensors
      */

@@ -24,7 +24,7 @@ public:
 private:
     Ui::SensorAPDS9306_065Dialog *ui;
 
-    GCSensorAPDS9306 sensor;
+    GCSensorAPDS9306 * sensor;
 };
 
 #endif // SENSORAPDS9306_065DIALOG_H

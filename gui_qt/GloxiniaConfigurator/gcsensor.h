@@ -13,7 +13,7 @@ class GCSensor
 {
 
 public:
-    GCSensor(GCNode* node = nullptr, quint8 id = 0x0);
+    GCSensor(GCNode* const node = nullptr, quint8 id = 0x0);
     ~GCSensor();
 
     enum sensor_class
@@ -38,8 +38,6 @@ public:
 
     // SensorType getSensorType(void);
     quint8 getInterfaceID(void);
-
-    void setInterfaceID(quint8 id);
 
     QString getLabel(void) const;
     void setLabel(const QString label);
@@ -70,14 +68,20 @@ public:
     friend QDataStream &operator<<(QDataStream &out, const GCSensor &myObj);
     friend QDataStream &operator>>(QDataStream &in, GCSensor &myObj);
 
+    static void setSensorFileDir(const QString dir);
+    static QString getSensorFileDir(void);
+
 protected:
-    GCNode* node;
-    quint8 interfaceID;
+    GCNode* const node;
+    const quint8 interfaceID;
+
     quint16 measurementPeriod;
     bool useGlobalPeriod;
     QString label;
     QFile* file = nullptr;
     QString filePath;
+
+    static QString sensorFileDir;
 
     GCSensorStatus status = INACTIVE;
 };
@@ -87,7 +91,7 @@ Q_DECLARE_METATYPE(GCSensor *)
 class GCSensorI2C : public GCSensor
 {
 public:
-    GCSensorI2C(GCNode* node = nullptr, quint8 id = 0, quint8 i2cAddress = 0x0);
+    GCSensorI2C(GCNode* const node = nullptr, quint8 id = 0, quint8 i2cAddress = 0x0);
     ~GCSensorI2C();
 
     virtual bool setI2CAddress(const quint8 a);
@@ -106,6 +110,13 @@ protected:
 
 Q_DECLARE_METATYPE(GCSensorI2C *)
 
+typedef struct {
+    quint8 repeatability;
+    quint8 clockStretching;
+    quint8 rate;
+    quint8 periodicity;
+} sensor_config_sht35_t;
+
 class GCSensorSHT35 : public GCSensorI2C
 {
 public:
@@ -117,7 +128,7 @@ public:
 
     static constexpr uint8_t crcPolynomial = 0x31U;
 
-    GCSensorSHT35(GCNode* node = nullptr, quint8 id = 0, quint8 i2cAddress = I2CAddressA);
+    GCSensorSHT35(GCNode* const node = nullptr, quint8 id = 0, quint8 i2cAddress = I2CAddressA);
     GCSensorSHT35(const GCSensorSHT35 &s) = default;
     ~GCSensorSHT35();
 
@@ -146,13 +157,10 @@ public:
     void printHeader(void) override;
 
 private:
-        uint8_t calculateCrc(uint8_t b, uint8_t crc, uint8_t poly);
+    uint8_t calculateCrc(uint8_t b, uint8_t crc, uint8_t poly);
 
 protected:
-    quint8 repeatability;
-    quint8 clockStretching;
-    quint8 rate;
-    quint8 periodicity;
+    sensor_config_sht35_t config;
 
 
 };
@@ -169,7 +177,7 @@ public:
         TH_LOW = 0x3,
     };
 
-    GCSensorAPDS9306(GCNode* node = nullptr, quint8 id = 0, quint8 i2cAddress = 0x52);
+    GCSensorAPDS9306(GCNode* const node = nullptr, quint8 id = 0, quint8 i2cAddress = 0x52);
     GCSensorAPDS9306(const GCSensorAPDS9306 &s) = default;
     ~GCSensorAPDS9306();
 

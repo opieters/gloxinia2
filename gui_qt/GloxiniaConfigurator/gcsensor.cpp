@@ -2,6 +2,9 @@
 #include <algorithm>
 #include <QList>
 #include <QDateTime>
+#include <QDir>
+
+QString GCSensor::sensorFileDir = "";
 
 GCSensor::GCSensor(GCNode* node, quint8 id) : node(node), interfaceID(id)
 {
@@ -13,11 +16,6 @@ GCSensor::~GCSensor() {}
 quint8 GCSensor::getInterfaceID(void)
 {
     return interfaceID;
-}
-
-void GCSensor::setInterfaceID(quint8 id)
-{
-    interfaceID = id;
 }
 
 QString GCSensor::getLabel(void) const
@@ -57,8 +55,11 @@ bool GCSensor::startMeasurement(void)
         delete file;
         file = nullptr;
         status = GCSensorStatus::ERROR;
+        qDebug() << "Unable to open file" << filePath;
         return false;
     }
+
+    qDebug() << "File open succesS!";
 
     printHeader();
     status = GCSensorStatus::ACTIVE;
@@ -141,6 +142,16 @@ QDataStream &operator<<(QDataStream &out, const GCSensor &myObj)
     return out << "SENSOR";
 }
 
+void GCSensor::setSensorFileDir(const QString dir)
+{
+    GCSensor::sensorFileDir = dir;
+}
+
+QString GCSensor::getSensorFileDir(void)
+{
+    return GCSensor::sensorFileDir;
+}
+
 GCSensorI2C::GCSensorI2C(GCNode* node, quint8 id, quint8 i2cAddress) : GCSensor(node, id), i2cAddress(i2cAddress)
 {
 }
@@ -165,10 +176,17 @@ const quint8 GCSensorI2C::getI2CAddress(void)
 
 GCSensorSHT35::GCSensorSHT35(GCNode* node, quint8 id, quint8 i2cAddress) : GCSensorI2C(node, id, i2cAddress)
 {
-    repeatability = 0;
-    clockStretching = 0;
-    rate = 0;
-    periodicity = 0;
+    config.repeatability = 0;
+    config.clockStretching = 0;
+    config.rate = 0;
+    config.periodicity = 0;
+
+    if(node == nullptr){
+        filePath = QString(sensorFileDir + "/node-0-" + QString::number(id) + "-SHT35.csv");
+    } else {
+        filePath = QString(sensorFileDir + "/node-" + QString::number(node->getID()) + "-" + QString::number(id) + "-SHT35.csv");
+    }
+    filePath = QDir::cleanPath(filePath);
 }
 
 GCSensorSHT35::~GCSensorSHT35() {}
@@ -184,40 +202,40 @@ bool GCSensorSHT35::setI2CAddress(const quint8 a)
 }
 bool GCSensorSHT35::setRepeatability(const quint8 r)
 {
-    repeatability = std::min(r, (quint8)2);
-    return r == repeatability;
+    config.repeatability = std::min(r, (quint8)2);
+    return r == config.repeatability;
 }
 bool GCSensorSHT35::setClockStretching(const quint8 c)
 {
-    clockStretching = std::min(c, (quint8)1);
-    return c == clockStretching;
+    config.clockStretching = std::min(c, (quint8)1);
+    return c == config.clockStretching;
 }
 bool GCSensorSHT35::setRate(const quint8 r)
 {
-    rate = std::min(r, (quint8)4);
-    return r == rate;
+    config.rate = std::min(r, (quint8)4);
+    return r == config.rate;
 }
 bool GCSensorSHT35::setPeriodicity(const quint8 p)
 {
-    periodicity = std::min(p, (quint8)1);
-    return p == periodicity;
+    config.periodicity = std::min(p, (quint8)1);
+    return p == config.periodicity;
 }
 
 const quint8 GCSensorSHT35::getRepeatability(void)
 {
-    return repeatability;
+    return config.repeatability;
 }
 const quint8 GCSensorSHT35::getClockStretching(void)
 {
-    return clockStretching;
+    return config.clockStretching;
 }
 const quint8 GCSensorSHT35::getRate(void)
 {
-    return rate;
+    return config.rate;
 }
 const quint8 GCSensorSHT35::getPeriodicity(void)
 {
-    return periodicity;
+    return config.periodicity;
 }
 
 int GCSensorSHT35::i2cAddressToInt(const quint8 a)
@@ -250,13 +268,11 @@ QString GCSensorSHT35::toConfigString(void) const
 {
     QString nLabel = label;
     nLabel.replace(' ', "\\ ");
-    return "S SHT35 " + QString::number(interfaceID) + " " + nLabel + " " + QString::number(i2cAddress) + " " + QString::number(repeatability) + " " + QString::number(clockStretching) + " " + QString::number(rate) + " " + QString::number(periodicity) + " ;";
+    return "S SHT35 " + QString::number(interfaceID) + " " + nLabel + " " + QString::number(i2cAddress) + " " + QString::number(config.repeatability) + " " + QString::number(config.clockStretching) + " " + QString::number(config.rate) + " " + QString::number(config.periodicity) + " ;";
 }
 
 bool GCSensorSHT35::fromConfigString(const QStringList &config)
 {
-    GCSensorSHT35 s(nullptr, 0);
-
     if (config.count() != 9)
         return false;
 
@@ -264,7 +280,7 @@ bool GCSensorSHT35::fromConfigString(const QStringList &config)
         return false;
 
     bool success = true;
-    s.setInterfaceID(config[2].toInt());
+    GCSensorSHT35 s(nullptr, config[2].toInt());
     s.setLabel(config[3]);
     success = success && s.setI2CAddress(config[4].toInt());
     success = success && s.setRepeatability(config[5].toInt());
@@ -274,7 +290,7 @@ bool GCSensorSHT35::fromConfigString(const QStringList &config)
 
     if (success)
     {
-        this->setInterfaceID(s.getInterfaceID());
+        //this->setInterfaceID(s.getInterfaceID());
         this->setLabel(s.getLabel());
         this->setI2CAddress(s.getI2CAddress());
         this->setRepeatability(s.getRepeatability());
@@ -301,10 +317,10 @@ QList<GMessage> GCSensorSHT35::getConfigurationMessages()
     mData[0] = (quint8)GCSensor::sensor_class::SHT35;
     mData[1] = GCSensorSHT35::Register::CONFIG;
     mData[2] = i2cAddress;
-    mData[3] = repeatability;
-    mData[4] = clockStretching;
-    mData[5] = rate;
-    mData[6] = periodicity;
+    mData[3] = config.repeatability;
+    mData[4] = config.clockStretching;
+    mData[5] = config.rate;
+    mData[6] = config.periodicity;
     mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, false, mData));
 
     return mList;
@@ -478,7 +494,7 @@ bool GCSensorAPDS9306::fromConfigString(const QStringList &config)
         return false;
 
     bool success = true;
-    s.setInterfaceID(config[2].toInt());
+    //s.setInterfaceID(config[2].toInt());
     s.setLabel(config[3]);
     success = success && s.setI2CAddress(config[4].toInt());
     success = success && s.setAlsMeasurementRate(config[5].toInt());
@@ -490,7 +506,7 @@ bool GCSensorAPDS9306::fromConfigString(const QStringList &config)
 
     if (success)
     {
-        this->setInterfaceID(s.getInterfaceID());
+        //this->setInterfaceID(s.getInterfaceID());
         this->setLabel(s.getLabel());
         this->setI2CAddress(s.getI2CAddress());
         this->setAlsMeasurementRate(s.getAlsMeasurementRate());
