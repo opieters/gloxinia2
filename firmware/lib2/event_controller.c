@@ -153,6 +153,8 @@ uint32_t schedule_remove_event(uint32_t id){
     
     // the id was not found -> return the default id
     if(n_scheduled_events == id){
+        _GIE = 1;
+        
         return DEFAULT_ID;
     }
     
