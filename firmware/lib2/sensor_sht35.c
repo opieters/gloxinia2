@@ -466,7 +466,7 @@ void sht35_i2c_cb_single_shot_m_config(i2c_message_t *m)
 
         intf->log_data[0] = m->status;
         intf->log_data[1] = m->error;
-        intf->log_data[2] = 1;
+        intf->log_data[2] = S_SHT35_ERROR_CONFIG_SINGLE_SHOT;
 
         sensor_error_log(intf, intf->log_data, 3);
         
