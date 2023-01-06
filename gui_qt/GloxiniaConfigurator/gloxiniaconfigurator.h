@@ -21,6 +21,7 @@
 #include <gmessage.h>
 #include <QTimer>
 #include <measurementsettingsdialog.h>
+#include <newprojectdialog.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -43,10 +44,20 @@ public:
     GloxiniaConfigurator(QWidget *parent = nullptr);
     ~GloxiniaConfigurator();
 
-    void saveToFile(void);
-    void loadFromFile(void);
+    static constexpr unsigned int maxRecentFiles = 5;
+
+
+    void setProject(NewProjectDialog::ProjectSettings& settings);
+
+    void saveProject(void);
+    void readSettings(void);
+    void updateRecentProjects(void);
+    void writeSettings(void);
+    void newProject(void);
+    void openProject(void);
     void clearAll(void);
     void selectDataFile(void);
+    void exit(void);
 
     enum SerialReadoutState
     {
@@ -85,12 +96,13 @@ private slots:
     void showContextMenu(const QPoint &pos);
 
     void preferencesMenu(void);
+    void connectToDevice(void);
     // void setSensor();
     // void writeData(const QByteArray &data);
     // void handleError(QSerialPort::SerialPortError error);
 
 private:
-    Settings settings;
+    NewProjectDialog::ProjectSettings settings;
 
     /*
      * UI main object
@@ -101,6 +113,9 @@ private:
      * status bar information
      */
     QLabel *status;
+
+    QList<QAction*> recentFileActions;
+    QAction* recentFileSeparatorAction;
 
     /*
      * This widget is used to plot incoming sensor data
@@ -139,6 +154,8 @@ private:
     void updateActions();
     GCSensor *selectSensor(void);
 
+    void updateUI(void);
+
     // message handling
     void processIncomingGMessage(const GMessage &m);
     void processCANDiscoveryMessage(const GMessage &m);
@@ -166,6 +183,9 @@ private:
     SensorDialog *sensorSettings = nullptr;
 
 
+    NewProjectDialog* newProjectDialog;
+
+
     /*
      * Configuration screens for sensors
      */
@@ -187,6 +207,9 @@ private:
     QTimer *discoveryTimer;
 
     void addSHT35Sensor(void);
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
 };
 
 #endif // GLOXINIACONFIGURATOR_H

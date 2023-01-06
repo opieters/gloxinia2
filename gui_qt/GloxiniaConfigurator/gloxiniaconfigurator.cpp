@@ -14,6 +14,8 @@
 #include <QValueAxis>
 #include <QFileDialog>
 #include <QThread>
+#include <QSettings>
+#include <QStandardPaths>
 
 GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     : QMainWindow(parent),
@@ -30,7 +32,8 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
       nodeDicioDialog(new NodeDicioDialog),
       chart(new QChart),
       messageModel(new QStringListModel),
-      measurementSettings(new MeasurementSettingsDialog)
+      measurementSettings(new MeasurementSettingsDialog),
+      newProjectDialog(new NewProjectDialog)
 {
     ui->setupUi(this);
     ui->statusbar->addWidget(status);
@@ -39,18 +42,27 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
 
     this->treeModel = new TreeModel(this);
 
+    // create recent files actions
+    ui->menuFile->insertSeparator(ui->actionExit);
+    QAction* pAction = ui->actionSave, *cAction;
+    for(int i = 0; i < maxRecentFiles; i++)
+    {
+        cAction = new QAction(this);
+        recentFileActions.append(cAction);
+        ui->menuFile->insertAction(pAction, cAction);
+    }
+    recentFileSeparatorAction = ui->menuFile->insertSeparator(recentFileActions[0]);
+
     // serial data readout trigger
     connect(serial, &QSerialPort::readyRead, this, &GloxiniaConfigurator::readData);
 
     // connect File menu to functions
-    connect(ui->actionSave, &QAction::triggered, this, &GloxiniaConfigurator::saveToFile);
-    connect(ui->actionOpen, &QAction::triggered, this, &GloxiniaConfigurator::loadFromFile);
-    connect(ui->actionSelectDataFile, &QAction::triggered, this, &GloxiniaConfigurator::selectDataFile);
-    connect(ui->actionClear, &QAction::triggered, this, &GloxiniaConfigurator::clearAll);
+    connect(ui->actionSave, &QAction::triggered, this, &GloxiniaConfigurator::saveProject);
+    connect(ui->actionOpen, &QAction::triggered, this, &GloxiniaConfigurator::openProject);
+    connect(ui->actionNew, &QAction::triggered, this, &GloxiniaConfigurator::newProject);
+    connect(ui->actionExit, &QAction::triggered, this, &GloxiniaConfigurator::exit);
 
     // connect Edit menu to functions
-    // connect(ui->actionAddNode, &QAction::triggered, this, &GloxiniaConfigurator::addNode);
-    //connect(ui->actionAddSensor, &QAction::triggered, this, &GloxiniaConfigurator::addSensor);
     connect(ui->actionEditNode, &QAction::triggered, this, &GloxiniaConfigurator::editNode);
     connect(ui->actionEditSensor, &QAction::triggered, this, &GloxiniaConfigurator::editSensor);
     connect(ui->actionDelete, &QAction::triggered, this, &GloxiniaConfigurator::removeItems);
@@ -61,53 +73,30 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     connect(ui->actionMeasurementSettings, &QAction::triggered, this, &GloxiniaConfigurator::editMeasurementSettings);
 
     // connect System menu to functions
-    connect(ui->actionConnect, &QAction::triggered, this, &GloxiniaConfigurator::openSerialPort);
+    connect(ui->actionConnect, &QAction::triggered, this, &GloxiniaConfigurator::connectToDevice);
     // connect(ui->actionUpdate, &QAction::triggered, this, &GloxiniaConfigurator::);
     connect(ui->actionDisconnect, &QAction::triggered, this, &GloxiniaConfigurator::closeSerialPort);
     connect(ui->actionConfigureSerial, &QAction::triggered, systemSettings, &SettingsDialog::show);
-    connect(ui->actionRefreshPorts, &QAction::triggered, this, &GloxiniaConfigurator::updateSerialPortList);
-    updateSerialPortList();
 
-    ui->actionDisconnect->setEnabled(false);
-    ui->actionUpdate->setEnabled(false);
-
+    // set data models
     ui->messageView->setModel(this->messageModel);
-
     ui->systemOverview->setModel(this->treeModel);
+
+    // set model properties
     ui->systemOverview->setEditTriggers(QAbstractItemView::NoEditTriggers);
     // ui->systemOverview->setModel(this->model);
     // ui->systemOverview->setColumnCount(1);
     ui->systemOverview->setHeaderHidden(true);
     ui->systemOverview->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    // right-click action in the system tree view
     connect(ui->systemOverview, &QTreeView::customContextMenuRequested, this, &GloxiniaConfigurator::showContextMenu);
 
     // connect sample period settings dialogs
     sensorMeasurementDialog->setGlobalPeriodDialog(globalMeasurementPolicyDialog);
     sensorSHT35Dialog->setPeriodDialog(sensorMeasurementDialog);
 
-
-    /*
-     * for debugging, add some default system state
-     */
-    /*QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
-    this->treeModel->insertRow(index.row()+1, index.parent());
-    QModelIndex child = this->treeModel->index(index.row() + 1, 0, index.parent());
-    GCNode* data = new GCNode(0, GCNode::GCDicio, "logger");
-    this->treeModel->setData(child, QVariant::fromValue(data), Qt::EditRole);
-
-    index = ui->systemOverview->selectionModel()->currentIndex();
-    this->treeModel->insertRow(index.row()+1, index.parent());
-    child = this->treeModel->index(index.row() + 1, 0, index.parent());
-    data = new GCNode(0, GCNode::GCDicio, "greenhouse 1");
-    this->treeModel->setData(child, QVariant::fromValue(data), Qt::EditRole);
-
-    index = ui->systemOverview->selectionModel()->currentIndex();
-    this->treeModel->insertRow(index.row()+1, index.parent());
-    child = this->treeModel->index(index.row() + 1, 0, index.parent());
-    data = new GCNode(0, GCNode::GCDicio, "greenhouse 2");
-    this->treeModel->setData(child, QVariant::fromValue(data), Qt::EditRole);*/
-
-    // addNode(new GCNodeModel(GCNodeModel::DicioNode));
+    // add plot window to UI
     QLineSeries *series = new QLineSeries();
     chart->addSeries(series);
     chart->legend()->hide();
@@ -131,31 +120,159 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
 
     ui->vLayout->addWidget(chartView);
 
-    messageModel->insertRow(0);
-    QModelIndex mIndex = messageModel->index(0, 0);
-    messageModel->setData(mIndex, "Application started.");
-
+    // timer use to send discovery messages
     discoveryTimer = new QTimer();
-    // connect(discoveryTimer, &QTimer::timeout, this, &GloxiniaConfigurator::runDiscovery);
+    connect(discoveryTimer, &QTimer::timeout, this, &GloxiniaConfigurator::runDiscovery);
 
-    // TODO: make this configurable
-    settings.serialPortName = "COM12";
-    settings.projectName = "myproject";
-    settings.projectDir = "C:/Users/opieters/Documents/GloxiniaConfigurator/";
+    // Load application configuration and set default values
+    readSettings();
+    settings.success = false;
 
-    QDir documents(settings.projectDir);
-    documents.mkpath(settings.projectName);
+    updateUI();
 
-    // create project directory and alert user if this is not possible
-    GCSensor::setSensorFileDir(settings.projectDir);
-    openSerialPort();
-
-    // TODO: load user settings from file QStandardPaths::ConfigLocation
+    // update status
+    //messageModel->insertRow(0);
+    //QModelIndex mIndex = messageModel->index(0, 0);
+    //messageModel->setData(mIndex, "Application started.");
+    showStatusMessage("Application started.");
 }
 
 GloxiniaConfigurator::~GloxiniaConfigurator()
 {
     delete ui;
+}
+
+void GloxiniaConfigurator::readSettings(void)
+{
+    QSettings settings;
+
+    settings.beginGroup("main");
+
+    const auto geometry = settings.value("geometry", QByteArray()).toByteArray();
+
+    if(!geometry.isEmpty())
+        restoreGeometry(geometry);
+
+    this->settings.projectDir = settings.value("projectDir", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
+    this->settings.runDiscovery = settings.value("runDiscovery", true).toBool();
+    updateRecentProjects();
+
+
+    settings.endGroup();
+}
+
+void GloxiniaConfigurator::updateRecentProjects(void)
+{
+    QSettings settings;
+
+    settings.beginGroup("main");
+    const auto recentProjects = settings.value("recentProjets", QStringList()).toStringList();
+
+    for(int i = 0; i < recentProjects.size(); i++)
+    {
+        QString text = tr("&%1 %2").arg(i + 1).arg(QFileInfo(recentProjects[i]).fileName());
+        recentFileActions[i]->setText(text);
+        recentFileActions[i]->setData(recentProjects[i]);
+        recentFileActions[i]->setVisible(true);
+    }
+    for(int i = recentProjects.size(); i < maxRecentFiles; i++)
+    {
+        recentFileActions[i]->setVisible(false);
+    }
+
+    recentFileSeparatorAction->setVisible(recentProjects.size() > 0);
+
+    settings.endGroup();
+}
+
+void GloxiniaConfigurator::writeSettings(void)
+{
+    QSettings settings;
+
+    settings.beginGroup("main");
+    settings.setValue("geometry", saveGeometry());
+    settings.setValue("projectDir", this->settings.projectDir);
+    settings.setValue("runDiscovery", this->settings.runDiscovery);
+
+    QStringList files = settings.value("recentProjects").toStringList();
+    files.prepend(QDir::cleanPath(this->settings.projectDir + "/" + this->settings.projectName + ".gc"));
+    if(files.size() > GloxiniaConfigurator::maxRecentFiles){
+        files.removeLast();
+    }
+    settings.setValue("recentProjects", files);
+
+    settings.endGroup();
+}
+
+void GloxiniaConfigurator::closeEvent(QCloseEvent *event)
+{
+    // TODO: pop-up
+    //if (userReallyWantsToQuit()) {
+        writeSettings();
+        event->accept();
+    //} else {
+    //    event->ignore();
+    //}
+}
+
+void GloxiniaConfigurator::exit(void)
+{
+    // TODO: check if config saved??
+
+    close();
+}
+
+void GloxiniaConfigurator::setProject(NewProjectDialog::ProjectSettings& settings){
+    this->settings = settings;
+}
+
+void GloxiniaConfigurator::updateUI(){
+
+
+    if(settings.success){
+        ui->actionSave->setDisabled(false);
+
+        if(serial->isOpen()){
+            ui->actionConnect->setEnabled(false);
+            ui->actionDisconnect->setEnabled(true);
+            ui->actionLoadDeviceConfig->setEnabled(true);
+            ui->actionConfigureSerial->setEnabled(false);
+            ui->actionEditNode->setEnabled(true);
+            ui->actionEditSensor->setEnabled(true);
+            ui->actionDelete->setEnabled(true);
+            ui->actionStartMeasuring->setEnabled(true);
+            ui->actionStopMeasuring->setEnabled(true);
+            ui->actionMeasurementSettings->setEnabled(true);
+            ui->actionRunDiscovery->setEnabled(true);
+        } else {
+            ui->actionConnect->setEnabled(true);
+            ui->actionDisconnect->setEnabled(false);
+            ui->actionConfigureSerial->setEnabled(true);
+            ui->actionLoadDeviceConfig->setEnabled(false);
+            ui->actionEditNode->setEnabled(false);
+            ui->actionEditSensor->setEnabled(false);
+            ui->actionDelete->setEnabled(false);
+            ui->actionStartMeasuring->setEnabled(false);
+            ui->actionStopMeasuring->setEnabled(false);
+            ui->actionMeasurementSettings->setEnabled(true);
+            ui->actionRunDiscovery->setEnabled(false);
+        }
+    } else {
+        ui->actionSave->setDisabled(true);
+        ui->actionConnect->setDisabled(true);
+        ui->actionDisconnect->setEnabled(false);
+        ui->actionConfigureSerial->setEnabled(false);
+        ui->actionLoadDeviceConfig->setEnabled(false);
+        ui->actionEditNode->setEnabled(false);
+        ui->actionEditSensor->setEnabled(false);
+        ui->actionDelete->setEnabled(false);
+        ui->actionStartMeasuring->setEnabled(false);
+        ui->actionStopMeasuring->setEnabled(false);
+        ui->actionMeasurementSettings->setEnabled(false);
+        ui->actionRunDiscovery->setEnabled(false);
+    }
+
+
 }
 
 void GloxiniaConfigurator::showStatusMessage(const QString &message)

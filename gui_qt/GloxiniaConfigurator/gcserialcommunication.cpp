@@ -15,11 +15,23 @@
 #include <QValueAxis>
 #include <QFileDialog>
 
+
+void GloxiniaConfigurator::connectToDevice(void)
+{
+    // check if serial port is empty, if so request one from user
+    if(settings.comPort.isEmpty())
+    {
+
+    }
+
+    openSerialPort();
+}
+
 // https://code.qt.io/cgit/qt/qtserialport.git/tree/examples/serialport/terminal/mainwindow.cpp?h=5.15
 void GloxiniaConfigurator::openSerialPort()
 {
     // const SettingsDialog::Settings p = m_settings->settings();
-    serial->setPortName(settings.serialPortName);
+    serial->setPortName(settings.comPort);
     serial->setBaudRate(500000);
     serial->setDataBits(QSerialPort::Data8);
     serial->setParity(QSerialPort::NoParity);
@@ -31,9 +43,9 @@ void GloxiniaConfigurator::openSerialPort()
         // m_console->setLocalEchoEnabled(p.localEchoEnabled);
         ui->actionConnect->setEnabled(false);
         ui->actionDisconnect->setEnabled(true);
-        ui->actionUpdate->setEnabled(true);
+        ui->actionLoadDeviceConfig->setEnabled(true);
         ui->actionConfigureSerial->setEnabled(false);
-        showStatusMessage(tr("Connected to ") + settings.serialPortName);
+        showStatusMessage(tr("Connected to ") + settings.comPort);
         /*showStatusMessage(tr("Connected to %1 : %2, %3, %4, %5, %6")
                           .arg(p.name).arg(p.stringBaudRate).arg(p.stringDataBits)
                           .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl));*/
@@ -63,7 +75,7 @@ void GloxiniaConfigurator::closeSerialPort()
     ui->actionConnect->setEnabled(true);
     ui->actionDisconnect->setEnabled(false);
     ui->actionConfigureSerial->setEnabled(true);
-    ui->actionUpdate->setEnabled(false);
+    ui->actionLoadDeviceConfig->setEnabled(false);
     showStatusMessage(tr("Disconnected"));
 }
 
@@ -290,52 +302,6 @@ void GloxiniaConfigurator::readData()
     } while (n_read > 0);
 }
 
-void GloxiniaConfigurator::updateSerialPortList(void)
-{
-    // TODO: add sort items
-
-    auto list = QSerialPortInfo::availablePorts();
-
-    // remove items
-    for (QAction *i : serialPortActionList)
-    {
-        bool serialPortFound = false;
-        for (const QSerialPortInfo &j : list)
-        {
-            if (j.portName() == i->text())
-            {
-                serialPortFound = true;
-                break;
-            }
-        }
-        if (!serialPortFound)
-        {
-            ui->menuPortSelection->removeAction(i);
-        }
-    }
-
-    // add new items
-    for (const QSerialPortInfo &i : list)
-    {
-        bool serialPortFound = false;
-        for (QAction *j : serialPortActionList)
-        {
-            if (i.portName() == j->text())
-            {
-                serialPortFound = true;
-                break;
-            }
-        }
-        if (!serialPortFound)
-        {
-            QAction *action = ui->menuPortSelection->addAction(i.portName());
-            action->setCheckable(true);
-            connect(action, &QAction::triggered, this, &GloxiniaConfigurator::setSerialPort);
-            serialPortActionList.append(action);
-        }
-    }
-}
-
 void GloxiniaConfigurator::setSerialPort(void)
 {
     QAction *button = qobject_cast<QAction *>(sender());
@@ -355,6 +321,6 @@ void GloxiniaConfigurator::setSerialPort(void)
         }
 
         // update configuration and the connected port
-        settings.serialPortName = button->text();
+        settings.comPort = button->text();
     }
 }

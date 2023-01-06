@@ -13,63 +13,147 @@
 #include <QChartView>
 #include <QValueAxis>
 #include <QFileDialog>
+#include <QJsonDocument>
+#include <QJsonObject>
 
-void GloxiniaConfigurator::saveToFile(void)
+void GloxiniaConfigurator::saveProject(void)
 {
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Configuration"), "", tr("Gloxinia Config File (*.gcf);;All Files (*)"));
-
-    // save only if filename is non-empty
-    if (fileName.isEmpty())
-        return;
-
-    QFile file(fileName);
-    if (!file.open(QIODevice::WriteOnly))
+    if(settings.success)
     {
-        QMessageBox::information(this, tr("Unable to open file"), file.errorString());
-        return;
+        // try to open and write file data
+        QDir projectDir(settings.projectDir);
+        if(!projectDir.mkpath(settings.projectDir)){
+            QMessageBox msgBox;
+            msgBox.setText("Unable to create project directory " + settings.projectDir + ".");
+            msgBox.exec();
+            return;
+        }
+
+        QString filePath = QDir::cleanPath(settings.projectDir + "/" + settings.projectName + ".gc");
+
+        // check if file exists
+        if(QFile::exists(filePath)){
+            QMessageBox msgBox;
+            msgBox.setText("File already exists at " + filePath + ".");
+            msgBox.exec();
+            return;
+        }
+
+        QFile file(filePath);
+
+        if(file.open(QIODevice::WriteOnly)){
+            QJsonDocument fileData;
+            QJsonObject data;
+
+            data.insert("project_name", settings.projectName);
+            data.insert("com_port", settings.comPort);
+            data.insert("baudrate", settings.baudrate);
+            data.insert("work_offline", settings.workOffline);
+            fileData.setObject(data);
+            file.write(fileData.toJson());
+
+            file.close();
+        } else {
+            settings.success = false;
+
+            QMessageBox msgBox;
+            msgBox.setText("Unable to open file at " + filePath + ".");
+            msgBox.exec();
+            return;
+        }
     }
-
-    QTextStream out(&file); // QDataStream is also possible for serialised data
-    // out.setVersion(QDataStream::Qt_6_3);
-
-    QStringList textConfig = treeModel->toTextConfig();
-    for (QString i : textConfig)
-    {
-        out << i << "\n";
-    }
-
-    // TODO: update status bar with message indicating the file was saved
 }
-void GloxiniaConfigurator::loadFromFile(void)
+void GloxiniaConfigurator::newProject(void)
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Gloxinia Configuration"), "", tr("Gloxinia Config File (*.gcf);;All Files (*)"));
-
-    // load only if filename is non-empty
-    if (fileName.isEmpty())
-        return;
-
-    QFile file(fileName);
-    if (!file.open(QIODevice::ReadOnly))
-    {
-        QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+    newProjectDialog->setWindowModality(Qt::ApplicationModal);
+    if(newProjectDialog->exec() == QDialog::Rejected){
         return;
     }
+    settings = newProjectDialog->getProject();
 
-    QTextStream in(&file); // QDataStream is also possible for serialised data
-    // out.setVersion(QDataStream::Qt_6_3);
+    if(settings.success)
+    {
+        // try to open and write file data
+        QDir projectDir(settings.projectDir);
+        if(!projectDir.mkpath(settings.projectDir)){
+            QMessageBox msgBox;
+            msgBox.setText("Unable to create project directory " + settings.projectDir + ".");
+            msgBox.exec();
+            return;
+        }
 
-    QString textConfigFull = file.readAll();
-    QStringList textConfig = textConfigFull.split("\n");
+        QString filePath = QDir::cleanPath(settings.projectDir + "/" + settings.projectName + ".gc");
 
-    clearAll();
+        // check if file exists
+        if(QFile::exists(filePath)){
+            QMessageBox msgBox;
+            msgBox.setText("File already exists at " + filePath + ".");
+            msgBox.exec();
+            return;
+        }
 
-    // TODO: read file version
-    // TODO: read filenames where data is created
+        QFile file(filePath);
 
-    bool ok = treeModel->fromTextConfig(textConfig);
+        if(file.open(QIODevice::WriteOnly)){
+            QJsonDocument fileData;
+            QJsonObject data;
 
-    // if(ok)
-    //  TODO: update status bar with message indicating the file was saved
+            data.insert("project_name", settings.projectName);
+            data.insert("com_port", settings.comPort);
+            data.insert("baudrate", settings.baudrate);
+            data.insert("work_offline", settings.workOffline);
+            fileData.setObject(data);
+            file.write(fileData.toJson());
+
+            file.close();
+        } else {
+            settings.success = false;
+
+            QMessageBox msgBox;
+            msgBox.setText("Unable to open file at " + filePath + ".");
+            msgBox.exec();
+            return;
+        }
+    } else {
+        QMessageBox msgBox;
+        msgBox.setText("Selected file not valid.");
+        msgBox.exec();
+    }
+}
+
+void GloxiniaConfigurator::openProject(void)
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open project"),
+                                                    settings.projectDir,
+                                                   tr("GC files (*.gc)"));
+
+    if(!fileName.isEmpty()){
+        QFile file(fileName);
+
+        if(!file.open(QFile::ReadOnly)){
+            QMessageBox msgBox;
+            msgBox.setText("Unable to open file at " + fileName + ".");
+            msgBox.exec();
+            return;
+        }
+
+        QJsonDocument jsonDoc = QJsonDocument::fromJson(file.readAll());
+        QJsonObject jsonData = jsonDoc.object();
+        QStringList keys = jsonData.keys();
+        if((!keys.contains("project_name")) || (!keys.contains("com_port")) ||
+                (!keys.contains("baudrate")) || (!keys.contains("work_offline"))){
+            QMessageBox msgBox;
+            msgBox.setText("Invalid project file selected.");
+            msgBox.exec();
+            return;
+        }
+
+        settings.projectName = jsonData.value("project_name").toString();
+        settings.comPort = jsonData["com_port"].toString();
+        settings.baudrate = jsonData["baudrate"].toInt();
+        settings.workOffline = jsonData["work_offline"].toBool();
+        settings.projectDir = QDir::cleanPath(fileName.replace(settings.projectName + ".gc", ""));
+    }
 }
 
 void GloxiniaConfigurator::clearAll(void)

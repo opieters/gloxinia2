@@ -33,25 +33,22 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>29</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
-    <addaction name="actionSelectDataFile"/>
-    <addaction name="separator"/>
-    <addaction name="actionClear"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
      <string>Edit</string>
     </property>
-    <addaction name="actionRunDiscovery"/>
     <addaction name="actionEditNode"/>
     <addaction name="actionEditSensor"/>
     <addaction name="actionDelete"/>
@@ -62,26 +59,20 @@
     <property name="title">
      <string>System</string>
     </property>
-    <widget class="QMenu" name="menuPortSelection">
-     <property name="title">
-      <string>Port selection</string>
-     </property>
-    </widget>
     <addaction name="actionConnect"/>
-    <addaction name="actionUpdate"/>
+    <addaction name="actionLoadDeviceConfig"/>
     <addaction name="actionDisconnect"/>
-    <addaction name="actionConfigureSerial"/>
-    <addaction name="actionRefreshPorts"/>
-    <addaction name="menuPortSelection"/>
     <addaction name="separator"/>
     <addaction name="actionStartMeasuring"/>
     <addaction name="actionStopMeasuring"/>
     <addaction name="actionMeasurementSettings"/>
+    <addaction name="actionRunDiscovery"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -89,29 +80,36 @@
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionOpen">
+  <action name="actionNew">
    <property name="text">
-    <string>Open Configuration</string>
+    <string>New project</string>
+   </property>
+   <property name="toolTip">
+    <string>Create a new project</string>
    </property>
   </action>
   <action name="actionSave">
    <property name="text">
-    <string>Save Configuraton</string>
+    <string>Save project</string>
+   </property>
+   <property name="toolTip">
+    <string>Save current project</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open project</string>
+   </property>
+   <property name="toolTip">
+    <string>Open existing project</string>
    </property>
   </action>
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
    </property>
-  </action>
-  <action name="actionAddSensor">
-   <property name="text">
-    <string>Add sensor</string>
-   </property>
-  </action>
-  <action name="actionAddNode">
-   <property name="text">
-    <string>Add node</string>
+   <property name="toolTip">
+    <string>Closes application (without saving)</string>
    </property>
   </action>
   <action name="actionEditSensor">
@@ -124,9 +122,9 @@
     <string>Preferences</string>
    </property>
   </action>
-  <action name="actionUpdate">
+  <action name="actionLoadDeviceConfig">
    <property name="text">
-    <string>Update</string>
+    <string>Load device configuration</string>
    </property>
   </action>
   <action name="actionConnect">
@@ -154,24 +152,9 @@
     <string>Edit node</string>
    </property>
   </action>
-  <action name="actionClear">
-   <property name="text">
-    <string>Clear</string>
-   </property>
-  </action>
-  <action name="actionSelectDataFile">
-   <property name="text">
-    <string>Select Data File</string>
-   </property>
-  </action>
   <action name="actionRefreshPorts">
    <property name="text">
     <string>Refresh ports</string>
-   </property>
-  </action>
-  <action name="actionRunDiscovery">
-   <property name="text">
-    <string>Run discovery</string>
    </property>
   </action>
   <action name="actionStartMeasuring">
@@ -187,6 +170,16 @@
   <action name="actionMeasurementSettings">
    <property name="text">
     <string>Measurement settings</string>
+   </property>
+  </action>
+  <action name="actionRunDiscovery">
+   <property name="text">
+    <string>Run discovery</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
    </property>
   </action>
  </widget>
