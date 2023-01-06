@@ -1,5 +1,4 @@
 #include "gloxiniaconfigurator.h"
-#include "gcsensor.h"
 
 #include <QApplication>
 #include <QLocale>
@@ -16,6 +15,10 @@ int main(int argc, char *argv[])
     QMetaType::registerConverter<GCSensorSHT35, QString>(&GCSensorSHT35::toString);
     QMetaType::registerConverter<GCSensorAPDS9306, QString>(&GCSensorAPDS9306::toString);*/
 
+    QCoreApplication::setOrganizationName("Ghent University");
+    QCoreApplication::setOrganizationDomain("ugent.be");
+    QCoreApplication::setApplicationName("Gloxinia Configurator");
+
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
     for (const QString &locale : uiLanguages) {
@@ -25,6 +28,7 @@ int main(int argc, char *argv[])
             break;
         }
     }
+
     GloxiniaConfigurator w;
     w.show();
     return a.exec();
