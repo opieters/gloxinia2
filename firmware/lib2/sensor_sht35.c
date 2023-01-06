@@ -502,9 +502,6 @@ void sht35_i2c_cb_single_shot_m_read(i2c_message_t *m)
                          m->read_data,
                          SENSOR_SHT35_CAN_DATA_LENGTH);
             message_send(&intf->log);
-            
-            intf->status = SENSOR_STATUS_ERROR;
-            sensor_error_handle(intf);
         }
     }
     if (m->error != I2C_NO_ERROR)
