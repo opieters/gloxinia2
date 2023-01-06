@@ -3,6 +3,8 @@
 #include <event_controller.h>
 #include <stdbool.h>
 
+#include "utilities.h"
+
 // variables for event scheduling and handling
 volatile uint16_t n_queued_tasks = 0;
 task_t task_list[MAX_N_TASKS];
@@ -99,6 +101,7 @@ uint32_t schedule_event(task_schedule_t* s) {
     }
 
     id = schedule_specific_event(s, id);
+    s->id = id;
 
     _GIE = 1; // enable interrupts
 
@@ -154,6 +157,8 @@ uint32_t schedule_remove_event(uint32_t id){
     // the id was not found -> return the default id
     if(n_scheduled_events == id){
         _GIE = 1;
+        
+        UART_DEBUG_PRINT("Unable to find schedule");
         
         return DEFAULT_ID;
     }
