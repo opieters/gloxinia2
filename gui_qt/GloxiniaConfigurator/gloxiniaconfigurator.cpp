@@ -398,6 +398,23 @@ void GloxiniaConfigurator::runDiscovery()
 
 void GloxiniaConfigurator::startMeasuring(void)
 {
+    // cancel discovery
+    discoveryTimer->stop();
+
+    // create directory for sensor data
+    QDateTime now = QDateTime::currentDateTime();
+    QString sensorDataName = settings.projectDir + "/" + now.toString("yyyy-MM-dd_hh-mm-ss");
+    QDir sensorDataDir(sensorDataName);
+    if(!sensorDataDir.mkpath(sensorDataName)){
+        QMessageBox msgBox;
+        msgBox.setText("Unable to create sensor data directory " + sensorDataName + ".");
+        msgBox.exec();
+        return;
+    }
+
+    // set path prefix for sensor data
+    GCSensor::setSensorFileDir(sensorDataName);
+
     // loop over all nodes and sensors and trigger measurement
     for(int i = 0; i < treeModel->rowCount(); i++)
     {
@@ -622,7 +639,21 @@ bool GloxiniaConfigurator::removeSensor(const QModelIndex &index)
 
     if (index.isValid() && index.parent().isValid())
     {
-        return model->removeRow(index.row(), index.parent());
+
+        QVariant data = model->data(index, Qt::EditRole);
+        GCSensorSHT35 *sensorSHT35;
+        GCSensorAPDS9306 *sensorAPDS9306;
+
+        sensorSHT35 = data.value<GCSensorSHT35 *>();
+        sensorAPDS9306 = data.value<GCSensorAPDS9306 *>();
+
+        if(sensorSHT35 != nullptr)
+            delete sensorSHT35;
+        if(sensorAPDS9306 != nullptr)
+            delete sensorAPDS9306;
+
+        return model->setData(index, QVariant());
+        //return model->removeRow(index.row(), index.parent());
     }
 
     return false;
@@ -814,9 +845,9 @@ void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
     // connect(&mAddNode, &QAction::triggered, this, &GloxiniaConfigurator::addNode);
     // m.addAction(&mAddNode);
 
-    QAction mAddSensor("Add sensor", this);
-    connect(&mAddSensor, &QAction::triggered, this, &GloxiniaConfigurator::addSensor);
-    m.addAction(&mAddSensor);
+    //QAction mAddSensor("Add sensor", this);
+    //connect(&mAddSensor, &QAction::triggered, this, &GloxiniaConfigurator::addSensor);
+    //m.addAction(&mAddSensor);
 
     QAction mEditNode("Edit node", this);
     connect(&mEditNode, &QAction::triggered, this, &GloxiniaConfigurator::editNode);
