@@ -70,13 +70,16 @@ void GloxiniaConfigurator::closeSerialPort()
     if (serial->isOpen())
     {
         serial->close();
+        showStatusMessage(tr("Disconnected"));
     }
     // m_console->setEnabled(false);
-    ui->actionConnect->setEnabled(true);
+    /*ui->actionConnect->setEnabled(true);
     ui->actionDisconnect->setEnabled(false);
     ui->actionConfigureSerial->setEnabled(true);
-    ui->actionLoadDeviceConfig->setEnabled(false);
-    showStatusMessage(tr("Disconnected"));
+    ui->actionLoadDeviceConfig->setEnabled(false);*/
+
+    updateUI();
+
 }
 
 void GloxiniaConfigurator::readData()
