@@ -230,7 +230,7 @@ void GloxiniaConfigurator::updateUI(){
 
 
     if(settings.success){
-        ui->actionSave->setDisabled(false);
+        ui->actionSave->setEnabled(true);
 
         if(serial->isOpen()){
             ui->actionConnect->setEnabled(false);
