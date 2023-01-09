@@ -33,10 +33,11 @@ void GloxiniaConfigurator::saveProject(void)
 
         // check if file exists
         if(QFile::exists(filePath)){
-            QMessageBox msgBox;
-            msgBox.setText("File already exists at " + filePath + ".");
-            msgBox.exec();
-            return;
+            QMessageBox::StandardButton reply;
+            reply = QMessageBox::question(this, "File already exists.", "There already exists a file on the disk at " + filePath + ". Overwrite?", QMessageBox::Yes | QMessageBox::No);
+            if(reply == QMessageBox::No){
+                return;
+            }
         }
 
         QFile file(filePath);
@@ -65,6 +66,8 @@ void GloxiniaConfigurator::saveProject(void)
 }
 void GloxiniaConfigurator::newProject(void)
 {
+    closeSerialPort();
+
     newProjectDialog->setWindowModality(Qt::ApplicationModal);
     if(newProjectDialog->exec() == QDialog::Rejected){
         return;
@@ -85,11 +88,13 @@ void GloxiniaConfigurator::newProject(void)
         QString filePath = QDir::cleanPath(settings.projectDir + "/" + settings.projectName + ".gc");
 
         // check if file exists
+        // check if file exists
         if(QFile::exists(filePath)){
-            QMessageBox msgBox;
-            msgBox.setText("File already exists at " + filePath + ".");
-            msgBox.exec();
-            return;
+            QMessageBox::StandardButton reply;
+            reply = QMessageBox::question(this, "File already exists.", "There already exists a file on the disk at " + filePath + ". Overwrite?", QMessageBox::Yes | QMessageBox::No);
+            if(reply == QMessageBox::No){
+                return;
+            }
         }
 
         QFile file(filePath);
@@ -118,7 +123,17 @@ void GloxiniaConfigurator::newProject(void)
         QMessageBox msgBox;
         msgBox.setText("Selected file not valid.");
         msgBox.exec();
+        return;
     }
+
+    // file saved, now connect to the device if not working offline
+    if(!settings.workOffline){
+        openSerialPort();
+    }
+
+    // update UI
+    updateUI();
+
 }
 
 void GloxiniaConfigurator::openProject(void)
@@ -137,6 +152,8 @@ void GloxiniaConfigurator::openProject(void)
             return;
         }
 
+        closeSerialPort();
+
         QJsonDocument jsonDoc = QJsonDocument::fromJson(file.readAll());
         QJsonObject jsonData = jsonDoc.object();
         QStringList keys = jsonData.keys();
@@ -153,7 +170,16 @@ void GloxiniaConfigurator::openProject(void)
         settings.baudrate = jsonData["baudrate"].toInt();
         settings.workOffline = jsonData["work_offline"].toBool();
         settings.projectDir = QDir::cleanPath(fileName.replace(settings.projectName + ".gc", ""));
+        settings.success = true;
     }
+
+    // file saved, now connect to the device if not working offline
+    if(!settings.workOffline){
+        openSerialPort();
+    }
+
+    // update UI
+    updateUI();
 }
 
 void GloxiniaConfigurator::clearAll(void)
