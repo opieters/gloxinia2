@@ -3,6 +3,7 @@
 #include <QFileDialog>
 #include <QStandardPaths>
 #include <QSerialPortInfo>
+#include <QMessageBox>
 
 NewProjectDialog::NewProjectDialog(QWidget *parent) :
     QDialog(parent),
@@ -141,13 +142,24 @@ void NewProjectDialog::apply()
     settings.comPort = ui->comBox->currentText();
     settings.baudrate = ui->baudrateBox->value();
 
-    if(settings.projectDir.isEmpty())
+    if(settings.projectDir.isEmpty()){
+        QMessageBox msgBox;
+        msgBox.setText("Empty project directory. Cannot create project.");
+        msgBox.exec();
         settings.success = false;
-    if(settings.projectName.isEmpty())
+    }
+    if(settings.projectName.isEmpty()){
+        QMessageBox msgBox;
+        msgBox.setText("Empty project name. Cannot create project.");
+        msgBox.exec();
         settings.success = false;
-    if((!settings.workOffline) && (ui->comBox->currentIndex() ))
+    }
+    if((!settings.workOffline) && (ui->comBox->currentIndex() )){
+        QMessageBox msgBox;
+        msgBox.setText("No COM port selected while working in online mode.");
+        msgBox.exec();
         settings.success = false;
-
+    }
     if(settings.success)
         accept();
     else
