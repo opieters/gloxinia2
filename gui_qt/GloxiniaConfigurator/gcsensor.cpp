@@ -54,17 +54,22 @@ void GCSensor::setUseGlobalPeriodFlag(bool flag)
 
 bool GCSensor::startMeasurement(void)
 {
-    file = new QFile(filePath);
+    if(status != IDLE){
+        return false;
+    }
+
+    QString fullPath = QDir::cleanPath(GCSensor::sensorFileDir + "/" + this->filePath);
+    file = new QFile(fullPath);
     if(!file->open(QIODevice::WriteOnly)){
         // TODO: pop-up error that file could not be openened for saving
         delete file;
         file = nullptr;
         status = GCSensorStatus::ERROR;
-        qDebug() << "Unable to open file" << filePath;
+        qDebug() << "Unable to open file" << fullPath;
         return false;
     }
 
-    qDebug() << "File open succesS!";
+    qDebug() << "File open success!";
 
     printHeader();
     status = GCSensorStatus::ACTIVE;
@@ -187,9 +192,9 @@ GCSensorSHT35::GCSensorSHT35(GCNode* node, quint8 id, quint8 i2cAddress) : GCSen
     config.periodicity = 0;
 
     if(node == nullptr){
-        filePath = QString(sensorFileDir + "/node-0-" + QString::number(id) + "-SHT35.csv");
+        filePath = "node-0-" + QString::number(id) + "-SHT35.csv";
     } else {
-        filePath = QString(sensorFileDir + "/node-" + QString::number(node->getID()) + "-" + QString::number(id) + "-SHT35.csv");
+        filePath = "node-" + QString::number(node->getID()) + "-" + QString::number(id) + "-SHT35.csv";
     }
     filePath = QDir::cleanPath(filePath);
 }
@@ -397,6 +402,12 @@ return crc;
 
 GCSensorAPDS9306::GCSensorAPDS9306(GCNode* node, quint8 id, quint8 i2cAddress) : GCSensorI2C(node, id, i2cAddress)
 {
+    if(node == nullptr){
+        filePath = "node-0-" + QString::number(id) + "-APDS9306_065.csv";
+    } else {
+        filePath = "node-" + QString::number(node->getID()) + "-" + QString::number(id) + "-APDS9306_065.csv";
+    }
+    filePath = QDir::cleanPath(filePath);
 }
 
 GCSensorAPDS9306::~GCSensorAPDS9306() {}
@@ -479,7 +490,7 @@ QString GCSensorAPDS9306::toString(void) const
     {
         dLabel = "APDS9306 065";
     }
-    return "[" + QString::number(interfaceID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ")";
+    return "[" + QString::number(interfaceID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ") - " + statusToString(status);
 }
 
 QString GCSensorAPDS9306::toConfigString(void) const
