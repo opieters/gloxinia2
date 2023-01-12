@@ -127,6 +127,8 @@ void GloxiniaConfigurator::processTextMessage(const GMessage &m)
 void GloxiniaConfigurator::processSensorData(const GMessage& m)
 {
     GCSensor* sensor = treeModel->getSensor(m.getMessageID(), m.getSensorID());
+    if(sensor == nullptr)
+        return;
     auto data = m.getData();
     sensor->saveData(data);
     qDebug() << m.toLogString();
