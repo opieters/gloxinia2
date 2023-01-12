@@ -50,6 +50,7 @@ extern "C" {
     void sensor_error_handle(sensor_interface_t* intf);
     void sensor_i2c_error_handle(sensor_interface_t* intf, i2c_message_t* m, uint8_t location);
     void sensor_start(void);
+    void sensor_stop(void);
     void sensor_send_status(uint8_t interface_id);
     void sensor_set_status(uint8_t interface_id, sensor_status_t s);
 
