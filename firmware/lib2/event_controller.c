@@ -78,7 +78,7 @@ void schedule_init(task_schedule_t* s,
     s->id = DEFAULT_ID;
     s->task = task;
     s->period = period;
-    s->trigger_time = period-1;
+    s->trigger_time = period;
     
 }
 
@@ -145,17 +145,23 @@ uint32_t schedule_specific_event(task_schedule_t* s, uint32_t id) {
 
 uint32_t schedule_remove_event(uint32_t id){
     int i, j;
+    bool schedule_found = false;
+    
+    // if no events are scheduled, cancel operation
+    if(n_scheduled_events == 0)
+        return DEFAULT_ID;
     
     _GIE = 0; // disable interrupts
     
     for(i = 0; i < n_scheduled_events; i++){
         if(schedule_list[i].id == id){
+            schedule_found = true;
             break;
         }
     }
     
     // the id was not found -> return the default id
-    if(n_scheduled_events == id){
+    if(!schedule_found){
         _GIE = 1;
         
         UART_DEBUG_PRINT("Unable to find schedule");
@@ -167,6 +173,7 @@ uint32_t schedule_remove_event(uint32_t id){
     for(j = i+1; j < n_scheduled_events; j++){
         schedule_list[j-1] = schedule_list[j];
     }
+    n_scheduled_events--;
     
     _GIE = 1; // enable interrupts
     
