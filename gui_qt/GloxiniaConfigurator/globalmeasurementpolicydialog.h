@@ -27,7 +27,7 @@ private slots:
 private:
     Ui::GlobalMeasurementPolicyDialog *ui;
 
-    quint16 period;
+    quint16 period = 9;
 };
 
 #endif // GLOBALMEASUREMENTPOLICYDIALOG_H
