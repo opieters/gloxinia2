@@ -189,7 +189,6 @@ private:
     /*
      * Configuration screens for sensors
      */
-    SensorMeasurementDialog* sensorMeasurementDialog;
     GlobalMeasurementPolicyDialog* globalMeasurementPolicyDialog;
     SensorAnalogueDialog *sensorAnalogueDialog;
     SensorAPDS9306_065Dialog *sensorAPDS9306_065Dialog;

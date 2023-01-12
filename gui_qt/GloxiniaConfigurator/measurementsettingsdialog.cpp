@@ -75,7 +75,6 @@ void MeasurementSettingsDialog::apply(void)
     settings.uniqueFolder = ui->folderBox->isChecked();
 
     QDir documents = QStandardPaths::displayName(QStandardPaths::DocumentsLocation);
-    settings.projectName = ui->projectEdit->text();
 
     // create project directory and alert user if this is not possible
     if(!documents.mkpath(settings.projectName)){
