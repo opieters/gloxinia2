@@ -45,6 +45,8 @@ sensor_status_t sensor_sht35_config(struct sensor_interface_s *intf, uint8_t *bu
 
     sensor_sht35_config_t *config = &intf->config.sht35;
     
+    config->data_ready = false;
+    
     switch(buffer[0]){
         case sensor_sht35_gloxinia_register_general:
             if (length != 3){ return SENSOR_STATUS_ERROR; }
@@ -326,7 +328,7 @@ static void sht35_config_phase1_cb(i2c_message_t *m)
         }
     }
 
-    i2c_init_message(&config->m_config,
+    i2c_init_message(&config->m_config2,
                      I2C_WRITE_ADDRESS(config->address),
                      config->i2c_bus,
                      config->m_config_data,
@@ -339,7 +341,7 @@ static void sht35_config_phase1_cb(i2c_message_t *m)
                      (uint8_t *)intf,
                      0);
 
-    i2c_queue_message(&config->m_config);
+    i2c_queue_message(&config->m_config2);
 }
 
 static void sht35_config_phase2_cb(i2c_message_t *m)
@@ -348,6 +350,7 @@ static void sht35_config_phase2_cb(i2c_message_t *m)
     sensor_sht35_config_t *config = (sensor_sht35_config_t *)&intf->config.sht35;
     message_t m_status;
     uint8_t data[1];
+    void (*callback)(i2c_message_t * m);
     
     if (m->error != I2C_NO_ERROR)
     {
@@ -360,16 +363,29 @@ static void sht35_config_phase2_cb(i2c_message_t *m)
         sensor_error_handle(intf);
         return;
     }
-
+    
     switch (config->periodicity)
     {
     case S_SHT35_PERIODIC:
-        config->m_config.callback = NULL;
+        callback = NULL;
         break;
     default:
-        config->m_config.callback = sht35_i2c_cb_single_shot_m_config;
+        callback = sht35_i2c_cb_single_shot_m_config;
         break;
     }
+    
+    i2c_init_message(&config->m_config,
+                     I2C_WRITE_ADDRESS(config->address),
+                     config->i2c_bus,
+                     config->m_config_data,
+                     SENSOR_SHT35_CONFIG_DATA_LENGTH,
+                     I2C_NO_DATA,
+                     0,
+                     i2c_get_write_controller(config->i2c_bus),
+                     3,
+                     callback,
+                     (uint8_t *)intf,
+                     0);
 
     if (m->error != I2C_NO_ERROR)
     {
@@ -460,10 +476,11 @@ void sht35_i2c_cb_periodic_m_read(i2c_message_t *m)
 
 void sht35_i2c_cb_single_shot_m_config(i2c_message_t *m)
 {
+    struct sensor_interface_s *intf = (struct sensor_interface_s *)m->callback_data;
+    sensor_sht35_config_t *config = (sensor_sht35_config_t *)&intf->config.sht35;
+    
     if (m->error != I2C_NO_ERROR)
     {
-        struct sensor_interface_s *intf = (struct sensor_interface_s *)m->callback_data;
-
         intf->log_data[0] = m->status;
         intf->log_data[1] = m->error;
         intf->log_data[2] = S_SHT35_ERROR_CONFIG_SINGLE_SHOT;
@@ -472,6 +489,10 @@ void sht35_i2c_cb_single_shot_m_config(i2c_message_t *m)
         
         intf->status = SENSOR_STATUS_ERROR;
         sensor_error_handle(intf);
+        
+        config->data_ready = false;
+    } else {
+        config->data_ready = true;
     }
 }
 
@@ -479,6 +500,13 @@ void sht35_i2c_cb_single_shot_m_read(i2c_message_t *m)
 {
     struct sensor_interface_s *intf = (struct sensor_interface_s *)m->callback_data;
     uint8_t crc_temperature = 0xFF, crc_rh = 0xFF;
+    sensor_sht35_config_t *config = (sensor_sht35_config_t *)&intf->config.sht35;
+    
+    // if there is no data, stop processing
+    if(!config->data_ready)
+        return;
+    
+    config->data_ready = false;
     
     if (m->error == I2C_NO_ERROR)
     {

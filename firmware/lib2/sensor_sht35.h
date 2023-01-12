@@ -93,8 +93,11 @@ extern "C" {
         sensor_sht35_periodicity_t periodicity;
 
         i2c_message_t m_config;
+        i2c_message_t m_config2;
         i2c_message_t m_read;
         i2c_message_t m_fetch;
+        
+        bool data_ready;
 
         uint8_t m_config_data[SENSOR_SHT35_CONFIG_DATA_LENGTH];
         uint8_t m_read_data[SENSOR_SHT35_DATA_LENGTH];
