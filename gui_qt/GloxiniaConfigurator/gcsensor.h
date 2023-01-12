@@ -46,6 +46,7 @@ public:
     bool getUseGlobalPeriodFlag(void) const;
     void setUseGlobalPeriodFlag(bool flag);
     void setStatus(GCSensorStatus s);
+    GCSensorStatus getStatus() const;
 
     static GCSensor* fromQVariant(const QVariant data);
 
@@ -75,8 +76,8 @@ protected:
     GCNode* const node;
     const quint8 interfaceID;
 
-    quint16 measurementPeriod;
-    bool useGlobalPeriod;
+    quint16 measurementPeriod = 9;
+    bool useGlobalPeriod = false;
     QString label;
     QFile* file = nullptr;
     QString filePath;

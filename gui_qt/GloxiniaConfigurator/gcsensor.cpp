@@ -103,6 +103,11 @@ void GCSensor::setStatus(GCSensorStatus s)
     status = s;
 }
 
+GCSensor::GCSensorStatus GCSensor::getStatus() const
+{
+    return status;
+}
+
 GCSensor* GCSensor::fromQVariant(const QVariant data)
 {
     GCSensorSHT35 *sensorSHT35 = data.value<GCSensorSHT35 *>();
@@ -319,8 +324,8 @@ QList<GMessage> GCSensorSHT35::getConfigurationMessages()
     auto mData = std::vector<quint8>(4);
     mData[0] = (quint8)GCSensor::sensor_class::SHT35;
     mData[1] = GCSensorSHT35::Register::MEASUREMENT;
-    mData[2] = (quint8) measurementPeriod >> 8;
-    mData[3] = (quint8) measurementPeriod & 0xff;
+    mData[2] = (quint8) (measurementPeriod >> 8);
+    mData[3] = (quint8) (measurementPeriod & 0xff);
     mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, false, mData));
 
     mData = std::vector<quint8>(7);
@@ -356,7 +361,8 @@ void GCSensorSHT35::saveData(std::vector<quint8>& data)
     formattedData.append(date.toString("dd.MM.yyyy hh:mm:ss"));
     formattedData.append("; ");
     if(data.size() == 6){
-        temp = data[0] | (data[1] << 8);
+        temp = (data[0] << 8) | data[1];
+        temp = -45 + 175 * temp / ((1 << 16) - 1);
         crc = 0xff;
         crc = calculateCrc(data[0], crc,crcPolynomial );
         crc = calculateCrc(data[1], crc,crcPolynomial );
@@ -364,12 +370,13 @@ void GCSensorSHT35::saveData(std::vector<quint8>& data)
         formattedData.append(QString::number(temp, 'g', 4));
         formattedData.append("; ");
 
-        rh = data[3] | (data[4] << 8);
+        rh = (data[3] << 8) | data[4];
+        rh = 100 * rh / ((1 << 16) - 1);
+        crc = 0xff;
         crc = calculateCrc(data[3], crc,crcPolynomial );
         crc = calculateCrc(data[4], crc,crcPolynomial );
         checksum = checksum & (crc == data[5]);
-        checksum = true;
-        formattedData.append(QString::number(temp, 'g', 4)); // print in scientific format with precision of 4
+        formattedData.append(QString::number(rh, 'g', 4)); // print in scientific format with precision of 4
         formattedData.append("; ");
         if(checksum)
             formattedData.append(QString::number(1));
@@ -381,6 +388,7 @@ void GCSensorSHT35::saveData(std::vector<quint8>& data)
     formattedData.append("\n");
 
     file->write(formattedData.toUtf8());
+    qInfo() << "Wrote one line of data";
 }
 uint8_t GCSensorSHT35::calculateCrc(uint8_t b, uint8_t crc, uint8_t poly)
 {
