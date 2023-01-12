@@ -24,7 +24,6 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
       status(new QLabel),
       systemSettings(new SettingsDialog),
       sensorSettings(new SensorDialog),
-      sensorMeasurementDialog(new SensorMeasurementDialog),
       globalMeasurementPolicyDialog(new GlobalMeasurementPolicyDialog),
       sensorAnalogueDialog(new SensorAnalogueDialog),
       sensorAPDS9306_065Dialog(new SensorAPDS9306_065Dialog),
@@ -93,8 +92,7 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     connect(ui->systemOverview, &QTreeView::customContextMenuRequested, this, &GloxiniaConfigurator::showContextMenu);
 
     // connect sample period settings dialogs
-    sensorMeasurementDialog->setGlobalPeriodDialog(globalMeasurementPolicyDialog);
-    sensorSHT35Dialog->setPeriodDialog(sensorMeasurementDialog);
+    sensorSHT35Dialog->setPeriodDialog(globalMeasurementPolicyDialog);
 
     // add plot window to UI
     QLineSeries *series = new QLineSeries();
@@ -415,6 +413,10 @@ void GloxiniaConfigurator::startMeasuring(void)
     // set path prefix for sensor data
     GCSensor::setSensorFileDir(sensorDataName);
 
+    // disable start option, enable stop option
+    ui->actionStartMeasuring->setEnabled(false);
+    ui->actionStopMeasuring->setEnabled(true);
+
     // loop over all nodes and sensors and trigger measurement
     for(int i = 0; i < treeModel->rowCount(); i++)
     {
@@ -450,6 +452,13 @@ void GloxiniaConfigurator::startMeasuring(void)
 }
 void GloxiniaConfigurator::stopMeasuring(void)
 {
+    GMessage mStop = GMessage(GMessage::Code::SENSOR_STOP, GMessage::ComputerAddress, GMessage::NoSensorID, true);
+    sendSerialMessage(mStop);
+
+    // enable start option, disable stop option
+    ui->actionStartMeasuring->setEnabled(true);
+    ui->actionStopMeasuring->setEnabled(false);
+
     // loop over all nodes and sensora and cancel measurement
     for(int i = 0; i < treeModel->rowCount(); i++)
     {
@@ -469,15 +478,9 @@ void GloxiniaConfigurator::stopMeasuring(void)
             if(sensor == nullptr)
                 continue;
 
-            if(sensor->startMeasurement())
-            {
-                GMessage mStop = sensor->getStopMessage();
-
-                sendSerialMessage(mStop);
-                qInfo() << "Sending sensor start" << mStop.toString();
-            }
-
+            sensor->stopMeasurement();
         }
+
     }
 }
 
@@ -709,6 +712,15 @@ void GloxiniaConfigurator::editSensor()
             }
             sensorSHT35Dialog->updateSensor(sensorSHT35);
             model->setData(index, QVariant::fromValue(sensorSHT35), Qt::EditRole);
+
+            configMs = sensorSHT35->getConfigurationMessages();
+
+            for(const GMessage &m : configMs){
+                sendSerialMessage(m);
+                qInfo() << "Send SHT35 config" << m.toString();
+
+            }
+
             return;
         }
 
@@ -723,6 +735,17 @@ void GloxiniaConfigurator::editSensor()
             }
             sensorAPDS9306_065Dialog->updateSensor(sensorAPDS9306);
             model->setData(index, QVariant::fromValue(sensorAPDS9306), Qt::EditRole);
+
+            configMs = sensorAPDS9306->getConfigurationMessages();
+
+            for(const GMessage &m : configMs){
+                sendSerialMessage(m);
+                qInfo() << "Send APDS9306 065 config" << m.toString();
+
+            }
+
+            return;
+
             return;
         }
 

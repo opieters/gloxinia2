@@ -5,14 +5,14 @@
 SensorSHT35Dialog::SensorSHT35Dialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SensorSHT35Dialog),
-    mDialog(nullptr),
+    gDialog(nullptr),
     sensor(new GCSensorSHT35())
 {
     ui->setupUi(this);
 
     connect(ui->periodicityBox, &QComboBox::currentIndexChanged, this, &SensorSHT35Dialog::updatePeriodicity);
     connect(ui->confirmBox, &QDialogButtonBox::accepted, this, &SensorSHT35Dialog::apply);
-    connect(ui->periodButton, &QPushButton::clicked, this, &SensorSHT35Dialog::updatePeriodSettings);
+    connect(ui->gperiodButton, &QPushButton::clicked, this, &SensorSHT35Dialog::editGlobalPeriodSettings);
 
     updatePeriodicity();
 
@@ -25,6 +25,26 @@ SensorSHT35Dialog::~SensorSHT35Dialog()
     delete ui;
 }
 
+
+void SensorSHT35Dialog::editGlobalPeriodSettings(void)
+{
+    int result;
+
+    if(gDialog == nullptr){
+        return;
+    }
+
+    result = gDialog->exec();
+    if(result == QDialog::Rejected)
+        return;
+
+    globalPeriod = gDialog->getPeriod();
+    if(useGlobalPeriod)
+        period = globalPeriod;
+
+    update();
+}
+
 void SensorSHT35Dialog::apply(void)
 {
     sensor->setPeriodicity(ui->periodicityBox->currentIndex());
@@ -32,6 +52,12 @@ void SensorSHT35Dialog::apply(void)
     sensor->setI2CAddress(ui->addressBox->currentText().toInt(nullptr, 0));
     sensor->setRate(ui->rateBox->currentIndex());
     sensor->setRepeatability(ui->repeatabilityBox->currentIndex());
+
+    if(useGlobalPeriod){
+        period = globalPeriod;
+    } else {
+        period = round(ui->periodBox->value()*10) - 1;
+    }
 
     hide();
 }
@@ -44,11 +70,11 @@ void SensorSHT35Dialog::updateUISettings(void)
     ui->rateBox->setCurrentIndex(sensor->getRate());
     ui->repeatabilityBox->setCurrentIndex(sensor->getRepeatability());
 
-    if(mDialog != nullptr)
+    if(gDialog != nullptr)
     {
-        ui->periodButton->setDisabled(false);
+        ui->gperiodButton->setDisabled(false);
     } else {
-        ui->periodButton->setDisabled(true);
+        ui->gperiodButton->setDisabled(true);
     }
 }
 
@@ -68,10 +94,14 @@ void SensorSHT35Dialog::updatePeriodicity()
 
 void SensorSHT35Dialog::updateSensor(GCSensorSHT35 *s)
 {
+    apply();
+
     s->setRepeatability(sensor->getRepeatability());
     s->setClockStretching(sensor->getClockStretching());
     s->setRate(sensor->getRate());
     s->setPeriodicity(sensor->getPeriodicity());
+    s->setMeasurementPeriod(period);
+    s->setUseGlobalPeriodFlag(useGlobalPeriod);
 }
 
 void SensorSHT35Dialog::setSensorSettings(GCSensorSHT35 *s)
@@ -80,24 +110,10 @@ void SensorSHT35Dialog::setSensorSettings(GCSensorSHT35 *s)
     sensor = new GCSensorSHT35(*s);
 }
 
-void SensorSHT35Dialog::setPeriodDialog(SensorMeasurementDialog* dialog)
+void SensorSHT35Dialog::setPeriodDialog(GlobalMeasurementPolicyDialog* dialog)
 {
-    mDialog = dialog;
+    gDialog = dialog;
 
     updateUISettings();
-}
-
-void SensorSHT35Dialog::updatePeriodSettings(void)
-{
-    int result;
-    if(mDialog == nullptr){
-        return;
-    }
-    result = mDialog->exec();
-    if(result == QDialog::Rejected){
-        return;
-    }
-    sensor->setMeasurementPeriod(mDialog->getPeriod());
-    sensor->setUseGlobalPeriodFlag(mDialog->getUseGlobalPeriod());
 }
 

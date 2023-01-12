@@ -3,7 +3,7 @@
 
 #include <QDialog>
 #include <gcsensor.h>
-#include <sensormeasurementdialog.h>
+#include <globalmeasurementpolicydialog.h>
 
 namespace Ui
 {
@@ -20,19 +20,23 @@ public:
 
     void updateUISettings();
     void setSensorSettings(GCSensorSHT35 *s);
-    void setPeriodDialog(SensorMeasurementDialog* dialog);
+    void setPeriodDialog(GlobalMeasurementPolicyDialog* dialog);
     void apply(void);
+    void editGlobalPeriodSettings(void);
 
     void updateSensor(GCSensorSHT35 *s);
 private slots:
     void updatePeriodicity(void);
-    void updatePeriodSettings(void);
 
 private:
     Ui::SensorSHT35Dialog *ui;
-    SensorMeasurementDialog *mDialog = nullptr;
+    GlobalMeasurementPolicyDialog *gDialog = nullptr;
 
     GCSensorSHT35* sensor;
+
+    quint16 period = 9;
+    quint16 globalPeriod = 9;
+    bool useGlobalPeriod = false;
 };
 
 #endif // SENSORSHT35DIALOG_H
