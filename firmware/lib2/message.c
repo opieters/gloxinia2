@@ -18,6 +18,7 @@ static void cmd_sensor_status(const message_t *m);
 static void cmd_sensor_error(const message_t *m);
 static void cmd_sensor_data(const message_t *m);
 static void cmd_sensor_start(const message_t* m);
+static void cmd_sensor_stop(const message_t* m);
 
 static void address_get_task(void *data);
 
@@ -133,6 +134,9 @@ void message_process(const message_t *m)
         break;
     case M_SENSOR_START:
         cmd_sensor_start(m);
+        break;
+    case M_SENSOR_STOP:
+        cmd_sensor_stop(m);
         break;
     case M_SENSOR_CONFIG:
         cmd_sensor_config(m);
@@ -349,4 +353,9 @@ static void cmd_sensor_data(const message_t *m)
 static void cmd_sensor_start(const message_t* m)
 {
     sensor_start();
+}
+
+static void cmd_sensor_stop(const message_t* m)
+{
+    sensor_stop();
 }
