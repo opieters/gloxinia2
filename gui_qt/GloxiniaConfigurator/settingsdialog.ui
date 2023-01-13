@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>148</height>
+    <height>98</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,62 +15,46 @@
   </property>
   <layout class="QFormLayout" name="formLayout">
    <item row="0" column="0">
-    <widget class="QLabel" name="baudrateLabel">
+    <widget class="QLabel" name="mBufferLabel">
      <property name="text">
-      <string>Baudrate</string>
+      <string>Message buffer length</string>
      </property>
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QLineEdit" name="baudrateEdit">
-     <property name="placeholderText">
-      <string>500000</string>
+    <widget class="QSpinBox" name="mBufferEdit">
+     <property name="minimum">
+      <number>100</number>
      </property>
-     <property name="clearButtonEnabled">
-      <bool>false</bool>
+     <property name="maximum">
+      <number>100000</number>
      </property>
     </widget>
    </item>
    <item row="1" column="0">
-    <widget class="QLabel" name="stopbitsLabel">
+    <widget class="QLabel" name="plotBufferLabel">
      <property name="text">
-      <string>Stopbits</string>
+      <string>Plot buffer length</string>
      </property>
     </widget>
    </item>
    <item row="1" column="1">
-    <widget class="QComboBox" name="stopbitsEdit">
-     <item>
-      <property name="text">
-       <string>1 stopbit</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>1.5 stopbits</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>2 stopbits</string>
-      </property>
-     </item>
+    <widget class="QSpinBox" name="plotBufferEdit">
+     <property name="minimum">
+      <number>10</number>
+     </property>
+     <property name="maximum">
+      <number>100000</number>
+     </property>
     </widget>
    </item>
-   <item row="3" column="0" colspan="2">
+   <item row="2" column="0" colspan="2">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="1">
-    <widget class="QCheckBox" name="autoDiscovery">
-     <property name="text">
-      <string>Automatic node discovery</string>
      </property>
     </widget>
    </item>
