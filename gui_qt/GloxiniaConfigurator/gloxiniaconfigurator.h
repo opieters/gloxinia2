@@ -22,6 +22,9 @@
 #include <QTimer>
 #include <measurementsettingsdialog.h>
 #include <newprojectdialog.h>
+#include <QChartView>
+#include <QValueAxis>
+#include <QDateTimeAxis>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -79,6 +82,9 @@ private slots:
     void readData();
     void setSerialPort();
 
+    void updatePreferences(void);
+    void resetSystem(void);
+
     void runDiscovery(void);
     // void addNode(void);
     void editNode(void);
@@ -90,6 +96,10 @@ private slots:
     void addSensor(void);
     void editSensor(void);
     bool removeSensor(const QModelIndex &index);
+    void addToPlot(void);
+    void removeFromPlot(void);
+
+    void autoScaleChart(void);
 
     void removeItems();
 
@@ -120,7 +130,14 @@ private:
     /*
      * This widget is used to plot incoming sensor data
      */
-    QChart *chart;
+    QChart* chart;
+    QChartView* chartView;
+    QList<GCSensor::VariableType> yAxisTypes;
+    QList<QValueAxis*> yAxes;
+    QDateTimeAxis* xAxis;
+    void autoScaleSeries(QXYSeries* series);
+    QList<QMetaObject::Connection> seriesConnections;
+    QLineSeries *dummySeries;
 
     /*
      * This model stores the system configuration (i.e. which nodes and sensors are connected and their respective numbers).
@@ -171,6 +188,7 @@ private:
      */
     SettingsDialog *systemSettings = nullptr;
     MeasurementSettingsDialog *measurementSettings = nullptr;
+    GCAppSettings applicationSettings;
 
     /*
      * Node configuration screen

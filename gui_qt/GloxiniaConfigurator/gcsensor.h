@@ -8,13 +8,14 @@
 #include <QFile>
 #include "gmessage.h"
 #include "gcnode.h"
+#include <QLineSeries>
 
 class GCSensor
 {
 
 public:
     GCSensor(GCNode* const node = nullptr, quint8 id = 0x0);
-    ~GCSensor();
+    virtual ~GCSensor();
 
     enum sensor_class
     {
@@ -34,6 +35,13 @@ public:
         ERROR = 0x05
     };
 
+    enum VariableType {
+        Temperature,
+        RelativeHumidity,
+        Light,
+        Analogue,
+    };
+
     // static QString sensorTypeToString(SensorType t);
 
     // SensorType getSensorType(void);
@@ -47,6 +55,8 @@ public:
     void setUseGlobalPeriodFlag(bool flag);
     void setStatus(GCSensorStatus s);
     GCSensorStatus getStatus() const;
+    QList<VariableType> getVariableTypes() const;
+    QList<QLineSeries*> getPlotSeries() const;
 
     static GCSensor* fromQVariant(const QVariant data);
 
@@ -72,10 +82,16 @@ public:
     static void setSensorFileDir(const QString dir);
     static QString getSensorFileDir(void);
 
+    static QString VariableTypeToString(VariableType t);
+
+    unsigned int getMaxPlotSize(void);
+    void setMaxPlotSize(unsigned int value);
+
 protected:
     GCNode* const node;
     const quint8 interfaceID;
 
+    GCSensorStatus status = INACTIVE;
     quint16 measurementPeriod = 9;
     bool useGlobalPeriod = false;
     QString label;
@@ -83,8 +99,11 @@ protected:
     QString filePath;
 
     static QString sensorFileDir;
+    unsigned int maxPlotSize = 100;
 
-    GCSensorStatus status = INACTIVE;
+    // data storage for plotting
+    QList<QLineSeries*> plotSeries;
+    QList<VariableType> measurementVariableTypes;
 };
 
 Q_DECLARE_METATYPE(GCSensor *)
@@ -93,7 +112,7 @@ class GCSensorI2C : public GCSensor
 {
 public:
     GCSensorI2C(GCNode* const node = nullptr, quint8 id = 0, quint8 i2cAddress = 0x0);
-    ~GCSensorI2C();
+    virtual ~GCSensorI2C() = 0;
 
     virtual bool setI2CAddress(const quint8 a);
 
@@ -131,7 +150,7 @@ public:
 
     GCSensorSHT35(GCNode* const node = nullptr, quint8 id = 0, quint8 i2cAddress = I2CAddressA);
     GCSensorSHT35(const GCSensorSHT35 &s) = default;
-    ~GCSensorSHT35();
+    ~GCSensorSHT35() override;
 
     static constexpr quint8 I2CAddressA = 0x44;
     static constexpr quint8 I2CAddressB = 0x45;
@@ -180,7 +199,7 @@ public:
 
     GCSensorAPDS9306(GCNode* const node = nullptr, quint8 id = 0, quint8 i2cAddress = 0x52);
     GCSensorAPDS9306(const GCSensorAPDS9306 &s) = default;
-    ~GCSensorAPDS9306();
+    ~GCSensorAPDS9306() override;
 
     bool setI2CAddress(const quint8 a) override;
     bool setAlsMeasurementRate(quint8);

@@ -20,7 +20,7 @@ GCAppSettings SettingsDialog::getApplicationSettings(void)
     GCAppSettings settings;
 
     settings.messageBufferSize = ui->mBufferEdit->value();
-    settings.plotBufferSize = ui->plotBufferEdit->value();
+    settings.plotBufferWindow = ui->plotBufferEdit->value();
 
     return settings;
 }
@@ -28,5 +28,5 @@ GCAppSettings SettingsDialog::getApplicationSettings(void)
 void SettingsDialog::setApplicationSettings(GCAppSettings& settings)
 {
     ui->mBufferEdit->setValue(settings.messageBufferSize);
-    ui->plotBufferEdit->setValue(settings.plotBufferSize);
+    ui->plotBufferEdit->setValue(settings.plotBufferWindow);
 }

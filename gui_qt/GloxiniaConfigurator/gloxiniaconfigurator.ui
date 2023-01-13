@@ -67,6 +67,7 @@
     <addaction name="actionStopMeasuring"/>
     <addaction name="actionMeasurementSettings"/>
     <addaction name="actionRunDiscovery"/>
+    <addaction name="actionReset"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -180,6 +181,11 @@
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionReset">
+   <property name="text">
+    <string>Reset</string>
    </property>
   </action>
  </widget>

@@ -16,6 +16,9 @@
 #include <QThread>
 #include <QSettings>
 #include <QStandardPaths>
+#include <cfloat>
+#include <QtGlobal>
+#include <QRandomGenerator>
 
 GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     : QMainWindow(parent),
@@ -36,8 +39,6 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
 {
     ui->setupUi(this);
     ui->statusbar->addWidget(status);
-
-    const QStringList headers({tr("Title"), tr("Description")});
 
     this->treeModel = new TreeModel(this);
 
@@ -75,7 +76,9 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     connect(ui->actionConnect, &QAction::triggered, this, &GloxiniaConfigurator::connectToDevice);
     // connect(ui->actionUpdate, &QAction::triggered, this, &GloxiniaConfigurator::);
     connect(ui->actionDisconnect, &QAction::triggered, this, &GloxiniaConfigurator::closeSerialPort);
-    connect(ui->actionConfigureSerial, &QAction::triggered, systemSettings, &SettingsDialog::show);
+    connect(ui->actionPreferences, &QAction::triggered, this, &GloxiniaConfigurator::updatePreferences);
+    connect(ui->actionReset, &QAction::triggered, this, &GloxiniaConfigurator::resetSystem);
+
 
     // set data models
     ui->messageView->setModel(this->messageModel);
@@ -95,26 +98,24 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     sensorSHT35Dialog->setPeriodDialog(globalMeasurementPolicyDialog);
 
     // add plot window to UI
-    QLineSeries *series = new QLineSeries();
-    chart->addSeries(series);
-    chart->legend()->hide();
-    chart->setTitle("Some example plot");
+    dummySeries = new QLineSeries();
+    chart->addSeries(dummySeries);
+    //chart->legend()->hide();
+    //chart->setTitle("Analog readout [a.u.]");
 
-    QDateTimeAxis *axisX = new QDateTimeAxis;
-    axisX->setTickCount(10);
-    axisX->setFormat("MMM yyyy");
-    axisX->setTitleText("Date");
-    chart->addAxis(axisX, Qt::AlignBottom);
-    series->attachAxis(axisX);
+    xAxis = new QDateTimeAxis;
+    xAxis->setTickCount(10);
+    xAxis->setFormat("hh:mm:ss");
+    xAxis->setTitleText("time");
+    chart->addAxis(xAxis, Qt::AlignBottom);
+    dummySeries->attachAxis(xAxis);
 
-    QValueAxis *axisY = new QValueAxis;
-    axisY->setLabelFormat("%i");
-    axisY->setTitleText("Sunspots count");
-    chart->addAxis(axisY, Qt::AlignLeft);
-    series->attachAxis(axisY);
-
-    QChartView *chartView = new QChartView(chart);
+    chartView = new QChartView(chart);
     chartView->setRenderHint(QPainter::Antialiasing);
+
+    // auto update when points are removed/added
+    //connect(series, &QXYSeries::pointAdded, this, &GloxiniaConfigurator::autoScaleChart);
+    //seriesConnections.insert(0, connect(dummySeries, &QXYSeries::pointAdded, this, [this]{autoScaleSeries(dummySeries); }));
 
     ui->vLayout->addWidget(chartView);
 
@@ -128,6 +129,10 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
 
     updateUI();
 
+    // application settings
+    applicationSettings.messageBufferSize = 1000;
+    applicationSettings.plotBufferWindow = 250;
+
     // update status
     //messageModel->insertRow(0);
     //QModelIndex mIndex = messageModel->index(0, 0);
@@ -138,6 +143,97 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
 GloxiniaConfigurator::~GloxiniaConfigurator()
 {
     delete ui;
+}
+
+void GloxiniaConfigurator::autoScaleSeries(QXYSeries* series)
+{
+    // TODO: update scales!!
+    auto axes = series->attachedAxes();
+    for(QAbstractAxis* i : axes)
+    {
+        QValueAxis* yAx = dynamic_cast<QValueAxis*>(i);
+
+        if(yAx == nullptr)
+            continue;
+
+        qreal ymax = yAx->max();
+        qreal ymin = yAx->min();
+        QPointF p = series->at(series->count()-1);
+
+        yAx->setRange(std::min(ymin,p.y() ), std::max(ymax, p.y()));
+    }
+
+    // scale x-axis
+    qint64 xmax = xAxis->max().toMSecsSinceEpoch();
+    qint64 vlast = (qint64) series->at(series->count() - 1).x();
+    xmax = std::max(xmax,vlast);
+
+    xAxis->setRange(QDateTime::fromMSecsSinceEpoch(xmax - applicationSettings.plotBufferWindow * 1000), QDateTime::fromMSecsSinceEpoch(xmax));
+
+}
+
+void GloxiniaConfigurator::resetSystem(void)
+{
+    GMessage reset(GMessage::Code::NODE_RESET, GMessage::ComputerAddress, GMessage::NoSensorID, true);
+
+    sendSerialMessage(reset);
+
+    // disable start option, enable stop option
+    ui->actionStartMeasuring->setEnabled(true);
+    ui->actionStopMeasuring->setEnabled(false);
+
+    // TODO: clear treemodel
+
+}
+
+void GloxiniaConfigurator::updatePreferences(void)
+{
+    systemSettings->setApplicationSettings(applicationSettings);
+    systemSettings->setWindowModality(Qt::ApplicationModal);
+    int result = systemSettings->exec();
+    if(result == QDialog::Rejected){
+        return;
+    }
+
+    applicationSettings = systemSettings->getApplicationSettings();
+
+    // update buffer lengths of sensors
+    // loop over all nodes and sensors
+    for(int i = 0; i < treeModel->rowCount(); i++)
+    {
+        QModelIndex index = treeModel->index(i, 0);
+        QVariant data = treeModel->data(index, Qt::EditRole);
+        GCNode* node = GCNode::fromQVariant(data);
+
+        if(node == nullptr)
+            continue;
+
+        for(int j = 0; j < treeModel->rowCount(index); j++)
+        {
+            QModelIndex sIndex = treeModel->index(j, 0, index);
+            QVariant sData = treeModel->data(sIndex, Qt::EditRole);
+            GCSensor* sensor = GCSensor::fromQVariant(sData);
+
+            if(sensor == nullptr)
+                continue;
+
+            sensor->setMaxPlotSize(((unsigned int) applicationSettings.plotBufferWindow) * 10 / (sensor->getMeasurementPeriod() + 1));
+        }
+    }
+}
+
+void GloxiniaConfigurator::autoScaleChart(void)
+{
+    auto series = chart->series();
+    double xMin = DBL_MAX, xMax = 0, yMin, yMax;
+
+    for(QAbstractSeries* i : series)
+    {
+        auto j = dynamic_cast<QXYSeries*>(i);
+        xMin = std::min(xMin, j->at(0).x());
+        xMax = std::max(xMax, j->at(j->count()-1).x());
+    }
+    //chart->ax
 }
 
 void GloxiniaConfigurator::readSettings(void)
@@ -239,6 +335,7 @@ void GloxiniaConfigurator::updateUI(){
             ui->actionEditSensor->setEnabled(true);
             ui->actionDelete->setEnabled(true);
             ui->actionStartMeasuring->setEnabled(true);
+            ui->actionReset->setEnabled(true);
             ui->actionStopMeasuring->setEnabled(true);
             ui->actionMeasurementSettings->setEnabled(true);
             ui->actionRunDiscovery->setEnabled(true);
@@ -251,6 +348,7 @@ void GloxiniaConfigurator::updateUI(){
             ui->actionEditSensor->setEnabled(false);
             ui->actionDelete->setEnabled(false);
             ui->actionStartMeasuring->setEnabled(false);
+            ui->actionReset->setEnabled(false);
             ui->actionStopMeasuring->setEnabled(false);
             ui->actionMeasurementSettings->setEnabled(true);
             ui->actionRunDiscovery->setEnabled(false);
@@ -265,6 +363,7 @@ void GloxiniaConfigurator::updateUI(){
         ui->actionEditSensor->setEnabled(false);
         ui->actionDelete->setEnabled(false);
         ui->actionStartMeasuring->setEnabled(false);
+        ui->actionReset->setEnabled(false);
         ui->actionStopMeasuring->setEnabled(false);
         ui->actionMeasurementSettings->setEnabled(false);
         ui->actionRunDiscovery->setEnabled(false);
@@ -665,7 +764,7 @@ bool GloxiniaConfigurator::removeSensor(const QModelIndex &index)
 void GloxiniaConfigurator::removeItems()
 {
     QItemSelectionModel *selectionModel = ui->systemOverview->selectionModel();
-    QAbstractItemModel *model = ui->systemOverview->model();
+    //QAbstractItemModel *model = ui->systemOverview->model();
 
     const QModelIndexList indexes = selectionModel->selectedIndexes();
     QModelIndexList nodeIndices;
@@ -721,6 +820,9 @@ void GloxiniaConfigurator::editSensor()
 
             }
 
+            sensorSHT35->setMaxPlotSize(((unsigned int) applicationSettings.plotBufferWindow) * 10 / (sensorSHT35->getMeasurementPeriod() + 1));
+
+
             return;
         }
 
@@ -744,7 +846,7 @@ void GloxiniaConfigurator::editSensor()
 
             }
 
-            return;
+            sensorAPDS9306->setMaxPlotSize(((unsigned int) applicationSettings.plotBufferWindow) * 10 / (sensorAPDS9306->getMeasurementPeriod() + 1));
 
             return;
         }
@@ -805,6 +907,8 @@ void GloxiniaConfigurator::editSensor()
                     sendSerialMessage(m);
                     qInfo() << "Send SHT35 config" << m.toString();
                 }
+                sensorSHT35->setMaxPlotSize(((unsigned int) applicationSettings.plotBufferWindow) * 10 / (sensorSHT35->getMeasurementPeriod() + 1));
+
                 break;
             case 2:
                 sensorAPDS9306_065Dialog->setWindowModality(Qt::ApplicationModal);
@@ -824,6 +928,9 @@ void GloxiniaConfigurator::editSensor()
                     qInfo() << "Send APDS9306 065 config" << m.toString();
 
                 }
+                sensorAPDS9306->setMaxPlotSize(((unsigned int) applicationSettings.plotBufferWindow) * 10 / (sensorAPDS9306->getMeasurementPeriod() + 1));
+
+                break;
             default:
                 sensor = nullptr;
                 break;
@@ -835,6 +942,121 @@ void GloxiniaConfigurator::editSensor()
 void GloxiniaConfigurator::preferencesMenu(void)
 {
 
+}
+
+void GloxiniaConfigurator::addToPlot(void)
+{
+    const QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = ui->systemOverview->model();
+    GCSensor *sensor;
+    int result;
+    QXYSeries* series = nullptr;
+    GCSensor::VariableType seriesType;
+
+    // sensor is selected -> run menu
+    if (index.isValid() && index.parent().isValid())
+    {
+        QVariant data = model->data(index, Qt::EditRole);
+        sensor = GCSensor::fromQVariant(data);
+        if(sensor == nullptr)
+            return;
+        auto plotSeries = sensor->getPlotSeries();
+        if(plotSeries.size() > 1){
+            QStringList labels;
+            for(int i = 0; i < plotSeries.size(); i++)
+            {
+                labels.append(plotSeries[i]->name());
+            }
+            // todo: load menu to select plots
+            bool ok;
+            QString text = QInputDialog::getItem(this, tr("Select variable to plot from ") + sensor->getLabel(),
+                                                 tr("Variables:"), labels, 0, false, &ok);
+            if (ok && !text.isEmpty()){
+                int index = labels.indexOf(text);
+                if((index < 0) || (index > plotSeries.size()))
+                    return;
+                series = plotSeries[index];
+                seriesType = sensor->getVariableTypes().at(index);
+            }
+        } else {
+            series = plotSeries[0];
+            seriesType = sensor->getVariableTypes().at(0);
+        }
+    }
+
+    // add item if not yet in list
+    if(series != nullptr){
+        QList<QAbstractSeries*> cSeries = chart->series();
+
+        if(cSeries.indexOf(series) < 0){
+            // check if axes exists already
+
+            seriesConnections.append(connect(series, &QXYSeries::pointAdded, this, [this,series]{autoScaleSeries(series); }));
+
+            if(yAxisTypes.contains(seriesType))
+            {
+                int index = yAxisTypes.indexOf(seriesType);
+
+                chart->addSeries(series);
+                series->attachAxis(yAxes.at(index));
+                series->attachAxis(xAxis);
+
+            } else {
+                QValueAxis *axisY = new QValueAxis;
+
+                axisY->setLabelFormat("%.1f");
+                axisY->setTitleText(GCSensor::VariableTypeToString(seriesType));
+                chart->addAxis(axisY, Qt::AlignLeft);
+
+                yAxes.append(axisY);
+                yAxisTypes.append(seriesType);
+
+                chart->addSeries(series);
+                series->attachAxis(axisY);
+                series->attachAxis(xAxis);
+
+            }
+            chartView->update();
+        }
+    }
+
+    // if there is at least one plot, remove dummy plot
+    if((chart->series().count() > 1) && (chart->series().contains(dummySeries)))
+    {
+        chart->removeSeries(dummySeries);
+    }
+
+}
+void GloxiniaConfigurator::removeFromPlot(void)
+{
+    // request plot to remove
+    QStringList labels;
+    for(auto i : chart->series())
+    {
+        labels.append(i->name());
+    }
+
+    if(labels.isEmpty())
+        return;
+
+    // todo: load menu to select plots
+    bool ok;
+    QString text = QInputDialog::getItem(this, tr("Select plot to remove"),
+                                         tr("Plots:"), labels, 0, false, &ok);
+    if(!ok)
+        return;
+
+    int index = labels.indexOf(text);
+    // TODO: add dummy plot if it is the last one left, keep the last y axis alive also
+    QObject::disconnect(seriesConnections.at(index));
+    seriesConnections.removeAt(index);
+
+    chart->removeSeries(chart->series().at(index));
+
+    // there are not more series, so we have to re-add the dummySeries
+    if(seriesConnections.isEmpty()){
+        chart->addSeries(dummySeries);
+    }
 }
 
 void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
@@ -880,15 +1102,36 @@ void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
     connect(&mEditSensor, &QAction::triggered, this, &GloxiniaConfigurator::editSensor);
     m.addAction(&mEditSensor);
 
+    QAction mAddToPlot("Add to plot", this);
+    connect(&mAddToPlot, &QAction::triggered, this, &GloxiniaConfigurator::addToPlot);
+    m.addAction(&mAddToPlot);
+
+    QAction mRemoveFromPlot("Remove from plot", this);
+    connect(&mRemoveFromPlot, &QAction::triggered, this, &GloxiniaConfigurator::removeFromPlot);
+    m.addAction(&mRemoveFromPlot);
+
+    mDelete.setEnabled(false);
+    mEditNode.setEnabled(false);
+    mEditSensor.setEnabled(false);
+    mAddToPlot.setEnabled(false);
+    mRemoveFromPlot.setEnabled(false);
+
     if (sensorCurrent)
     {
-        // mAddNode.setEnabled(false);
-        mEditNode.setEnabled(false);
+        mDelete.setEnabled(true);
+        mEditSensor.setEnabled(true);
+        // todo: check if data displayed in plot
+        mAddToPlot.setEnabled(true);
+        if(!chart->series().contains(dummySeries))
+            mRemoveFromPlot.setEnabled(true);
     }
 
     if (nodeCurrent)
     {
-        mEditSensor.setEnabled(false);
+        mDelete.setEnabled(true);
+        mEditNode.setEnabled(true);
+        if(!chart->series().contains(dummySeries))
+            mRemoveFromPlot.setEnabled(true);
     }
 
     m.exec(ui->systemOverview->mapToGlobal(pos));

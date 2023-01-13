@@ -9,7 +9,7 @@ class SettingsDialog;
 
 struct GCAppSettings {
     qint64 messageBufferSize;
-    qint64 plotBufferSize;
+    qint64 plotBufferWindow;
 };
 
 class SettingsDialog : public QDialog

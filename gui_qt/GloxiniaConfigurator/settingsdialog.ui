@@ -34,17 +34,20 @@
    <item row="1" column="0">
     <widget class="QLabel" name="plotBufferLabel">
      <property name="text">
-      <string>Plot buffer length</string>
+      <string>Plot buffer window</string>
      </property>
     </widget>
    </item>
    <item row="1" column="1">
     <widget class="QSpinBox" name="plotBufferEdit">
+     <property name="suffix">
+      <string notr="true">s</string>
+     </property>
      <property name="minimum">
       <number>10</number>
      </property>
      <property name="maximum">
-      <number>100000</number>
+      <number>86400</number>
      </property>
     </widget>
    </item>
