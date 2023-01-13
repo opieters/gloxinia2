@@ -38,8 +38,9 @@ void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
     messageModel->insertRow(0);
     QModelIndex mIndex = messageModel->index(0, 0);
     messageModel->setData(mIndex, m.toLogString());
-
-    qInfo() << "Processing" << m.toString();
+    if(messageModel->rowCount() > applicationSettings.messageBufferSize){
+        messageModel->removeRows(applicationSettings.messageBufferSize, messageModel->rowCount() -  applicationSettings.messageBufferSize);
+    }
 }
 
 void GloxiniaConfigurator::processCANDiscoveryMessage(const GMessage &m)
@@ -96,7 +97,7 @@ void GloxiniaConfigurator::processNodeInfoMessage(const GMessage &m)
         bool success = this->treeModel->insertRow(treeModel->rowCount(), index);
         if (!success)
         {
-            free(node);
+            delete node;
             return;
         }
         QModelIndex child = this->treeModel->index(treeModel->rowCount() - 1, 0, index);
