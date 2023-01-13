@@ -12,7 +12,8 @@ GCSensor::GCSensor(GCNode* node, quint8 id) : node(node), interfaceID(id)
 
 GCSensor::~GCSensor() {
     if(file != nullptr){
-        file->flush();
+        if(file->isOpen())
+            file->flush();
         delete file;
     }
 }
@@ -108,6 +109,16 @@ GCSensor::GCSensorStatus GCSensor::getStatus() const
     return status;
 }
 
+QList<GCSensor::VariableType> GCSensor::getVariableTypes() const
+{
+    return measurementVariableTypes;
+}
+
+QList<QLineSeries*> GCSensor::getPlotSeries() const
+{
+    return plotSeries;
+}
+
 GCSensor* GCSensor::fromQVariant(const QVariant data)
 {
     GCSensorSHT35 *sensorSHT35 = data.value<GCSensorSHT35 *>();
@@ -167,6 +178,33 @@ QString GCSensor::getSensorFileDir(void)
     return GCSensor::sensorFileDir;
 }
 
+QString GCSensor::VariableTypeToString(VariableType t)
+{
+    switch(t)
+    {
+    case VariableType::Temperature:
+        return "temperature [C]";
+    case VariableType::RelativeHumidity:
+        return "RH [%]";
+    case VariableType::Light:
+        return "light [lux]";
+    case VariableType::Analogue:
+        return "analogue [a.u.]";
+    }
+
+    return "Unknown";
+}
+
+unsigned int GCSensor::getMaxPlotSize(void)
+{
+    return maxPlotSize;
+}
+
+void GCSensor::setMaxPlotSize(unsigned int value)
+{
+    maxPlotSize = value;
+}
+
 GCSensorI2C::GCSensorI2C(GCNode* node, quint8 id, quint8 i2cAddress) : GCSensor(node, id), i2cAddress(i2cAddress)
 {
 }
@@ -202,9 +240,35 @@ GCSensorSHT35::GCSensorSHT35(GCNode* node, quint8 id, quint8 i2cAddress) : GCSen
         filePath = "node-" + QString::number(node->getID()) + "-" + QString::number(id) + "-SHT35.csv";
     }
     filePath = QDir::cleanPath(filePath);
+
+    QString prefix;
+    if(!label.isEmpty())
+        prefix += label + " ";
+    else
+        prefix += "SHT35 ";
+    if(node != nullptr)
+        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "] ";
+    else
+        prefix += "[0-" + QString::number(interfaceID) + "] ";
+
+    plotSeries.append(new QLineSeries());
+    plotSeries[0]->setName(prefix + "temperature");
+    measurementVariableTypes.append(VariableType::Temperature);
+
+    plotSeries.append(new QLineSeries());
+    plotSeries[1]->setName(prefix + "RH");
+    measurementVariableTypes.append(VariableType::RelativeHumidity);
 }
 
-GCSensorSHT35::~GCSensorSHT35() {}
+GCSensorSHT35::~GCSensorSHT35() {
+    for(int i = 0; i < plotSeries.count(); i++)
+    {
+        if(plotSeries[i] != nullptr){
+            delete plotSeries[i];
+            plotSeries[i] = nullptr;
+        }
+    }
+}
 
 bool GCSensorSHT35::setI2CAddress(const quint8 a)
 {
@@ -382,13 +446,26 @@ void GCSensorSHT35::saveData(std::vector<quint8>& data)
             formattedData.append(QString::number(1));
         else
             formattedData.append(QString::number(0));
+
+        plotSeries[0]->append(date.toMSecsSinceEpoch(), temp);
+        plotSeries[1]->append(date.toMSecsSinceEpoch(), rh);
     } else {
         formattedData.append("NaN; NaN; 0");
+        plotSeries[0]->append(date.toMSecsSinceEpoch(), nan(""));
+        plotSeries[1]->append(date.toMSecsSinceEpoch(), nan(""));
     }
     formattedData.append("\n");
 
-    file->write(formattedData.toUtf8());
-    qInfo() << "Wrote one line of data";
+    for(QLineSeries* i : plotSeries)
+    {
+        if(i->count() > maxPlotSize)
+        {
+            i->removePoints(0, i->count() - maxPlotSize);
+        }
+    }
+
+    if(file != nullptr)
+        file->write(formattedData.toUtf8());
 }
 uint8_t GCSensorSHT35::calculateCrc(uint8_t b, uint8_t crc, uint8_t poly)
 {
