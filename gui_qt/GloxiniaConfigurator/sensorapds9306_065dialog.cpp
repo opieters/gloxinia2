@@ -4,6 +4,7 @@
 SensorAPDS9306_065Dialog::SensorAPDS9306_065Dialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SensorAPDS9306_065Dialog),
+    gDialog(nullptr),
     sensor(new GCSensorAPDS9306())
 {
     ui->setupUi(this);
@@ -12,6 +13,8 @@ SensorAPDS9306_065Dialog::SensorAPDS9306_065Dialog(QWidget *parent) :
     ui->addressBox->setDisabled(true);
 
     connect(ui->confirmBox, &QDialogButtonBox::accepted, this, &SensorAPDS9306_065Dialog::apply);
+    connect(ui->gperiodButton, &QPushButton::clicked, this, &SensorAPDS9306_065Dialog::editGlobalPeriodSettings);
+
 
     updateUISettings();
 }
@@ -22,11 +25,38 @@ SensorAPDS9306_065Dialog::~SensorAPDS9306_065Dialog()
     delete ui;
 }
 
+void SensorAPDS9306_065Dialog::editGlobalPeriodSettings(void)
+{
+    int result;
+
+    if(gDialog == nullptr){
+        return;
+    }
+
+    result = gDialog->exec();
+    if(result == QDialog::Rejected)
+        return;
+
+    globalPeriod = gDialog->getPeriod();
+    if(useGlobalPeriod)
+        period = globalPeriod;
+
+    update();
+}
+
+
 void SensorAPDS9306_065Dialog::updateUISettings()
 {
     ui->rateBox->setCurrentIndex(sensor->getAlsMeasurementRate());
     ui->resolutionBox->setCurrentIndex(sensor->getAlsResolution());
     ui->gainBox->setCurrentIndex(sensor->getAlsGain());
+
+    if(gDialog != nullptr)
+    {
+        ui->gperiodButton->setDisabled(false);
+    } else {
+        ui->gperiodButton->setDisabled(true);
+    }
 }
 void SensorAPDS9306_065Dialog::setSensorSettings(GCSensorAPDS9306* s)
 {
@@ -45,6 +75,12 @@ void SensorAPDS9306_065Dialog::apply()
     sensor->setAlsTHHigh(0);
     sensor->setAlsTHLow(0);
 
+    if(useGlobalPeriod){
+        period = globalPeriod;
+    } else {
+        period = round(ui->periodBox->value()*10) - 1;
+    }
+
     hide();
 }
 void SensorAPDS9306_065Dialog::updateSensor(GCSensorAPDS9306* s)
@@ -59,3 +95,12 @@ void SensorAPDS9306_065Dialog::updateSensor(GCSensorAPDS9306* s)
     s->setAlsTHHigh(sensor->getAlsTHHigh());
     s->setAlsTHLow(sensor->getAlsTHLow());
 }
+
+
+void SensorAPDS9306_065Dialog::setPeriodDialog(GlobalMeasurementPolicyDialog* dialog)
+{
+    gDialog = dialog;
+
+    updateUISettings();
+}
+

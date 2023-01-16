@@ -96,6 +96,7 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
 
     // connect sample period settings dialogs
     sensorSHT35Dialog->setPeriodDialog(globalMeasurementPolicyDialog);
+    sensorAPDS9306_065Dialog->setPeriodDialog(globalMeasurementPolicyDialog);
 
     // add plot window to UI
     dummySeries = new QLineSeries();
