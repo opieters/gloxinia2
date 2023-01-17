@@ -18,6 +18,8 @@ struct GCProjectSettings {
     int baudrate;
     bool workOffline;
     bool runDiscovery;
+
+    quint16 globalMeasurementPeriod;
 };
 
 class SettingsDialog : public QDialog
