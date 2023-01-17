@@ -38,8 +38,8 @@ void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
     messageModel->insertRow(0);
     QModelIndex mIndex = messageModel->index(0, 0);
     messageModel->setData(mIndex, m.toLogString());
-    if(messageModel->rowCount() > applicationSettings.messageBufferSize){
-        messageModel->removeRows(applicationSettings.messageBufferSize, messageModel->rowCount() -  applicationSettings.messageBufferSize);
+    if(messageModel->rowCount() > settings.messageBufferSize){
+        messageModel->removeRows(settings.messageBufferSize, messageModel->rowCount() -  settings.messageBufferSize);
     }
 }
 

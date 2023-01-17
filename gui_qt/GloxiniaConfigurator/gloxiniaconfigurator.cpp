@@ -130,8 +130,8 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     updateUI();
 
     // application settings
-    applicationSettings.messageBufferSize = 1000;
-    applicationSettings.plotBufferWindow = 250;
+    settings.messageBufferSize = 1000;
+    settings.plotBufferWindow = 250;
 
     // update status
     //messageModel->insertRow(0);
@@ -168,7 +168,7 @@ void GloxiniaConfigurator::autoScaleSeries(QXYSeries* series)
     qint64 vlast = (qint64) series->at(series->count() - 1).x();
     xmax = std::max(xmax,vlast);
 
-    xAxis->setRange(QDateTime::fromMSecsSinceEpoch(xmax - applicationSettings.plotBufferWindow * 1000), QDateTime::fromMSecsSinceEpoch(xmax));
+    xAxis->setRange(QDateTime::fromMSecsSinceEpoch(xmax - settings.plotBufferWindow * 1000), QDateTime::fromMSecsSinceEpoch(xmax));
 
 }
 
@@ -188,14 +188,14 @@ void GloxiniaConfigurator::resetSystem(void)
 
 void GloxiniaConfigurator::updatePreferences(void)
 {
-    systemSettings->setApplicationSettings(applicationSettings);
+    systemSettings->updateDialog(settings);
     systemSettings->setWindowModality(Qt::ApplicationModal);
     int result = systemSettings->exec();
     if(result == QDialog::Rejected){
         return;
     }
 
-    applicationSettings = systemSettings->getApplicationSettings();
+    systemSettings->updateApplicationSettings(settings);
 
     // update buffer lengths of sensors
     // loop over all nodes and sensors
@@ -217,7 +217,7 @@ void GloxiniaConfigurator::updatePreferences(void)
             if(sensor == nullptr)
                 continue;
 
-            sensor->setMaxPlotSize(((unsigned int) applicationSettings.plotBufferWindow) * 10 / (sensor->getMeasurementPeriod() + 1));
+            sensor->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensor->getMeasurementPeriod() + 1));
         }
     }
 }
@@ -820,7 +820,7 @@ void GloxiniaConfigurator::editSensor()
 
             }
 
-            sensorSHT35->setMaxPlotSize(((unsigned int) applicationSettings.plotBufferWindow) * 10 / (sensorSHT35->getMeasurementPeriod() + 1));
+            sensorSHT35->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorSHT35->getMeasurementPeriod() + 1));
 
 
             return;
@@ -846,7 +846,7 @@ void GloxiniaConfigurator::editSensor()
 
             }
 
-            sensorAPDS9306->setMaxPlotSize(((unsigned int) applicationSettings.plotBufferWindow) * 10 / (sensorAPDS9306->getMeasurementPeriod() + 1));
+            sensorAPDS9306->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorAPDS9306->getMeasurementPeriod() + 1));
 
             return;
         }
@@ -907,7 +907,7 @@ void GloxiniaConfigurator::editSensor()
                     sendSerialMessage(m);
                     qInfo() << "Send SHT35 config" << m.toString();
                 }
-                sensorSHT35->setMaxPlotSize(((unsigned int) applicationSettings.plotBufferWindow) * 10 / (sensorSHT35->getMeasurementPeriod() + 1));
+                sensorSHT35->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorSHT35->getMeasurementPeriod() + 1));
 
                 break;
             case 2:
@@ -928,7 +928,7 @@ void GloxiniaConfigurator::editSensor()
                     qInfo() << "Send APDS9306 065 config" << m.toString();
 
                 }
-                sensorAPDS9306->setMaxPlotSize(((unsigned int) applicationSettings.plotBufferWindow) * 10 / (sensorAPDS9306->getMeasurementPeriod() + 1));
+                sensorAPDS9306->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorAPDS9306->getMeasurementPeriod() + 1));
 
                 break;
             default:
@@ -1113,10 +1113,15 @@ void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
 
     if (sensorCurrent)
     {
-        mDelete.setEnabled(true);
+
         mEditSensor.setEnabled(true);
         // todo: check if data displayed in plot
-        mAddToPlot.setEnabled(true);
+        QVariant data = model->data(index);
+        GCSensor* sensor = GCSensor::fromQVariant(data);
+        if(sensor != nullptr){
+            mDelete.setEnabled(true);
+            mAddToPlot.setEnabled(true);
+        }
         if(!chart->series().contains(dummySeries))
             mRemoveFromPlot.setEnabled(true);
     }

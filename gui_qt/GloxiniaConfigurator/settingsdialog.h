@@ -28,8 +28,8 @@ public:
     explicit SettingsDialog(QWidget *parent = nullptr);
     ~SettingsDialog();
 
-    GCProjectSettings getApplicationSettings(void);
-    void setApplicationSettings(GCProjectSettings& settings);
+    void updateApplicationSettings(GCProjectSettings& settings);
+    void updateDialog(GCProjectSettings& settings);
 
 private:
     Ui::SettingsDialog *ui;

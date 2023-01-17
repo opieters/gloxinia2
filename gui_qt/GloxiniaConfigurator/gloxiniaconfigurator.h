@@ -105,8 +105,6 @@ private slots:
     // void handleError(QSerialPort::SerialPortError error);
 
 private:
-    GCProjectSettings settings;
-
     /*
      * UI main object
      */
@@ -181,7 +179,7 @@ private:
      */
     SettingsDialog *systemSettings = nullptr;
     MeasurementSettingsDialog *measurementSettings = nullptr;
-    GCProjectSettings applicationSettings;
+    GCProjectSettings settings;
 
     /*
      * Node configuration screen

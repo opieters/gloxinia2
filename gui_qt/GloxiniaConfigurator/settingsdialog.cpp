@@ -15,17 +15,13 @@ SettingsDialog::~SettingsDialog()
 }
 
 
-GCProjectSettings SettingsDialog::getApplicationSettings(void)
+void SettingsDialog::updateApplicationSettings(GCProjectSettings& settings)
 {
-    GCProjectSettings settings;
-
     settings.messageBufferSize = ui->mBufferEdit->value();
     settings.plotBufferWindow = ui->plotBufferEdit->value();
-
-    return settings;
 }
 
-void SettingsDialog::setApplicationSettings(GCProjectSettings& settings)
+void SettingsDialog::updateDialog(GCProjectSettings& settings)
 {
     ui->mBufferEdit->setValue(settings.messageBufferSize);
     ui->plotBufferEdit->setValue(settings.plotBufferWindow);
