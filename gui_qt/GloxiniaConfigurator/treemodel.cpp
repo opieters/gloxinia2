@@ -186,7 +186,6 @@ bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int rol
     // TODO: free memory here if value is non-null pointer?
     bool result = item->setData(value);
 
-
     if (result)
     {
         emit dataChanged(index, index, {Qt::DisplayRole, Qt::EditRole});
@@ -387,17 +386,18 @@ QStringList TreeModel::toTextConfig(void)
     return textConfig;
 }
 
-GCNode* TreeModel::getNode(int nodeID)
+GCNode *TreeModel::getNode(int nodeID)
 {
-    for(int i = 0; i < rootItem->childCount(); i++)
+    for (int i = 0; i < rootItem->childCount(); i++)
     {
         QVariant data = rootItem->child(i)->data();
-        GCNode* node = GCNode::fromQVariant(data);
+        GCNode *node = GCNode::fromQVariant(data);
 
-        if(node == nullptr)
+        if (node == nullptr)
             continue;
 
-        if(node->getID() == nodeID){
+        if (node->getID() == nodeID)
+        {
             return node;
         }
     }
@@ -405,39 +405,70 @@ GCNode* TreeModel::getNode(int nodeID)
     return nullptr;
 }
 
-GCSensor* TreeModel::getSensor(int nodeID, int sensorID)
+GCSensor *TreeModel::getSensor(int nodeID, int sensorID)
 {
-    TreeItem* nodeItem, *sensorItem;
-    GCNode* node;
-    GCSensor* sensor;
+    TreeItem *nodeItem, *sensorItem;
+    GCNode *node;
+    GCSensor *sensor;
 
-    for(int i = 0; i < rootItem->childCount(); i++)
+    for (int i = 0; i < rootItem->childCount(); i++)
     {
         nodeItem = rootItem->child(i);
         node = GCNode::fromQVariant(nodeItem->data());
-        if(node == nullptr)
+        if (node == nullptr)
             continue;
-        if(node->getID() == nodeID)
+        if (node->getID() == nodeID)
             break;
         else
             node = nullptr;
     }
 
-    if(node == nullptr)
+    if (node == nullptr)
         return nullptr;
 
-    for(int i = 0; i < nodeItem->childCount(); i++)
+    for (int i = 0; i < nodeItem->childCount(); i++)
     {
         sensorItem = nodeItem->child(i);
         sensor = GCSensor::fromQVariant(sensorItem->data());
-        if(sensor == nullptr)
+        if (sensor == nullptr)
             continue;
-        if(sensor->getInterfaceID() == sensorID)
+        if (sensor->getInterfaceID() == sensorID)
             return sensor;
     }
 
-
     return nullptr; // TODO: implement or remove function
+}
+
+QModelIndex TreeModel::getIndex(int nodeID, int sensorID)
+{
+    TreeItem *nodeItem, *sensorItem;
+    GCNode *node;
+    GCSensor *sensor;
+    int i;
+    QModelIndex nodeIndex;
+
+    for (i = 0; i < rootItem->childCount(); i++)
+    {
+        nodeItem = rootItem->child(i);
+        node = GCNode::fromQVariant(nodeItem->data());
+        if (node == nullptr)
+            continue;
+        if (node->getID() == nodeID)
+            break;
+        else
+            node = nullptr;
+    }
+
+    if (node == nullptr)
+        return QModelIndex();
+
+    nodeIndex = index(i, 0);
+
+    if(sensorID == -1){
+        return nodeIndex;
+    }
+
+    return index(sensorID, 0, nodeIndex);
 }
 
 bool TreeModel::checkUniqueNodeID(int id)

@@ -41,6 +41,7 @@ public:
 
     GCNode* getNode(int nodeID);
     GCSensor* getSensor(int nodeID, int sensorID);
+    QModelIndex getIndex(int nodeID, int sensorID = -1);
 
 private:
     void setupModelData(const QStringList &lines, TreeItem *parent);
