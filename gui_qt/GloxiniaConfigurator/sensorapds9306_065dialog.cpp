@@ -4,25 +4,34 @@
 SensorAPDS9306_065Dialog::SensorAPDS9306_065Dialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SensorAPDS9306_065Dialog),
-    gDialog(nullptr),
-    sensor(new GCSensorAPDS9306())
+    gDialog(nullptr)
 {
     ui->setupUi(this);
 
     // disable address selection since only one option
     ui->addressBox->setDisabled(true);
 
-    connect(ui->confirmBox, &QDialogButtonBox::accepted, this, &SensorAPDS9306_065Dialog::apply);
+
     connect(ui->gperiodButton, &QPushButton::clicked, this, &SensorAPDS9306_065Dialog::editGlobalPeriodSettings);
+    connect(ui->gperiodBox, &QCheckBox::stateChanged, this, &SensorAPDS9306_065Dialog::useGlobalPeriodToggle);
 
-
-    updateUISettings();
+    useGlobalPeriodToggle();
 }
 
 SensorAPDS9306_065Dialog::~SensorAPDS9306_065Dialog()
 {
-    delete sensor;
     delete ui;
+}
+
+void SensorAPDS9306_065Dialog::useGlobalPeriodToggle()
+{
+    if(ui->gperiodBox->isChecked()){
+        if(gDialog != nullptr)
+            ui->periodBox->setValue(gDialog->getPeriod());
+        ui->periodBox->setEnabled(false);
+    } else {
+        ui->periodBox->setEnabled(true);
+    }
 }
 
 void SensorAPDS9306_065Dialog::editGlobalPeriodSettings(void)
@@ -37,33 +46,36 @@ void SensorAPDS9306_065Dialog::editGlobalPeriodSettings(void)
     if(result == QDialog::Rejected)
         return;
 
-    globalPeriod = gDialog->getPeriod();
-    if(useGlobalPeriod)
-        period = globalPeriod;
-
-    update();
+    if(ui->gperiodBox->isChecked()){
+        ui->periodBox->setValue(gDialog->getPeriod());
+    }
 }
 
 
-void SensorAPDS9306_065Dialog::updateUISettings()
+void SensorAPDS9306_065Dialog::updateUISettings(GCSensorAPDS9306* sensor)
 {
     ui->rateBox->setCurrentIndex(sensor->getAlsMeasurementRate());
     ui->resolutionBox->setCurrentIndex(sensor->getAlsResolution());
     ui->gainBox->setCurrentIndex(sensor->getAlsGain());
+    ui->periodBox->setValue((sensor->getMeasurementPeriod()+1.0)/10);
+    if(sensor->getUseGlobalPeriodFlag())
+        ui->gperiodBox->setCheckState(Qt::Checked);
+    else
+        ui->gperiodBox->setCheckState(Qt::Unchecked);
 
     if(gDialog != nullptr)
     {
         ui->gperiodButton->setDisabled(false);
+        ui->gperiodBox->setDisabled(false);
     } else {
         ui->gperiodButton->setDisabled(true);
+        ui->gperiodBox->setDisabled(true);
     }
+
+    useGlobalPeriodToggle();
 }
-void SensorAPDS9306_065Dialog::setSensorSettings(GCSensorAPDS9306* s)
-{
-    delete sensor;
-    sensor = new GCSensorAPDS9306(*s);
-}
-void SensorAPDS9306_065Dialog::apply()
+
+void SensorAPDS9306_065Dialog::apply(GCSensorAPDS9306* sensor)
 {
     sensor->setI2CAddress(ui->addressBox->currentText().toInt(nullptr, 0));
     sensor->setAlsMeasurementRate(ui->rateBox->currentIndex());
@@ -75,32 +87,17 @@ void SensorAPDS9306_065Dialog::apply()
     sensor->setAlsTHHigh(0);
     sensor->setAlsTHLow(0);
 
-    if(useGlobalPeriod){
-        period = globalPeriod;
-    } else {
-        period = round(ui->periodBox->value()*10) - 1;
-    }
+    quint16 period = round(ui->periodBox->value()*10) - 1;
+    sensor->setMeasurementPeriod(period);
+    sensor->setUseGlobalPeriodFlag(ui->gperiodBox->isChecked());
 
     hide();
 }
-void SensorAPDS9306_065Dialog::updateSensor(GCSensorAPDS9306* s)
-{
-    s->setI2CAddress(sensor->getI2CAddress());
-    s->setMeasurementPeriod(sensor->getMeasurementPeriod());
 
-    s->setAlsMeasurementRate(sensor->getAlsMeasurementRate());
-    s->setAlsResolution(sensor->getAlsResolution());
-    s->setAlsGain(sensor->getAlsGain());
-    s->setAlsIVCount(sensor->getAlsIVCount());
-    s->setAlsTHHigh(sensor->getAlsTHHigh());
-    s->setAlsTHLow(sensor->getAlsTHLow());
-}
 
 
 void SensorAPDS9306_065Dialog::setPeriodDialog(GlobalMeasurementPolicyDialog* dialog)
 {
     gDialog = dialog;
-
-    updateUISettings();
 }
 

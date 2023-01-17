@@ -17,23 +17,18 @@ public:
     explicit SensorAPDS9306_065Dialog(QWidget *parent = nullptr);
     ~SensorAPDS9306_065Dialog();
 
-    void updateUISettings();
-    void setSensorSettings(GCSensorAPDS9306* s);
+    void updateUISettings(GCSensorAPDS9306* s);
     void setPeriodDialog(GlobalMeasurementPolicyDialog* dialog);
-    void apply();
-    void editGlobalPeriodSettings(void);
+    void apply(GCSensorAPDS9306* s);
 
-    void updateSensor(GCSensorAPDS9306* s);
+private slots:
+    void editGlobalPeriodSettings(void);
+    void useGlobalPeriodToggle(void);
 
 private:
     Ui::SensorAPDS9306_065Dialog *ui;
     GlobalMeasurementPolicyDialog *gDialog = nullptr;
 
-    GCSensorAPDS9306 * sensor;
-
-    quint16 period = 9;
-    quint16 globalPeriod = 9;
-    bool useGlobalPeriod = false;
 };
 
 #endif // SENSORAPDS9306_065DIALOG_H

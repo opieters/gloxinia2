@@ -803,13 +803,13 @@ void GloxiniaConfigurator::editSensor()
         // selected sensor is SHT35 -> edit parameters of this sensor
         if (sensorSHT35 != nullptr)
         {
-            sensorSHT35Dialog->setSensorSettings(sensorSHT35);
+            sensorSHT35Dialog->updateUISettings(sensorSHT35);
             sensorSHT35Dialog->setWindowModality(Qt::ApplicationModal);
             result = sensorSHT35Dialog->exec();
             if(result == QDialog::Rejected){
                 return;
             }
-            sensorSHT35Dialog->updateSensor(sensorSHT35);
+            sensorSHT35Dialog->apply(sensorSHT35);
             model->setData(index, QVariant::fromValue(sensorSHT35), Qt::EditRole);
 
             configMs = sensorSHT35->getConfigurationMessages();
@@ -829,13 +829,13 @@ void GloxiniaConfigurator::editSensor()
         // selected sensor is APDS9306 065 -> edit parameters of this sensor
         if (sensorAPDS9306 != nullptr)
         {
-            sensorAPDS9306_065Dialog->setSensorSettings(sensorAPDS9306);
+            sensorAPDS9306_065Dialog->updateUISettings(sensorAPDS9306);
             sensorAPDS9306_065Dialog->setWindowModality(Qt::ApplicationModal);
             result = sensorAPDS9306_065Dialog->exec();
             if(result == QDialog::Rejected){
                 return;
             }
-            sensorAPDS9306_065Dialog->updateSensor(sensorAPDS9306);
+            sensorAPDS9306_065Dialog->apply(sensorAPDS9306);
             model->setData(index, QVariant::fromValue(sensorAPDS9306), Qt::EditRole);
 
             configMs = sensorAPDS9306->getConfigurationMessages();
@@ -897,7 +897,7 @@ void GloxiniaConfigurator::editSensor()
                     return;
                 }
                 sensorSHT35 = new GCSensorSHT35(node, (quint8)index.row());
-                sensorSHT35Dialog->updateSensor(sensorSHT35);
+                sensorSHT35Dialog->apply(sensorSHT35);
                 model->setData(index, QVariant::fromValue(sensorSHT35), Qt::EditRole);
 
                 // update hardware configuration
@@ -918,7 +918,7 @@ void GloxiniaConfigurator::editSensor()
                     return;
                 }
                 sensorAPDS9306 = new GCSensorAPDS9306(node, (quint8)index.row());
-                sensorAPDS9306_065Dialog->updateSensor(sensorAPDS9306);
+                sensorAPDS9306_065Dialog->apply(sensorAPDS9306);
                 model->setData(index, QVariant::fromValue(sensorAPDS9306), Qt::EditRole);
 
                 configMs = sensorAPDS9306->getConfigurationMessages();
