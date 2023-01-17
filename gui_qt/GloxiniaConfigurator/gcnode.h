@@ -16,7 +16,7 @@ public:
     };
 
     GCNode() = default;
-    ~GCNode() = default;
+    virtual ~GCNode() = default;
     GCNode(const GCNode &) = default;
     GCNode &operator=(const GCNode &) = default;
 
