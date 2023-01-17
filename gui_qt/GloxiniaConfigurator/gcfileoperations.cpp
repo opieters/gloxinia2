@@ -52,6 +52,7 @@ void GloxiniaConfigurator::saveProject(void)
             data.insert("work_offline", settings.workOffline);
             data.insert("message_buffer_size", settings.messageBufferSize);
             data.insert("plot_buffer_window", settings.plotBufferWindow);
+            data.insert("global_measurement_period", settings.globalMeasurementPeriod);
 
             fileData.setObject(data);
             file.write(fileData.toJson());
@@ -112,6 +113,7 @@ void GloxiniaConfigurator::newProject(void)
             data.insert("work_offline", settings.workOffline);
             data.insert("message_buffer_size", settings.messageBufferSize);
             data.insert("plot_buffer_window", settings.plotBufferWindow);
+            data.insert("global_measurement_period", settings.globalMeasurementPeriod);
             fileData.setObject(data);
             file.write(fileData.toJson());
 
@@ -176,6 +178,7 @@ void GloxiniaConfigurator::openProject(void)
         settings.workOffline = jsonData["work_offline"].toBool();
         settings.messageBufferSize = jsonData["message_buffer_size"].toInt();
         settings.plotBufferWindow = jsonData["plot_buffer_window"].toInt();
+        settings.globalMeasurementPeriod = (quint16) jsonData["global_measurement_settings"].toInt();
         settings.projectDir = QDir::cleanPath(fileName.replace(settings.projectName + ".gc", ""));
         settings.success = true;
     }
