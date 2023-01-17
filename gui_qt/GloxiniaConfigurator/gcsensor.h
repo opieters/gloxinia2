@@ -75,6 +75,7 @@ public:
     virtual QString toConfigString(void) const = 0;
     virtual bool fromConfigString(const QStringList &config) = 0;
     virtual QList<GMessage> getConfigurationMessages() = 0;
+    virtual QList<GMessage> getConfigurationRequests() = 0;
 
     friend QDataStream &operator<<(QDataStream &out, const GCSensor &myObj);
     friend QDataStream &operator>>(QDataStream &in, GCSensor &myObj);
@@ -173,6 +174,7 @@ public:
     QString toConfigString(void) const override;
     bool fromConfigString(const QStringList &config) override;
     QList<GMessage> getConfigurationMessages() override;
+    QList<GMessage> getConfigurationRequests() override;
     void saveData(std::vector<quint8>& data) override;
     void printHeader(void) override;
 
@@ -222,6 +224,7 @@ public:
     QString toConfigString(void) const override;
     bool fromConfigString(const QStringList &config) override;
     QList<GMessage> getConfigurationMessages() override;
+    QList<GMessage> getConfigurationRequests() override;
     void saveData(std::vector<quint8>& data) override;
     void printHeader(void) override;
 

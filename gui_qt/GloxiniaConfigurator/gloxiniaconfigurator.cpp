@@ -182,8 +182,7 @@ void GloxiniaConfigurator::resetSystem(void)
     ui->actionStartMeasuring->setEnabled(true);
     ui->actionStopMeasuring->setEnabled(false);
 
-    // TODO: clear treemodel
-
+    treeModel->removeRows(0, treeModel->rowCount());
 }
 
 void GloxiniaConfigurator::updatePreferences(void)
@@ -1063,13 +1062,13 @@ void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
 
     bool nodeCurrent = false, sensorCurrent = false;
 
-    // node is selected -> add sensor as child
+    // node is selected
     if (index.isValid() && !index.parent().isValid())
     {
         nodeCurrent = true;
     }
 
-    // sensor is selected -> add sensor as new row
+    // sensor is selected
     if (index.isValid() && index.parent().isValid())
     {
         sensorCurrent = true;
@@ -1116,7 +1115,7 @@ void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
 
         mEditSensor.setEnabled(true);
         // todo: check if data displayed in plot
-        QVariant data = model->data(index);
+        QVariant data = treeModel->data(index, Qt::EditRole);
         GCSensor* sensor = GCSensor::fromQVariant(data);
         if(sensor != nullptr){
             mDelete.setEnabled(true);

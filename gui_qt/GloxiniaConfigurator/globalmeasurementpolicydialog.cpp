@@ -8,8 +8,9 @@ GlobalMeasurementPolicyDialog::GlobalMeasurementPolicyDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(ui->periodBox, &QDoubleSpinBox::valueChanged, this, &GlobalMeasurementPolicyDialog::update);
-    connect(ui->okBox, &QDialogButtonBox::accepted, this, &GlobalMeasurementPolicyDialog::apply);
+    connect(ui->periodBox, &QDoubleSpinBox::valueChanged, this, &GlobalMeasurementPolicyDialog::updateUI);
+
+    ui->periodBox->setValue(1.0);
 }
 
 GlobalMeasurementPolicyDialog::~GlobalMeasurementPolicyDialog()
@@ -17,42 +18,45 @@ GlobalMeasurementPolicyDialog::~GlobalMeasurementPolicyDialog()
     delete ui;
 }
 
-void GlobalMeasurementPolicyDialog::update(void)
+void GlobalMeasurementPolicyDialog::updateUI(void)
 {
     double value = 1/ui->periodBox->value();
     QString freq;
 
     if(value >= 1.0){
         freq.append("Hz");
-    } else if(value < 1/(60*60))
-    {
-        value *= 60*60*24;
-        freq.append("samples/day");
-    } else if(value < 1/60)
-    {
-        value *= 60*60;
-        freq.append("samples/hour");
-    } else {
-        value *= 60;
-        freq.append("samples/minute");
+        freq.prepend(QString::number(value, 'f', 1));
+    } else{
+        if(value < 1/(60*60))
+        {
+            value *= 60*60*24;
+            freq.append("samples/day");
+        } else if(value < 1/60)
+        {
+            value *= 60*60;
+            freq.append("samples/hour");
+        } else {
+            value *= 60;
+            freq.append("samples/minute");
+        }
+        freq.prepend(QString::number(value, 'g', 1));
     }
-    freq.prepend(QString::number(value, 'g', 1));
+
     ui->frequencyValue->setText(freq);
 }
 
-void GlobalMeasurementPolicyDialog::apply(void)
+void GlobalMeasurementPolicyDialog::apply(quint16 period)
 {
-    double value = ui->periodBox->value()*10;
-    period = round(value);
-    hide();
+    ui->periodBox->setValue((period+1.0)/10);
 }
 
-void GlobalMeasurementPolicyDialog::setPeriod(quint16 value)
+void GlobalMeasurementPolicyDialog::updatePeriod(quint16& value)
 {
-    period = value;
+    double period = ui->periodBox->value()*10-1;
+    value = round(period);
 }
 
-quint16 GlobalMeasurementPolicyDialog::getPeriod(void) const
+double GlobalMeasurementPolicyDialog::getPeriod(void) const
 {
-    return period;
+    return ui->periodBox->value();
 }

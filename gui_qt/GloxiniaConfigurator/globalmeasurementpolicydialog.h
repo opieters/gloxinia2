@@ -15,19 +15,20 @@ public:
     explicit GlobalMeasurementPolicyDialog(QWidget *parent = nullptr);
     ~GlobalMeasurementPolicyDialog();
 
-    quint16 getPeriod(void) const;
-    void setPeriod(quint16 v);
+    double getPeriod(void) const;
+    void updatePeriod(quint16& v);
+
 
 private:
-    void apply(void);
+    void apply(quint16 v);
 
 private slots:
-    void update(void);
+    void updateUI();
 
 private:
     Ui::GlobalMeasurementPolicyDialog *ui;
 
-    quint16 period = 9;
+    double period = 1.0;
 };
 
 #endif // GLOBALMEASUREMENTPOLICYDIALOG_H

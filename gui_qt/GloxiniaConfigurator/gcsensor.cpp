@@ -405,6 +405,15 @@ QList<GMessage> GCSensorSHT35::getConfigurationMessages()
     return mList;
 }
 
+QList<GMessage> GCSensorSHT35::getConfigurationRequests()
+{
+    QList<GMessage> mList;
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, true, std::vector<quint8>()));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, true, std::vector<quint8>()));
+
+    return mList;
+}
+
 void GCSensorSHT35::printHeader(void)
 {
     file->write("# Intermediate storage file for SHT35\n");
@@ -626,11 +635,6 @@ QList<GMessage> GCSensorAPDS9306::getConfigurationMessages()
 {
     QList<GMessage> mList;
 
-    // check if the sensor is linked to a node
-    if(node == nullptr){
-        return mList;
-    }
-
     auto mData = std::vector<quint8>(4);
     mData[0] = (quint8)GCSensor::sensor_class::APDS9306_065;
     mData[1] = GCSensorAPDS9306::Register::MEASUREMENT;
@@ -668,6 +672,19 @@ QList<GMessage> GCSensorAPDS9306::getConfigurationMessages()
 
     return mList;
 }
+
+QList<GMessage> GCSensorAPDS9306::getConfigurationRequests()
+{
+    QList<GMessage> mList;
+
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, true, std::vector<quint8>(0)));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, true, std::vector<quint8>(0)));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, true, std::vector<quint8>(0)));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, true, std::vector<quint8>(0)));
+
+    return mList;
+}
+
 
 void GCSensorAPDS9306::printHeader(void)
 {
