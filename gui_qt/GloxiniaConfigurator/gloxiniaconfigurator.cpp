@@ -66,7 +66,7 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     connect(ui->actionEditNode, &QAction::triggered, this, &GloxiniaConfigurator::editNode);
     connect(ui->actionEditSensor, &QAction::triggered, this, &GloxiniaConfigurator::editSensor);
     connect(ui->actionDelete, &QAction::triggered, this, &GloxiniaConfigurator::removeItems);
-    connect(ui->actionPreferences, &QAction::triggered, this, &GloxiniaConfigurator::preferencesMenu);
+    connect(ui->actionPreferences, &QAction::triggered, this, &GloxiniaConfigurator::updatePreferences);
     connect(ui->actionRunDiscovery, &QAction::triggered, this, &GloxiniaConfigurator::runDiscovery);
     connect(ui->actionStartMeasuring, &QAction::triggered, this, &GloxiniaConfigurator::startMeasuring);
     connect(ui->actionStopMeasuring, &QAction::triggered, this, &GloxiniaConfigurator::stopMeasuring);
@@ -76,7 +76,6 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     connect(ui->actionConnect, &QAction::triggered, this, &GloxiniaConfigurator::connectToDevice);
     // connect(ui->actionUpdate, &QAction::triggered, this, &GloxiniaConfigurator::);
     connect(ui->actionDisconnect, &QAction::triggered, this, &GloxiniaConfigurator::closeSerialPort);
-    connect(ui->actionPreferences, &QAction::triggered, this, &GloxiniaConfigurator::updatePreferences);
     connect(ui->actionReset, &QAction::triggered, this, &GloxiniaConfigurator::resetSystem);
 
 
@@ -938,11 +937,6 @@ void GloxiniaConfigurator::editSensor()
             }
         }
     }
-}
-
-void GloxiniaConfigurator::preferencesMenu(void)
-{
-
 }
 
 void GloxiniaConfigurator::addToPlot(void)

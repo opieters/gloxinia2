@@ -99,7 +99,6 @@ private slots:
 
     void showContextMenu(const QPoint &pos);
 
-    void preferencesMenu(void);
     void connectToDevice(void);
     // void setSensor();
     // void writeData(const QByteArray &data);
