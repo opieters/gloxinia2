@@ -27,7 +27,7 @@ private:
 
     Ui::SerialSettingsDialog *ui;
 
-    NewProjectDialog::ProjectSettings settings;
+    GCProjectSettings settings;
 };
 
 #endif // SERIALSETTINGSDIALOG_H

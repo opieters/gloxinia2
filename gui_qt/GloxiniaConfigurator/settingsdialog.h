@@ -7,9 +7,17 @@ namespace Ui {
 class SettingsDialog;
 }
 
-struct GCAppSettings {
+struct GCProjectSettings {
     qint64 messageBufferSize;
     qint64 plotBufferWindow;
+
+    bool success;
+    QString projectName;
+    QString projectDir;
+    QString comPort;
+    int baudrate;
+    bool workOffline;
+    bool runDiscovery;
 };
 
 class SettingsDialog : public QDialog
@@ -20,8 +28,8 @@ public:
     explicit SettingsDialog(QWidget *parent = nullptr);
     ~SettingsDialog();
 
-    GCAppSettings getApplicationSettings(void);
-    void setApplicationSettings(GCAppSettings& settings);
+    GCProjectSettings getApplicationSettings(void);
+    void setApplicationSettings(GCProjectSettings& settings);
 
 private:
     Ui::SettingsDialog *ui;

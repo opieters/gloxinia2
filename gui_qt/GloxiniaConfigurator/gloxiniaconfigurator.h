@@ -38,19 +38,13 @@ class GloxiniaConfigurator : public QMainWindow
     Q_OBJECT
 
 public:
-    struct Settings {
-        QString serialPortName; // Menu selected serial port that will be used for communication
-        QString projectDir;
-        QString projectName;
-    };
-
     GloxiniaConfigurator(QWidget *parent = nullptr);
     ~GloxiniaConfigurator();
 
     static constexpr unsigned int maxRecentFiles = 5;
 
 
-    void setProject(NewProjectDialog::ProjectSettings& settings);
+    void setProject(GCProjectSettings& settings);
 
     void saveProject(void);
     void readSettings(void);
@@ -112,7 +106,7 @@ private slots:
     // void handleError(QSerialPort::SerialPortError error);
 
 private:
-    NewProjectDialog::ProjectSettings settings;
+    GCProjectSettings settings;
 
     /*
      * UI main object
@@ -188,7 +182,7 @@ private:
      */
     SettingsDialog *systemSettings = nullptr;
     MeasurementSettingsDialog *measurementSettings = nullptr;
-    GCAppSettings applicationSettings;
+    GCProjectSettings applicationSettings;
 
     /*
      * Node configuration screen

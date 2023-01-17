@@ -40,12 +40,12 @@ NewProjectDialog::~NewProjectDialog()
     delete ui;
 }
 
-NewProjectDialog::ProjectSettings NewProjectDialog::getProject(void) const
+GCProjectSettings NewProjectDialog::getProject(void) const
 {
     return settings;
 }
 
-void NewProjectDialog::setProject(NewProjectDialog::ProjectSettings& settings)
+void NewProjectDialog::setProject(GCProjectSettings& settings)
 {
     this->settings = settings;
 }

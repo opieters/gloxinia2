@@ -317,7 +317,7 @@ void GloxiniaConfigurator::exit(void)
     close();
 }
 
-void GloxiniaConfigurator::setProject(NewProjectDialog::ProjectSettings& settings){
+void GloxiniaConfigurator::setProject(GCProjectSettings& settings){
     this->settings = settings;
 }
 
