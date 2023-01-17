@@ -29,6 +29,9 @@ void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
         case GMessage::Code::SENSOR_STATUS:
             processSensorStatus(m);
             break;
+        case GMessage::Code::SENSOR_CONFIG:
+            processSensorConfig(m);
+            break;
         default:
             break;
         }
@@ -115,6 +118,14 @@ void GloxiniaConfigurator::processNodeInfoMessage(const GMessage &m)
 
             GCSensor *interfaceData = nullptr;
 
+            // send a message to detect existing sensors
+            GMessage sensor_request(GMessage::Code::SENSOR_CONFIG, m.getMessageID(), i, true, std::vector<quint8>());
+
+            quint8 rawData[32];
+            unsigned int length;
+            length = sensor_request.toBytes(rawData, 32);
+            serial->write((char *)rawData, length);
+
             QModelIndex interface = this->treeModel->index(treeModel->rowCount(child) - 1, 0, child);
             this->treeModel->setData(interface, QVariant::fromValue(interfaceData), Qt::EditRole);
         }
@@ -158,6 +169,66 @@ void GloxiniaConfigurator::processSensorStatus(const GMessage& m)
     sensor->setStatus(status);
 
     qDebug() << "Updated sensor status at (" << m.getMessageID() << "," << m.getSensorID() << ")";
+}
+
+void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
+{
+    GCSensor* sensor = treeModel->getSensor(m.getMessageID(), m.getSensorID());
+    GCNode* node = treeModel->getNode(m.getMessageID());
+    quint8 rawData[32];
+    unsigned int length;
+
+    if(node == nullptr)
+        return;
+
+    if(sensor == nullptr)
+    {
+        QModelIndex index = treeModel->getIndex(m.getMessageID(), m.getSensorID());
+        // create sensor
+        switch(m.getData().at(0)){
+        case GCSensor::sensor_class::SHT35:
+        {
+            GCSensorSHT35* sensor_sht35 = new GCSensorSHT35(node, m.getSensorID());
+            treeModel->setData(index, QVariant::fromValue(sensor_sht35));
+            auto list = sensor_sht35->getConfigurationRequests();
+            for(int i = 1; i < list.count(); i++){
+                length = list.at(i).toBytes(rawData, 32);
+                serial->write((char *)rawData, length);
+            }
+
+            break;
+        }
+        case GCSensor::sensor_class::ANALOGUE:
+            // TODO
+            break;
+        case GCSensor::sensor_class::APDS9306_065:
+        {
+            GCSensorAPDS9306* sensor_apds9306_065 =new GCSensorAPDS9306(node, m.getSensorID());
+            treeModel->setData(index, QVariant::fromValue(sensor_apds9306_065));
+            auto list = sensor_apds9306_065->getConfigurationRequests();
+            for(int i = 1; i < list.count(); i++){
+                length = list.at(i).toBytes(rawData, 32);
+                serial->write((char *)rawData, length);
+            }
+            break;
+        }
+        case GCSensor::sensor_class::NOT_SET:
+        default:
+            return;
+        }
+
+        // new sensor, request status too
+        GMessage status_request(GMessage::Code::SENSOR_STATUS, m.getMessageID(), m.getSensorID(), true, std::vector<quint8>());
+
+
+        length = status_request.toBytes(rawData, 32);
+        serial->write((char *)rawData, length);
+    } else {
+        // update todos
+    }
+
+    //
+
 }
 
 

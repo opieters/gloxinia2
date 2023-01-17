@@ -171,6 +171,7 @@ private:
     void processNodeInfoMessage(const GMessage &m);
     void processSensorData(const GMessage& m);
     void processSensorStatus(const GMessage& m);
+    void processSensorConfig(const GMessage& m);
 
     void sendSerialMessage(const GMessage &m);
 
