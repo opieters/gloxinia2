@@ -8,8 +8,10 @@ void sensors_init(void) {
 
     for (i = 0; i < N_SENSOR_INTERFACES; i++) {
         task_t task = {task_dummy, NULL};
-        schedule_init(&sensor_interfaces->measure, task, 0);
+        schedule_init(&sensor_interfaces[i].measure, task, 0);
 
+        sensor_interfaces[i].sensor_type = SENSOR_NOT_SET;
+        sensor_interfaces[i].status = SENSOR_STATUS_INACTIVE;
         sensor_interfaces[i].sensor_id = i;
     }
 
@@ -127,6 +129,9 @@ void sensor_set_status(uint8_t interface_id, sensor_status_t status) {
     switch (status) {
         case SENSOR_STATUS_ACTIVE:
             if ((intf->status == SENSOR_STATUS_IDLE) || (intf->status == SENSOR_STATUS_STOPPED)) {
+                if (intf->measure.task.cb == task_dummy) {
+                    break;
+                }
                 intf->status = SENSOR_STATUS_ACTIVE;
                 switch (intf->sensor_type) {
                     case SENSOR_NOT_SET:
@@ -212,17 +217,7 @@ void sensor_i2c_error_handle(sensor_interface_t *intf, i2c_message_t *m, uint8_t
 void sensor_start(void) {
     for (int i = 0; i < N_SENSOR_INTERFACES; i++) {
         // check if init was done correctly
-        if (sensor_interfaces[i].measure.task.cb == task_dummy) {
-            continue;
-        }
-
-        if ((sensor_interfaces[i].status != SENSOR_STATUS_ACTIVE) && (sensor_interfaces[i].status != SENSOR_STATUS_STOPPED)) {
-            continue;
-        }
-
-        sensor_interfaces[i].status = SENSOR_STATUS_RUNNING;
-
-        schedule_event(&sensor_interfaces[i].measure);
+        sensor_set_status(i, SENSOR_STATUS_RUNNING);
     }
 }
 
