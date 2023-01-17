@@ -137,45 +137,47 @@ QString GMessage::toLogString() const
 {
     QString formattedData;
     QString cTime = QDateTime::currentDateTime().toString("hh:mm:ss");
-    switch (code)
-    {
-    case MSG_TEXT:
-    {
-        std::string s(data.begin(), data.end());
-        formattedData = QString::fromStdString(s);
-        break;
-    }
-    case SENSOR_STATUS:
-        switch ((GCSensor::GCSensorStatus)data[0])
+    if(!data.empty()){
+        switch (code)
         {
-        case GCSensor::GCSensorStatus::INACTIVE:
-            formattedData.append("inactive");
-            break;
-        case GCSensor::GCSensorStatus::IDLE:
-            formattedData.append("idle");
-            break;
-        case GCSensor::GCSensorStatus::ACTIVE:
-            formattedData.append("active");
-            break;
-        case GCSensor::GCSensorStatus::RUNNING:
-            formattedData.append("running");
-            break;
-        case GCSensor::GCSensorStatus::STOPPED:
-            formattedData.append("stopped");
-            break;
-        case GCSensor::GCSensorStatus::ERROR:
-            formattedData.append("error");
+        case MSG_TEXT:
+        {
+            std::string s(data.begin(), data.end());
+            formattedData = QString::fromStdString(s);
             break;
         }
+        case SENSOR_STATUS:
+            switch ((GCSensor::GCSensorStatus)data[0])
+            {
+            case GCSensor::GCSensorStatus::INACTIVE:
+                formattedData.append("inactive");
+                break;
+            case GCSensor::GCSensorStatus::IDLE:
+                formattedData.append("idle");
+                break;
+            case GCSensor::GCSensorStatus::ACTIVE:
+                formattedData.append("active");
+                break;
+            case GCSensor::GCSensorStatus::RUNNING:
+                formattedData.append("running");
+                break;
+            case GCSensor::GCSensorStatus::STOPPED:
+                formattedData.append("stopped");
+                break;
+            case GCSensor::GCSensorStatus::ERROR:
+                formattedData.append("error");
+                break;
+            }
 
-        break;
-    default:
-    {
-        for (quint8 i : data)
+            break;
+        default:
         {
-            formattedData.append(QStringLiteral("%1").arg(i, 2, 16, QLatin1Char('0')) + " ");
+            for (quint8 i : data)
+            {
+                formattedData.append(QStringLiteral("%1").arg(i, 2, 16, QLatin1Char('0')) + " ");
+            }
         }
-    }
+        }
     }
     return "[" + cTime + "] (" + QString::number(messageID) + ", " + QString::number(sensorID) + ") " + GMessage::codeToString(code) + " " + formattedData;
 }
