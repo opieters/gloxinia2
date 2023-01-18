@@ -53,15 +53,9 @@ void GloxiniaConfigurator::processCANDiscoveryMessage(const GMessage &m)
     // if ID is not yet in the system, request info to create node
     if (treeModel->checkUniqueNodeID(m.getMessageID()))
     {
-
         // request node info
-        quint8 rawData[32];
-        unsigned int length;
-
         GMessage reply(GMessage::Code::NODE_INFO, m.getMessageID(), GMessage::NoSensorID, true, std::vector<quint8>());
-
-        length = reply.toBytes(rawData, 32);
-        serial->write((char *)rawData, length);
+        sendSerialMessage(reply);
     }
 }
 
@@ -120,11 +114,7 @@ void GloxiniaConfigurator::processNodeInfoMessage(const GMessage &m)
 
             // send a message to detect existing sensors
             GMessage sensor_request(GMessage::Code::SENSOR_CONFIG, m.getMessageID(), i, true, std::vector<quint8>());
-
-            quint8 rawData[32];
-            unsigned int length;
-            length = sensor_request.toBytes(rawData, 32);
-            serial->write((char *)rawData, length);
+            sendSerialMessage(sensor_request);
 
             QModelIndex interface = this->treeModel->index(treeModel->rowCount(child) - 1, 0, child);
             this->treeModel->setData(interface, QVariant::fromValue(interfaceData), Qt::EditRole);
@@ -192,8 +182,7 @@ void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
             treeModel->setData(index, QVariant::fromValue(sensor_sht35));
             auto list = sensor_sht35->getConfigurationRequests();
             for(int i = 1; i < list.count(); i++){
-                length = list.at(i).toBytes(rawData, 32);
-                serial->write((char *)rawData, length);
+                sendSerialMessage(list.at(i));
             }
 
             break;
@@ -207,8 +196,7 @@ void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
             treeModel->setData(index, QVariant::fromValue(sensor_apds9306_065));
             auto list = sensor_apds9306_065->getConfigurationRequests();
             for(int i = 1; i < list.count(); i++){
-                length = list.at(i).toBytes(rawData, 32);
-                serial->write((char *)rawData, length);
+                sendSerialMessage(list.at(i));
             }
             break;
         }
@@ -219,10 +207,7 @@ void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
 
         // new sensor, request status too
         GMessage status_request(GMessage::Code::SENSOR_STATUS, m.getMessageID(), m.getSensorID(), true, std::vector<quint8>());
-
-
-        length = status_request.toBytes(rawData, 32);
-        serial->write((char *)rawData, length);
+        sendSerialMessage(status_request);
     } else {
         // update todos
     }

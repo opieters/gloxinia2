@@ -443,9 +443,6 @@ QString GloxiniaConfigurator::getSensorLabel(GCSensor* s){
 
 void GloxiniaConfigurator::runDiscovery()
 {
-    quint8 rawData[32];
-    unsigned int length;
-
     // check if there already is a node in the system, if not send address update to finish first assignment
     /*if(treeModel->rowCount() == 0){
         qInfo() << "Assiging address of node conncted to computer.";
@@ -456,10 +453,7 @@ void GloxiniaConfigurator::runDiscovery()
     qInfo() << "Running discovery broadcast";
 
     GMessage m(GMessage::Code::DISCOVERY, 0, 0, true, std::vector<quint8>());
-
-    length = m.toBytes(rawData, 32);
-    //}
-    serial->write((char *)rawData, length);
+    sendSerialMessage(m);
 }
 
 /*void GloxiniaConfigurator::addNode()
