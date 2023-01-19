@@ -15,6 +15,8 @@ SensorAPDS9306_065Dialog::SensorAPDS9306_065Dialog(QWidget *parent) :
     connect(ui->gperiodButton, &QPushButton::clicked, this, &SensorAPDS9306_065Dialog::editGlobalPeriodSettings);
     connect(ui->gperiodBox, &QCheckBox::stateChanged, this, &SensorAPDS9306_065Dialog::useGlobalPeriodToggle);
 
+    ui->periodBox->setValue(1.0);
+
     useGlobalPeriodToggle();
 }
 

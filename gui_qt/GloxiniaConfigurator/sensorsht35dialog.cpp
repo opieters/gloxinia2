@@ -13,6 +13,9 @@ SensorSHT35Dialog::SensorSHT35Dialog(QWidget *parent) :
     connect(ui->gperiodButton, &QPushButton::clicked, this, &SensorSHT35Dialog::editGlobalPeriodSettings);
     connect(ui->gperiodBox, &QCheckBox::stateChanged, this, &SensorSHT35Dialog::useGlobalPeriodToggle);
 
+    ui->periodBox->setValue(1.0);
+    ui->clockStretchingBox->setCheckState(Qt::Unchecked);
+
     updatePeriodicity();
     useGlobalPeriodToggle();
 }
