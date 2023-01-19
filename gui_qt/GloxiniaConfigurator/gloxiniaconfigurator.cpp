@@ -37,8 +37,35 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
       measurementSettings(new MeasurementSettingsDialog),
       newProjectDialog(new NewProjectDialog)
 {
+    // build UI
     ui->setupUi(this);
     ui->statusbar->addWidget(status);
+
+    mainLayout = new QHBoxLayout;
+    // horizontal layout
+    splitter = new QSplitter;
+    splitter2 = new QSplitter;
+    messageView = new QListView;
+    systemOverview = new QTreeView;
+    chartView = new QChartView(chart);
+
+    mainLayout->addWidget(splitter);
+
+    splitter->setOrientation(Qt::Horizontal);
+    splitter->addWidget(systemOverview);
+    splitter->addWidget(splitter2);
+
+    splitter2->setOrientation(Qt::Vertical);
+    splitter2->addWidget(messageView);
+    splitter2->addWidget(chartView);
+
+    chartView->setRenderHint(QPainter::Antialiasing);
+
+    ui->centralwidget->setLayout(mainLayout);
+
+    // auto update when points are removed/added
+    //connect(series, &QXYSeries::pointAdded, this, &GloxiniaConfigurator::autoScaleChart);
+    //seriesConnections.insert(0, connect(dummySeries, &QXYSeries::pointAdded, this, [this]{autoScaleSeries(dummySeries); }));
 
     this->treeModel = new TreeModel(this);
 
@@ -80,18 +107,18 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
 
 
     // set data models
-    ui->messageView->setModel(this->messageModel);
-    ui->systemOverview->setModel(this->treeModel);
+    messageView->setModel(this->messageModel);
+    systemOverview->setModel(this->treeModel);
 
     // set model properties
-    ui->systemOverview->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    // ui->systemOverview->setModel(this->model);
-    // ui->systemOverview->setColumnCount(1);
-    ui->systemOverview->setHeaderHidden(true);
-    ui->systemOverview->setContextMenuPolicy(Qt::CustomContextMenu);
+    systemOverview->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    // systemOverview->setModel(this->model);
+    // systemOverview->setColumnCount(1);
+    systemOverview->setHeaderHidden(true);
+    systemOverview->setContextMenuPolicy(Qt::CustomContextMenu);
 
     // right-click action in the system tree view
-    connect(ui->systemOverview, &QTreeView::customContextMenuRequested, this, &GloxiniaConfigurator::showContextMenu);
+    connect(systemOverview, &QTreeView::customContextMenuRequested, this, &GloxiniaConfigurator::showContextMenu);
 
     // connect sample period settings dialogs
     sensorSHT35Dialog->setPeriodDialog(globalMeasurementPolicyDialog);
@@ -105,19 +132,12 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
 
     xAxis = new QDateTimeAxis;
     xAxis->setTickCount(10);
-    xAxis->setFormat("hh:mm:ss");
+    xAxis->setFormat("mm:ss");
     xAxis->setTitleText("time");
     chart->addAxis(xAxis, Qt::AlignBottom);
     dummySeries->attachAxis(xAxis);
 
-    chartView = new QChartView(chart);
-    chartView->setRenderHint(QPainter::Antialiasing);
 
-    // auto update when points are removed/added
-    //connect(series, &QXYSeries::pointAdded, this, &GloxiniaConfigurator::autoScaleChart);
-    //seriesConnections.insert(0, connect(dummySeries, &QXYSeries::pointAdded, this, [this]{autoScaleSeries(dummySeries); }));
-
-    ui->vLayout->addWidget(chartView);
 
     // timer use to send discovery messages
     discoveryTimer = new QTimer();
@@ -137,7 +157,11 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     //messageModel->insertRow(0);
     //QModelIndex mIndex = messageModel->index(0, 0);
     //messageModel->setData(mIndex, "Application started.");
-    showStatusMessage("Application started.");
+    showStatusMessage("No file open.");
+
+    QList<int> splitterSizes = {300, 600};
+    splitter->setSizes(splitterSizes);
+    splitter2->setSizes(splitterSizes);
 }
 
 GloxiniaConfigurator::~GloxiniaConfigurator()
@@ -179,8 +203,7 @@ void GloxiniaConfigurator::resetSystem(void)
     sendSerialMessage(reset);
 
     // disable start option, enable stop option
-    ui->actionStartMeasuring->setEnabled(true);
-    ui->actionStopMeasuring->setEnabled(false);
+    updateUI();
 
     treeModel->removeRows(0, treeModel->rowCount());
 }
@@ -458,8 +481,8 @@ void GloxiniaConfigurator::runDiscovery()
 
 /*void GloxiniaConfigurator::addNode()
 {
-    const QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
-    QAbstractItemModel *model = ui->systemOverview->model();
+    const QModelIndex index = systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = systemOverview->model();
 
     auto parent = index.parent();
 
@@ -481,7 +504,7 @@ void GloxiniaConfigurator::runDiscovery()
     GCNode* data = nodeDicioDialog->getNode();
     model->setData(child, QVariant::fromValue(data), Qt::EditRole);
 
-    //ui->systemOverview->selectionModel()->setCurrentIndex(index, QItemSelectionModel::ClearAndSelect);
+    //systemOverview->selectionModel()->setCurrentIndex(index, QItemSelectionModel::ClearAndSelect);
 
     //updateActions();
 }*/
@@ -506,8 +529,7 @@ void GloxiniaConfigurator::startMeasuring(void)
     GCSensor::setSensorFileDir(sensorDataName);
 
     // disable start option, enable stop option
-    ui->actionStartMeasuring->setEnabled(false);
-    ui->actionStopMeasuring->setEnabled(true);
+    updateUI();
 
     // loop over all nodes and sensors and trigger measurement
     for(int i = 0; i < treeModel->rowCount(); i++)
@@ -528,6 +550,8 @@ void GloxiniaConfigurator::startMeasuring(void)
             if(sensor == nullptr)
                 continue;
 
+            continue;
+
             if(sensor->startMeasurement())
             {
                 GMessage mStart = sensor->getStartMessage();
@@ -541,6 +565,8 @@ void GloxiniaConfigurator::startMeasuring(void)
 
     GMessage mStart = GMessage(GMessage::Code::SENSOR_START, GMessage::ComputerAddress, GMessage::NoSensorID, true);
     sendSerialMessage(mStart);
+
+    qInfo() << "Started measuring";
 }
 void GloxiniaConfigurator::stopMeasuring(void)
 {
@@ -548,8 +574,7 @@ void GloxiniaConfigurator::stopMeasuring(void)
     sendSerialMessage(mStop);
 
     // enable start option, disable stop option
-    ui->actionStartMeasuring->setEnabled(true);
-    ui->actionStopMeasuring->setEnabled(false);
+    updateUI();
 
     // loop over all nodes and sensora and cancel measurement
     for(int i = 0; i < treeModel->rowCount(); i++)
@@ -574,6 +599,8 @@ void GloxiniaConfigurator::stopMeasuring(void)
         }
 
     }
+
+    qInfo() << "Stopped measuring";
 }
 
 void GloxiniaConfigurator::editMeasurementSettings(void)
@@ -586,7 +613,7 @@ void GloxiniaConfigurator::editMeasurementSettings(void)
 bool GloxiniaConfigurator::removeNode(const QModelIndex &index)
 {
 
-    QAbstractItemModel *model = ui->systemOverview->model();
+    QAbstractItemModel *model = systemOverview->model();
 
     if (index.isValid() && !index.parent().isValid())
     {
@@ -600,7 +627,7 @@ bool GloxiniaConfigurator::removeNode(const QModelIndex &index)
     return false;
 
     // get item at selected position:
-    QItemSelectionModel *selectionModel = this->ui->systemOverview->selectionModel();
+    QItemSelectionModel *selectionModel = this->systemOverview->selectionModel();
 
     const QModelIndexList indexes = selectionModel->selectedIndexes();
 
@@ -611,7 +638,7 @@ bool GloxiniaConfigurator::removeNode(const QModelIndex &index)
     for (const QModelIndex &index : indexes)
     {
         QString text = QString("(%1,%2)").arg(index.row()).arg(index.column());
-        QVariant data = ui->systemOverview->model()->data(index, Qt::EditRole);
+        QVariant data = systemOverview->model()->data(index, Qt::EditRole);
         s = data.value<GCSensor *>();
         n = data.value<GCNode *>();
         if (s != nullptr)
@@ -626,14 +653,14 @@ bool GloxiniaConfigurator::removeNode(const QModelIndex &index)
 
     // https://stackoverflow.com/questions/14237020/qtreewidget-right-click-menu
 
-    // qInfo() << "Index is " << this->ui->systemOverview->indexFromItem(nd);
+    // qInfo() << "Index is " << this->systemOverview->indexFromItem(nd);
 }
 
 void GloxiniaConfigurator::editNode()
 {
 
-    const QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
-    QAbstractItemModel *model = ui->systemOverview->model();
+    const QModelIndex index = systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = systemOverview->model();
     int result;
 
     // node is selected -> run menu
@@ -671,8 +698,8 @@ void GloxiniaConfigurator::editNode()
 
 void GloxiniaConfigurator::addSensor()
 {
-    const QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
-    QAbstractItemModel *model = ui->systemOverview->model();
+    const QModelIndex index = systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = systemOverview->model();
 
     // node is selected -> add sensor as child
     if (index.isValid() && !index.parent().isValid())
@@ -694,7 +721,7 @@ void GloxiniaConfigurator::addSensor()
             // model->setData(child, QVariant::fromValue(GCNode()), Qt::EditRole);
         }
 
-        ui->systemOverview->selectionModel()->setCurrentIndex(model->index(0, 0, index),
+        systemOverview->selectionModel()->setCurrentIndex(model->index(0, 0, index),
                                                               QItemSelectionModel::ClearAndSelect);
         updateActions();
 
@@ -715,7 +742,7 @@ void GloxiniaConfigurator::addSensor()
         model->setData(child, QVariant::fromValue(sensor), Qt::EditRole);
         // model->setData(child, QVariant::fromValue(GCNode()), Qt::EditRole);
 
-        ui->systemOverview->selectionModel()->setCurrentIndex(model->index(0, 0, index),
+        systemOverview->selectionModel()->setCurrentIndex(model->index(0, 0, index),
                                                               QItemSelectionModel::ClearAndSelect);
         updateActions();
 
@@ -730,7 +757,7 @@ void GloxiniaConfigurator::addSensor()
 
 bool GloxiniaConfigurator::removeSensor(const QModelIndex &index)
 {
-    QAbstractItemModel *model = ui->systemOverview->model();
+    QAbstractItemModel *model = systemOverview->model();
 
     if (index.isValid() && index.parent().isValid())
     {
@@ -756,8 +783,8 @@ bool GloxiniaConfigurator::removeSensor(const QModelIndex &index)
 
 void GloxiniaConfigurator::removeItems()
 {
-    QItemSelectionModel *selectionModel = ui->systemOverview->selectionModel();
-    //QAbstractItemModel *model = ui->systemOverview->model();
+    QItemSelectionModel *selectionModel = systemOverview->selectionModel();
+    //QAbstractItemModel *model = systemOverview->model();
 
     const QModelIndexList indexes = selectionModel->selectedIndexes();
     QModelIndexList nodeIndices;
@@ -778,8 +805,8 @@ void GloxiniaConfigurator::removeItems()
 
 void GloxiniaConfigurator::editSensor()
 {
-    const QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
-    QAbstractItemModel *model = ui->systemOverview->model();
+    const QModelIndex index = systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = systemOverview->model();
     GCSensorSHT35 *sensorSHT35;
     GCSensorAPDS9306 *sensorAPDS9306;
     int result;
@@ -814,7 +841,6 @@ void GloxiniaConfigurator::editSensor()
             }
 
             sensorSHT35->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorSHT35->getMeasurementPeriod() + 1));
-
 
             return;
         }
@@ -934,8 +960,8 @@ void GloxiniaConfigurator::editSensor()
 
 void GloxiniaConfigurator::addToPlot(void)
 {
-    const QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
-    QAbstractItemModel *model = ui->systemOverview->model();
+    const QModelIndex index = systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = systemOverview->model();
     GCSensor *sensor;
     int result;
     QXYSeries* series = nullptr;
@@ -1051,8 +1077,8 @@ void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
 {
     // only show menu when an item is selected
 
-    const QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
-    QAbstractItemModel *model = ui->systemOverview->model();
+    const QModelIndex index = systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = systemOverview->model();
 
     bool nodeCurrent = false, sensorCurrent = false;
 
@@ -1127,7 +1153,7 @@ void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
             mRemoveFromPlot.setEnabled(true);
     }
 
-    m.exec(ui->systemOverview->mapToGlobal(pos));
+    m.exec(systemOverview->mapToGlobal(pos));
 }
 
 GCSensor *GloxiniaConfigurator::selectSensor(void)
@@ -1161,21 +1187,21 @@ GCSensor *GloxiniaConfigurator::selectSensor(void)
 
 void GloxiniaConfigurator::updateActions()
 {
-    const bool hasSelection = !ui->systemOverview->selectionModel()->selection().isEmpty();
+    const bool hasSelection = !systemOverview->selectionModel()->selection().isEmpty();
     // removeRowAction->setEnabled(hasSelection);
     // removeColumnAction->setEnabled(hasSelection);
 
-    const bool hasCurrent = ui->systemOverview->selectionModel()->currentIndex().isValid();
+    const bool hasCurrent = systemOverview->selectionModel()->currentIndex().isValid();
     // addNode->setEnabled(hasCurrent);
     // insertColumnAction->setEnabled(hasCurrent);
 
     if (hasCurrent)
     {
-        ui->systemOverview->closePersistentEditor(ui->systemOverview->selectionModel()->currentIndex());
+        systemOverview->closePersistentEditor(systemOverview->selectionModel()->currentIndex());
 
-        const int row = ui->systemOverview->selectionModel()->currentIndex().row();
-        const int column = ui->systemOverview->selectionModel()->currentIndex().column();
-        if (ui->systemOverview->selectionModel()->currentIndex().parent().isValid())
+        const int row = systemOverview->selectionModel()->currentIndex().row();
+        const int column = systemOverview->selectionModel()->currentIndex().column();
+        if (systemOverview->selectionModel()->currentIndex().parent().isValid())
             statusBar()->showMessage(tr("Position: (%1,%2)").arg(row).arg(column));
         else
             statusBar()->showMessage(tr("Position: (%1,%2) in top level").arg(row).arg(column));

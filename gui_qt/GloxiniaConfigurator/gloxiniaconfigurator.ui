@@ -6,33 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>1307</width>
+    <height>908</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>GloxiniaConfigurator</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="hLayout">
-    <item>
-     <widget class="QTreeView" name="systemOverview"/>
-    </item>
-    <item>
-     <layout class="QVBoxLayout" name="vLayout">
-      <item>
-       <widget class="QListView" name="messageView"/>
-      </item>
-     </layout>
-    </item>
-   </layout>
-  </widget>
+  <widget class="QWidget" name="centralwidget"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>1307</width>
      <height>22</height>
     </rect>
    </property>
