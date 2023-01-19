@@ -36,8 +36,8 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
     }
 
     QVariant data = item->data();
-    GCSensor *s;
-    GCNode *n;
+    GCSensor *s = nullptr;
+    GCNode *n = nullptr;
 
     switch (role)
     {
@@ -312,7 +312,7 @@ bool TreeModel::parseNode(const QStringList &args, TreeItem *parent)
 bool TreeModel::parseSensor(const QStringList &args, TreeItem *parent)
 {
     bool status = false;
-    GCSensor *sensorPointer;
+    GCSensor *sensorPointer = nullptr;
 
     if (parent == nullptr)
         return false;
@@ -354,7 +354,7 @@ bool TreeModel::parseSensor(const QStringList &args, TreeItem *parent)
 QStringList TreeModel::toTextConfig(void)
 {
     QVariant nodeData;
-    TreeItem *nodeItem;
+    TreeItem *nodeItem = nullptr;
 
     QStringList textConfig;
 
@@ -407,9 +407,9 @@ GCNode *TreeModel::getNode(int nodeID)
 
 GCSensor *TreeModel::getSensor(int nodeID, int sensorID)
 {
-    TreeItem *nodeItem, *sensorItem;
-    GCNode *node;
-    GCSensor *sensor;
+    TreeItem *nodeItem = nullptr, *sensorItem = nullptr;
+    GCNode *node = nullptr;
+    GCSensor *sensor = nullptr;
 
     for (int i = 0; i < rootItem->childCount(); i++)
     {
@@ -441,9 +441,9 @@ GCSensor *TreeModel::getSensor(int nodeID, int sensorID)
 
 QModelIndex TreeModel::getIndex(int nodeID, int sensorID)
 {
-    TreeItem *nodeItem, *sensorItem;
-    GCNode *node;
-    GCSensor *sensor;
+    TreeItem *nodeItem = nullptr, *sensorItem = nullptr;
+    GCNode *node = nullptr;
+    GCSensor *sensor = nullptr;
     int i;
     QModelIndex nodeIndex;
 
