@@ -26,6 +26,7 @@ typedef enum
     M_SENSOR_START = 0x14,
     M_SENSOR_STOP = 0x15,
     M_ACTUATOR_STATUS = 0x20,
+    M_TX_ERROR = 0x30,
 } message_cmd_t;
 
 /*typedef enum {
@@ -41,12 +42,16 @@ typedef enum
 
 typedef enum
 {
+    M_EMPTY,
     M_RX_FROM_CAN,
     M_RX_FROM_UART,
     M_TX_INIT_DONE,
     M_TX_QUEUED,
     M_TX_SENT,
     M_ERROR,
+    M_ERROR_STOP_DETECT,
+    M_ERROR_OVERFLOW,
+    M_ERROR_HW_OVERFLOW
 } message_status_t;
 
 typedef enum
