@@ -502,6 +502,21 @@ GCSensorAPDS9306::GCSensorAPDS9306(GCNode* node, quint8 id, quint8 i2cAddress) :
         filePath = "node-" + QString::number(node->getID()) + "-" + QString::number(id) + "-APDS9306_065.csv";
     }
     filePath = QDir::cleanPath(filePath);
+
+    QString prefix;
+    if(!label.isEmpty())
+        prefix += label + " ";
+    else
+        prefix += "APDS9306 065 ";
+    if(node != nullptr)
+        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "] ";
+    else
+        prefix += "[0-" + QString::number(interfaceID) + "] ";
+
+
+    plotSeries.append(new QLineSeries());
+    plotSeries[0]->setName(prefix + "light");
+    measurementVariableTypes.append(VariableType::Light);
 }
 
 GCSensorAPDS9306::~GCSensorAPDS9306() {}
@@ -704,10 +719,16 @@ void GCSensorAPDS9306::saveData(std::vector<quint8>& data)
     if(data.size() == 3){
         value = data[0] | (data[1] << 8) | (data[2] << 16);
         formattedData.append(QString::number(value)); // print in scientific format with precision of 6
+
+        plotSeries[0]->append(date.toMSecsSinceEpoch(), value);
+
     } else {
         formattedData.append("NaN");
+
+        plotSeries[0]->append(date.toMSecsSinceEpoch(), nan(""));
     }
     formattedData.append("\n");
 
-    file->write(formattedData.toUtf8());
+    if((file != nullptr) && file->isOpen())
+        file->write(formattedData.toUtf8());
 }
