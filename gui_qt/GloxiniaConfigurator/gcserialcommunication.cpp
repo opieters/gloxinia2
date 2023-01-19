@@ -25,6 +25,8 @@ void GloxiniaConfigurator::connectToDevice(void)
     }
 
     openSerialPort();
+
+    updateUI();
 }
 
 // https://code.qt.io/cgit/qt/qtserialport.git/tree/examples/serialport/terminal/mainwindow.cpp?h=5.15
@@ -32,13 +34,14 @@ void GloxiniaConfigurator::openSerialPort()
 {
     // const SettingsDialog::Settings p = m_settings->settings();
     serial->setPortName(settings.comPort);
-    serial->setBaudRate(500000);
+    serial->setBaudRate(50000);
     serial->setDataBits(QSerialPort::Data8);
     serial->setParity(QSerialPort::NoParity);
     serial->setStopBits(QSerialPort::OneStop);
     serial->setFlowControl(QSerialPort::HardwareControl);
     if (serial->open(QIODevice::ReadWrite))
     {
+        serial->clear();
         // m_console->setEnabled(true);
         // m_console->setLocalEchoEnabled(p.localEchoEnabled);
         ui->actionConnect->setEnabled(false);
@@ -69,6 +72,7 @@ void GloxiniaConfigurator::closeSerialPort()
 
     if (serial->isOpen())
     {
+        serial->flush();
         serial->close();
         showStatusMessage(tr("Disconnected"));
     }
@@ -86,7 +90,7 @@ void GloxiniaConfigurator::readData()
 {
     static SerialReadoutState readoutState = FindStartByte;
     short n_read = 0;
-    static short read_length = 0;
+    static int read_length = 0;
     static char data[255 + 5];
 
     do
@@ -240,6 +244,7 @@ void GloxiniaConfigurator::readData()
                 break;
             }
         case ReadData:
+            if((data[7] - read_length) > 0){
             n_read = serial->read(&data[8 + read_length], data[7] - read_length);
             if (n_read < 0)
             {
@@ -254,6 +259,9 @@ void GloxiniaConfigurator::readData()
             else
             {
                 break;
+            }} else {
+                readoutState = FindStartByte;
+                return;
             }
         case DetectStopByte:
             n_read = serial->read(&data[8 + read_length], 1);
