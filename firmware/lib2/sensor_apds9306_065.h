@@ -85,6 +85,17 @@ typedef enum {
     SENSOR_APDS9306_065_ALS_IV_1024_COUNTS = 0b111,  
 } sensor_apds9306_065_als_interrupt_variance_t;
 
+typedef enum {
+    S_APDS9306_065_ERROR_READOUT,
+    S_APDS9306_065_ERROR_PHASE1_CB,
+    S_APDS9306_065_ERROR_PHASE2_CB,
+    S_APDS9306_065_ERROR_PHASE3_CB,
+    S_APDS9306_065_ERROR_PHASE4_CB,
+    S_APDS9306_065_ERROR_PHASE5_CB,
+    S_APDS9306_065_ERROR_PHASE6_CB,
+    S_APDS9306_065_ERROR_PHASE7_CB
+} sensor_apds9306_065_error_t;
+
 typedef struct sensor_sensor_apds9306_065_config_s {
     uint8_t address;
     i2c_bus_t i2c_bus;

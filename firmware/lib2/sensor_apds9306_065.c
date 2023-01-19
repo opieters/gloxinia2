@@ -22,6 +22,9 @@ void sensor_apds9306_065_get_config(struct sensor_interface_s* intf, uint8_t reg
 
     switch (reg) {
         case sensor_apds9306_065_gloxinia_register_general:
+            intf->measure.task.cb = sensor_apds9306_065_measure;
+            intf->measure.task.data = (void *)intf;
+
             buffer[2] = (uint8_t) (intf->measure.period >> 8);
             buffer[3] = (uint8_t) intf->measure.period;
             *length = 4;
@@ -50,6 +53,7 @@ void sensor_apds9306_065_get_config(struct sensor_interface_s* intf, uint8_t reg
             *length = 6;
             break;
         default:
+            *length = 0;
             break;
     }
 }
@@ -62,6 +66,8 @@ sensor_status_t sensor_apds9306_065_config(struct sensor_interface_s* intf, uint
         return SENSOR_STATUS_ERROR;
     }
 
+    UART_DEBUG_PRINT("Configuring APDS9306 065 sensor");
+
     switch (buffer[0]) {
         case sensor_apds9306_065_gloxinia_register_general:
             if (length != 3){ return SENSOR_STATUS_ERROR; }
@@ -71,7 +77,7 @@ sensor_status_t sensor_apds9306_065_config(struct sensor_interface_s* intf, uint
             
             schedule_init(&intf->measure, intf->measure.task, (((uint16_t)buffer[1]) << 8) | buffer[2]);
             
-            return SENSOR_STATUS_ACTIVE;
+            return SENSOR_STATUS_IDLE;
             
             break;
         case sensor_apds9306_065_gloxinia_register_config:
@@ -136,6 +142,24 @@ void sensor_apds9306_065_init_sensor(struct sensor_interface_s* intf) {
     config->m_config1_data[1] = (config->meas_resolution << 4) | config->meas_rate;
 
     i2c_queue_message(&config->m_config1);
+    
+    UART_DEBUG_PRINT("Configuring APDS9306 065 measurement rate");
+
+    // configure readout message
+    i2c_init_message(&config->m_read_setup,
+        I2C_WRITE_ADDRESS(config->address),
+        config->i2c_bus,
+        config->m_read_address,
+        ARRAY_LENGTH(config->m_read_address),
+        config->m_read_data, 
+        ARRAY_LENGTH(config->m_read_data),
+        i2c_get_write_read_controller(config->i2c_bus),
+        3,
+        sensor_apds9306_065_i2c_cb,
+        intf,
+        0);
+    
+    config->m_read_address[0] = SENSOR_APDS9306_065_R_CLEAR_DATA_0;
 }
 
 static void sensor_apds9306_065_config_phase1_cb(i2c_message_t* m) {
@@ -143,8 +167,14 @@ static void sensor_apds9306_065_config_phase1_cb(i2c_message_t* m) {
     sensor_apds9306_065_config_t* config = &intf->config.apds9306_065;
 
     if (m->error != I2C_NO_ERROR) {
+        intf->log_data[0] = m->status;
+        intf->log_data[1] = m->error;
+        intf->log_data[2] = S_APDS9306_065_ERROR_PHASE1_CB;
+
+        sensor_error_log(intf, intf->log_data, 3);
+        
         intf->status = SENSOR_STATUS_ERROR;
-        sensor_i2c_error_handle(intf, m,  1);
+        sensor_error_handle(intf);
         return;
     }
 
@@ -165,6 +195,8 @@ static void sensor_apds9306_065_config_phase1_cb(i2c_message_t* m) {
     config->m_config2_data[1] = config->gain;
 
     i2c_queue_message(&config->m_config2);
+    
+    UART_DEBUG_PRINT("Configuring APDS9306 065 gain");
 }
 
 static void sensor_apds9306_065_config_phase2_cb(i2c_message_t* m) {
@@ -172,8 +204,14 @@ static void sensor_apds9306_065_config_phase2_cb(i2c_message_t* m) {
     sensor_apds9306_065_config_t* config = &intf->config.apds9306_065;
 
     if (m->error != I2C_NO_ERROR) {
+        intf->log_data[0] = m->status;
+        intf->log_data[1] = m->error;
+        intf->log_data[2] = S_APDS9306_065_ERROR_PHASE2_CB;
+
+        sensor_error_log(intf, intf->log_data, 3);
+        
         intf->status = SENSOR_STATUS_ERROR;
-        sensor_i2c_error_handle(intf, m,  2);
+        sensor_error_handle(intf);
         return;
     }
 
@@ -198,6 +236,8 @@ static void sensor_apds9306_065_config_phase2_cb(i2c_message_t* m) {
      */
 
     i2c_queue_message(&config->m_config1);
+    
+    UART_DEBUG_PRINT("Configuring APDS9306 065 interrupts");
 }
 
 static void sensor_apds9306_065_config_phase3_cb(i2c_message_t* m) {
@@ -205,8 +245,14 @@ static void sensor_apds9306_065_config_phase3_cb(i2c_message_t* m) {
     sensor_apds9306_065_config_t* config = &intf->config.apds9306_065;
 
     if (m->error != I2C_NO_ERROR) {
+        intf->log_data[0] = m->status;
+        intf->log_data[1] = m->error;
+        intf->log_data[2] = S_APDS9306_065_ERROR_PHASE3_CB;
+
+        sensor_error_log(intf, intf->log_data, 3);
+        
         intf->status = SENSOR_STATUS_ERROR;
-        sensor_i2c_error_handle(intf, m,  3);
+        sensor_error_handle(intf);
         return;
     }
 
@@ -227,6 +273,8 @@ static void sensor_apds9306_065_config_phase3_cb(i2c_message_t* m) {
     config->m_config2_data[1] = (0b00 << 4); // every ALS value out of the range triggers an interrupt
 
     i2c_queue_message(&config->m_config2);
+    
+    UART_DEBUG_PRINT("Configuring APDS9306 065 persistence");
 }
 
 static void sensor_apds9306_065_config_phase4(sensor_interface_t* intf) {
@@ -251,14 +299,22 @@ static void sensor_apds9306_065_config_phase4(sensor_interface_t* intf) {
     config->m_config1_data[3] = (config->als_threshold_high >> 16) & 0xf;
 
     i2c_queue_message(&config->m_config1);
+    
+    UART_DEBUG_PRINT("Configuring APDS9306 065 TH high");
 }
 
 static void sensor_apds9306_065_config_phase4_cb(i2c_message_t* m) {
     sensor_interface_t* intf = (sensor_interface_t*) m->callback_data;
 
     if (m->error != I2C_NO_ERROR) {
+        intf->log_data[0] = m->status;
+        intf->log_data[1] = m->error;
+        intf->log_data[2] = S_APDS9306_065_ERROR_PHASE4_CB;
+
+        sensor_error_log(intf, intf->log_data, 3);
+        
         intf->status = SENSOR_STATUS_ERROR;
-        sensor_i2c_error_handle(intf, m,  4);
+        sensor_error_handle(intf);
         return;
     }
 }
@@ -267,8 +323,14 @@ static void sensor_apds9306_065_config_phase5_cb(i2c_message_t* m) {
     sensor_interface_t* intf = (sensor_interface_t*) m->callback_data;
 
     if (m->error != I2C_NO_ERROR) {
+        intf->log_data[0] = m->status;
+        intf->log_data[1] = m->error;
+        intf->log_data[2] = S_APDS9306_065_ERROR_PHASE5_CB;
+
+        sensor_error_log(intf, intf->log_data, 3);
+        
         intf->status = SENSOR_STATUS_ERROR;
-        sensor_i2c_error_handle(intf, m,  5);
+        sensor_error_handle(intf);
         return;
     }
 }
@@ -295,14 +357,22 @@ static void sensor_apds9306_065_config_phase5(sensor_interface_t* intf) {
     config->m_config2_data[3] = (config->als_threshold_low >> 16) & 0xf;
 
     i2c_queue_message(&config->m_config2);
+    
+    UART_DEBUG_PRINT("Configuring APDS9306 065 TH low");
 }
 
 static void sensor_apds9306_065_config_phase6_cb(i2c_message_t* m) {
     sensor_interface_t* intf = (sensor_interface_t*) m->callback_data;
 
     if (m->error != I2C_NO_ERROR) {
+        intf->log_data[0] = m->status;
+        intf->log_data[1] = m->error;
+        intf->log_data[2] = S_APDS9306_065_ERROR_PHASE6_CB;
+
+        sensor_error_log(intf, intf->log_data, 3);
+        
         intf->status = SENSOR_STATUS_ERROR;
-        sensor_i2c_error_handle(intf, m,  6);
+        sensor_error_handle(intf);
         return;
     }
 }
@@ -311,24 +381,24 @@ static void sensor_apds9306_065_config_phase7_cb(i2c_message_t* m) {
     sensor_interface_t* intf = (sensor_interface_t*) m->callback_data;
 
     if (m->error != I2C_NO_ERROR) {
+        intf->log_data[0] = m->status;
+        intf->log_data[1] = m->error;
+        intf->log_data[2] = S_APDS9306_065_ERROR_PHASE7_CB;
+
+        sensor_error_log(intf, intf->log_data, 3);
+        
         intf->status = SENSOR_STATUS_ERROR;
-        sensor_i2c_error_handle(intf, m,  7);
+        sensor_error_handle(intf);
         return;
     } else {
-        intf->status = SENSOR_STATUS_ACTIVE;
+        intf->status = SENSOR_STATUS_IDLE;
     }
 }
 
 void sensor_apds9306_065_activate(struct sensor_interface_s* intf){
+    // activate sensor 
     sensor_apds9306_065_config_t* config = &intf->config.apds9306_065;
-    message_t m_status;
-    uint8_t data[1];
     
-    if((intf->status != SENSOR_STATUS_IDLE) && (intf->status != SENSOR_STATUS_STOPPED)){
-        return;
-    }
-    
-    // activate sensor
     i2c_init_message(&config->m_config1,
             I2C_WRITE_ADDRESS(config->address),
             config->i2c_bus,
@@ -338,55 +408,40 @@ void sensor_apds9306_065_activate(struct sensor_interface_s* intf){
             0,
             i2c_get_write_controller(config->i2c_bus),
             3,
-            sensor_apds9306_065_config_phase7_cb,
+            NULL,
             intf,
             0);
-
     config->m_config1_data[0] = SENSOR_APDS9306_065_R_MAIN_CTRL;
     config->m_config1_data[1] = (1 << 1); // turn sensor on
 
     i2c_queue_message(&config->m_config1);
     
-    // initialise message to read PD value
-    // initialise measurement messages
-    config->m_read_address[0] = SENSOR_APDS9306_065_R_ALS_DATA_0; // select DATA register
-
-    i2c_init_message(&config->m_read_setup,
-            I2C_WRITE_ADDRESS(config->address),
-            config->i2c_bus,
-            config->m_read_address,
-            ARRAY_LENGTH(config->m_read_address),
-            config->m_read_data,
-            ARRAY_LENGTH(config->m_read_data),
-            i2c_get_write_read_controller(config->i2c_bus),
-            3,
-            sensor_apds9306_065_i2c_cb,
-            intf,
-            0);
+    config->m_read_data[0] = 0xAA;
+    config->m_read_data[0] = 0xBB;
+    config->m_read_data[0] = 0xCC;
     
-    if(intf->status != SENSOR_STATUS_ERROR)
-        intf->status = SENSOR_STATUS_RUNNING;
-
-    message_init(&m_status, controller_address, MESSAGE_NO_REQUEST, M_SENSOR_STATUS,
-            intf->sensor_id, data, ARRAY_LENGTH(data));
-    data[0] = intf->status;
-
-    message_send(&m_status);
-
-    return;
+    UART_DEBUG_PRINT("Activating sensor ADPS9306 065");
+    
+    intf->status = SENSOR_STATUS_RUNNING;
 }
 
 void sensor_apds9306_065_i2c_cb(i2c_message_t* m) {
     sensor_interface_t* intf = (sensor_interface_t*) m->callback_data;
 
     if (m->error != I2C_NO_ERROR) {
+        intf->log_data[0] = m->status;
+        intf->log_data[1] = m->error;
+        intf->log_data[2] = S_APDS9306_065_ERROR_READOUT;
+
+        sensor_error_log(intf, intf->log_data, 3);
+        
         intf->status = SENSOR_STATUS_ERROR;
-        sensor_i2c_error_handle(intf, m,  8);
+        sensor_error_handle(intf);
     } else {
         message_init(&intf->log,
                 controller_address,
                 MESSAGE_NO_REQUEST,
-                M_SENSOR_STATUS,
+                M_SENSOR_DATA,
                 intf->sensor_id,
                 m->read_data,
                 SENSOR_APDS3906_098_CAN_DATA_LENGTH);
@@ -430,7 +485,7 @@ void sensor_apds9306_065_measure(void* data) {
         i2c_reset_message(&intf->config.apds9306_065.m_read_setup, 1);
         i2c_queue_message(&intf->config.apds9306_065.m_read_setup);
     } else {
-        UART_DEBUG_PRINT("APDS9306 %x not fully processed.", intf->sensor_id);
+        UART_DEBUG_PRINT("APDS9306 065 %x not fully processed.", intf->sensor_id);
         intf->config.apds9306_065.m_read_setup.status = I2C_MESSAGE_CANCELED;
         
         intf->status = SENSOR_STATUS_ERROR;
