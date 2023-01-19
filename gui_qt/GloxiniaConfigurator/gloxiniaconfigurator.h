@@ -25,6 +25,10 @@
 #include <QChartView>
 #include <QValueAxis>
 #include <QDateTimeAxis>
+#include <QSplitter>
+#include <QListView>
+#include <QTreeView>
+#include <QHBoxLayout>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -109,6 +113,16 @@ private:
      * UI main object
      */
     Ui::GloxiniaConfigurator *ui;
+
+    /*
+     * Main UI elements
+     */
+
+    QHBoxLayout *mainLayout;
+    // horizontal layout
+    QSplitter* splitter, *splitter2;
+    QListView* messageView;
+    QTreeView* systemOverview;
 
     /*
      * status bar information
