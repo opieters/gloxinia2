@@ -217,7 +217,7 @@ void sensor_i2c_error_handle(sensor_interface_t *intf, i2c_message_t *m, uint8_t
 void sensor_start(void) {
     for (int i = 0; i < N_SENSOR_INTERFACES; i++) {
         // check if init was done correctly
-        sensor_set_status(i, SENSOR_STATUS_RUNNING);
+        sensor_set_status(i, SENSOR_STATUS_ACTIVE);
     }
 }
 
@@ -226,7 +226,7 @@ void sensor_stop(void) {
 
         if (sensor_interfaces[i].status == SENSOR_STATUS_RUNNING) {
             // cancel event
-            schedule_remove_event(sensor_interfaces[i].measure.id);
+            //schedule_remove_event(sensor_interfaces[i].measure.id);
 
             // update sensor status
             sensor_set_status(i, SENSOR_STATUS_STOPPED);
