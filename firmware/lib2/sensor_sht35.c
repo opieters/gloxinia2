@@ -72,11 +72,15 @@ sensor_status_t sensor_sht35_config(struct sensor_interface_s *intf, uint8_t *bu
 
             // validate configuration
             if(!validate_sht35_config(config)){
+                UART_DEBUG_PRINT("Configuring SHT35 INVALID CONFIG");
                 return SENSOR_STATUS_ERROR;
             } else {
                 // start sensor initialisation (async) only when configuration is OK
                 sht35_init_sensor(intf);
             }
+            break;
+        default:
+            break;
     }
 
     return SENSOR_STATUS_IDLE;
@@ -128,6 +132,8 @@ void sht35_init_sensor(struct sensor_interface_s *intf)
     void (*callback)(i2c_message_t * m);
 
     sensor_sht35_config_t *config = &intf->config.sht35;
+    
+    UART_DEBUG_PRINT("Configuring SHT35 init sensor");
 
     switch (intf->config.sht35.periodicity)
     {
@@ -188,10 +194,14 @@ static void sht35_config_phase1_cb(i2c_message_t *m)
         intf->log_data[2] = S_SHT35_ERROR_PHASE1_CB;
         sensor_error_log(intf, intf->log_data, 3);
         
+        UART_DEBUG_PRINT("Configuring SHT35 CB1 ERR");
+        
         intf->status = SENSOR_STATUS_ERROR;
         sensor_error_handle(intf);
         return;
     }
+    
+    UART_DEBUG_PRINT("Configuring SHT35 CB1");
 
     if (config->periodicity == S_SHT35_PERIODIC)
     {
@@ -354,6 +364,8 @@ static void sht35_config_phase2_cb(i2c_message_t *m)
     
     if (m->error != I2C_NO_ERROR)
     {
+        UART_DEBUG_PRINT("Configuring SHT35 CB2 ERR");
+        
         intf->log_data[0] = m->status;
         intf->log_data[1] = m->error;
         intf->log_data[2] = S_SHT35_ERROR_PHASE2_CB;
@@ -363,6 +375,8 @@ static void sht35_config_phase2_cb(i2c_message_t *m)
         sensor_error_handle(intf);
         return;
     }
+    
+    UART_DEBUG_PRINT("Configuring SHT35 CB2");
     
     switch (config->periodicity)
     {
