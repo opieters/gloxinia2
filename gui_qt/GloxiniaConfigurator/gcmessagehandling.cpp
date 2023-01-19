@@ -165,8 +165,6 @@ void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
 {
     GCSensor* sensor = treeModel->getSensor(m.getMessageID(), m.getSensorID());
     GCNode* node = treeModel->getNode(m.getMessageID());
-    quint8 rawData[32];
-    unsigned int length;
 
     if(node == nullptr)
         return;
@@ -224,5 +222,6 @@ void GloxiniaConfigurator::sendSerialMessage(const GMessage &m)
 
     length = m.toBytes(rawData, 32);
     serial->write((char *)rawData, length);
+    qInfo() << "Sending" << m.toString();
     serial->flush();
 }
