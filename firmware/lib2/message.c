@@ -22,6 +22,9 @@ static void cmd_sensor_stop(const message_t* m);
 
 static void address_get_task(void *data);
 
+static message_t m_error;
+static uint8_t m_error_data[2];
+
 extern bool uart_connection_active;
 
 void message_init(message_t *m,
@@ -77,12 +80,6 @@ void message_send(message_t *m)
 {
     switch (m->status)
     {
-    case M_RX_FROM_CAN:
-    case M_RX_FROM_UART:
-    case M_TX_QUEUED:
-    case M_TX_SENT:
-    case M_ERROR:
-        break;
     case M_TX_INIT_DONE:
         if (uart_connection_active)
         {
@@ -94,11 +91,35 @@ void message_send(message_t *m)
             send_message_can(m);
         }
         break;
+    case M_RX_FROM_CAN:
+    case M_RX_FROM_UART:
+    case M_TX_QUEUED:
+    case M_TX_SENT:
+    case M_ERROR:
+    case M_EMPTY:
+    default:
+        break;
     }
 }
 
 void message_process(const message_t *m)
 {
+    // do not process message if there was an error
+    if(m->status >= M_ERROR)
+    {
+        m_error_data[0] = m->command;
+        m_error_data[1] = m->status;
+        message_init(&m_error, controller_address,
+                  MESSAGE_NO_REQUEST,
+                  M_TX_ERROR,
+                  NO_SENSOR_ID,
+                  m_error_data,
+                  ARRAY_LENGTH(m_error_data));
+
+        send_message_uart(&m_error);
+        return;
+    }
+    
     switch (m->command)
     {
     case M_REQUEST_ADDRESS_AVAILABLE:

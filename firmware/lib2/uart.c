@@ -5,6 +5,8 @@
 #include <can.h>
 #include <event_controller.h>
 
+#include "i2c.h"
+
 // UART TX FIFO buffer variables
 volatile uint8_t n_uart_tx_messages = 0;
 volatile uint8_t uart_tx_queue_idx = 0;
@@ -40,6 +42,7 @@ task_t uart_rx_tasks[UART_FIFO_RX_BUFFER_SIZE];
 volatile uart_rx_state_t uart_rx_state = 0;
 volatile uint8_t uart_rx_data_idx = 0;
 volatile uint8_t uart_rx_idx = 0;
+message_t *uart_rx_m;
 
 // debug message and data
 message_t *uart_print_message = NULL;
@@ -249,6 +252,7 @@ void __attribute__((__interrupt__, no_auto_psv)) _DMA14Interrupt(void)
 
 void __attribute__((interrupt, no_auto_psv)) _U2ErrInterrupt(void)
 {
+    uart_rx_m->status = M_ERROR_HW_OVERFLOW;
     U2STAbits.OERR = 0;
     _U2EIF = 0; // Clear the UART2 Error Interrupt Flag
 }
@@ -258,9 +262,7 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
 
     register uint8_t rx_value = U2RXREG;
     //register message_t *m = &(uart_rx_queue[(n_uart_rx_messages + uart_rx_read_idx) % UART_RX_BUFFER_SIZE]);
-    static message_t *m;
     
-
     //if (n_uart_rx_messages == UART_RX_BUFFER_SIZE)
     //{
     //    _U2RXIF = 0;
@@ -272,38 +274,39 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
         if (rx_value == UART_CMD_START)
         {
             uart_rx_state = UART_RX_STATE_READ_IDH;
-            m = &uart_rx_queue[uart_rx_idx];
-            m->data = uart_rx_data[uart_rx_idx];
+            uart_rx_m = &uart_rx_queue[uart_rx_idx];
+            uart_rx_m->data = uart_rx_data[uart_rx_idx];
+            uart_rx_m->status = M_EMPTY;
         }
         break;
     case UART_RX_STATE_READ_IDH:
-        m->identifier = rx_value;
+        uart_rx_m->identifier = rx_value;
         uart_rx_state = UART_RX_STATE_READ_IDL;
         break;
     case UART_RX_STATE_READ_IDL:
-        m->identifier = (m->identifier << 8) | rx_value;
+        uart_rx_m->identifier = (uart_rx_m->identifier << 8) | rx_value;
         uart_rx_state = UART_RX_STATE_READ_CMD;
         break;
     case UART_RX_STATE_READ_CMD:
-        m->command = rx_value;
+        uart_rx_m->command = rx_value;
         uart_rx_state = UART_RX_STATE_READ_REQUEST;
         break;
     case UART_RX_STATE_READ_REQUEST:
-        m->request_message_bit = rx_value;
-        // m->status = UART_MSG_TRANSFERRED;
+        uart_rx_m->request_message_bit = rx_value;
+        // uart_rx_m->status = UART_MSG_TRANSFERRED;
         uart_rx_state = UART_RX_STATE_READ_SIDH;
         break;
     case UART_RX_STATE_READ_SIDH:
-        m->sensor_identifier = rx_value;
+        uart_rx_m->sensor_identifier = rx_value;
         uart_rx_state = UART_RX_STATE_READ_SIDL;
 
         break;
     case UART_RX_STATE_READ_SIDL:
-        m->sensor_identifier = (m->sensor_identifier << 8) | rx_value;
+        uart_rx_m->sensor_identifier = (uart_rx_m->sensor_identifier << 8) | rx_value;
         uart_rx_state = UART_RX_STATE_READ_LENGTH;
         break;
     case UART_RX_STATE_READ_LENGTH:
-        m->length = rx_value;
+        uart_rx_m->length = rx_value;
         if (rx_value > 0)
         {
             uart_rx_state = UART_RX_STATE_READ_DATA;
@@ -319,17 +322,17 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
         // only write data until buffer is full
         if (uart_rx_data_idx < PRINT_BUFFER_LENGTH)
         {
-            m->data[uart_rx_data_idx] = rx_value;
+            uart_rx_m->data[uart_rx_data_idx] = rx_value;
         }
         else
         {
             // continue reading data, but indicate error occurred
-            m->status = M_ERROR;
+            uart_rx_m->status = M_ERROR_OVERFLOW;
         }
 
         uart_rx_data_idx++;
 
-        if (uart_rx_data_idx == m->length)
+        if (uart_rx_data_idx == uart_rx_m->length)
         {
             uart_rx_state = UART_RX_STATE_DETECT_STOP;
         }
@@ -338,14 +341,14 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
     case UART_RX_STATE_DETECT_STOP:
         if (rx_value == UART_CMD_STOP)
         {
-            if (m->status != M_ERROR)
+            if (uart_rx_m->status < M_ERROR)
             {
-                m->status = M_RX_FROM_UART;
+                uart_rx_m->status = M_RX_FROM_UART;
             }
         }
         else
         {
-            m->status = M_ERROR;
+            uart_rx_m->status = M_ERROR_STOP_DETECT;
         }
 
         //n_uart_rx_messages++;
@@ -353,9 +356,9 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
 
         uart_connection_active = true;
 
-        if ((m->identifier == controller_address) || (m->identifier == ADDRESS_GATEWAY))
+        if ((uart_rx_m->identifier == controller_address) || (uart_rx_m->identifier == ADDRESS_GATEWAY))
         {
-            send_message_uart(m);
+            send_message_uart(uart_rx_m);
             
             // schedule processing task
             task_t task = uart_rx_tasks[uart_rx_idx];
@@ -366,10 +369,10 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
         else
         {
             // forward this message over CAN
-            send_message_can(m);
+            send_message_can(uart_rx_m);
         }
         
-        uart_rx_idx++;
+        uart_rx_idx = (uart_rx_idx+1) % UART_FIFO_RX_BUFFER_SIZE;
 
         break;
     default:
