@@ -71,9 +71,11 @@ void GloxiniaConfigurator::saveProject(void)
 void GloxiniaConfigurator::newProject(void)
 {
     closeSerialPort();
+    settings.success = false;
 
     newProjectDialog->setWindowModality(Qt::ApplicationModal);
     if(newProjectDialog->exec() == QDialog::Rejected){
+        showStatusMessage(tr("No file open."));
         return;
     }
     settings = newProjectDialog->getProject();
@@ -140,7 +142,7 @@ void GloxiniaConfigurator::newProject(void)
 
     // update UI
     updateUI();
-
+    showStatusMessage(tr("Created project ") + settings.projectName);
 }
 
 void GloxiniaConfigurator::openProject(void)
@@ -190,6 +192,7 @@ void GloxiniaConfigurator::openProject(void)
 
     // update UI
     updateUI();
+    showStatusMessage(tr("Openened project ") + settings.projectName);
 }
 
 void GloxiniaConfigurator::clearAll(void)
