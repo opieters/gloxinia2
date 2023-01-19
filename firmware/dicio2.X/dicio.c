@@ -34,7 +34,7 @@ void dicio_init(void)
 
     dicio_init_pins();
 
-    uart_init(500000);
+    uart_init(50000);
     UART_DEBUG_PRINT("Configured UART.");
 
     can_init();
@@ -52,20 +52,8 @@ void dicio_init(void)
     event_controller_init();
     UART_DEBUG_PRINT("Initialised event controller.");
 
+    // TODO:REMOVE???
     uart_connection_active = true;
-    message_t m;
-    uint8_t data[] = {
-        SENSOR_TYPE_APDS9306_065,
-        0,
-        I2C_ADDRESS_SENSOR_APDS9306_065,
-        I2C2_BUS,
-        SENSOR_APDS9306_065_ALS_MEAS_RATE_100MS,
-        SENSOR_APDS9306_065_ALS_RESOLUTION_20BIT,
-        SENSOR_APDS9306_065_ALS_GAIN_1};
-
-    message_init(&m, controller_address, MESSAGE_NO_REQUEST, M_SENSOR_CONFIG, 0,
-                 data, ARRAY_LENGTH(data));
-    message_process(&m);
 
     // task_schedule_t dicio_read_log = {{dicio_send_ready_message, NULL}, 1, 0};
     // schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);
