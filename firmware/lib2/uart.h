@@ -6,8 +6,8 @@
 #include <stddef.h>
 #include <message.h>
 
-#define UART_CMD_START ('\x01')
-#define UART_CMD_STOP  ('\x04')
+#define UART_CMD_START ('\x5B')
+#define UART_CMD_STOP  ('\x5D')
 
 #define UART_MESSAGE_BUFFER_LENGTH 64U
 #define UART_HEADER_SIZE 9U

@@ -33,8 +33,8 @@ public:
         ACTUATOR_STATUS = 0x20,
     };
 
-    static constexpr uint8_t GMessageStartByte = 0x01;
-    static constexpr uint8_t GMessageStopByte = 0x04;
+    static constexpr uint8_t GMessageStartByte = 0x5B;
+    static constexpr uint8_t GMessageStopByte = 0x5D;
     static constexpr uint8_t headerSize = 9;
 
     static constexpr uint8_t ComputerAddress = 0x00;
