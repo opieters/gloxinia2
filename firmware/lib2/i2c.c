@@ -316,12 +316,18 @@ bool i2c_check_message_sent(i2c_message_t* m){
 
 void __attribute__((interrupt, no_auto_psv)) _MI2C1Interrupt(void) {
     transfer_done = 1;
+    
     _MI2C1IF = 0;
+    
+    i2c_process_queue();
 }
 
 void __attribute__((interrupt, no_auto_psv)) _MI2C2Interrupt(void) {
     transfer_done = 1;
+    
     _MI2C2IF = 0;
+    
+    i2c_process_queue();
 }
 
 void __attribute__((__interrupt__, no_auto_psv)) _T2Interrupt(void) {
