@@ -132,3 +132,7 @@ pcb_design/reflexa/gerber/
 firmware/dicio2.X/.generated_files/
 firmware/sylvatica2.X/.generated_files/
 firmware/dicio2.X/debug/default/queuelogs/debugtool
+pcb_design/samtec/how-to-import.htm
+firmware/can_bootloader.X/.generated_files/
+firmware/fatfs/
+firmware/mcc_generated_files/
