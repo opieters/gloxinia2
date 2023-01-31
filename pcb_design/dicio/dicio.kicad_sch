@@ -8382,7 +8382,7 @@
     (property "Value" "10uF" (id 1) (at 283.591 54.229 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_1206_3216Metric" (id 2) (at 281.6352 56.896 0)
+    (property "Footprint" "Capacitor_SMD:C_1210_3225Metric" (id 2) (at 281.6352 56.896 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 280.67 53.086 0)
@@ -8785,7 +8785,7 @@
       (reference "C22") (unit 1) (value "4.7uF") (footprint "Capacitor_SMD:C_1206_3216Metric")
     )
     (path "/fbbb808d-778e-4398-a312-aedbff2b6c0e"
-      (reference "C23") (unit 1) (value "10uF") (footprint "Capacitor_SMD:C_1206_3216Metric")
+      (reference "C23") (unit 1) (value "10uF") (footprint "Capacitor_SMD:C_1210_3225Metric")
     )
     (path "/00000000-0000-0000-0000-00005ddd282f"
       (reference "C24") (unit 1) (value "10uF") (footprint "Capacitor_SMD:C_1210_3225Metric")
