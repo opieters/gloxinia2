@@ -16,6 +16,9 @@
 #define N_SENSOR_INTERFACES 4
 #endif
 
+#define DICIO_N_SENSOR_IFS 4
+#define PLANALTA_N_SENSOR_IFS 4
+#define SYLVATICA_N_SENSOR_IFS 8
 
     
     typedef union sensor_config_u {
@@ -37,6 +40,8 @@
         message_t log;
         uint8_t log_data[CAN_MAX_N_BYTES];
     } sensor_interface_t;
+    
+    extern sensor_interface_t sensor_interfaces[N_SENSOR_INTERFACES];
 
 #ifdef	__cplusplus
 extern "C" {
@@ -53,6 +58,7 @@ extern "C" {
     void sensor_stop(void);
     void sensor_send_status(uint8_t interface_id);
     void sensor_set_status(uint8_t interface_id, sensor_status_t s);
+    void sdcard_save_sensor_data(sensor_type_t sensor_type, uint8_t* buffer, size_t length);
 
 
 #ifdef	__cplusplus

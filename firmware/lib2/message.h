@@ -4,7 +4,7 @@
 #include <xc.h>
 #include <stdbool.h>
 
-#define NO_SENSOR_ID 0
+#define NO_SENSOR_ID (0xff)
 #define MESSAGE_REQUEST 1
 #define MESSAGE_NO_REQUEST 0
 
@@ -23,10 +23,17 @@ typedef enum
     M_SENSOR_ERROR = 0x11,
     M_SENSOR_DATA = 0x12,
     M_SENSOR_CONFIG = 0x13, // configure sensors or read configuration
+    M_SENSOR_CONFIG_END = 0x16, // ends burst of configuration data
     M_SENSOR_START = 0x14,
     M_SENSOR_STOP = 0x15,
     M_ACTUATOR_STATUS = 0x20,
     M_TX_ERROR = 0x30,
+    M_DATA_CLEAR = 0x40,
+    M_DATA_READ = 0x41,
+    M_DATA_WRITE = 0x42,
+    M_DATA_BURST_START = 0x43,
+    M_DATA_BURST = 0x44,
+    M_DATA_BURST_STOP = 0x45
 } message_cmd_t;
 
 /*typedef enum {

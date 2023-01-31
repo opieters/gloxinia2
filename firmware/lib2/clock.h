@@ -18,8 +18,12 @@ extern "C" {
 #endif
     
     void clock_init(void);
-    void clock_set_config(clock_time_t* time);
-    uint8_t clock_sync(clock_time_t* time);
+    void clock_set_time(clock_time_t* time);
+    void clock_start_calibration(void);
+    void clock_stop_calibration(void);
+    void clock_set_calibration(uint8_t value);
+    void clock_get_raw_time(uint16_t* ctime);
+
 
 #ifdef	__cplusplus
 }

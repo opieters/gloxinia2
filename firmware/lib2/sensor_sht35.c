@@ -473,6 +473,10 @@ void sht35_i2c_cb_periodic_m_read(i2c_message_t *m)
                          m->read_data,
                          SENSOR_SHT35_CAN_DATA_LENGTH);
             message_send(&intf->log);
+            
+#ifdef __DICIO__
+            sdcard_save_sensor_data(SENSOR_TYPE_SHT35, m->read_data, SENSOR_SHT35_CAN_DATA_LENGTH);
+#endif
         }
     }
     if (m->error != I2C_NO_ERROR)
@@ -544,6 +548,10 @@ void sht35_i2c_cb_single_shot_m_read(i2c_message_t *m)
                          m->read_data,
                          SENSOR_SHT35_CAN_DATA_LENGTH);
             message_send(&intf->log);
+            
+#ifdef __DICIO__
+            sdcard_save_sensor_data(SENSOR_TYPE_SHT35, m->read_data, SENSOR_SHT35_CAN_DATA_LENGTH);
+#endif
         }
     }
     if (m->error != I2C_NO_ERROR)

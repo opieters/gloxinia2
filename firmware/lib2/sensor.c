@@ -1,5 +1,9 @@
 #include <sensor.h>
 #include <address.h>
+#include <clock.h>
+#ifdef __DICIO__
+#include <../dicio2.X/sdcard.h>
+#endif
 
 sensor_interface_t sensor_interfaces[N_SENSOR_INTERFACES];
 
@@ -245,3 +249,29 @@ i2c_bus_t sensor_i2c_get_bus(uint8_t sensor_interface_n) {
 #error "This board is not yet supported"
 #endif
 }
+
+#ifdef __DICIO__
+void sdcard_save_sensor_data(sensor_type_t sensor_type, uint8_t* buffer, size_t length)
+{
+    uint8_t sd_buffer[CAN_MAX_N_BYTES+6]; // TODO
+    uint16_t ctime[4];
+    
+    // get current time
+    clock_get_raw_time(ctime);
+    
+    // create new buffer
+    sd_buffer[0] = SDCARD_START_BYTE;
+    sd_buffer[1] = (uint8_t) (ctime[2] & 0xff);
+    sd_buffer[2] = (uint8_t) ((ctime[3] >> 8) & 0xff);
+    sd_buffer[3] = (uint8_t) (ctime[3] & 0xff);
+    sd_buffer[4] = sensor_type;
+    for(size_t i = 0; i < length; i++)
+    {
+        sd_buffer[5+i] = buffer[i];
+    }
+    sd_buffer[5+length] = SDCARD_STOP_BYTE;
+    
+    // store data
+    sdcard_save_data(sd_buffer, 6+length);
+}
+#endif

@@ -47,6 +47,8 @@ extern "C" {
 
     extern char print_buffer[DEBUG_BUFFER_DEPTH][DEBUG_BUFFER_LENGTH];
     extern uint8_t print_buffer_idx;
+    void clear_buffer(uint8_t* buffer, size_t length);
+    
 
 
 #ifdef	__cplusplus
