@@ -181,7 +181,7 @@ uint32_t schedule_remove_event(uint32_t id){
 }
 
 
-void __attribute__((__interrupt__, no_auto_psv)) _T9Interrupt(void) {
+void __attribute__((interrupt,no_auto_psv)) _T9Interrupt(void) {
     uint16_t i;
     
     for(i = 0; i < n_scheduled_events; i++){

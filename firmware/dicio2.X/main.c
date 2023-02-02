@@ -3,7 +3,9 @@
 #include <event_controller.h>
 #include <utilities.h>
 #include <i2c.h>
+#include "mcc_generated_files/clock.h"
 
+/*
 #pragma config GWRP = OFF                       // General Segment Write-Protect bit (General Segment may be written)
 #pragma config GSS = OFF                        // General Segment Code-Protect bit (General Segment Code protect is disabled)
 #pragma config GSSK = OFF                       // General Segment Key bits (General Segment Write Protection and Code Protection is Disabled)
@@ -39,34 +41,14 @@
 #pragma config AWRP = OFF                       // Auxiliary Segment Write-protect bit (Auxiliary program memory is not write-protected)
 #pragma config APL = OFF                        // Auxiliary Segment Code-protect bit (Aux Flash Code protect is disabled)
 #pragma config APLK = OFF                       // Auxiliary Segment Key bits (Aux Flash Write Protection and Code Protection is Disabled)
+*/
 
 static task_t task;
 
 int main(void) {
-
-    // Configure Oscillator to operate the device at 64MHz with internal 
-    // crystal
-    // Fosc= Fin*M/(N1*N2), Fcy=Fosc/2
-    // Fosc= 7.37M*70/(2*2)=128Mhz for 8M input clock
-    PLLFBD = 62; // M=70
-    CLKDIVbits.PLLPOST = 0; // N1=2
-    CLKDIVbits.PLLPRE = 0; // N2=2
-    OSCTUN = 0; // Tune FRC oscillator, if FRC is used
-
-    // Disable Watch Dog Timer
-    RCONbits.SWDTEN = 0;
-
-    // Clock switch to incorporate PLL
-    __builtin_write_OSCCONH(0x03); // Initiate Clock Switch to
-
-    // FRC with PLL (NOSC=0b001)
-    __builtin_write_OSCCONL(OSCCON | 0x01); // Start clock switching
-    while (OSCCONbits.COSC != 0b011);
-
-    // Wait for Clock switch to occur
-    // Wait for PLL to lock
-    while (OSCCONbits.LOCK != 1);
-
+    
+    CLOCK_Initialize();
+    
     dicio_init();
 
     while (1) {

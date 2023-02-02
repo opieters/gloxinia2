@@ -236,7 +236,7 @@ void uart_parse_to_raw_buffer(uint8_t *data, message_t *m, const size_t max_leng
     data[8 + m->length] = UART_CMD_STOP;
 }
 
-void __attribute__((__interrupt__, no_auto_psv)) _DMA14Interrupt(void)
+void __attribute__((interrupt, no_auto_psv)) _DMA14Interrupt(void)
 {
     // finish the current transfer
     // uart_tx_queue[uart_tx_queue_valid].status = M_TX_SENT;
@@ -382,7 +382,7 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
     _U2RXIF = 0;
 }
 
-void __attribute__((interrupt, no_auto_psv)) _U2TXInterrupt(void)
+void __attribute__((interrupt,no_auto_psv)) _U2TXInterrupt(void)
 {
     _U2TXIF = 0;
 }

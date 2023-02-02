@@ -330,7 +330,7 @@ void __attribute__((interrupt, no_auto_psv)) _MI2C2Interrupt(void) {
     i2c_process_queue();
 }
 
-void __attribute__((__interrupt__, no_auto_psv)) _T2Interrupt(void) {
+void __attribute__((no_auto_psv)) __T2Interrupt(void) {
     UART_DEBUG_PRINT("I2C error, cancelling message (%02x) on bus %x.", m->address, m->i2c_bus);
 
     if ((I2C1CONbits.I2CEN == 1) && (m->i2c_bus == I2C1_BUS)) {

@@ -9,6 +9,7 @@
 #include <sensor.h>
 #include "sdcard.h"
 #include <clock.h>
+#include "mcc_generated_files/interrupt_manager.h"
 
 // TODO REMOVE DEBUG INCLUDES
 #include <sensor_apds9306_065.h>
@@ -40,6 +41,8 @@ i2c_config_t dicio_i2c2_config = {
 void dicio_init(void) {
 
     dicio_init_pins();
+    
+    INTERRUPT_GlobalEnable();
 
     uart_init(50000);
     UART_DEBUG_PRINT("Configured UART.");
@@ -416,6 +419,7 @@ void dicio_dump_sdcard_data(uint32_t sector_start, uint32_t sector_stop) {
 }
 
 void dicio_init_pins(void) {
+    __builtin_write_OSCCONL(OSCCON & 0xbf); // unlock PPS
 #ifdef __dsPIC33EP256MU806__
 
     /*****************************
@@ -783,6 +787,7 @@ void dicio_init_pins(void) {
             // CLEAR_BIT(config.rst_sensor_pin.tris_r, config.rst_sensor_pin.n);
             // SET_BIT(config.rst_sensor_pin.lat_r, config.rst_sensor_pin.n);
 #endif
+                __builtin_write_OSCCONL(OSCCON | 0x40); // lock PPS
 }
 
 void dicio_send_ready_message(void *data) {
