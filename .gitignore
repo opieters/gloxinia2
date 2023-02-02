@@ -136,3 +136,4 @@ pcb_design/samtec/how-to-import.htm
 firmware/can_bootloader.X/.generated_files/
 firmware/fatfs/
 firmware/mcc_generated_files/
+firmware/uart_bootloader.X/.generated_files/
