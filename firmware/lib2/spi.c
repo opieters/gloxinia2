@@ -24,6 +24,8 @@ bool spi1_open(spi1_modes spiUniqueConfiguration)
         SPI1CON2 = spi1_configuration[spiUniqueConfiguration].con2;
         SPI1STAT = spi1_configuration[spiUniqueConfiguration].stat | 0x8000;
         
+        _SPI1IE = 1;
+        
         
         //TODO: fix
         //TRISDbits.TRISD1 = spi1_configuration[spiUniqueConfiguration].operation;

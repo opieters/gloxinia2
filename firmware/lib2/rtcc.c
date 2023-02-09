@@ -1,4 +1,4 @@
-#include "clock.h"
+#include "rtcc.h"
 
 void clock_init(void)
 {

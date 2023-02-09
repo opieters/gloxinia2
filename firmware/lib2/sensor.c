@@ -1,6 +1,6 @@
 #include <sensor.h>
 #include <address.h>
-#include <clock.h>
+#include <rtcc.h>
 #ifdef __DICIO__
 #include <../dicio2.X/sdcard.h>
 #endif

@@ -20,21 +20,6 @@ uint8_t uart_dma_message_data[128];
 
 extern bool uart_connection_active;
 
-// receive buffer variables
-typedef enum
-{
-    UART_RX_STATE_FIND_START_BYTE,
-    UART_RX_STATE_READ_IDH,
-    UART_RX_STATE_READ_IDL,
-    UART_RX_STATE_READ_CMD,
-    UART_RX_STATE_READ_REQUEST,
-    UART_RX_STATE_READ_SIDH,
-    UART_RX_STATE_READ_SIDL,
-    UART_RX_STATE_READ_LENGTH,
-    UART_RX_STATE_READ_DATA,
-    UART_RX_STATE_DETECT_STOP
-} uart_rx_state_t;
-
 message_t uart_rx_queue[UART_FIFO_RX_BUFFER_SIZE];
 uint8_t uart_rx_data[UART_FIFO_RX_BUFFER_SIZE][CAN_MAX_N_BYTES];
 task_t uart_rx_tasks[UART_FIFO_RX_BUFFER_SIZE];
@@ -96,8 +81,8 @@ void uart_init(uint32_t baudrate)
     _DMA14IF = 0; // Clear DMA Interrupt Flag
     _DMA14IE = 1; // Enable DMA interrupt
 
-    DMA14STAL = (uint16_t)uart_dma_message_data;
-    DMA14STAH = 0x0;
+    DMA14STAL = __builtin_dmaoffset(uart_dma_message_data);
+    DMA14STAH = __builtin_dmapage(uart_dma_message_data);
 
     // update interrupt priority
     _DMA14IP = 7;
@@ -115,6 +100,7 @@ void uart_init(uint32_t baudrate)
         uart_tx_queue[i].length = UART_FIFO_TX_BUFFER_SIZE;
         uart_tx_queue[i].status = M_TX_SENT;
     }
+    
     n_uart_tx_messages = 0;
     uart_tx_queue_idx = 0;
     uart_tx_queue_valid = 0;
@@ -205,8 +191,8 @@ void process_uart_tx_queue(void)
             ;
 
         m->status = M_TX_SENT;
-        DMA14STAL = (uint16_t)uart_dma_message_data;
-        DMA14STAH = 0x0;
+        DMA14STAL = __builtin_dmaoffset(uart_dma_message_data);
+        DMA14STAH = __builtin_dmapage(uart_dma_message_data);
         DMA14CNT = UART_HEADER_SIZE + (m->length) - 1;
 
         // start transfer
@@ -236,7 +222,7 @@ void uart_parse_to_raw_buffer(uint8_t *data, message_t *m, const size_t max_leng
     data[8 + m->length] = UART_CMD_STOP;
 }
 
-void __attribute__((interrupt, no_auto_psv)) _DMA14Interrupt(void)
+void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA14Interrupt ( void )
 {
     // finish the current transfer
     // uart_tx_queue[uart_tx_queue_valid].status = M_TX_SENT;
@@ -250,14 +236,14 @@ void __attribute__((interrupt, no_auto_psv)) _DMA14Interrupt(void)
     _DMA14IF = 0; // Clear the DMA14 Interrupt Flag
 }
 
-void __attribute__((interrupt, no_auto_psv)) _U2ErrInterrupt(void)
+void __attribute__ ( ( interrupt, no_auto_psv ) ) _U2ErrInterrupt ( void )
 {
     uart_rx_m->status = M_ERROR_HW_OVERFLOW;
     U2STAbits.OERR = 0;
     _U2EIF = 0; // Clear the UART2 Error Interrupt Flag
 }
 
-void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
+void __attribute__ ( ( interrupt, no_auto_psv ) ) _U2RXInterrupt ( void )
 {
 
     register uint8_t rx_value = U2RXREG;
@@ -382,7 +368,7 @@ void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
     _U2RXIF = 0;
 }
 
-void __attribute__((interrupt,no_auto_psv)) _U2TXInterrupt(void)
+void __attribute__ ( ( interrupt, no_auto_psv ) ) _U2TXInterrupt ( void )
 {
     _U2TXIF = 0;
 }
