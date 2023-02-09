@@ -137,3 +137,5 @@ firmware/can_bootloader.X/.generated_files/
 firmware/fatfs/
 firmware/mcc_generated_files/
 firmware/uart_bootloader.X/.generated_files/
+firmware/dicio_debug.X/.generated_files/
+firmware/uart_bootloader.X/debug/
