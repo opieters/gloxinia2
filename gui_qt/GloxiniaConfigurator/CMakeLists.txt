@@ -33,6 +33,7 @@ set(PROJECT_SOURCES
         globalmeasurementpolicydialog.h globalmeasurementpolicydialog.cpp globalmeasurementpolicydialog.ui
         serialsettingsdialog.h serialsettingsdialog.cpp serialsettingsdialog.ui
         newprojectdialog.h newprojectdialog.cpp newprojectdialog.ui
+        updatedialog.h updatedialog.cpp updatedialog.ui
         gcmessagehandling.cpp
         gcfileoperations.cpp
         gcserialcommunication.cpp

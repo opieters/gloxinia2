@@ -12,10 +12,10 @@ GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, bo
     this->data = std::vector<quint8>(data, data+size);
 }*/
 GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, bool request, std::vector<quint8> data) : code(code),
-                                                                                                                        messageID(messageID),
-                                                                                                                        sensorID(sensorID),
-                                                                                                                        request(request),
-                                                                                                                        data(data)
+    messageID(messageID),
+    sensorID(sensorID),
+    request(request),
+    data(data)
 {
 }
 
@@ -99,6 +99,38 @@ QString GMessage::codeToString(GMessage::Code code)
         return "sensor stop";
     case ACTUATOR_STATUS:
         return "actuator config";
+    case TX_ERROR:
+        return "transmit error";
+    case DATA_CLEAR:
+        return "clear data";
+    case DATA_READ :
+        return "read data";
+    case DATA_WRITE:
+        return "data write";
+    case DATA_BURST_START:
+        return "start data burst";
+    case DATA_BURST:
+        return "data burst";
+    case DATA_BURST_STOP:
+        return "stop data burst";
+    case BOOT_READ_VERSION:
+        return "read bootloader version";
+    case BOOT_READ_FLASH:
+        return "read flash";
+    case BOOT_WRITE_FLASH:
+        return "write flash";
+    case  BOOT_ERASE_FLASH :
+        return "erase flash";
+    case BOOT_CALC_CHECKSUM:
+        return "flsah checksum";
+    case BOOT_RESET_DEVICE:
+        return "reset device";
+    case BOOT_SELF_VERIFY:
+        return "self verification";
+    case BOOT_GET_MEMORY_ADDRESS_RANGE_COMMAND:
+        return "flash memory range";
+    case BOOT_READY:
+        return "bootloader ready";
     default:
         return "unknown (" + QString::number((int)code, 16) + ")";
         break;

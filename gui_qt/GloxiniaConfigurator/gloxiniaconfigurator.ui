@@ -55,6 +55,7 @@
     <addaction name="actionMeasurementSettings"/>
     <addaction name="actionRunDiscovery"/>
     <addaction name="actionReset"/>
+    <addaction name="actionUpdateDevice"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -173,6 +174,11 @@
   <action name="actionReset">
    <property name="text">
     <string>Reset</string>
+   </property>
+  </action>
+  <action name="actionUpdateDevice">
+   <property name="text">
+    <string>Update device</string>
    </property>
   </action>
  </widget>

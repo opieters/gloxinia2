@@ -32,6 +32,33 @@ void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
         case GMessage::Code::SENSOR_CONFIG:
             processSensorConfig(m);
             break;
+        case GMessage::Code::BOOT_READ_VERSION:
+            processBootReadVersion(m);
+            break;
+        case GMessage::Code::BOOT_READ_FLASH:
+            processBootReadFlash(m);
+            break;
+        case GMessage::Code::BOOT_WRITE_FLASH:
+            processBootWriteFlash(m);
+            break;
+        case GMessage::Code::BOOT_ERASE_FLASH:
+            processBootEraseFlash(m);
+            break;
+        case GMessage::Code::BOOT_CALC_CHECKSUM:
+            processBootCalcChecksum(m);
+            break;
+        case GMessage::Code::BOOT_RESET_DEVICE:
+            processBootResetDevice(m);
+            break;
+        case GMessage::Code::BOOT_SELF_VERIFY:
+            processBootSelfVerify(m);
+            break;
+        case GMessage::Code::BOOT_GET_MEMORY_ADDRESS_RANGE_COMMAND:
+            processBootGetMemoryAddressRangeCommand(m);
+            break;
+        case GMessage::Code::BOOT_READY:
+            processBootReady(m);
+            break;
         default:
             break;
         }
@@ -214,6 +241,109 @@ void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
 
 }
 
+
+void GloxiniaConfigurator::processBootReadVersion(const GMessage&m)
+{
+    FlashNodeInfo info;
+
+    auto data = m.getData();
+
+    info.bootVersion = (((uint16_t) data[0]) << 8) | (data[1]);
+    info.swVersion = (((uint32_t) data[7]) << 24) | (((uint32_t) data[8]) << 16) | (((uint32_t) data[9]) << 8) | (data[10]);
+    info.hwVersion = (((uint32_t) data[11]) << 24) | (((uint32_t) data[12]) << 16) | (((uint32_t) data[13]) << 8) | (data[14]);
+
+    info.maxPacketSize = data[6];
+    info.eraseRowSize = data[15];
+    info.writeRowSize = data[16];
+}
+void GloxiniaConfigurator::processBootReadFlash(const GMessage&m)
+{
+
+}
+void GloxiniaConfigurator::processBootWriteFlash(const GMessage&m)
+{
+    handleBootMessageStatus(m);
+}
+void GloxiniaConfigurator::processBootEraseFlash(const GMessage&m)
+{
+    handleBootMessageStatus(m);
+}
+void GloxiniaConfigurator::processBootCalcChecksum(const GMessage&m)
+{
+    bool status = handleBootMessageStatus(m);
+    auto data = m.getData();
+    if(status && (data.size() == 7)){
+        updateDialog->receivedCRC(((uint16_t) data[5]) << 8 | data[6]);
+    }
+}
+
+void GloxiniaConfigurator::processBootResetDevice(const GMessage&m)
+{
+    handleBootMessageStatus(m);
+}
+
+void GloxiniaConfigurator::processBootSelfVerify(const GMessage&m)
+{
+    if(handleBootMessageStatus(m))
+    {
+        updateDialog->setVerification(true);
+    } else {
+        updateDialog->setVerification(false);
+    }
+}
+
+void GloxiniaConfigurator::processBootGetMemoryAddressRangeCommand(const GMessage&m)
+{
+    auto data = m.getData();
+    if(handleBootMessageStatus(m) && (data.size() == (5+8)))
+    {
+        uint32_t address1 = 0, address2 = 0;
+        for(int i = 0; i < 4; i++){
+            address1 = (address1 << 8) | data[5+i];
+        }
+
+        address2 = 0;
+        for(int i = 0; i < 4; i++){
+            address2 = (address2 << 8) | data[5+4+i];
+        }
+
+        updateDialog->setFlashRange(address1, address2);
+    }
+}
+
+void GloxiniaConfigurator::processBootReady(const GMessage&m)
+{
+    updateDialog->setBootReady(true);
+}
+
+bool GloxiniaConfigurator::handleBootMessageStatus(const GMessage &m){
+    // get reply and process it
+    auto data = m.getData();
+    if(data.size() < 5){
+        return false;
+    }
+
+    switch(data[4])
+    {
+        case 1:
+            qInfo() << "success";
+            return true;
+            break;
+        case 0xff:
+            updateDialog->detectedError();
+            qInfo() << "Command not supported";
+            break;
+        case 0xfe:
+            updateDialog->detectedError();
+            qInfo() << "Bootloader reported address error";
+            break;
+        default:
+            updateDialog->detectedError();
+            qInfo() << "Unknown command return received";
+            break;
+    }
+    return false;
+}
 
 void GloxiniaConfigurator::sendSerialMessage(const GMessage &m)
 {

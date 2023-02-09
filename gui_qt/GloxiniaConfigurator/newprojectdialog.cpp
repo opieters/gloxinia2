@@ -26,7 +26,10 @@ NewProjectDialog::NewProjectDialog(QWidget *parent) :
     settings.projectName = "MyProject";
     settings.projectDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/" + settings.projectName;
     settings.projectDir = QDir::cleanPath(settings.projectDir);
-    settings.baudrate = 500000;
+    settings.baudrate = 50000;
+    settings.messageBufferSize = 1000;
+    settings.plotBufferWindow = 100;
+    settings.globalMeasurementPeriod = 9;
     settings.workOffline = false;
 
     updateCOMList();

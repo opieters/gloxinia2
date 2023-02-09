@@ -1,6 +1,7 @@
 #ifndef GLOXINIACONFIGURATOR_H
 #define GLOXINIACONFIGURATOR_H
 
+#include "updatedialog.h"
 #include <QMainWindow>
 #include <QSerialPort>
 #include <QStringListModel>
@@ -60,6 +61,9 @@ public:
     void selectDataFile(void);
     void exit(void);
 
+    void sendSerialMessage(const GMessage &m);
+    bool handleBootMessageStatus(const GMessage &m);
+
     enum SerialReadoutState
     {
         FindStartByte,
@@ -82,6 +86,7 @@ private slots:
 
     void updatePreferences(void);
     void resetSystem(void);
+    void updateDevice(void);
 
     void runDiscovery(void);
     // void addNode(void);
@@ -186,8 +191,15 @@ private:
     void processSensorData(const GMessage& m);
     void processSensorStatus(const GMessage& m);
     void processSensorConfig(const GMessage& m);
-
-    void sendSerialMessage(const GMessage &m);
+    void processBootReadVersion(const GMessage&m);
+    void processBootReadFlash(const GMessage&m);
+    void processBootWriteFlash(const GMessage&m);
+    void processBootEraseFlash(const GMessage&m);
+    void processBootCalcChecksum(const GMessage&m);
+    void processBootResetDevice(const GMessage&m);
+    void processBootSelfVerify(const GMessage&m);
+    void processBootGetMemoryAddressRangeCommand(const GMessage&m);
+    void processBootReady(const GMessage&m);
 
     /*
      * Dialog screen to edit the system settings
@@ -205,6 +217,9 @@ private:
      * General sensor type selection screen
      */
     SensorDialog *sensorSettings = nullptr;
+
+
+    UpdateDialog* updateDialog = nullptr;
 
 
     NewProjectDialog* newProjectDialog;

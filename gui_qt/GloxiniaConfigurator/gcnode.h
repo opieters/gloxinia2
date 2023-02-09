@@ -15,6 +15,12 @@ public:
         GCSylvatica = 0x03,
     };
 
+    enum BootLoaderNodeID {
+        Dicio = 0x0A,
+        Sylvatica = 0x0B,
+        Planalta = 0x0C,
+    };
+
     GCNode() = default;
     virtual ~GCNode() = default;
     GCNode(const GCNode &) = default;
@@ -41,6 +47,7 @@ public:
     bool fromConfigString(const QStringList &config);
 
     virtual const unsigned int getNInterfaces(void) const = 0;
+    virtual const BootLoaderNodeID getBootLloaderID(void) const = 0;
 
 protected:
     int id;
@@ -60,8 +67,10 @@ class GCNodeDicio : public GCNode
 {
 public:
     GCNodeDicio(const int nodeID, const QString label = "dicio node");
+    GCNodeDicio(GCNodeDicio&);
 
     const unsigned int getNInterfaces(void) const override;
+    const BootLoaderNodeID getBootLloaderID(void) const override;
 
 protected:
 };
@@ -72,8 +81,10 @@ class GCNodePlanalta : public GCNode
 {
 public:
     GCNodePlanalta(const int nodeID, const QString label = "planalta node");
+    GCNodePlanalta(GCNodePlanalta&);
 
     const unsigned int getNInterfaces(void) const override;
+    const BootLoaderNodeID getBootLloaderID(void) const override;
 
 protected:
 };
@@ -84,8 +95,10 @@ class GCNodeSylvatica : public GCNode
 {
 public:
     GCNodeSylvatica(const int nodeID, const QString label = "sylvatica node");
+    GCNodeSylvatica(GCNodeSylvatica&);
 
     const unsigned int getNInterfaces(void) const override;
+    const BootLoaderNodeID getBootLloaderID(void) const override;
 
 protected:
 };

@@ -132,14 +132,26 @@ GCNode* GCNode::fromQVariant(const QVariant data)
 GCNodeDicio::GCNodeDicio(const int nodeID, const QString label) : GCNode(nodeID, label)
 {
 }
+GCNodeDicio::GCNodeDicio(GCNodeDicio& c) : GCNode(c.id, c.label)
+{
+
+}
 
 const unsigned int GCNodeDicio::getNInterfaces(void) const
 {
     return 4;
 }
 
+const  GCNode::BootLoaderNodeID GCNodeDicio::getBootLloaderID(void) const{
+    return GCNode::BootLoaderNodeID::Dicio;
+}
+
 GCNodePlanalta::GCNodePlanalta(const int nodeID, const QString label) : GCNode(nodeID, label)
 {
+}
+GCNodePlanalta::GCNodePlanalta(GCNodePlanalta& c) : GCNode(c.id, c.label)
+{
+
 }
 
 const unsigned int GCNodePlanalta::getNInterfaces(void) const
@@ -147,11 +159,24 @@ const unsigned int GCNodePlanalta::getNInterfaces(void) const
     return 4;
 }
 
+const  GCNode::BootLoaderNodeID GCNodePlanalta::getBootLloaderID(void) const{
+    return GCNode::BootLoaderNodeID::Planalta;
+}
+
 GCNodeSylvatica::GCNodeSylvatica(const int nodeID, const QString label) : GCNode(nodeID, label)
 {
+}
+
+GCNodeSylvatica::GCNodeSylvatica(GCNodeSylvatica& c) : GCNode(c.id, c.label)
+{
+
 }
 
 const unsigned int GCNodeSylvatica::getNInterfaces(void) const
 {
     return 8;
+}
+
+const  GCNode::BootLoaderNodeID GCNodeSylvatica::getBootLloaderID(void) const{
+    return GCNode::BootLoaderNodeID::Sylvatica;
 }

@@ -35,7 +35,8 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
       chart(new QChart),
       messageModel(new QStringListModel),
       measurementSettings(new MeasurementSettingsDialog),
-      newProjectDialog(new NewProjectDialog)
+      newProjectDialog(new NewProjectDialog),
+      updateDialog(new UpdateDialog)
 {
     // build UI
     ui->setupUi(this);
@@ -82,6 +83,7 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
 
     // serial data readout trigger
     connect(serial, &QSerialPort::readyRead, this, &GloxiniaConfigurator::readData);
+    updateDialog->setConfigurator(this);
 
     // connect File menu to functions
     connect(ui->actionSave, &QAction::triggered, this, &GloxiniaConfigurator::saveProject);
@@ -104,6 +106,7 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     // connect(ui->actionUpdate, &QAction::triggered, this, &GloxiniaConfigurator::);
     connect(ui->actionDisconnect, &QAction::triggered, this, &GloxiniaConfigurator::closeSerialPort);
     connect(ui->actionReset, &QAction::triggered, this, &GloxiniaConfigurator::resetSystem);
+    connect(ui->actionUpdateDevice, &QAction::triggered, this, &GloxiniaConfigurator::updateDevice);
 
 
     // set data models
@@ -206,6 +209,52 @@ void GloxiniaConfigurator::resetSystem(void)
     updateUI();
 
     treeModel->removeRows(0, treeModel->rowCount());
+}
+
+void GloxiniaConfigurator::updateDevice(void)
+{
+    // get selected node
+
+    const QModelIndex index = systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = systemOverview->model();
+    GCNode* node = nullptr;
+
+    // node is selected -> run menu
+    if (index.isValid() && !index.parent().isValid())
+    {
+        QVariant data = model->data(index, Qt::EditRole);
+
+
+        GCNodeDicio *nodeD = data.value<GCNodeDicio*>();
+        GCNodeSylvatica *nodeS = data.value<GCNodeSylvatica*>();
+        GCNodePlanalta *nodeP = data.value<GCNodePlanalta*>();
+
+        if(nodeD != nullptr)
+            node = new GCNodeDicio(*nodeD);
+        else if(nodeS != nullptr)
+            node = new GCNodeSylvatica(*nodeS);
+        else if(nodeP != nullptr)
+            node = new GCNodePlanalta(*nodeP);
+        else
+            return;
+        removeNode(index);
+        updateDialog->setNode(node);
+    } else {
+        updateDialog->setNode(nullptr);
+
+        QMessageBox msgBox;
+        msgBox.setText("No node selected, cannot update firmware.");
+        msgBox.exec();
+        return;
+    }
+
+    updateDialog->setWindowModality(Qt::ApplicationModal);
+    int result = updateDialog->exec();
+    if(result == QDialog::Rejected){
+        return;
+    }
+    if(node != nullptr)
+        delete node;
 }
 
 void GloxiniaConfigurator::updatePreferences(void)

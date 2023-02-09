@@ -31,6 +31,22 @@ public:
         SENSOR_START = 0x14,
         SENSOR_STOP = 0x15,
         ACTUATOR_STATUS = 0x20,
+        TX_ERROR = 0x30,
+        DATA_CLEAR = 0x40,
+        DATA_READ = 0x41,
+        DATA_WRITE = 0x42,
+        DATA_BURST_START = 0x43,
+        DATA_BURST = 0x44,
+        DATA_BURST_STOP = 0x45,
+        BOOT_READ_VERSION = 0x80,
+        BOOT_READ_FLASH = 0x81,
+        BOOT_WRITE_FLASH = 0x82,
+        BOOT_ERASE_FLASH = 0x83,
+        BOOT_CALC_CHECKSUM = 0x88,
+        BOOT_RESET_DEVICE = 0x89,
+        BOOT_SELF_VERIFY = 0x8A,
+        BOOT_GET_MEMORY_ADDRESS_RANGE_COMMAND = 0x8B,
+        BOOT_READY = 0x8F,
     };
 
     static constexpr uint8_t GMessageStartByte = 0x5B;
@@ -41,6 +57,7 @@ public:
     static constexpr uint8_t SearchStartAddress = 0x01;
     static constexpr uint8_t UnsetAddress = 0xff;
     static constexpr uint16_t NoSensorID = 0x0000;
+    static constexpr uint16_t UnlockSequence = 0x55AA;
 
     GMessage(GMessage::Code code = NOP, quint8 messegaID = ComputerAddress, quint16 sensorID = NoSensorID, bool request = false, std::vector<quint8> data = std::vector<quint8>());
 
