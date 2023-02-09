@@ -1,35 +1,3 @@
-
-/* This file lists all of the interrupts in the system and how they will be
- * handled.  This file is use by both the hardware interrupt table and the 
- * user remap table to make sure they both stay in sync.
- *
- * IMPORTANT NOTE: Once a boot loader is deployed using this file, this file 
- * can not be modified in the end application.  Take care when selecting how to 
- * handle each interrupt at the development of the boot loader.
- *
- * Options:
- *   remap_to_application - this forwards the interrupt directly to the
- *   user application.  Each interrupt forwarded will require 2 instructions
- *   for the GOTO in the user reamapping table thus taking up 6 bytes of program
- *   memory each.  This is the safest option for all interrupts implemented in 
- *   hardware.  
- *
- *   keep_in_bootloader - this option will keep the interrupt in the boot
- *   loader.  If the interrupt function is defined, it will just to that
- *   function.  If it is not defined, it will jump to the default interrupt 
- *   handler function.
- *
- *   remap_to_application_default - this forwards the interrupt directly to the
- *   user application's default interrupt handler rather than the specified 
- *   unique interrupt vector.  This option is useful for interrupts that the
- *   application does not expect to use.  Since each interrupt forwarded by the
- *   remap_to_application option takes 2 instruction words, can get quite costly
- *   to forward all possible interrupts.  Interrupts forwarded with this option
- *   do not take any additional code space to forward.  Since multiple
- *   interrupts will be forwarded to the same vector, the user code will have to
- *   check to see which interrupt triggered to process them accordingly.  
- */
-    
 #ifdef REMAP_TABLE    
 
 REMAP_TO_APPLICATION   OscillatorFail       
@@ -51,8 +19,8 @@ REMAP_TO_APPLICATION   T2Interrupt
 REMAP_TO_APPLICATION   T3Interrupt       
 REMAP_TO_APPLICATION   SPI1ErrInterrupt       
 REMAP_TO_APPLICATION   SPI1Interrupt       
-REMAP_TO_APPLICATION   U1RXInterrupt       
-REMAP_TO_APPLICATION   U1TXInterrupt       
+KEEP_IN_BOOTLOADER   U1RXInterrupt       
+KEEP_IN_BOOTLOADER   U1TXInterrupt       
 REMAP_TO_APPLICATION   AD1Interrupt       
 REMAP_TO_APPLICATION   DMA1Interrupt       
 REMAP_TO_APPLICATION   NVMInterrupt       
@@ -105,7 +73,7 @@ REMAP_TO_APPLICATION   DMA5Interrupt
 REMAP_TO_APPLICATION   RTCCInterrupt       
 REMAP_TO_APPLICATION_DEFAULT   Interrupt63       
 REMAP_TO_APPLICATION_DEFAULT   Interrupt64       
-REMAP_TO_APPLICATION   U1ErrInterrupt       
+KEEP_IN_BOOTLOADER   U1ErrInterrupt       
 REMAP_TO_APPLICATION   U2ErrInterrupt       
 REMAP_TO_APPLICATION   CRCInterrupt       
 REMAP_TO_APPLICATION   DMA6Interrupt       

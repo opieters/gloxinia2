@@ -7,7 +7,7 @@
 /**
  * a private place to store the error code if we run into a severe error
  */
-static uint16_t TRAPS_error_code = -1;
+uint16_t TRAPS_error_code = -1;
 
 /**
  * Halts 
@@ -103,7 +103,10 @@ void ERROR_HANDLER _SoftTrapError(void)
       TRAPS_halt_on_error(TRAPS_DOOVR_ERR);
     }
 
-    while(1);
+    while(1)
+    {
+        Nop();
+    }
 }
 
 

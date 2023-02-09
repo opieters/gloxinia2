@@ -52,22 +52,7 @@
 */
 void INTERRUPT_Initialize (void)
 {
-}
-
-
-void __attribute__((interrupt, no_auto_psv)) _DefaultInterrupt(void)
-{
-    //while(1)
-    //{
-    //    Nop();
-    //}
-    IFS0 = 0;
-    IFS1 = 0;
-    IFS2 = 0;
-    IFS3 = 0;
-    IFS4 = 0;
-    IFS5 = 0;
-    IFS6 = 0;
-    IFS7 = 0;
-    IFS8 = 0;
+    //    CNI: Change Notification Interrupt
+    //    Priority: 1
+        IPC4bits.CNIP = 1;
 }

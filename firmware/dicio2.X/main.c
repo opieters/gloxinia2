@@ -45,7 +45,8 @@
 
 static task_t task;
 
-int main(void) {
+int main(void) 
+{
     
     CLOCK_Initialize();
     

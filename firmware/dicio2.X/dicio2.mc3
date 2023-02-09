@@ -7049,7 +7049,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="Pin Module" registerAlias="CNI" settingAlias="enable"/>
-         <value>disabled</value>
+         <value>enabled</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="Pin Module" registerAlias="CNI" settingAlias="flag"/>
@@ -8994,12 +8994,12 @@
          <hash>b8cd45c278fb207cb112a86ea423149812a05e4db6f5f147a50216df53c6ae31</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\boot\hardware_interrupt_table.S</file>
-         <hash>6a23f2a98ca2232eb2a1eb49b8024ff505755d26d9ce9e65a0c841e1c9bacd30</hash>
-      </entry>
-      <entry>
          <file>mcc_generated_files\boot\application_header_crc32.S</file>
          <hash>4caee5a18507490bd1561160c10081265ff7094236801c7b288ff0e5a755f09b</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files\boot\hardware_interrupt_table.S</file>
+         <hash>6a23f2a98ca2232eb2a1eb49b8024ff505755d26d9ce9e65a0c841e1c9bacd30</hash>
       </entry>
       <entry>
          <file>mcc_generated_files\boot\postBuild.bat</file>
@@ -9026,12 +9026,12 @@
          <hash>65e9d009f97001c14b62021bd920bc17a159045ad48e329baf7e8c3de4026637</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\mcc.c</file>
-         <hash>e8099436edf270749718053a38282c320a679b1a9ef574c0657e3f7aaf9f1ff7</hash>
-      </entry>
-      <entry>
          <file>mcc_generated_files\boot\interrupts.S</file>
          <hash>85f45a6ad79daf44864699c84a8a67e660adebe0779d642b234d895bba172fb0</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files\mcc.c</file>
+         <hash>e8099436edf270749718053a38282c320a679b1a9ef574c0657e3f7aaf9f1ff7</hash>
       </entry>
       <entry>
          <file>mcc_generated_files\reset.h</file>
@@ -9067,7 +9067,7 @@
       </entry>
       <entry>
          <file>mcc_generated_files\pin_manager.c</file>
-         <hash>111c99139c71389f41d920f3e563a765d35da4de7146d8ba4970adcae0d766f8</hash>
+         <hash>17f7a0c8590e6db251088f69d10efafe84332a6cbb5066a40a85b6c26aafb706</hash>
       </entry>
       <entry>
          <file>mcc_generated_files\boot\boot_config.h</file>
@@ -9091,7 +9091,7 @@
       </entry>
       <entry>
          <file>mcc_generated_files\interrupt_manager.c</file>
-         <hash>0d0616cd414f99ac850b7f0221ba158c527f9cf72532694eacef4c985aa8d9f7</hash>
+         <hash>7e3451e2c7764689e32c02ce9ff994be9fc5289333e8e4b350cfac8fed0c14d0</hash>
       </entry>
       <entry>
          <file>mcc_generated_files\watchdog.h</file>

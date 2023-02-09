@@ -54,6 +54,10 @@
 #include "pin_manager.h"
 
 /**
+ Section: File specific functions
+*/
+
+/**
  Section: Driver Interface Function Definitions
 */
 void PIN_MANAGER_Initialize (void)
@@ -110,5 +114,17 @@ void PIN_MANAGER_Initialize (void)
     ANSELD = 0x00C0;
     ANSELE = 0x00FF;
     ANSELG = 0x03C0;
+    
+}
+
+/* Interrupt service routine for the CNI interrupt. */
+void __attribute__ (( interrupt, no_auto_psv )) _CNInterrupt ( void )
+{
+    if(IFS1bits.CNIF == 1)
+    {
+        
+        // Clear the flag
+        IFS1bits.CNIF = 0;
+    }
 }
 

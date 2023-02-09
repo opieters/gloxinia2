@@ -8,7 +8,7 @@
 #include <i2c.h>
 #include <sensor.h>
 #include "sdcard.h"
-#include <clock.h>
+#include <rtcc.h>
 #include "mcc_generated_files/interrupt_manager.h"
 
 // TODO REMOVE DEBUG INCLUDES
@@ -43,12 +43,17 @@ void dicio_init(void) {
     dicio_init_pins();
     
     INTERRUPT_GlobalEnable();
-
+    
     uart_init(50000);
+    
     UART_DEBUG_PRINT("Configured UART.");
+    
+    while(1);
 
     can_init();
     UART_DEBUG_PRINT("Initialised ECAN.");
+    
+    
 
     i2c1_init(&dicio_i2c1_config);
     UART_DEBUG_PRINT("Initialised I2C1.");
@@ -62,8 +67,6 @@ void dicio_init(void) {
     event_controller_init();
     UART_DEBUG_PRINT("Initialised event controller.");
     
-    UART_DEBUG_PRINT("Unable to write sector %i!", sizeof(sensor_interface_t));
-
     dicio_init_node_configurations();
 
     if (SD_SPI_MediaInitialize() == true) {
