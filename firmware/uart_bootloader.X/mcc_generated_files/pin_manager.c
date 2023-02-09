@@ -1,51 +1,4 @@
 /**
-  PIN MANAGER Generated Driver File
-
-  @Company:
-    Microchip Technology Inc.
-
-  @File Name:
-    pin_manager.c
-
-  @Summary:
-    This is the generated manager file for the PIC24 / dsPIC33 / PIC32MM MCUs device.  This manager
-    configures the pins direction, initial state, analog setting.
-    The peripheral pin select, PPS, configuration is also handled by this manager.
-
-  @Description:
-    This source file provides implementations for PIN MANAGER.
-    Generation Information :
-        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.171.1
-        Device            :  dsPIC33EP512MC806
-    The generated drivers are tested against the following:
-        Compiler          :  XC16 v1.70
-        MPLAB 	          :  MPLAB X v5.50
-*/
-
-/*
-    (c) 2020 Microchip Technology Inc. and its subsidiaries. You may use this
-    software and any derivatives exclusively with Microchip products.
-
-    THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER
-    EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE, INCLUDING ANY IMPLIED
-    WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, AND FITNESS FOR A
-    PARTICULAR PURPOSE, OR ITS INTERACTION WITH MICROCHIP PRODUCTS, COMBINATION
-    WITH ANY OTHER PRODUCTS, OR USE IN ANY APPLICATION.
-
-    IN NO EVENT WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE,
-    INCIDENTAL OR CONSEQUENTIAL LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND
-    WHATSOEVER RELATED TO THE SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP HAS
-    BEEN ADVISED OF THE POSSIBILITY OR THE DAMAGES ARE FORESEEABLE. TO THE
-    FULLEST EXTENT ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL CLAIMS IN
-    ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
-    THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
-
-    MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE
-    TERMS.
-*/
-
-
-/**
     Section: Includes
 */
 
@@ -124,3 +77,49 @@ void PIN_MANAGER_Initialize (void)
     __builtin_write_OSCCONL(OSCCON | 0x40); // lock PPS
 }
 
+void PIN_MANAGER_Deactivate (void)
+{
+    /****************************************************************************
+     * Setting the Output Latch SFR(s)
+     ***************************************************************************/
+    LATB = 0x0000;
+    LATC = 0x0000;
+    LATD = 0x0000;
+    LATE = 0x0080;
+    LATF = 0x0000;
+    LATG = 0x0000;
+
+    /****************************************************************************
+     * Setting the GPIO Direction SFR(s)
+     ***************************************************************************/
+    TRISB = 0xFFFF;
+    TRISC = 0xFFFF;
+    TRISD = 0xFFFF;
+    TRISE = 0xFFFF;
+    TRISF = 0xFFFF;
+    TRISG = 0xFFFF;
+
+
+
+
+    /****************************************************************************
+     * Setting the Analog/Digital Configuration SFR(s)
+     ***************************************************************************/
+    ANSELB = 0xFFFF;
+    ANSELC = 0xFFFF;
+    ANSELD = 0xFFFF;
+    ANSELE = 0xFFFF;
+    ANSELG = 0xFFFF;
+    
+    /****************************************************************************
+     * Set the PPS
+     ***************************************************************************/
+    __builtin_write_OSCCONL(OSCCON & 0xbf); // unlock PPS
+
+    RPINR18bits.U1RXR = 0x0000; 
+    RPOR6bits.RP85R = 0x0000;  
+    RPOR6bits.RP87R = 0x0000;  
+    RPINR18bits.U1CTSR = 0x0000;    
+
+    __builtin_write_OSCCONL(OSCCON | 0x40); // lock PPS
+}
