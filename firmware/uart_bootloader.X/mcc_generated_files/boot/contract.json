@@ -90,11 +90,11 @@
     },
     {
       "name": "U1RXInterrupt",
-      "mappingOption": "REMAP_TO_APPLICATION"
+      "mappingOption": "KEEP_IN_BOOTLOADER"
     },
     {
       "name": "U1TXInterrupt",
-      "mappingOption": "REMAP_TO_APPLICATION"
+      "mappingOption": "KEEP_IN_BOOTLOADER"
     },
     {
       "name": "AD1Interrupt",
@@ -310,7 +310,7 @@
     },
     {
       "name": "U2ErrInterrupt",
-      "mappingOption": "REMAP_TO_APPLICATION"
+      "mappingOption": "KEEP_IN_BOOTLOADER"
     },
     {
       "name": "CRCInterrupt",

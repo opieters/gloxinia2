@@ -1,58 +1,5 @@
-
-/**
-  @Generated 16-bit Bootloader Source File
-
-  @Company:
-    Microchip Technology Inc.
-
-  @File Name: 
-    boot_process.c
-
-  @Summary:
-    This is the boot_process.c file generated using 16-bit Bootloader
-
-  @Description:
-    This header file provides implementations for driver APIs for all modules selected in the GUI.
-    Generation Information :
-        Product Revision  :  16-bit Bootloader - 1.22.1
-        Device            :  dsPIC33EP512MC806
-    The generated drivers are tested against the following:
-        Compiler          :  XC16 v1.36B
-        MPLAB             :  MPLAB X v5.15
-*/
-/*
-Copyright (c) [2012-2023] Microchip Technology Inc.  
-
-    All rights reserved.
-
-    You are permitted to use the accompanying software and its derivatives 
-    with Microchip products. See the Microchip license agreement accompanying 
-    this software, if any, for additional info regarding your rights and 
-    obligations.
-    
-    MICROCHIP SOFTWARE AND DOCUMENTATION ARE PROVIDED "AS IS" WITHOUT 
-    WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT 
-    LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE, NON-INFRINGEMENT 
-    AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT WILL MICROCHIP OR ITS
-    LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT, NEGLIGENCE, STRICT 
-    LIABILITY, CONTRIBUTION, BREACH OF WARRANTY, OR OTHER LEGAL EQUITABLE 
-    THEORY FOR ANY DIRECT OR INDIRECT DAMAGES OR EXPENSES INCLUDING BUT NOT 
-    LIMITED TO ANY INCIDENTAL, SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES, 
-    OR OTHER SIMILAR COSTS. 
-    
-    To the fullest extend allowed by law, Microchip and its licensors 
-    liability will not exceed the amount of fees, if any, that you paid 
-    directly to Microchip to use this software. 
-    
-    THIRD PARTY SOFTWARE:  Notwithstanding anything to the contrary, any 
-    third party software accompanying this software is subject to the terms 
-    and conditions of the third party's license agreement.  To the extent 
-    required by third party licenses covering such third party software, 
-    the terms of such license will apply in lieu of the terms provided in 
-    this notice or applicable license.  To the extent the terms of such 
-    third party licenses prohibit any of the restrictions described here, 
-    such restrictions will not apply to such third party software.
-*/
+#include <xc.h>
+#include <libpic30.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
@@ -62,6 +9,8 @@ Copyright (c) [2012-2023] Microchip Technology Inc.
 #include "boot_process.h"
 #include "boot_image.h"
 #include "boot_config.h"
+#include "../uart1.h"
+#include <message.h>
 
 
 #define EXECUTABLE_IMAGE_FIRST_ADDRESS BOOT_CONFIG_PROGRAMMABLE_ADDRESS_LOW
@@ -73,105 +22,64 @@ Copyright (c) [2012-2023] Microchip Technology Inc.
 #endif
 
 
-static uint8_t commandArray[BOOT_CONFIG_MAX_PACKET_SIZE];
-
-enum BOOT_COMMAND_RESPONSES
-{
-    COMMAND_SUCCESS = 0x01,
-    UNSUPPORTED_COMMAND = 0xFF,
-    BAD_ADDRESS = 0xFE,
-    BAD_LENGTH  = 0xFD,
-    VERIFY_FAIL = 0xFC
-};
-
-enum BOOT_COMMAND
-{
-    READ_VERSION = 0x00,
-    READ_FLASH = 0x01,
-    WRITE_FLASH = 0x02,
-    ERASE_FLASH = 0x03,
-    CALC_CHECKSUM = 0x08,
-    RESET_DEVICE = 0x09,
-    SELF_VERIFY = 0x0A,
-    GET_MEMORY_ADDRESS_RANGE_COMMAND = 0x0B
-};
-
-
-
 /******************************************************************************/
 /* Private Function Prototypes                                                */
 /******************************************************************************/
 
-static enum BOOT_COMMAND_RESULT CommandError(enum BOOT_COMMAND_RESPONSES);
-static enum BOOT_COMMAND_RESULT ReadVersion(void);
+static boot_command_response_t CommandError(boot_command_response_t);
+static boot_command_response_t ReadVersion(void);
 
 static void ResetDevice(void);
-static enum BOOT_COMMAND_RESULT EraseFlash(void);
-static enum BOOT_COMMAND_RESULT WriteFlash(void);
-static enum BOOT_COMMAND_RESULT ReadFlash(void);
-static enum BOOT_COMMAND_RESULT CalculateChecksum(void);
-static enum BOOT_COMMAND_RESULT SelfVerify(void);
-static enum BOOT_COMMAND_RESULT GetMemoryAddressRange(void);
+static boot_command_response_t EraseFlash(void);
+static boot_command_response_t WriteFlash(void);
+static boot_command_response_t ReadFlash(void);
+static boot_command_response_t CalculateChecksum(void);
+static boot_command_response_t SelfVerify(void);
+static boot_command_response_t GetMemoryAddressRange(void);
+
+extern volatile bool received_bootloader_message;
 
 /******************************************************************************/
 /* Public Functions                                                           */
 /******************************************************************************/
 void BOOT_Initialize() 
 {
+    received_bootloader_message = false;
 }
 
+extern uart1_message_t uart1_rx_m;
 
-enum BOOT_COMMAND_RESULT BOOT_ProcessCommand(void)
+boot_command_result_t BOOT_ProcessCommand(void)
 {    
-    uint16_t bytes_ready = BOOT_COM_GetBytesReady();
-    uint8_t command;
-    uint16_t command_length;
-
-    if (bytes_ready == 0u) 
-    { 
-        return BOOT_COMMAND_NONE; 
-    }
-    if (bytes_ready < sizeof(struct CMD_STRUCT_0)) 
-    { 
-        return BOOT_COMMAND_INCOMPLETE; 
-    }
+    received_bootloader_message = true;
     
-    command = BOOT_COM_Peek(0);
-
-    // validate the length of the command will not exceed the buffer size
-    command_length = BOOT_COM_Peek(1u) + BOOT_COM_Peek(2u)*256u + sizeof(struct CMD_STRUCT_0);
-    if ( ( command_length > BOOT_CONFIG_MAX_PACKET_SIZE ) && ( command != ERASE_FLASH ) )
-    {
-        return CommandError(BAD_LENGTH);
-    }
-
-    switch (command)
+    switch (uart1_rx_m.command)
     {
         
-    case WRITE_FLASH:
+    case M_BOOT_WRITE_FLASH:
         return WriteFlash();
 
-    case READ_FLASH:
+    case M_BOOT_READ_FLASH:
         return ReadFlash();
 
-    case READ_VERSION:
+    case M_BOOT_READ_VERSION:
         return ReadVersion();
 
-    case ERASE_FLASH:
+    case M_BOOT_ERASE_FLASH:
         return EraseFlash();
 
-    case RESET_DEVICE:
+    case M_BOOT_RESET_DEVICE:
         ResetDevice();
         return BOOT_COMMAND_SUCCESS;
 
-    case CALC_CHECKSUM:
+    case M_BOOT_CALC_CHECKSUM:
         return CalculateChecksum();
 
-    case SELF_VERIFY:
+    case M_BOOT_SELF_VERIFY:
         return SelfVerify();
 
      
-    case GET_MEMORY_ADDRESS_RANGE_COMMAND:
+    case M_BOOT_GET_MEMORY_ADDRESS_RANGE_COMMAND:
         return GetMemoryAddressRange();
 
     default:
@@ -192,40 +100,65 @@ void BOOT_StartApplication()
 /* Private Functions                                                          */
 /******************************************************************************/
 
+extern uart1_message_t uart1_rx_m;
 
-static enum BOOT_COMMAND_RESULT CommandError(enum BOOT_COMMAND_RESPONSES errorType)
-{
-    struct RESPONSE_TYPE_0 response;
+
+static boot_command_response_t CommandError(boot_command_response_t errorType)
+{    
+    uart1_message_t err_response;
     
-    (void)BOOT_COM_Read(commandArray, sizeof(struct CMD_STRUCT_0));
-    memcpy(&response, commandArray, sizeof(struct CMD_STRUCT_0));
-    response.success = errorType;
-    BOOT_COM_Write((uint8_t*) & response, sizeof (struct RESPONSE_TYPE_0 ) / sizeof (uint8_t));
+    copy_uart1_message(&uart1_rx_m, &err_response);
+    err_response.length = 5;
+    err_response.data[4] = errorType;
+
+    uart1_tx_message(&err_response);
     
     return BOOT_COMMAND_ERROR;
 }
 
-static enum BOOT_COMMAND_RESULT ReadVersion(void)
+static boot_command_response_t ReadVersion(void)
 {
-    struct GET_VERSION_RESPONSE response = {
-        .cmd = 0,
-        .dataLength = 0,
-        .unlockSequence = 0,
-        .address = 0,
-        .version = BOOT_CONFIG_VERSION,
-        .maxPacketLength = BOOT_CONFIG_MAX_PACKET_SIZE,
-        .unused1 = 0,
-        .deviceId = 0x3456u,
-        .unused2 = 0,
-        .writeSize = MINIMUM_WRITE_BLOCK_SIZE,
-        .unused3 = 0,
-        .userRsvdStartSddress = 0,
-        .userRsvdEndSddress = 0
-    };
-    response.eraseSize = BOOT_EraseSizeGet();
+    uart1_message_t response;
+    //__psv__ const char __attribute__((eds,space(prog),address(__DEVID_BASE))) device_information_area;
+    //static __psv__ const char __attribute__((space(psv),address(__DEVID_BASE))) device_information_area;
+    //static const char * __attribute__((space(prog))) device_information_area = __DEVID_BASE;
+    //__prog__ unsigned int __attribute__((space(prog))) myPROGvar = 0x1234;
     
-    (void)BOOT_COM_Read(commandArray, sizeof(struct CMD_STRUCT_0));
-    BOOT_COM_Write((uint8_t*) & response, sizeof (struct GET_VERSION_RESPONSE ) / sizeof (uint8_t));
+    //static __psv__ const char __attribute__((space(prog), address(__DEVID_BASE))) device_information;
+    //__psv__ char* device_information_area = device_information;
+    //__psv__ char* device_information_area = (__psv__ char*) __DEVID_BASE;
+    //__psv__ char* device_information_area = (__psv__ char*) __DEVID_BASE;
+    
+    
+    copy_uart1_message(&uart1_rx_m, &response);
+    response.length += 16;
+    
+    // address copied by means of previous command
+    // bootloader version
+    response.data[4] = BOOT_CONFIG_VERSION >> 8;
+    response.data[5] = BOOT_CONFIG_VERSION & 0xff;
+    // max packet size
+    response.data[6] = BOOT_CONFIG_MAX_PACKET_SIZE;
+    // software version of image
+    uint32_t sw_version;
+    BOOT_Read32Data(&sw_version, BOOT_CONFIG_DOWNLOAD_LOW+22);
+    response.data[7] = (uint8_t) (sw_version >> 24);
+    response.data[8] = (uint8_t) (sw_version >> 16);
+    response.data[9] = (uint8_t) (sw_version >> 8);
+    response.data[10] = (uint8_t) (sw_version & 0xff);
+    // hardware version of image
+    uint32_t hw_version;
+    BOOT_Read32Data(&hw_version, BOOT_CONFIG_DOWNLOAD_LOW+30);
+    response.data[11] = (uint8_t) (hw_version >> 24);
+    response.data[12] = (uint8_t) (hw_version >> 16);
+    response.data[13] = (uint8_t) (hw_version >> 8);
+    response.data[14] = (uint8_t) (hw_version & 0xff);
+    // erase row size
+    response.data[15] = BOOT_EraseSizeGet();
+    // write row size
+    response.data[16] = MINIMUM_WRITE_BLOCK_SIZE;
+
+    uart1_tx_message(&response);
 
     return BOOT_COMMAND_SUCCESS;
 }
@@ -237,134 +170,136 @@ static void Reset(void){
 
 static void ResetDevice(void)
 {
-    struct RESPONSE_TYPE_0 response = {
-        .cmd = 9,
-        .dataLength = 0,
-        .unlockSequence = 0,
-        .address = 0,
-
-        .success = COMMAND_SUCCESS
-    };         
+    uart1_message_t response;    
     
-    (void)BOOT_COM_Read(commandArray, sizeof(struct CMD_STRUCT_0));
+    copy_uart1_message(&uart1_rx_m, &response);
+    response.length = 5;
+    
+    // address copied by means of previous command
+    // bootloader version
+    response.data[4] = COMMAND_SUCCESS;
 
-    BOOT_COM_Write((uint8_t*) & response, sizeof (struct RESPONSE_TYPE_0) / sizeof (uint8_t));
+    
+    uart1_tx_message(&response);   
+    uart1_wait_tx();
     
     Reset();
  }
 
 
-static enum BOOT_COMMAND_RESULT EraseFlash(void)
+static boot_command_response_t EraseFlash(void)
 {
-    uint32_t eraseAddress;
-    struct RESPONSE_TYPE_0 response;
-    struct CMD_STRUCT_0 *pCommand = (struct CMD_STRUCT_0*) commandArray; 
+    uint32_t eraseAddress = 0;
+    uint16_t data_length = 0;
+    uint32_t unlock_sequence = 0;
+    boot_command_response_t success = BAD_ADDRESS;
+    uart1_message_t response;    
     
-    (void)BOOT_COM_Read(commandArray, sizeof(struct CMD_STRUCT_0));
-            
-    memcpy(&response, commandArray, sizeof(struct CMD_STRUCT_0));
+    copy_uart1_message(&uart1_rx_m, &response);
 
-    eraseAddress = pCommand->address;
-    
-    response.success = BAD_ADDRESS;
-    if ( BOOT_BlockErase(pCommand->address, pCommand->dataLength, pCommand->unlockSequence) == NVM_SUCCESS)
-    {
-        response.success = COMMAND_SUCCESS;
-    }     
-    
-    BOOT_COM_Write((uint8_t*) & response, sizeof (struct RESPONSE_TYPE_0) / sizeof (uint8_t));
-
-    /* destroy the unlock key so it isn't sitting around in memory. */
-    pCommand->unlockSequence = ~pCommand->unlockSequence;
-    
-    if(response.success == COMMAND_SUCCESS)
-    {
-        return BOOT_COMMAND_SUCCESS;
+    for(int i = 0; i < sizeof(eraseAddress); i++){
+        eraseAddress = (eraseAddress << 8) | uart1_rx_m.data[i];
+    }
+    for(int i = 0; i < sizeof(data_length); i++){
+        data_length = (data_length << 8) | uart1_rx_m.data[sizeof(eraseAddress)+i];
     }
     
-    return BOOT_COMMAND_ERROR;
-}
-
-static enum BOOT_COMMAND_RESULT WriteFlash(void)
-{
-    struct CMD_STRUCT_0_WITH_PAYLOAD *pCommand = (struct CMD_STRUCT_0_WITH_PAYLOAD*) commandArray;
-    struct RESPONSE_TYPE_0 response;
-    uint32_t flashAddress;   
-    uint16_t dataLength;
-    
-    dataLength = BOOT_COM_Peek(2u)<<8u;
-    dataLength |= BOOT_COM_Peek(1u);
-    
-    if (BOOT_COM_GetBytesReady() < (sizeof(struct CMD_STRUCT_0) + dataLength))
-    { 
-        return BOOT_COMMAND_INCOMPLETE; 
-    }  
-    
-    (void)BOOT_COM_Read(commandArray, sizeof(struct CMD_STRUCT_0) + dataLength);
-
-    memcpy(&response, commandArray, sizeof(struct CMD_STRUCT_0));
-    
-    response.success = COMMAND_SUCCESS;
-
-    flashAddress = pCommand->address;
-
-
-    if (dataLength <= (BOOT_CONFIG_MAX_PACKET_SIZE - sizeof(struct CMD_STRUCT_0)))
+    //(uint32_t nvmAddress, uint32_t lengthInPages, uint32_t key)
+    if(uart1_rx_m.unlock)
     {
-        if (BOOT_BlockWrite(pCommand->address, dataLength, &pCommand->data[0], pCommand->unlockSequence) != NVM_SUCCESS)
-        {
-            response.success = BAD_ADDRESS;   
-        } 
+        /* destroy the unlock key so it isn't sitting around in memory. */
+        uart1_rx_m.unlock = false;
+        unlock_sequence = 0x55aa;
+    }
+    
+    if ( BOOT_BlockErase(eraseAddress, data_length, unlock_sequence) == NVM_SUCCESS)
+    {
+        response.data[4] = COMMAND_SUCCESS;
+        success = COMMAND_SUCCESS;
+    } else {
+        response.data[4] = BAD_ADDRESS;
     }   
-    else
-    {
-        response.success = BAD_ADDRESS;
-    }
+    response.length = 5;
     
-    BOOT_COM_Write((uint8_t*) & response, sizeof (struct RESPONSE_TYPE_0) / sizeof (uint8_t));
+    uart1_tx_message(&response);   
     
-    /* destroy the unlock key so it isn't sitting around in memory. */
-    pCommand->unlockSequence = ~pCommand->unlockSequence;
-    
-    if(response.success == COMMAND_SUCCESS)
+    if(success == COMMAND_SUCCESS)
     {
         return BOOT_COMMAND_SUCCESS;
     }
     
     return BOOT_COMMAND_ERROR;
 }
-static enum BOOT_COMMAND_RESULT ReadFlash(void)
+
+static boot_command_response_t WriteFlash(void)
 {
-    struct RESPONSE_TYPE_0_WITH_PAYLOAD response;
-    struct CMD_STRUCT_0_WITH_PAYLOAD * const pCommand = (struct CMD_STRUCT_0_WITH_PAYLOAD*) commandArray;
+    uint32_t flash_address = 0;   
+    uint16_t data_length;
+    uart1_message_t response;
+    uint32_t unlock_sequence = 0;
     
-   (void)BOOT_COM_Read(commandArray, sizeof(struct CMD_STRUCT_0) );
+    copy_uart1_message(&uart1_rx_m, &response);
+    response.length = 5;
+    
+    data_length = uart1_rx_m.length - 4;
+    
 
-    memcpy(&response, commandArray, sizeof(struct CMD_STRUCT_0));
-
-    if (pCommand->dataLength <= (BOOT_CONFIG_MAX_PACKET_SIZE - sizeof(struct CMD_STRUCT_0) - 1u ))
+    response.data[4] = COMMAND_SUCCESS;
+    
+    if(uart1_rx_m.unlock)
     {
-        NVM_RETURN_STATUS readStatus = BOOT_BlockRead ((uint8_t *)&response.data[0], pCommand->dataLength, pCommand->address );
-        if (readStatus == NVM_SUCCESS)
-        {    
-            response.success = COMMAND_SUCCESS;
-        } 
-        else
-        {
-            response.success = BAD_ADDRESS;
-            response.dataLength = 0u;        
-        }
-            
+        unlock_sequence = 0x55aa;
+        /* destroy the unlock key so it isn't sitting around in memory. */
+        uart1_rx_m.unlock = false;
+    } 
+    else 
+    {
+        unlock_sequence = 0;
+    }
+    
+    if (BOOT_BlockWrite(flash_address, data_length, &uart1_rx_m.data[4], unlock_sequence) != NVM_SUCCESS)
+    {
+        response.data[4]  = BAD_ADDRESS;   
+    } 
+
+    uart1_tx_message(&response);   
+    
+    if(response.data[4] == COMMAND_SUCCESS)
+    {
+        return BOOT_COMMAND_SUCCESS;
+    }
+    
+    return BOOT_COMMAND_ERROR;
+}
+static boot_command_response_t ReadFlash(void)
+{
+    uint32_t flash_address = 0;   
+    uart1_message_t response;
+    uint16_t data_length = uart1_rx_m.length - 4;
+    
+    copy_uart1_message(&uart1_rx_m, &response);
+
+    for(int i = 0; i < sizeof(flash_address); i++)
+    {
+        flash_address = (flash_address << 8) | uart1_rx_m.data[i];
+    }
+        
+    NVM_RETURN_STATUS readStatus = BOOT_BlockRead ((uint8_t *)&response.data[4], data_length, flash_address );
+    if (readStatus == NVM_SUCCESS)
+    {    
+        response.data[4] = COMMAND_SUCCESS;
+        response.length = data_length+5;   
     } 
     else
     {
-        response.success = BAD_ADDRESS;
-        response.dataLength = 0u;        
+        response.data[4] = BAD_ADDRESS;
+        response.length = 5;        
     }
+            
     
-    BOOT_COM_Write((uint8_t*) & response, (sizeof (struct RESPONSE_TYPE_0) / sizeof (uint8_t)) + response.dataLength  );
+    uart1_tx_message(&response);   
 
-    if(response.success == COMMAND_SUCCESS)
+    if(response.data[4] == COMMAND_SUCCESS)
     {
         return BOOT_COMMAND_SUCCESS;
     }
@@ -373,38 +308,45 @@ static enum BOOT_COMMAND_RESULT ReadFlash(void)
 }
 
 
-static enum BOOT_COMMAND_RESULT CalculateChecksum(void)
-{
-    struct RESPONSE_TYPE_0_2_PAYLOAD response;
-    struct CMD_STRUCT_0 *pCommand = (struct CMD_STRUCT_0*) commandArray;
-    uint32_t flashData;
+static boot_command_response_t CalculateChecksum(void)
+{   
+    uart1_message_t response;
+    
+    uint32_t flash_address, flashData;
     uint32_t checksum = 0;
     uint16_t count;
     
-    (void)BOOT_COM_Read(commandArray, sizeof(struct CMD_STRUCT_0) );
-
-    memcpy(&response, commandArray, sizeof(struct CMD_STRUCT_0));
+    copy_uart1_message(&uart1_rx_m, &response);
     
-    if ( IsLegalRange(pCommand->address, pCommand->address+pCommand->dataLength - 1u))
+        for(int i = 0; i < sizeof(flash_address); i++)
     {
-        for (count = 0; count < pCommand->dataLength; count += 4u)
+        flash_address = (flash_address << 8) | uart1_rx_m.data[i];
+    }
+    
+    if ( IsLegalRange(flash_address, flash_address+uart1_rx_m.length - 1U-4U))
+    {
+        for (count = 0; count < (uart1_rx_m.length - 1U-4U); count += 4u)
         {
-            BOOT_BlockRead ((uint8_t*)&flashData, 4u,  pCommand->address + (count/2u));
+            BOOT_BlockRead ((uint8_t*)&flashData, 4u,  flash_address + (count/2u));
             checksum += (flashData & 0xFFFFu) + ((flashData>>16u) & 0xFFu);;
         }
-        response.data = (checksum & 0xFFFFu);
+        checksum = checksum & 0xffff;
 
-        response.success = COMMAND_SUCCESS;
-        BOOT_COM_Write((uint8_t*) & response, (sizeof (struct RESPONSE_TYPE_0_2_PAYLOAD) / sizeof (uint8_t)) );  
+        response.data[4] = COMMAND_SUCCESS;
+        response.data[5] = (uint8_t) (checksum >> 8);
+        response.data[6] = (uint8_t) (checksum & 0xff);
+        response.length = 7;
+        
+        uart1_tx_message(&response);  
     }
     else
     {
-        response.success=BAD_ADDRESS;
-        response.dataLength = 0;
-        BOOT_COM_Write((uint8_t*) & response, (sizeof (struct RESPONSE_TYPE_0) / sizeof (uint8_t)) );  
+        response.data[4]=BAD_ADDRESS;
+        response.length = 5;
+        uart1_tx_message(&response);   
     }
     
-    if(response.success == COMMAND_SUCCESS)
+    if(response.data[4] == COMMAND_SUCCESS)
     {
         return BOOT_COMMAND_SUCCESS;
     }
@@ -412,25 +354,25 @@ static enum BOOT_COMMAND_RESULT CalculateChecksum(void)
     return BOOT_COMMAND_ERROR;
 } 
 
-static enum BOOT_COMMAND_RESULT SelfVerify(void)
+static boot_command_response_t SelfVerify(void)
 {
-    struct RESPONSE_TYPE_0_2_PAYLOAD response;
+    uart1_message_t response;
     
-    (void)BOOT_COM_Read((uint8_t*)&response, sizeof(struct CMD_STRUCT_0) );
+    copy_uart1_message(&uart1_rx_m, &response);
 
     if(BOOT_ImageVerify(DOWNLOAD_IMAGE_NUMBER) == false)
     {
-        response.success = VERIFY_FAIL;
+        response.data[4] = VERIFY_FAIL;
     }
     else
     {
-        response.success = COMMAND_SUCCESS;
+        response.data[4] = COMMAND_SUCCESS;
     }
 
-    response.dataLength = 0;
-    BOOT_COM_Write((uint8_t*) &response, (sizeof (struct RESPONSE_TYPE_0) / sizeof (uint8_t)) );  
+    response.length = 5;
+    uart1_tx_message(&response);  
     
-    if(response.success == COMMAND_SUCCESS)
+    if(response.data[4] == COMMAND_SUCCESS)
     {
         return BOOT_COMMAND_SUCCESS;
     }
@@ -438,19 +380,30 @@ static enum BOOT_COMMAND_RESULT SelfVerify(void)
     return BOOT_COMMAND_ERROR;
 } 
 
-static enum BOOT_COMMAND_RESULT GetMemoryAddressRange(void)
+static boot_command_response_t GetMemoryAddressRange(void)
 {
-   struct GET_MEMORY_ADDRESS_RANGE_RESPONSE response = {
-        .cmd = 0xB,
-        .dataLength = 0x8,
-        .unlockSequence = 0x0,
-        .address = 0,   
-        .success = 1,
-        .programFlashStart = EXECUTABLE_IMAGE_FIRST_ADDRESS,
-        .programFlashEnd = EXECUTABLE_IMAGE_LAST_ADDRESS
-    };
-    (void)BOOT_COM_Read(commandArray, sizeof(struct CMD_STRUCT_0));
-    BOOT_COM_Write((uint8_t*) & response, sizeof (struct GET_MEMORY_ADDRESS_RANGE_RESPONSE ) / sizeof (uint8_t));
+    uart1_message_t response;
+    
+    copy_uart1_message(&uart1_rx_m, &response);
+    
+    response.data[4] = COMMAND_SUCCESS;
+    
+    uint32_t flash_address = EXECUTABLE_IMAGE_FIRST_ADDRESS;
+    int i = 5;
+    response.data[i++] = (uint8_t) (flash_address >> 24);
+    response.data[i++] = (uint8_t) (flash_address >> 16);
+    response.data[i++] = (uint8_t) (flash_address >> 8);
+    response.data[i++] = (uint8_t) (flash_address & 0xff);
+    
+    flash_address = EXECUTABLE_IMAGE_LAST_ADDRESS;
+    response.data[i++] = (uint8_t) (flash_address >> 24);
+    response.data[i++] = (uint8_t) (flash_address >> 16);
+    response.data[i++] = (uint8_t) (flash_address >> 8);
+    response.data[i++] = (uint8_t) (flash_address & 0xff);
+    
+    response.length = 5+2*sizeof(flash_address);
+
+    uart1_tx_message(&response);
 
     return BOOT_COMMAND_SUCCESS;
 }
