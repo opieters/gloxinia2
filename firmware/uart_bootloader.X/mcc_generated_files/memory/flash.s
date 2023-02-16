@@ -199,10 +199,43 @@ prog_wait:
     mov         TBLPAG, W2
     mov         W1, TBLPAG    ; Little endian, w1 has MSW, w0 has LSX
     tblrdh      [W0], W1      ; read MSW of data to high latch
+    nop
     tblrdl      [W0], W0      ; read LSW of data 
     mov         W2, TBLPAG    ; Restore register, 
     return
 
+/**
+ * ;void FLASH_ReadWord24v2(uint32_t address, uint32_t* dest);
+ * Reads the 24 bit instruction located at the address passed to this function and stores it in the location specified by dest.
+ *
+ *
+ * @param address       24-bit (unsigned long) specifying a target address 
+ *                      that needs to be read.  Needs to be aligned to an even
+ *                      address.
+ * @param dest pointer to 32-bit (unsigned long) variable to store data
+ *
+ *   Registers used:    w0 w1 w2
+ *                      TBLPAG Preserved
+ *                  
+ *   Inputs:
+ *   w0,w1 = long data - Address in flash to read   (24 bits)
+ * 
+ *  outputs:
+ *   none   
+ **/    
+    
+    reset
+    .global         _FLASH_ReadWord24v2
+    .type           _FLASH_ReadWord24v2, @function
+    .extern         TBLPAG
+    _FLASH_ReadWord24v2:
+    push         TBLPAG
+    mov         W1, TBLPAG    ; Little endian, w1 has MSW, w0 has LSX
+    tblrdh      [W0], [W2++]      ; read MSW of data to high latch
+    tblrdl      [W0], [W2]      ; read LSW of data 
+    pop         TBLPAG    ; Restore register, 
+    return
+    
 /**
  * ;uint16_t FLASH_ReadWord16(uint32_t address);
  * Reads the 16 bit instruction located at the address passed to this function.

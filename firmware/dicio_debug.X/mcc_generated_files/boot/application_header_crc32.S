@@ -24,7 +24,7 @@
     .long(0x00000000)
 	
     /* Address where to start the checksum */
-    .long(0x00002800)
+    .long(0x0000280C)
 	
     /* Address where to end the checksum */
     .long(0x000557FE)

@@ -17,7 +17,8 @@ typedef enum
     UNSUPPORTED_COMMAND = 0xFF,
     BAD_ADDRESS = 0xFE,
     BAD_LENGTH  = 0xFD,
-    VERIFY_FAIL = 0xFC
+    VERIFY_FAIL = 0xFC,
+    FLASH_INIT_FAIL,
 } boot_command_response_t;
 
 typedef struct {

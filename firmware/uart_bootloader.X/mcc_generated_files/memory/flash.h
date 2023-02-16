@@ -44,6 +44,7 @@ bool     FLASH_ErasePage(uint32_t address);
 
 uint16_t FLASH_ReadWord16(uint32_t address);
 uint32_t FLASH_ReadWord24(uint32_t address);
+void FLASH_ReadWord24v2(uint32_t address, uint32_t* destination);
 
 bool     FLASH_WriteDoubleWord16(uint32_t flashAddress, uint16_t Data0, uint16_t Data1);
 bool     FLASH_WriteDoubleWord24(uint32_t address, uint32_t Data0, uint32_t Data1  );

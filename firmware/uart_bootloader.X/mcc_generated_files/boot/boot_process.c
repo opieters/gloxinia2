@@ -11,6 +11,7 @@
 #include "boot_config.h"
 #include "../uart1.h"
 #include <message.h>
+#include <utilities.h>
 
 
 #define EXECUTABLE_IMAGE_FIRST_ADDRESS BOOT_CONFIG_PROGRAMMABLE_ADDRESS_LOW
@@ -33,11 +34,13 @@ static void ResetDevice(void);
 static boot_command_response_t EraseFlash(void);
 static boot_command_response_t WriteFlash(void);
 static boot_command_response_t ReadFlash(void);
-static boot_command_response_t CalculateChecksum(void);
 static boot_command_response_t SelfVerify(void);
 static boot_command_response_t GetMemoryAddressRange(void);
+static boot_command_response_t WriteFlashInit(void);
+static boot_command_response_t WriteFlashDone(void);
 
 extern volatile bool received_bootloader_message;
+volatile uint32_t last_address_written = 0xf;
 
 /******************************************************************************/
 /* Public Functions                                                           */
@@ -45,6 +48,7 @@ extern volatile bool received_bootloader_message;
 void BOOT_Initialize() 
 {
     received_bootloader_message = false;
+    last_address_written = 0x0;
 }
 
 extern uart1_message_t uart1_rx_m;
@@ -72,15 +76,17 @@ boot_command_result_t BOOT_ProcessCommand(void)
         ResetDevice();
         return BOOT_COMMAND_SUCCESS;
 
-    case M_BOOT_CALC_CHECKSUM:
-        return CalculateChecksum();
-
     case M_BOOT_SELF_VERIFY:
         return SelfVerify();
 
      
     case M_BOOT_GET_MEMORY_ADDRESS_RANGE_COMMAND:
         return GetMemoryAddressRange();
+        
+        case     M_BOOT_WRITE_FLASH_INIT:
+            return WriteFlashInit();
+        case M_BOOT_WRITE_FLASH_DONE:
+            return WriteFlashDone();
 
     default:
         return CommandError(UNSUPPORTED_COMMAND);
@@ -131,32 +137,32 @@ static boot_command_response_t ReadVersion(void)
     
     
     copy_uart1_message(&uart1_rx_m, &response);
-    response.length += 16;
+    response.length = 13;
     
     // address copied by means of previous command
     // bootloader version
-    response.data[4] = BOOT_CONFIG_VERSION >> 8;
-    response.data[5] = BOOT_CONFIG_VERSION & 0xff;
+    response.data[0] = BOOT_CONFIG_VERSION >> 8;
+    response.data[1] = BOOT_CONFIG_VERSION & 0xff;
     // max packet size
-    response.data[6] = BOOT_CONFIG_MAX_PACKET_SIZE;
+    response.data[2] = BOOT_CONFIG_MAX_PACKET_SIZE;
     // software version of image
     uint32_t sw_version;
     BOOT_Read32Data(&sw_version, BOOT_CONFIG_DOWNLOAD_LOW+22);
-    response.data[7] = (uint8_t) (sw_version >> 24);
-    response.data[8] = (uint8_t) (sw_version >> 16);
-    response.data[9] = (uint8_t) (sw_version >> 8);
-    response.data[10] = (uint8_t) (sw_version & 0xff);
+    response.data[3] = (uint8_t) (sw_version >> 24);
+    response.data[4] = (uint8_t) (sw_version >> 16);
+    response.data[5] = (uint8_t) (sw_version >> 8);
+    response.data[6] = (uint8_t) (sw_version & 0xff);
     // hardware version of image
     uint32_t hw_version;
     BOOT_Read32Data(&hw_version, BOOT_CONFIG_DOWNLOAD_LOW+30);
-    response.data[11] = (uint8_t) (hw_version >> 24);
-    response.data[12] = (uint8_t) (hw_version >> 16);
-    response.data[13] = (uint8_t) (hw_version >> 8);
-    response.data[14] = (uint8_t) (hw_version & 0xff);
+    response.data[7] = (uint8_t) (hw_version >> 24);
+    response.data[8] = (uint8_t) (hw_version >> 16);
+    response.data[9] = (uint8_t) (hw_version >> 8);
+    response.data[10] = (uint8_t) (hw_version & 0xff);
     // erase row size
-    response.data[15] = BOOT_EraseSizeGet();
+    response.data[11] = BOOT_EraseSizeGet();
     // write row size
-    response.data[16] = MINIMUM_WRITE_BLOCK_SIZE;
+    response.data[12] = MINIMUM_WRITE_BLOCK_SIZE;
 
     uart1_tx_message(&response);
 
@@ -183,7 +189,14 @@ static void ResetDevice(void)
     uart1_tx_message(&response);   
     uart1_wait_tx();
     
-    Reset();
+    uart1_message_t broadcast;
+    broadcast.command = M_BOOT_READY;
+    broadcast.unlock = false;
+    broadcast.length = 0;
+     uart1_tx_message(&broadcast);
+     uart1_wait_tx();
+    
+    //Reset();
  }
 
 
@@ -209,7 +222,7 @@ static boot_command_response_t EraseFlash(void)
     {
         /* destroy the unlock key so it isn't sitting around in memory. */
         uart1_rx_m.unlock = false;
-        unlock_sequence = 0x55aa;
+        unlock_sequence = 0x00AA0055;
     }
     
     if ( BOOT_BlockErase(eraseAddress, data_length, unlock_sequence) == NVM_SUCCESS)
@@ -231,6 +244,7 @@ static boot_command_response_t EraseFlash(void)
     return BOOT_COMMAND_ERROR;
 }
 
+uint32_t live_checksum = 0;
 static boot_command_response_t WriteFlash(void)
 {
     uint32_t flash_address = 0;   
@@ -243,12 +257,16 @@ static boot_command_response_t WriteFlash(void)
     
     data_length = uart1_rx_m.length - 4;
     
-
+    for(int i = 0; i < 4; i++)
+    {
+        flash_address = (flash_address << 8) | uart1_rx_m.data[i];
+    }
+    
     response.data[4] = COMMAND_SUCCESS;
     
     if(uart1_rx_m.unlock)
     {
-        unlock_sequence = 0x55aa;
+        unlock_sequence = 0x00AA0055;
         /* destroy the unlock key so it isn't sitting around in memory. */
         uart1_rx_m.unlock = false;
     } 
@@ -257,10 +275,15 @@ static boot_command_response_t WriteFlash(void)
         unlock_sequence = 0;
     }
     
-    if (BOOT_BlockWrite(flash_address, data_length, &uart1_rx_m.data[4], unlock_sequence) != NVM_SUCCESS)
+    NVM_RETURN_STATUS s = BOOT_BlockWrite(flash_address, data_length, &uart1_rx_m.data[4], unlock_sequence);
+    
+    last_address_written = MAX(flash_address,last_address_written);
+    
+    // TODO: write BOOT_Read32Data(&address_last_data, BOOT_CONFIG_VAR_IMAGE_LAST_ADDRESS); final address in some way
+    if ( s != NVM_SUCCESS)
     {
         response.data[4]  = BAD_ADDRESS;   
-    } 
+    }
 
     uart1_tx_message(&response);   
     
@@ -307,60 +330,14 @@ static boot_command_response_t ReadFlash(void)
     return BOOT_COMMAND_ERROR;
 }
 
-
-static boot_command_response_t CalculateChecksum(void)
-{   
-    uart1_message_t response;
-    
-    uint32_t flash_address, flashData;
-    uint32_t checksum = 0;
-    uint16_t count;
-    
-    copy_uart1_message(&uart1_rx_m, &response);
-    
-        for(int i = 0; i < sizeof(flash_address); i++)
-    {
-        flash_address = (flash_address << 8) | uart1_rx_m.data[i];
-    }
-    
-    if ( IsLegalRange(flash_address, flash_address+uart1_rx_m.length - 1U-4U))
-    {
-        for (count = 0; count < (uart1_rx_m.length - 1U-4U); count += 4u)
-        {
-            BOOT_BlockRead ((uint8_t*)&flashData, 4u,  flash_address + (count/2u));
-            checksum += (flashData & 0xFFFFu) + ((flashData>>16u) & 0xFFu);;
-        }
-        checksum = checksum & 0xffff;
-
-        response.data[4] = COMMAND_SUCCESS;
-        response.data[5] = (uint8_t) (checksum >> 8);
-        response.data[6] = (uint8_t) (checksum & 0xff);
-        response.length = 7;
-        
-        uart1_tx_message(&response);  
-    }
-    else
-    {
-        response.data[4]=BAD_ADDRESS;
-        response.length = 5;
-        uart1_tx_message(&response);   
-    }
-    
-    if(response.data[4] == COMMAND_SUCCESS)
-    {
-        return BOOT_COMMAND_SUCCESS;
-    }
-    
-    return BOOT_COMMAND_ERROR;
-} 
-
 static boot_command_response_t SelfVerify(void)
 {
     uart1_message_t response;
+    uint32_t checksum = 0;
     
     copy_uart1_message(&uart1_rx_m, &response);
 
-    if(BOOT_ImageVerify(DOWNLOAD_IMAGE_NUMBER) == false)
+    if(BOOT_ImageVerify(DOWNLOAD_IMAGE_NUMBER, &checksum) == false)
     {
         response.data[4] = VERIFY_FAIL;
     }
@@ -409,7 +386,35 @@ static boot_command_response_t GetMemoryAddressRange(void)
 }
 
 
+static boot_command_response_t WriteFlashInit(void)
+{
+    return COMMAND_SUCCESS;
+}
 
+#include "../uart_bootloader.X/mcc_generated_files/memory/flash.h"
+static boot_command_response_t WriteFlashDone(void)
+{
+    uint32_t data[2] = {0};
+    bool s;
+    
+    
+    // write last location with image data
+    data[0] = (uint16_t) (last_address_written);
+    data[1] = (uint16_t) (last_address_written >> 16);
+
+    FLASH_Unlock(FLASH_UNLOCK_KEY);    
+    s = FLASH_WriteDoubleWord24(BOOT_CONFIG_APPLICATION_IMAGE_APPLICATION_HEADER_ADDRESS+8, data[0], data[1]);
+    FLASH_Lock();
+    
+    BOOT_Read32Data((uint32_t*) &last_address_written, BOOT_CONFIG_APPLICATION_IMAGE_APPLICATION_HEADER_ADDRESS+8);
+    
+    if(s)
+    {
+        return COMMAND_SUCCESS;
+    } else {
+        return BAD_ADDRESS;
+    }
+}
    
 
 

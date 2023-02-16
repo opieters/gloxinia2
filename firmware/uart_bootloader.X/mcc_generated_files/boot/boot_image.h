@@ -27,7 +27,7 @@ typedef enum NVM_RETURN_STATUS {
 bool IsLegalRange(uint32_t startRangeToCheck, uint32_t endRangeToCheck);
 bool BOOT_ImageErase(enum BOOT_IMAGE image);
 
-bool BOOT_ImageVerify(enum BOOT_IMAGE image);
+bool BOOT_ImageVerify(enum BOOT_IMAGE image, uint32_t* checksum);
 uint32_t BOOT_ImageAddressGet(enum BOOT_IMAGE image, uint32_t addressInExecutableImage);
 uint16_t BOOT_EraseSizeGet();
 NVM_RETURN_STATUS BOOT_BlockWrite(uint32_t nvmAddress, uint32_t lengthInBytes, uint8_t *sourceData, uint32_t key);

@@ -1,58 +1,3 @@
-/**
-  @Generated 16-bit Bootloader Source File
-
-  @Company:
-    Microchip Technology Inc.
-
-  @File Name: 
-    boot_verify_crc32.c
-
-  @Summary:
-    This is the boot_verify_crc32.c file generated using 16-bit Bootloader
-
-  @Description:
-    This header file provides implementations for driver APIs for all modules selected in the GUI.
-    Generation Information :
-        Product Revision  :  16-bit Bootloader - 1.22.1
-        Device            :  dsPIC33EP512MC806
-    The generated drivers are tested against the following:
-        Compiler          :  XC16 v1.36B
-        MPLAB             :  MPLAB X v5.15
-*/
-/*
-Copyright (c) [2012-2023] Microchip Technology Inc.  
-
-    All rights reserved.
-
-    You are permitted to use the accompanying software and its derivatives 
-    with Microchip products. See the Microchip license agreement accompanying 
-    this software, if any, for additional info regarding your rights and 
-    obligations.
-    
-    MICROCHIP SOFTWARE AND DOCUMENTATION ARE PROVIDED "AS IS" WITHOUT 
-    WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT 
-    LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE, NON-INFRINGEMENT 
-    AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT WILL MICROCHIP OR ITS
-    LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT, NEGLIGENCE, STRICT 
-    LIABILITY, CONTRIBUTION, BREACH OF WARRANTY, OR OTHER LEGAL EQUITABLE 
-    THEORY FOR ANY DIRECT OR INDIRECT DAMAGES OR EXPENSES INCLUDING BUT NOT 
-    LIMITED TO ANY INCIDENTAL, SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES, 
-    OR OTHER SIMILAR COSTS. 
-    
-    To the fullest extend allowed by law, Microchip and its licensors 
-    liability will not exceed the amount of fees, if any, that you paid 
-    directly to Microchip to use this software. 
-    
-    THIRD PARTY SOFTWARE:  Notwithstanding anything to the contrary, any 
-    third party software accompanying this software is subject to the terms 
-    and conditions of the third party's license agreement.  To the extent 
-    required by third party licenses covering such third party software, 
-    the terms of such license will apply in lieu of the terms provided in 
-    this notice or applicable license.  To the extent the terms of such 
-    third party licenses prohibit any of the restrictions described here, 
-    such restrictions will not apply to such third party software.
-*/
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -60,6 +5,8 @@ Copyright (c) [2012-2023] Microchip Technology Inc.
 
 #include "boot_config.h"
 #include "boot_image.h"
+#include "../uart1.h"
+#include "../uart_bootloader.X/mcc_generated_files/memory/flash.h"
 
 #include <stdio.h>
 
@@ -86,14 +33,16 @@ static void ApplicationHeaderRead(uint32_t sourceAddress, struct BOOT_VERIFY_APP
 {
     BOOT_Read32Data (&applicationHeader->crc32, sourceAddress);
     BOOT_Read32Data (&applicationHeader->startAddress, sourceAddress + 4);
+    //applicationHeader->endAddress = applicationHeader->startAddress + 2;
     BOOT_Read32Data (&applicationHeader->endAddress,   sourceAddress + 8);
 }
 
-bool BOOT_ImageVerify(enum BOOT_IMAGE image)
+bool BOOT_ImageVerify(enum BOOT_IMAGE image, uint32_t* checksum)
 {   
     struct BOOT_VERIFY_APPLICATION_HEADER applicationHeader;
-    uint32_t calculatedCRC;
-
+    uint32_t c;
+   
+   
     if( image >= BOOT_IMAGE_COUNT )
     {
         return false;
@@ -136,37 +85,24 @@ bool BOOT_ImageVerify(enum BOOT_IMAGE image)
         return false;
     }
     
-    /* Is the application header outside the memory range to be verified? */
-    if( (applicationHeaderAddress < applicationHeader.startAddress) ||
-        (applicationHeaderAddress > applicationHeader.endAddress)
-    )
+    // get address range for checksum
+    uint32_t address, instruction;
+    
+    c = 0;
+    
+    // read all data blocks from memory and process
+    for(address = applicationHeader.startAddress; address <= applicationHeader.endAddress; address +=2)
     {
-        calculatedCRC = CRCFlash(0x00000000, BOOT_ImageAddressGet(image, applicationHeader.startAddress), BOOT_ImageAddressGet(image, applicationHeader.endAddress));
-    }
-    else
-    {
-        /* If the application header is inside of the memory range to be verified, we
-         * can't include the CRC value inside the CRC calculation, so we must
-         * ignore the CRC value in the application header by pushing in 0s instead.
-         */
-        calculatedCRC = 0;
-        if(applicationHeader.startAddress != applicationHeaderAddress)
-        {
-            calculatedCRC = CRCFlash(calculatedCRC, BOOT_ImageAddressGet(image, applicationHeader.startAddress), BOOT_ImageAddressGet(image, applicationHeaderAddress - 2));
-        }
-        /* push in 2 instructions of 0s to blank out the CRC signature in the
-         * image applicationHeader.
-         */
-        calculatedCRC = CRCFlash(calculatedCRC, 0, 0);
-        calculatedCRC = CRCFlash(calculatedCRC, 0, 0);
-        /* resume with the rest of the application image. */
-        calculatedCRC = CRCFlash(calculatedCRC, BOOT_ImageAddressGet(image, applicationHeaderAddress + 4), BOOT_ImageAddressGet(image, applicationHeader.endAddress));
+        instruction = FLASH_ReadWord24(address);
+        c = c + instruction;
     }
     
-    return ( calculatedCRC  == applicationHeader.crc32 );
+    *checksum = c;
+    
+    return ( c  == applicationHeader.crc32 );
 }
 
-bool BOOT_Verify(void)
+bool BOOT_Verify(uint32_t* checksum)
 {
-    return BOOT_ImageVerify(0);
+    return BOOT_ImageVerify(0, checksum);
 }

@@ -15,6 +15,6 @@ typedef enum {
 void BOOT_Initialize(void);
 boot_command_result_t BOOT_ProcessCommand(void);
 void BOOT_StartApplication(void);
-bool BOOT_Verify(void);
+bool BOOT_Verify(uint32_t* checksum);
 
 #endif 

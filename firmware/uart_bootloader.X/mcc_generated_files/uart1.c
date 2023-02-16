@@ -1,5 +1,5 @@
 #include <xc.h>
-#include <p33EP512MC806.h>
+#include <libpic30.h>
 #include "uart1.h"
 #include "boot/boot_config.h"
 #include <uart.h>
@@ -24,17 +24,28 @@ void UART1_Initialize(void)
      Set the UART1 module to the options selected in the user interface.
      Make sure to set LAT bit corresponding to TxPin as high before UART initialization
 */
-    // STSEL 1; IREN disabled; PDSEL 8N; UARTEN enabled; RTSMD disabled; USIDL disabled; WAKE disabled; ABAUD disabled; LPBACK disabled; BRGH enabled; URXINV disabled; UEN TX_RX; 
-    U1MODEbits.UARTEN = 0;  // disabling UARTEN bit
-    U1MODEbits.BRGH = 1;  // BRGH enabled
-    U1MODEbits.UEN = 0b10; // RTS and CTS enabled
-    // UTXISEL0 TX_ONE_CHAR; UTXINV disabled; OERR NO_ERROR_cleared; URXISEL RX_ONE_CHAR; UTXBRK COMPLETED; UTXEN disabled; ADDEN disabled; 
-    U1STA = 0x0;
-    // BaudRate = 50000; Frequency = 64000000 Hz; BRG 319; 
-    U1BRG = 0x13F;
+    U1MODEbits.STSEL = 0; // 1-stop bit
+    U1MODEbits.PDSEL = 0; // No Parity, 8-data bits
+    U1MODEbits.ABAUD = 0; // Autobaud Disabled
+    U1MODEbits.BRGH = 1;  // 4x mode (16 clock cycles per data bit)
+    U1MODEbits.RTSMD = 0; // DTE-DTE mode
+    U1MODEbits.URXINV = 0;
+    U1BRG = 0x13F; // BAUD Rate Setting for 50000
+
+    U1MODEbits.UEN = 0b10; // use flow control
+
+    //  Configure UART for DMA transfers
+    U1STA = 0; // clear all possible errors after (soft) reset
+    U1STAbits.UTXISEL0 = 0; // Interrupt after one Tx character is transmitted
+    U1STAbits.UTXISEL1 = 0;
+    U1STAbits.URXISEL = 0; // Interrupt after one RX character is received
+    U1STAbits.TXINV = 0;
+
+    //  Enable UART Rx and Tx
+    U1MODEbits.UARTEN = 1; // Enable UART
+    U1STAbits.UTXEN = 1;   // Enable UART Tx
     
-    U1MODEbits.UARTEN = 1;  // enabling UARTEN bit
-    U1STAbits.UTXEN = 1;  
+    __delay_ms(100); // startup
     
     // enable interrupts
     _U1RXIF = 0;
@@ -77,12 +88,16 @@ void __attribute__((interrupt, no_auto_psv)) _U1ErrInterrupt(void)
 {
     if(U1STAbits.OERR == 1)
         U1STAbits.OERR = 0;
-    _U1EIF = 0; // Clear the UART2 Error Interrupt Flag
+    _U1EIF = 0; // Clear the UART1 Error Interrupt Flag
 }
 
+uint8_t rx_buffer[256];
 void __attribute__((interrupt, no_auto_psv)) _U1RXInterrupt(void)
 {
-   register uint8_t rx_value = U1RXREG;
+    _U1RXIF = 0;
+    uint8_t rx_value = U1RXREG;
+    static uint8_t i = 0;
+    rx_buffer[(i++) & 0xff] = rx_value;
 
     switch (uart1_rx_state)
     {
@@ -96,15 +111,15 @@ void __attribute__((interrupt, no_auto_psv)) _U1RXInterrupt(void)
         break;
     case UART_RX_STATE_READ_IDH:
         if(rx_value != 0x00)
-            uart1_rx_state = UART_CMD_START;
+            uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
         else 
             uart1_rx_state = UART_RX_STATE_READ_IDL;
         break;
+    case UART_RX_STATE_READ_IDL:
         if(rx_value != 0x00)
-            uart1_rx_state = UART_CMD_START;
+            uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
         else 
             uart1_rx_state = UART_RX_STATE_READ_CMD;
-        break;
         break;
     case UART_RX_STATE_READ_CMD:
         uart1_rx_m.command = rx_value;
@@ -112,20 +127,20 @@ void __attribute__((interrupt, no_auto_psv)) _U1RXInterrupt(void)
         break;
     case UART_RX_STATE_READ_REQUEST:
         if(rx_value != 0x00)
-            uart1_rx_state = UART_CMD_START;
+            uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
         else 
             uart1_rx_state = UART_RX_STATE_READ_SIDH;
         break;
     case UART_RX_STATE_READ_SIDH:
         if((uart1_rx_m.command == M_BOOT_WRITE_FLASH) || (uart1_rx_m.command == M_BOOT_ERASE_FLASH)){
             if(rx_value != 0x55){
-                uart1_rx_state = UART_CMD_START;
+                uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
             } else {
                 uart1_rx_state = UART_RX_STATE_READ_SIDL;
             }
         } else {
             if(rx_value != 0x00){
-                uart1_rx_state = UART_CMD_START;
+                uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
             } else {
                 uart1_rx_state = UART_RX_STATE_READ_SIDL;
             }
@@ -134,14 +149,14 @@ void __attribute__((interrupt, no_auto_psv)) _U1RXInterrupt(void)
     case UART_RX_STATE_READ_SIDL:
         if((uart1_rx_m.command == M_BOOT_WRITE_FLASH) || (uart1_rx_m.command == M_BOOT_ERASE_FLASH)){
             if(rx_value != 0xAA){
-                uart1_rx_state = UART_CMD_START;
-                uart1_rx_m.unlock = true;
+                uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
             } else {
                 uart1_rx_state = UART_RX_STATE_READ_LENGTH;
+                uart1_rx_m.unlock = true;
             }
         } else {
             if(rx_value != 0x00){
-                uart1_rx_state = UART_CMD_START;
+                uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
             } else {
                 uart1_rx_state = UART_RX_STATE_READ_LENGTH;
             }
@@ -179,18 +194,16 @@ void __attribute__((interrupt, no_auto_psv)) _U1RXInterrupt(void)
     case UART_RX_STATE_DETECT_STOP:
         if (rx_value == UART_CMD_STOP)
         {
-            BOOT_ProcessCommand();
+            _U1RXIE = 0;
         }
 
         uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
-        
-
         break;
     default:
         uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
         break;
     }
-    _U1RXIF = 0;
+    
 }
 
 void uart1_tx_message(uart1_message_t* m){
@@ -223,8 +236,6 @@ void __attribute__((interrupt, no_auto_psv)) _U1TXInterrupt(void)
     
     switch(uart1_tx_state)
     {
-        case UART_TX_STATE_SEND_START_BYTE:
-            break;
         case UART_TX_STATE_SEND_IDH:
             U1TXREG = 0x00;
             uart1_tx_state = UART_TX_STATE_SEND_IDL;
@@ -279,6 +290,7 @@ void __attribute__((interrupt, no_auto_psv)) _U1TXInterrupt(void)
         case  UART_TX_STATE_DONE:
             break;
         default:
+            uart1_tx_state = UART_TX_STATE_DONE;
             break;
     }
 }

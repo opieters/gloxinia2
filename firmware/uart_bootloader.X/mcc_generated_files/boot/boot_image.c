@@ -38,6 +38,12 @@ NVM_RETURN_STATUS BOOT_BlockWrite(uint32_t deviceAddress, uint32_t lengthInBytes
     uint32_t count = 0;
     enum NVM_RETURN_STATUS response = NVM_SUCCESS;
     
+    if(deviceAddress == 0x2808){
+        Nop();
+        Nop();
+        Nop();
+    }
+    
     if ((lengthInBytes % MINIMUM_WRITE_BLOCK_SIZE) == 0u)
     {
         if ( IsLegalRange(deviceAddress, deviceAddress + (lengthInBytes/2u)) ) 
