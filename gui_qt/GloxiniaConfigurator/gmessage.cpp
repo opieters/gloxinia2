@@ -121,8 +121,6 @@ QString GMessage::codeToString(GMessage::Code code)
         return "write flash";
     case  BOOT_ERASE_FLASH :
         return "erase flash";
-    case BOOT_CALC_CHECKSUM:
-        return "flsah checksum";
     case BOOT_RESET_DEVICE:
         return "reset device";
     case BOOT_SELF_VERIFY:

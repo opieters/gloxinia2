@@ -215,9 +215,25 @@ void GloxiniaConfigurator::updateDevice(void)
 {
     // get selected node
 
+    discoveryTimer->stop();
+
     const QModelIndex index = systemOverview->selectionModel()->currentIndex();
     QAbstractItemModel *model = systemOverview->model();
-    GCNode* node = nullptr;
+    GCNode* node = new GCNodeDicio(1, "dicio node");
+
+    updateDialog->setNode(node);
+    updateDialog->setWindowModality(Qt::ApplicationModal);
+    int result = updateDialog->exec();
+    if(result == QDialog::Rejected){
+        return;
+    }
+    if(node != nullptr)
+        delete node;
+    updateDialog->setNode(nullptr);
+
+    discoveryTimer->start();
+
+    return;
 
     // node is selected -> run menu
     if (index.isValid() && !index.parent().isValid())
@@ -249,7 +265,7 @@ void GloxiniaConfigurator::updateDevice(void)
     }
 
     updateDialog->setWindowModality(Qt::ApplicationModal);
-    int result = updateDialog->exec();
+    //int result = updateDialog->exec();
     if(result == QDialog::Rejected){
         return;
     }

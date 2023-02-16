@@ -118,6 +118,7 @@ void GloxiniaConfigurator::readData()
             {
                 // an error occurred -> return to initial state
                 readoutState = FindStartByte;
+                qInfo() << "Error reading id H";
                 return;
             }
             if (n_read == 1)
@@ -136,6 +137,7 @@ void GloxiniaConfigurator::readData()
             {
                 // an error occurred -> return to initial state
                 readoutState = FindStartByte;
+                qInfo() << "Error reading id L";
                 return;
             }
             if (n_read == 1)
@@ -153,6 +155,7 @@ void GloxiniaConfigurator::readData()
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
+                qInfo() << "Error reading command";
                 return;
             }
             if (n_read == 1)
@@ -171,6 +174,7 @@ void GloxiniaConfigurator::readData()
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
+                qInfo() << "Error reading request byte";
                 return;
             }
             if (n_read == 1)
@@ -189,6 +193,7 @@ void GloxiniaConfigurator::readData()
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
+                qInfo() << "Error reading sensor id H";
                 return;
             }
             if (n_read == 1)
@@ -206,6 +211,7 @@ void GloxiniaConfigurator::readData()
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
+                qInfo() << "Error reading sensor id L";
                 return;
             }
             if (n_read == 1)
@@ -223,6 +229,7 @@ void GloxiniaConfigurator::readData()
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
+                qInfo() << "Error reading length";
                 return;
             }
             if (n_read == 1)
@@ -245,21 +252,24 @@ void GloxiniaConfigurator::readData()
             }
         case ReadData:
             if((data[7] - read_length) > 0){
-            n_read = serial->read(&data[8 + read_length], data[7] - read_length);
-            if (n_read < 0)
-            {
-                readoutState = FindStartByte;
-                return;
-            }
-            read_length += n_read;
-            if (read_length == data[7])
-            {
-                readoutState = DetectStopByte;
-            }
-            else
-            {
-                break;
-            }} else {
+                n_read = serial->read(&data[8 + read_length], data[7] - read_length);
+                if (n_read < 0)
+                {
+                    readoutState = FindStartByte;
+                    qInfo() << "Error reading data";
+                    return;
+                }
+                read_length += n_read;
+                if (read_length == data[7])
+                {
+                    readoutState = DetectStopByte;
+                }
+                else
+                {
+                    break;
+                }
+            } else {
+                qInfo() << "Error reading data (2)";
                 readoutState = FindStartByte;
                 return;
             }
@@ -267,6 +277,7 @@ void GloxiniaConfigurator::readData()
             n_read = serial->read(&data[8 + read_length], 1);
             if (n_read < 0)
             {
+                qInfo() << "Error reading stop";
                 readoutState = FindStartByte;
                 read_length = 0;
                 return;
@@ -279,11 +290,13 @@ void GloxiniaConfigurator::readData()
                     if (read_length == 0)
                     {
                         GMessage m((GMessage::Code)udata[3], (((uint16_t)udata[1] << 8) | udata[2]), ((uint16_t)udata[5] << 8) | udata[6], udata[4] == 0 ? false : true);
+                        qInfo() << m.toString();
                         processIncomingGMessage(m);
                     }
                     else
                     {
                         GMessage m((GMessage::Code)udata[3], (((uint16_t)udata[1] << 8) | udata[2]), ((uint16_t)udata[5] << 8) | udata[6], udata[4] == 0 ? false : true, std::vector<quint8>(&data[8], &data[8 + read_length]));
+                        qInfo() << m.toString();
                         processIncomingGMessage(m);
                     }
 
@@ -294,6 +307,7 @@ void GloxiniaConfigurator::readData()
                 }
                 else
                 {
+                    qInfo() << "Error incorrect stop byte received";
                     // incorrect data byte received -> reset state
                 }
                 readoutState = FindStartByte;

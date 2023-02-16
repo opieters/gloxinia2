@@ -44,9 +44,6 @@ void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
         case GMessage::Code::BOOT_ERASE_FLASH:
             processBootEraseFlash(m);
             break;
-        case GMessage::Code::BOOT_CALC_CHECKSUM:
-            processBootCalcChecksum(m);
-            break;
         case GMessage::Code::BOOT_RESET_DEVICE:
             processBootResetDevice(m);
             break;
@@ -249,12 +246,20 @@ void GloxiniaConfigurator::processBootReadVersion(const GMessage&m)
     auto data = m.getData();
 
     info.bootVersion = (((uint16_t) data[0]) << 8) | (data[1]);
-    info.swVersion = (((uint32_t) data[7]) << 24) | (((uint32_t) data[8]) << 16) | (((uint32_t) data[9]) << 8) | (data[10]);
-    info.hwVersion = (((uint32_t) data[11]) << 24) | (((uint32_t) data[12]) << 16) | (((uint32_t) data[13]) << 8) | (data[14]);
+    info.swVersion = (((uint32_t) data[3]) << 24) | (((uint32_t) data[4]) << 16) | (((uint32_t) data[5]) << 8) | (data[6]);
+    info.hwVersion = (((uint32_t) data[7]) << 24) | (((uint32_t) data[8]) << 16) | (((uint32_t) data[9]) << 8) | (data[10]);
 
-    info.maxPacketSize = data[6];
-    info.eraseRowSize = data[15];
-    info.writeRowSize = data[16];
+    info.maxPacketSize = data[2];
+    info.eraseRowSize = data[11];
+    info.writeRowSize = data[12];
+
+    qInfo() << "Received bootloader info";
+    qInfo() << "bootloader version" << info.bootVersion;
+    qInfo() << "sw version" << info.swVersion;
+    qInfo() << "hw version" << info.hwVersion;
+    qInfo() << "other info:" << info.maxPacketSize << info.eraseRowSize << info.writeRowSize;
+
+    updateDialog->setNodeInfo(info);
 }
 void GloxiniaConfigurator::processBootReadFlash(const GMessage&m)
 {
@@ -262,19 +267,22 @@ void GloxiniaConfigurator::processBootReadFlash(const GMessage&m)
 }
 void GloxiniaConfigurator::processBootWriteFlash(const GMessage&m)
 {
-    handleBootMessageStatus(m);
+    auto data = m.getData();
+    if(data.size() == 5){
+        handleBootMessageStatus(m);
+
+        uint32_t address = 0;
+        for(int i = 0; i < 4; i++)
+            address = (address << 8) | (data[i]);
+        address *= 2;
+
+        updateDialog->setFlashProgress(address);
+    }
 }
+
 void GloxiniaConfigurator::processBootEraseFlash(const GMessage&m)
 {
     handleBootMessageStatus(m);
-}
-void GloxiniaConfigurator::processBootCalcChecksum(const GMessage&m)
-{
-    bool status = handleBootMessageStatus(m);
-    auto data = m.getData();
-    if(status && (data.size() == 7)){
-        updateDialog->receivedCRC(((uint16_t) data[5]) << 8 | data[6]);
-    }
 }
 
 void GloxiniaConfigurator::processBootResetDevice(const GMessage&m)
@@ -307,7 +315,8 @@ void GloxiniaConfigurator::processBootGetMemoryAddressRangeCommand(const GMessag
             address2 = (address2 << 8) | data[5+4+i];
         }
 
-        updateDialog->setFlashRange(address1, address2);
+        // we need to multiply by 2 here since the device address space is in words, but we work in bytes here
+        updateDialog->setFlashRange(address1*2, address2*2);
     }
 }
 
@@ -337,6 +346,8 @@ bool GloxiniaConfigurator::handleBootMessageStatus(const GMessage &m){
             updateDialog->detectedError();
             qInfo() << "Bootloader reported address error";
             break;
+    case 0xfc:
+        qInfo() << "Verification failed";
         default:
             updateDialog->detectedError();
             qInfo() << "Unknown command return received";

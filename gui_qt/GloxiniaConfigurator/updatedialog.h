@@ -46,13 +46,15 @@ public:
 
     void selectHexFile(void);
     void detectedError(void);
-    void receivedCRC(uint32_t crc);
+    void receivedChecksum(uint32_t crc);
     void setVerification(bool status);
     void setBootReady(bool status);
-    void setFlashRange(uint32_t start, uint32_t stop);
+    void setFlashRange(uint32_t startAddressInBytes, uint32_t stopAddressInBytes);
     void setConfigurator(GloxiniaConfigurator* c);
     void setNode( GCNode* node );
+    void setNodeInfo(FlashNodeInfo& info);
     void showEvent( QShowEvent* event ) override;
+    void setFlashProgress(uint32_t address);
 private slots:
     void resetNode(void);
 private:
@@ -67,18 +69,23 @@ private:
 
     uint32_t fileHWVersion = 0x0;
     uint32_t fileSWVersion = 0x0;
-    uint32_t fileCRC = 0x0;
+    uint32_t fileChecksum = 0x0;
+    uint32_t checksumStartAddress = 0x0;
+    uint32_t checksumEndAddress = 0x0;
 
-    uint32_t fileStartAddress = 0x0;
-    uint32_t fileEndAddress = 0x0;
+    uint32_t flashStartAddress = 0x0;
+    uint32_t flashEndAddress = 0x0;
 
     uint32_t computedFileCRC = 0x0;
 
+    unsigned int flashCount = 0;
+
     uint32_t deviceHWVersion = 0x0;
     uint32_t deviceSWVersion = 0x0;
-    uint32_t deviceCRC = 0x0;
+    uint32_t deviceChecksum = 0x0;
     bool deviceVerification = false;
     bool deviceBootLoaderActive = false;
+    bool flashOngoing = false;
 
     volatile bool errorReported = false;
 
@@ -91,7 +98,6 @@ private:
     void flash(void);
 
     void eraseFlash(uint32_t address, uint16_t n_rows);
-    void calculateChecksum(uint32_t address, uint16_t n_rows, uint16_t* checksum);
     void writeFlash(uint32_t address, uint8_t* data, uint8_t len);
     void resetDevice();
 
