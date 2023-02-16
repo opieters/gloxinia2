@@ -7,8 +7,8 @@
 #include <i2c.h>
 #include <sensor.h>
 #ifdef __DICIO__
-#include "../dicio2.X/dicio.h"
-#include "../dicio2.X/sdcard.h"
+#include "../dicio.X/dicio.h"
+#include "../dicio.X/sdcard.h"
 #endif
 
 // internal functions

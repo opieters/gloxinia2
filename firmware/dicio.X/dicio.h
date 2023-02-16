@@ -3,55 +3,45 @@
 
 #include <xc.h>
 #include <utilities.h>
-#include <i2c.h>
 #include <uart.h>
-#include <one_wire.h>
+#include <message.h>
 
-#define DICIO_READ_FREQUENCY 10 // interrupt frequency of the readout function
-
-#define N_SPI1_SS_PINS 3
-#define N_SPI2_SS_PINS 2
-#define N_I2C_BUSES    2
+#define DICIO_CONFIG_ADDRESS 0x00000000U
+#define DICIO_NODE_CONFIG_START_ADDRESS 0x00000020U
+#define DICIO_DATA_START_ADDRESS 0x00000000U
+#define DICIO_MAX_N_NODES 50U
 
 typedef struct {
-    pin_t blinky_pin;
-    pin_t error_pin;
-    pin_t rst1_sensor_pin;
-    pin_t rst2_sensor_pin;
-    pin_t spi1_ss[N_SPI1_SS_PINS];
-    pin_t spi2_ss[N_SPI2_SS_PINS];
-    i2c_config_t i2c_config[N_I2C_BUSES];
-    one_wire_config_t one_wire_config;
-    uint32_t output_frequency;
-} dicio_config_t;
+    uint32_t sector_address;
+    uint16_t node_id;
+    
+    message_node_t node_type;
+    uint8_t n_interfaces;
+    bool stored_config;
+    
+    uint8_t v_hw;
+    uint8_t v_sw_u;
+    uint8_t v_sw_l;
+} node_config_t;
+
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
     void dicio_init(void);
-    void dicio_loop(void);
-
-    void dicio_i2c_mw_sr_callback(i2c_message_t* m);
-    void dicio_i2c_mr_sw_callback(i2c_message_t* m);
-
+    
+    void dicio_send_ready_message(void*);
+    
     void dicio_init_pins(void);
-
-    void dicio_init_clock_sync(void);
-    void dicio_start_clock_sync(void);
-    void dicio_stop_clock_sync(void);
-
-    void dicio_dummy_callback(void);
-
-    void dicio_set_sensor_callback(void (*cb)(void));
-    void dicio_set_actuator_callback(void (*cb)(void));
-
-    void dicio_send_message(serial_cmd_t cmd, uint16_t can_ext_id,
-            uint8_t* data, uint8_t data_length);
-
-    void dicio_send_ready_message(void);
-
-
+    
+    void dicio_read_sdconfig_data(void);
+    void dicio_mount_fs(void);
+    void dicio_unmount_fs(void);
+    bool dicio_clear_data(void);
+    void dicio_dump_sdcard_data(uint32_t sector_start, uint32_t sector_stop);
+    void dicio_init_node_configurations(void);
+    void dicio_process_node_config(const message_t* m);
 
 #ifdef	__cplusplus
 }

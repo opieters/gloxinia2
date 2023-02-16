@@ -2,7 +2,7 @@
 #include <address.h>
 #include <rtcc.h>
 #ifdef __DICIO__
-#include <../dicio2.X/sdcard.h>
+#include <../dicio.X/sdcard.h>
 #endif
 
 sensor_interface_t sensor_interfaces[N_SENSOR_INTERFACES];

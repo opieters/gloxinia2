@@ -1,4 +1,4 @@
-<config configName="default" projectName="dicio_debug" configVersion="1.1" device="dsPIC33EP512MC806" deviceLibraryClass="com.microchip.mcc.mcu16.Mcu16PeripheralLibrary" coreVersion="5.4.14">
+<config configName="default" projectName="dicio" configVersion="1.1" device="dsPIC33EP512MC806" deviceLibraryClass="com.microchip.mcc.mcu16.Mcu16PeripheralLibrary" coreVersion="5.4.14">
    <usedPackages class="java.util.ArrayList"/>
    <usedClasses class="java.util.TreeMap">
       <entry>
