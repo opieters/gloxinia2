@@ -17,7 +17,7 @@ static uint16_t temp_can_address = ADDRESS_SEARCH_START;
 
 extern int16_t n_connected_devices;
 
-void address_get(void) {
+void address_find_non_reserved(void) {
     message_t m;
     
     if(controller_address != ADDRESS_UNSET){
@@ -33,7 +33,7 @@ void address_get(void) {
     temp_can_address++;
 }
 
-void address_set(uint16_t address) {
+void address_set_and_check_available(uint16_t address) {
     message_t m;
 
     controller_address = address;
