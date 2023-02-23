@@ -2,12 +2,18 @@
 #define	__SYLVATICA_H__
 
 #include <xc.h> 
+#include <dsp.h>
 #include <i2c.h>
 
 #define SYLVATICA_N_CHANNELS               8
 #define SYLVATICA_CHANNEL_BUFFER_SIZE      8
 #define SYLVATICA_I2C_BASE_ADDRESS         0b1000000
 #define SYLVATICA_ADC_BUFFER_LENGTH        200
+
+#define SYLVATICA_DEC_FACT_F0 10
+#define SYLVATICA_DEC_FACT_F1 10
+#define SYLVATICA_DEC_FACT_F2 10
+#define SYLVATICA_DEC_FACT_F3 5
 
 #define SYLVATICA_ADC_SAMPLE_FREQUENCY     80000
 #define SYLVATICA_COPY_BUFFER_SIZE         (10*SYLVATICA_DEC_FACT_F0)
@@ -43,6 +49,11 @@
 
 #define SYLVATICA_N_ADDRESS_SEL_PINS 8
 
+#define N_FIR_COEFFS0 100
+#define N_FIR_COEFFS1 100
+#define N_FIR_COEFFS2 100
+#define N_FIR_COEFFS3 192
+
 typedef enum {
     SYLVATICA_REG_STATUS     = 0,
     SYLVATICA_REG_ADC        = 1,
@@ -74,9 +85,16 @@ typedef enum {
 extern "C" {
 #endif
     
+    extern fractional fir_coeffs_0[100];
+    extern fractional fir_coeffs_1[100];
+    extern fractional fir_coeffs_2[100];
+    extern fractional fir_coeffs_3[192];
+    
     void sylvatica_init(void);
     void sylvatica_send_ready_message(void *data);
     void sylvatica_init_pins(void);
+    void sylvatica_filters_init(void);
+    void sylvatic_adc_callback(void);
     
     
 #ifdef	__cplusplus

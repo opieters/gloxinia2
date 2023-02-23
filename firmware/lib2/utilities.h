@@ -58,6 +58,9 @@
 /// @brief Macro to toggle a pin
 #define TOGGLE_BIT(x, y) ((*(x)) ^= 1UL << (y))
 
+/// @brief Macro to extract bit value (and shift to lowest position)
+#define GET_BIT(x, y) (((*(x)) >> (y)) & 1UL)
+
 /**
  * @brief Pin structure
  * 

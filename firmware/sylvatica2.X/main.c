@@ -1,8 +1,11 @@
 #include <xc.h>
-#include <event_controller.h>
 #include "sylvatica.h"
+#include <event_controller.h>
 #include <utilities.h>
+#include <i2c.h>
+#include "mcc_generated_files/clock.h"
 
+/*
 #pragma config GWRP = OFF                       // General Segment Write-Protect bit (General Segment may be written)
 #pragma config GSS = OFF                        // General Segment Code-Protect bit (General Segment Code protect is disabled)
 #pragma config GSSK = OFF                       // General Segment Key bits (General Segment Write Protection and Code Protection is Disabled)
@@ -12,7 +15,7 @@
 #pragma config IESO = OFF                       // Two-speed Oscillator Start-up Enable bit (Start up with user-selected oscillator source)
 
 // FOSC
-#pragma config POSCMD = XT                    // Primary Oscillator Mode Select bits (External clock source)
+#pragma config POSCMD = XT                    // Primary Oscillator Mode Select bits (Primary Oscillator disabled)
 #pragma config OSCIOFNC = OFF                   // OSC2 Pin Function bit (OSC2 is clock output)
 #pragma config IOL1WAY = OFF                    // Peripheral pin select configuration (Allow multiple reconfigurations)
 #pragma config FCKSM = CSECMD                   // Clock Switching Mode bits (Clock switching is enabled,Fail-safe Clock Monitor is disabled)
@@ -38,44 +41,25 @@
 #pragma config AWRP = OFF                       // Auxiliary Segment Write-protect bit (Auxiliary program memory is not write-protected)
 #pragma config APL = OFF                        // Auxiliary Segment Code-protect bit (Aux Flash Code protect is disabled)
 #pragma config APLK = OFF                       // Auxiliary Segment Key bits (Aux Flash Write Protection and Code Protection is Disabled)
+*/
 
-int main(void) {
-    // configure operating frequency
-    // system clock frequency = 64MHz
-    // due to 8MHz*64/(2*2)
-    // F_PLLI = F_IN / PPLPRE
-    // F_SYS = F_PPLI * PLLFBD
-    // F_OSC = F_SYS / PLLPOST -> crystal oscillation frequency
-    // F_P = F_CY = F_OSC / 2 -> operating frequency
-    // F_SYS OK since in range of 120 < F_SYS < 340
-    // F_PPLI OK since in range of 0.8 < F_PPLI < 8
-    PLLFBD = 62;                                // M=64
-    CLKDIVbits.PLLPOST = 0b00;                     // N1=2
-    CLKDIVbits.PLLPRE = 0;                      // N2=2
-    //OSCTUN = 0;                                 // Tune FRC oscillator, if FRC is used
+static task_t task;
 
-    // Disable Watch Dog Timer
-    RCONbits.SWDTEN = 0;
-
-    // Clock switch to incorporate PLL
-    __builtin_write_OSCCONH( 0x03 );            // Initiate Clock Switch to
-
-    // FRC with PLL (NOSC=0b001)
-    __builtin_write_OSCCONL( OSCCON || 0x01 );  // Start clock switching
-    while( OSCCONbits.COSC != 0b011 );
-
-    // Wait for Clock switch to occur
-    // Wait for PLL to lock
-    while( OSCCONbits.LOCK != 1 );
-
-    // UART serial communication (debug + print interface)
-    uart_init(500000);
+int main(void) 
+{
     
-    UART_DEBUG_PRINT("Configured UART.");
-     
-    init_sylvatica();
+    CLOCK_Initialize();
     
-    loop_sylvatica();
-    
+    sylvatica_init();
+
+    while (1) {
+        i2c_process_queue();
+
+        if (n_queued_tasks > 0) {
+            task = pop_queued_task();
+            task.cb(task.data);
+        }
+    }
+
     return 0;
 }

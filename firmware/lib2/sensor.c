@@ -245,6 +245,12 @@ i2c_bus_t sensor_i2c_get_bus(uint8_t sensor_interface_n) {
     } else {
         return I2C2_BUS;
     }
+#elif defined __SYLVATICA__
+    if (sensor_interface_n < 4) {
+        return I2C1_BUS;
+    } else {
+        return I2C2_BUS;
+    }
 #else
 #error "This board is not yet supported"
 #endif
