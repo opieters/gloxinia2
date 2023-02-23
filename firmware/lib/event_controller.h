@@ -34,7 +34,7 @@ extern "C" {
 
     event_t pop_queued_task(void);
 
-    int push_queued_task(event_t task);
+    bool push_queued_task(event_t task);
 
 #ifdef	__cplusplus
 }

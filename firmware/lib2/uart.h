@@ -1,91 +1,128 @@
 #ifndef __UART_H__
-#define	__UART_H__
+#define __UART_H__
 
 #include <xc.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <message.h>
+#include <can.h>
 
+/// @brief UART start byte
 #define UART_CMD_START ('\x5B')
-#define UART_CMD_STOP  ('\x5D')
 
-#define UART_MESSAGE_BUFFER_LENGTH 64U
+/// @brief UART stop byte
+#define UART_CMD_STOP ('\x5D')
+
+/// @brief UART FIFO TX queue size
+#define UART_FIFO_TX_BUFFER_SIZE 16U
+/// @brief UART FIFO TX message data size (preallocated)
+#define UART_FIFO_TX_DATA_BUFFER_SIZE 16U
+
+/// @brief UART FIFO RX queue size
+#define UART_FIFO_RX_BUFFER_SIZE 16U
+#define UART_FIFO_RX_DATA_BUFFER_SIZE CAN_MAX_N_BYTES
+
+/// @brief UART header size (includes start and stop bytes)
 #define UART_HEADER_SIZE 9U
 
-// UART RX cache size before processig (FIFO)
-#define UART_RX_BUFFER_SIZE 4U // number of unique messages
-#define PRINT_BUFFER_LENGTH 64 // max length of message data
-
-// UART FIFO TX buffer
-#define UART_FIFO_TX_BUFFER_SIZE 16U
-#define UART_FIFO_RX_BUFFER_SIZE 16U
-#define UART_TX_DATA_BUFFER_SIZE 16
-
-
-// receive buffer variables
+/// @brief UART receive state enumeration
 typedef enum
 {
-    UART_RX_STATE_FIND_START_BYTE,
-    UART_RX_STATE_READ_IDH,
-    UART_RX_STATE_READ_IDL,
-    UART_RX_STATE_READ_CMD,
-    UART_RX_STATE_READ_REQUEST,
-    UART_RX_STATE_READ_SIDH,
-    UART_RX_STATE_READ_SIDL,
-    UART_RX_STATE_READ_LENGTH,
-    UART_RX_STATE_READ_DATA,
-    UART_RX_STATE_DETECT_STOP
+    UART_RX_STATE_FIND_START_BYTE, ///< Find start byte
+    UART_RX_STATE_READ_IDH,        ///< Read ID high byte
+    UART_RX_STATE_READ_IDL,        ///< Read ID low byte
+    UART_RX_STATE_READ_CMD,        ///< Read command byte
+    UART_RX_STATE_READ_REQUEST,    ///< Read request byte
+    UART_RX_STATE_READ_SIDH,       ///< Read sensor ID high byte
+    UART_RX_STATE_READ_SIDL,       ///< Read sensor ID low byte
+    UART_RX_STATE_READ_LENGTH,     ///< Read data length byte
+    UART_RX_STATE_READ_DATA,       ///< Read data (len: variable length)
+    UART_RX_STATE_DETECT_STOP      ///< Detect stop byte
 } uart_rx_state_t;
 
-// receive buffer variables
+/// @brief UART transmit state enumeration
 typedef enum
 {
-    UART_TX_STATE_SEND_START_BYTE,
-    UART_TX_STATE_SEND_IDH,
-    UART_TX_STATE_SEND_IDL,
-    UART_TX_STATE_SEND_CMD,
-    UART_TX_STATE_SEND_REQUEST,
-    UART_TX_STATE_SEND_SIDH,
-    UART_TX_STATE_SEND_SIDL,
-    UART_TX_STATE_SEND_LENGTH,
-    UART_TX_STATE_SEND_DATA,
-    UART_TX_STATE_SEND_STOP,
+    UART_TX_STATE_SEND_START_BYTE, ///< Send start byte
+    UART_TX_STATE_SEND_IDH,        ///< Send ID high byte
+    UART_TX_STATE_SEND_IDL,        ///< Send ID low byte
+    UART_TX_STATE_SEND_CMD,        ///< Send command byte
+    UART_TX_STATE_SEND_REQUEST,    ///< Send request byte
+    UART_TX_STATE_SEND_SIDH,       ///< Send sensor ID high byte
+    UART_TX_STATE_SEND_SIDL,       ///< Send sensor ID low byte
+    UART_TX_STATE_SEND_LENGTH,     ///< Send data length byte
+    UART_TX_STATE_SEND_DATA,       ///< Send data (len: variable length)
+    UART_TX_STATE_SEND_STOP,       ///< Send stop byte
     UART_TX_STATE_DONE,
 } uart_tx_state_t;
 
-
-#ifdef	__cplusplus
-extern "C" {
+#ifdef __cplusplus
+extern "C"
+{
 #endif
 
+    /**
+     * @brief Initialise UART
+     *
+     * @param baudrate Baudrate
+     */
     void uart_init(uint32_t baudrate);
-    
-    
-    void message_reset(message_t* m);
-    
-    //extern volatile size_t n_uart_rx_messages;
 
-    //void uart_rx_callback(void);
+    /**
+     * @brief Reset message
+     *
+     * @param m Message
+     */
+    void message_reset(message_t *m);
 
-    void uart_queue_message(message_t* m);
+    /**
+     * @brief Add message to TX queue
+     *
+     * @details The message in the queue is a deep copy of the message passed to
+     * the function. So the variable passed to the function can be freed after
+     * the function returns. Data lengths of up to UART_FIFO_TX_DATA_BUFFER_SIZE
+     * bytes are supported.
+     *
+     * @param m Message to add to queue
+     */
+    void uart_queue_message(message_t *m);
 
-    void uart_parse_to_raw_buffer(uint8_t* data, message_t* m, const size_t max_length);
+    /**
+     * @brief Parse message to UART TX buffer for DMA transfer
+     *
+     * @details DMA transferis more efficient and can be used to make UART
+     * transmissions more efficient.
+     *
+     * @param data Pointer to data buffer
+     * @param m Message to parse
+     * @param max_length Maximum length of data buffer
+     */
+    void uart_parse_to_raw_buffer(uint8_t *data, message_t *m, const size_t max_length);
 
-    //void uart_await_tx(uart_message_t* m);
+    /**
+     * @brief Send string over UART.
+     *
+     * @details The string length is also limited to
+     * UART_FIFO_TX_DATA_BUFFER_SIZE bytes. If the string is longer than this,
+     * it will be truncated.
+     *
+     * @param message String to send
+     * @param lengh Length of string
+     */
+    void uart_print(const char *message, size_t lengh);
 
-    //void uart_wait(void);
-
-    //void uart_log_init(uint32_t baudrate);
-
-    void uart_print(const char* message, size_t lengh);
-    
-    void uart_send_message(message_t* m);
-    
+    /**
+     * @brief Process messages in the UART TX queue
+     *
+     * @details This message will start the transmission of the next message in
+     * the queue if the current one is done. It is automatically called by the
+     * DMA interrupt handler and when a new message is queued, so it is not
+     * necessary to call it manually in the main event loop.
+     */
     void process_uart_tx_queue(void);
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif	/* __UART_H__ */
-
+#endif /* __UART_H__ */

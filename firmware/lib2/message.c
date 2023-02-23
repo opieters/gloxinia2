@@ -230,12 +230,12 @@ static void cmd_address_taken(const message_t *m) {
 }
 
 static void address_get_task(void *data) {
-    address_get();
+    address_find_non_reserved();
 }
 
 static void cmd_update_address(const message_t *m) {
     if ((m->identifier == controller_address) && (m->length == 2)) {
-        address_set((m->data[0] << 8) | m->data[1]);
+        address_set_and_check_available((m->data[0] << 8) | m->data[1]);
     }
 
     // report back
@@ -254,7 +254,7 @@ static void cmd_discovery(const message_t *m) {
 
     if (m->request_message_bit && (m->identifier == ADDRESS_GATEWAY)) {
         if (controller_address == ADDRESS_UNSET) {
-            address_get();
+            address_find_non_reserved();
             return;
         } else {
             // forward the message to the other nodes

@@ -39,7 +39,7 @@ void i2c1_init(i2c_config_t* config) {
     T2CONbits.TGATE = 0; // disable gated timer
     T2CONbits.TCKPS = 0b11; // prescaler 1:256
     TMR2 = 0; // clear timer register
-    PR2 = I2C_TIMER_PERIOD - 1; // set period of ADC_SAMPLE_FREQUENCY
+    PR2 = I2C_TIMER_PERIOD - 1; // set period
     _T2IF = 0; // clear interrupt flag
     _T2IE = 1; // enable interrupt
 

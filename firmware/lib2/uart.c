@@ -13,7 +13,7 @@ volatile uint8_t uart_tx_queue_idx = 0;
 volatile uint8_t uart_tx_queue_valid = 0;
 volatile uint8_t uart_tx_ongoing = 0;
 message_t uart_tx_queue[UART_FIFO_TX_BUFFER_SIZE];
-uint8_t uart_tx_data[UART_FIFO_TX_BUFFER_SIZE][UART_TX_DATA_BUFFER_SIZE];
+uint8_t uart_tx_data[UART_FIFO_TX_BUFFER_SIZE][UART_FIFO_TX_DATA_BUFFER_SIZE];
 
 // DMA buffer
 uint8_t uart_dma_message_data[128];
@@ -21,9 +21,8 @@ uint8_t uart_dma_message_data[128];
 extern bool uart_connection_active;
 
 message_t uart_rx_queue[UART_FIFO_RX_BUFFER_SIZE];
-uint8_t uart_rx_data[UART_FIFO_RX_BUFFER_SIZE][CAN_MAX_N_BYTES];
+uint8_t uart_rx_data[UART_FIFO_RX_BUFFER_SIZE][UART_FIFO_RX_DATA_BUFFER_SIZE];
 task_t uart_rx_tasks[UART_FIFO_RX_BUFFER_SIZE];
-//uint8_t uart_rx_buffer[PRINT_BUFFER_LENGTH] __attribute__((space(xmemory)));
 volatile uart_rx_state_t uart_rx_state = 0;
 volatile uint8_t uart_rx_data_idx = 0;
 volatile uint8_t uart_rx_idx = 0;
@@ -88,7 +87,7 @@ void uart_init(uint32_t baudrate)
     _DMA14IP = 7;
 
     // RX buffer
-    for (i = 0; i < UART_RX_BUFFER_SIZE; i++)
+    for (i = 0; i < UART_FIFO_RX_BUFFER_SIZE; i++)
     {
         uart_rx_queue[i].status = M_RX_FROM_UART;
     }
@@ -140,7 +139,7 @@ void uart_print(const char *message, size_t length)
 void uart_queue_message(message_t *m)
 {
     // wait for space in the queue
-    while (n_uart_tx_messages == UART_MESSAGE_BUFFER_LENGTH)
+    while (n_uart_tx_messages == UART_FIFO_TX_BUFFER_SIZE)
         ;
 
     if (m->status != M_TX_INIT_DONE)
@@ -156,7 +155,7 @@ void uart_queue_message(message_t *m)
     // we only need to check this for messages other than the special print message
     if (m != uart_print_message)
     {
-        mtx->length = MIN(UART_TX_DATA_BUFFER_SIZE, m->length);
+        mtx->length = MIN(UART_FIFO_TX_DATA_BUFFER_SIZE, m->length);
         mtx->data = uart_tx_data[uart_tx_queue_idx];
 
         for (unsigned int i = 0; i < mtx->length; i++)
@@ -306,7 +305,7 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _U2RXInterrupt ( void )
         break;
     case UART_RX_STATE_READ_DATA:
         // only write data until buffer is full
-        if (uart_rx_data_idx < PRINT_BUFFER_LENGTH)
+        if (uart_rx_data_idx < UART_FIFO_RX_DATA_BUFFER_SIZE)
         {
             uart_rx_m->data[uart_rx_data_idx] = rx_value;
         }

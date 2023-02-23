@@ -29,7 +29,7 @@ void event_controller_init(void){
     T9CONbits.TON = 1;
 }
 
-uint32_t push_queued_task(task_t task) {
+bool push_queued_task(task_t task) {
     uint16_t index;
     _GIE = 0; // disable interrupts
 
@@ -43,12 +43,12 @@ uint32_t push_queued_task(task_t task) {
     } else {
         _GIE = 1;
 
-        return 1;
+        return false;
     }
 
     _GIE = 1; // enable interrupts
 
-    return 0;
+    return true;
 }
 
 task_t pop_queued_task(void) {

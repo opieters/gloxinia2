@@ -5,22 +5,13 @@
 #include <can.h>
 #include <address.h>
 
-
-// *****************************************************************************
-// *****************************************************************************
-// Section: File Scope or Global Constants
-// *****************************************************************************
-// *****************************************************************************
-
+// UARt TX FIFO variables
 volatile size_t n_uart_rx_messages = 0;
 volatile size_t uart_rx_read_idx = 0; // current or previous read index
 
 
 
 uart_message_t* uart_queue[UART_MESSAGE_BUFFER_LENGTH];
-
-
-
 
 volatile uint8_t n_uart_messages = 0;
 volatile uint8_t uart_queue_idx = 0;

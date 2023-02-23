@@ -100,6 +100,15 @@ extern "C"
     void can_disable(void);
 
     /**
+     * @brief Restarts ECAN module if an error occorred.
+     *
+     * @details This function can be used when it is unsure that the bus has
+     * multiple devices to restart the bus. It does not reset the bus if it is
+     * still operationg correctly.
+     */
+    void can_reset(void);
+
+    /**
      * @brief Initialises a CAN message.
      *
      * @details Initialises a CAN message with the given parameters.

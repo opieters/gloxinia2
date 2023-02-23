@@ -165,6 +165,23 @@ void can_disable(void)
     DMA1CONbits.CHEN = 0;
 }
 
+void can_reset(void) {
+    // when the module is still running fine, do not restart
+    if(C1CTRL1bits.OPMODE == CAN_MODULE_ENABLE){
+        return;
+    }
+
+    _TRISE4 = 0;
+    _RP84R = 0;
+    _RE4 = 0;
+    __delay_ms(10);
+    _RE4 = 1;
+    __delay_ms(10);
+    _RP84R = _RPOUT_C1TX;
+
+    can_init();
+}
+
 void can_init_message(can_message_t *m,
                       uint16_t identifier,
                       uint8_t remote_frame,

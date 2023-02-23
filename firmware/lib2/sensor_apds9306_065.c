@@ -444,11 +444,11 @@ void sensor_apds9306_065_i2c_cb(i2c_message_t* m) {
                 M_SENSOR_DATA,
                 intf->sensor_id,
                 m->read_data,
-                SENSOR_APDS3906_098_CAN_DATA_LENGTH);
+                SENSOR_APDS3906_065_CAN_DATA_LENGTH);
         message_send(&intf->log);
         
 #ifdef __DICIO__
-        sdcard_save_sensor_data(SENSOR_TYPE_APDS9306_065, m->read_data, SENSOR_APDS3906_098_CAN_DATA_LENGTH);
+        sdcard_save_sensor_data(SENSOR_TYPE_APDS9306_065, m->read_data, SENSOR_APDS3906_065_CAN_DATA_LENGTH);
 #endif
     }
 }
