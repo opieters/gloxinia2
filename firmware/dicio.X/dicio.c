@@ -38,10 +38,9 @@ i2c_config_t dicio_i2c2_config = {
 
 void dicio_init(void)
 {
-
     dicio_init_pins();
 
-    INTERRUPT_GlobalEnable();
+    __builtin_enable_interrupts();
 
     uart_init(50000);
 
