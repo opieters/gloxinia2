@@ -8184,7 +8184,7 @@
     (property "Footprint" "Package_SO:TSSOP-24_4.4x7.8mm_P0.65mm" (id 2) (at 336.55 222.25 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Datasheet" "" (id 3) (at 336.55 222.25 0)
+    (property "Datasheet" "https://www.ti.com/lit/ds/symlink/ads8332.pdf" (id 3) (at 336.55 222.25 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Mouser" "595-ADS8332IBPWR" (id 4) (at 0 444.5 0)
