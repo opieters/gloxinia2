@@ -8,14 +8,14 @@
 #define SYLVATICA_N_CHANNELS               8
 #define SYLVATICA_CHANNEL_BUFFER_SIZE      8
 #define SYLVATICA_I2C_BASE_ADDRESS         0b1000000
-#define SYLVATICA_ADC_BUFFER_LENGTH        200
+#define SYLVATICA_ADC16_BUFFER_LENGTH        200
 
 #define SYLVATICA_DEC_FACT_F0 10
 #define SYLVATICA_DEC_FACT_F1 10
 #define SYLVATICA_DEC_FACT_F2 10
 #define SYLVATICA_DEC_FACT_F3 5
 
-#define SYLVATICA_ADC_SAMPLE_FREQUENCY     80000
+#define SYLVATICA_ADC16_SAMPLE_FREQUENCY     80000
 #define SYLVATICA_COPY_BUFFER_SIZE         (10*SYLVATICA_DEC_FACT_F0)
 #define SYLVATICA_BLOCK1_INPUT_SIZE        (10*SYLVATICA_DEC_FACT_F1)
 #define SYLVATICA_BLOCK2_INPUT_SIZE        (SYLVATICA_DEC_FACT_F2)
@@ -94,7 +94,7 @@ extern "C" {
     void sylvatica_send_ready_message(void *data);
     void sylvatica_init_pins(void);
     void sylvatica_filters_init(void);
-    void sylvatic_adc_callback(void);
+    void sylvatic_adc16_callback(void);
     
     
 #ifdef	__cplusplus

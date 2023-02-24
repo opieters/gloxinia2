@@ -5,7 +5,7 @@
 #include <spi.h>
 #include <pga.h>
 #include <dsp.h>
-#include <adc.h>
+#include <adc16.h>
 #include <fir_common.h>
 
 i2c_config_t sylvatica_i2c1_config =  {
@@ -41,27 +41,27 @@ uint16_t copy_buffers_b[SYLVATICA_N_CHANNELS][SYLVATICA_COPY_BUFFER_SIZE];
 
 bool uart_connection_active = false;
 
-uint8_t adc_buffer_selector = 0;
+uint8_t adc16_buffer_selector = 0;
 volatile uint8_t copy_buffer_selector = 0;
 volatile uint8_t start_filter_block0 = 0;
 
-adc_config_t adc_config = {
-    .channel_select = ADC_CHANNEL_SELECT_MODE_AUTO,
-    .conversion_clock_source = ADC_CONVERSION_CLOCK_SOURCE_INTERNAL,
-    .trigger_select = ADC_TRIGGER_SELECT_MANUAL,
-    .auto_trigger_rate = ADC_SAMPLE_RATE_AUTO_TRIGGER_500KSPS,
-    .pin10_polarity = ADC_PIN10_POLARITY_SELECT_ACTIVE_LOW,
-    .pin10_output = ADC_PIN10_OUTPUT_EOC,
-    .pin10_io = ADC_PIN10_IO_SELECT_EOC_INT,
-    .auto_nap = ADC_AUTO_NAP_POWERDOWN_DISABLE,
-    .nap_powerdown = ADC_NAP_POWERDOWN_DISABLE,
-    .deep_powerdown = ADC_DEEP_POWERDOWN_DISABLE,
-    .tag_output = ADC_TAG_OUTPUT_DISABLE,
-    .sw_reset = ADC_NORMAL_OPERATION,
-    .channel = ADC_CH0,
-    .sample_frequency = SYLVATICA_ADC_SAMPLE_FREQUENCY,
-    .adc_buffer_size = SYLVATICA_ADC_BUFFER_LENGTH,
-    .rx_callback = sylvatic_adc_callback,
+adc16_config_t adc16_config = {
+    .channel_select = ADC16_CHANNEL_SELECT_MODE_AUTO,
+    .conversion_clock_source = ADC16_CONVERSION_CLOCK_SOURCE_INTERNAL,
+    .trigger_select = ADC16_TRIGGER_SELECT_MANUAL,
+    .auto_trigger_rate = ADC16_SAMPLE_RATE_AUTO_TRIGGER_500KSPS,
+    .pin10_polarity = ADC16_PIN10_POLARITY_SELECT_ACTIVE_LOW,
+    .pin10_output = ADC16_PIN10_OUTPUT_EOC,
+    .pin10_io = ADC16_PIN10_IO_SELECT_EOC_INT,
+    .auto_nap = ADC16_AUTO_NAP_POWERDOWN_DISABLE,
+    .nap_powerdown = ADC16_NAP_POWERDOWN_DISABLE,
+    .deep_powerdown = ADC16_DEEP_POWERDOWN_DISABLE,
+    .tag_output = ADC16_TAG_OUTPUT_DISABLE,
+    .sw_reset = ADC16_NORMAL_OPERATION,
+    .channel = ADC16_CH0,
+    .sample_frequency = SYLVATICA_ADC16_SAMPLE_FREQUENCY,
+    .adc16_buffer_size = SYLVATICA_ADC16_BUFFER_LENGTH,
+    .rx_callback = sylvatic_adc16_callback,
     .spi_module = SPI_MODULE_SELECTOR_2,
     .rst_pin = PIN_INIT(B, 15),
     .cs_pin = PIN_INIT(E, 5),
@@ -224,7 +224,7 @@ void sylvatica_init(void){
     sylvatica_filters_init();
     UART_DEBUG_PRINT("Initialised filters.");
 
-    adc_init(&adc_config);
+    adc16_init(&adc16_config);
     UART_DEBUG_PRINT("Initialised ADC.");
 
     task_schedule_t sylvatica_read_log;
@@ -294,32 +294,32 @@ void sylvatica_filters_init(void)
 }
 
 
-void sylvatic_adc_callback(void){
+void sylvatic_adc16_callback(void){
     uint16_t i;
     static uint16_t copy_counter = 0;
     
-    if (adc_buffer_selector == 0) {
+    if (adc16_buffer_selector == 0) {
         if(copy_buffer_selector == 0){
             for(i = 0; i < SYLVATICA_N_CHANNELS; i++){
-                copy_adc_data(SYLVATICA_ADC_BUFFER_LENGTH / SYLVATICA_N_CHANNELS, (fractional*) &copy_buffers_a[i][copy_counter], (fractional*) &adc_rx_buffer_a[i]);
+                copy_adc_data(SYLVATICA_ADC16_BUFFER_LENGTH / SYLVATICA_N_CHANNELS, (fractional*) &copy_buffers_a[i][copy_counter], (fractional*) &adc16_rx_buffer_a[i]);
             }
         } else {
             for(i = 0; i < SYLVATICA_N_CHANNELS; i++){
-                copy_adc_data(SYLVATICA_ADC_BUFFER_LENGTH / SYLVATICA_N_CHANNELS, (fractional*) &copy_buffers_b[i][copy_counter], (fractional*) &adc_rx_buffer_a[i]);
+                copy_adc_data(SYLVATICA_ADC16_BUFFER_LENGTH / SYLVATICA_N_CHANNELS, (fractional*) &copy_buffers_b[i][copy_counter], (fractional*) &adc16_rx_buffer_a[i]);
             }
         }
     } else {
         if(copy_buffer_selector == 0){
             for(i = 0; i < SYLVATICA_N_CHANNELS; i++){
-                copy_adc_data(SYLVATICA_ADC_BUFFER_LENGTH / SYLVATICA_N_CHANNELS, (fractional*) &copy_buffers_a[i][copy_counter], (fractional*) &adc_rx_buffer_b[i]);
+                copy_adc_data(SYLVATICA_ADC16_BUFFER_LENGTH / SYLVATICA_N_CHANNELS, (fractional*) &copy_buffers_a[i][copy_counter], (fractional*) &adc16_rx_buffer_b[i]);
             }
         } else {
             for(i = 0; i < SYLVATICA_N_CHANNELS; i++){
-                copy_adc_data(SYLVATICA_ADC_BUFFER_LENGTH / SYLVATICA_N_CHANNELS, (fractional*) &copy_buffers_b[i][copy_counter], (fractional*) &adc_rx_buffer_b[i]);
+                copy_adc_data(SYLVATICA_ADC16_BUFFER_LENGTH / SYLVATICA_N_CHANNELS, (fractional*) &copy_buffers_b[i][copy_counter], (fractional*) &adc16_rx_buffer_b[i]);
             }
         }
     }
-    copy_counter += SYLVATICA_ADC_BUFFER_LENGTH / SYLVATICA_N_CHANNELS;
+    copy_counter += SYLVATICA_ADC16_BUFFER_LENGTH / SYLVATICA_N_CHANNELS;
     
     if(copy_counter == SYLVATICA_COPY_BUFFER_SIZE){
         start_filter_block0 = 1;
@@ -327,5 +327,5 @@ void sylvatic_adc_callback(void){
         copy_counter = 0;
     }
     
-    adc_buffer_selector ^= 1;
+    adc16_buffer_selector ^= 1;
 }

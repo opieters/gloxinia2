@@ -71,20 +71,20 @@ void uart_init(uint32_t baudrate)
     // wait for at least one baud period to continue
     __delay_us(2 * (FCY / baudrate));
 
-    DMA14CONbits.DIR = 1;     // RAM-to-Peripheral
-    DMA14CONbits.SIZE = 1;    // byte transfer mode
-    DMA14CONbits.MODE = 0b01; // One-Shot, Ping-Pong modes disabled
-    DMA14CNT = 0;             // number of  DMA requests
-    DMA14REQ = 0x001F;        // Select UART2 transmitter
-    DMA14PAD = (volatile unsigned int)&U2TXREG;
-    _DMA14IF = 0; // Clear DMA Interrupt Flag
-    _DMA14IE = 1; // Enable DMA interrupt
+    DMA12CONbits.DIR = 1;     // RAM-to-Peripheral
+    DMA12CONbits.SIZE = 1;    // byte transfer mode
+    DMA12CONbits.MODE = 0b01; // One-Shot, Ping-Pong modes disabled
+    DMA12CNT = 0;             // number of  DMA requests
+    DMA12REQ = 0x001F;        // Select UART2 transmitter
+    DMA12PAD = (volatile unsigned int)&U2TXREG;
+    _DMA12IF = 0; // Clear DMA Interrupt Flag
+    _DMA12IE = 1; // Enable DMA interrupt
 
-    DMA14STAL = __builtin_dmaoffset(uart_dma_message_data);
-    DMA14STAH = __builtin_dmapage(uart_dma_message_data);
+    DMA12STAL = __builtin_dmaoffset(uart_dma_message_data);
+    DMA12STAH = __builtin_dmapage(uart_dma_message_data);
 
     // update interrupt priority
-    _DMA14IP = 7;
+    _DMA12IP = 7;
 
     // RX buffer
     for (i = 0; i < UART_FIFO_RX_BUFFER_SIZE; i++)
@@ -190,13 +190,13 @@ void process_uart_tx_queue(void)
             ;
 
         m->status = M_TX_SENT;
-        DMA14STAL = __builtin_dmaoffset(uart_dma_message_data);
-        DMA14STAH = __builtin_dmapage(uart_dma_message_data);
-        DMA14CNT = UART_HEADER_SIZE + (m->length) - 1;
+        DMA12STAL = __builtin_dmaoffset(uart_dma_message_data);
+        DMA12STAH = __builtin_dmapage(uart_dma_message_data);
+        DMA12CNT = UART_HEADER_SIZE + (m->length) - 1;
 
         // start transfer
-        DMA14CONbits.CHEN = 1;
-        DMA14REQbits.FORCE = 1;
+        DMA12CONbits.CHEN = 1;
+        DMA12REQbits.FORCE = 1;
     }
 }
 
@@ -221,7 +221,7 @@ void uart_parse_to_raw_buffer(uint8_t *data, message_t *m, const size_t max_leng
     data[8 + m->length] = UART_CMD_STOP;
 }
 
-void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA14Interrupt ( void )
+void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA12Interrupt ( void )
 {
     // finish the current transfer
     // uart_tx_queue[uart_tx_queue_valid].status = M_TX_SENT;
@@ -232,7 +232,7 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA14Interrupt ( void )
     uart_tx_ongoing = 0;
     process_uart_tx_queue();
 
-    _DMA14IF = 0; // Clear the DMA14 Interrupt Flag
+    _DMA12IF = 0; // Clear the DMA12 Interrupt Flag
 }
 
 void __attribute__ ( ( interrupt, no_auto_psv ) ) _U2ErrInterrupt ( void )
