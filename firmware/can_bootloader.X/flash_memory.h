@@ -1,28 +1,5 @@
-/**
-  FLASH Generated Driver API Header File
-
-  @Company
-    Microchip Technology Inc.
-
-  @File Name
-    flash.h
-
-  @Summary
-    This is the generated header file for the FLASH driver using PIC24 / dsPIC33 / PIC32MM MCUs
-
-  @Description
-    This header file provides APIs for driver for FLASH.
-    Generation Information :
-        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.171.1
-        Device            :  dsPIC33EP512MC806
-        Driver Version    :  1.00
-    The generated drivers are tested against the following:
-        Compiler          :  XC16 v1.70
-        MPLAB 	          :  MPLAB X v5.50
-*/
-
-#ifndef FLASH_H
-#define FLASH_H
+#ifndef __FLASH_MEMORY_H__
+#define __FLASH_MEMORY_H__
 
 #include <xc.h>
 #include <stdint.h>
@@ -57,7 +34,7 @@ bool     FLASH_WriteDoubleWord24(uint32_t address, uint32_t Data0, uint32_t Data
  *                   The address in *data must be row aligned.
  *                   returns true if successful */
 
-bool     FLASH_WriteRow24(uint32_t flashAddress, uint32_t *data);
+bool     FLASH_WriteRow24(uint32_t flashAddress, uint16_t *data);
 
 /* FLASH_WriteRow16: Writes a single row of data from the location in given in *data to
  *                   to the flash location in address. Each 16 bit source data 
@@ -74,5 +51,5 @@ uint32_t FLASH_GetErasePageAddress(uint32_t address);
 
 
 
-#endif	/* FLASH_H */
+#endif
 

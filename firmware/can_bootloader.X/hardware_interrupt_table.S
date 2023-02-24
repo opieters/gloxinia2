@@ -1,4 +1,4 @@
-#include "boot_config.h"
+#include "bootloader_config.h"
     	     
 __bootloader_DefaultInterrupt:
     goto __DefaultInterrupt
@@ -27,4 +27,4 @@ __bootloader_DefaultInterrupt:
     .section .ivt, code, address(0x4), keep
     
     #define REMAP_TABLE
-    .include "mcc_generated_files/boot/interrupts.S"
+    .include "interrupts.S"
