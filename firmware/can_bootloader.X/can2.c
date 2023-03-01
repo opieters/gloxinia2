@@ -5,7 +5,6 @@
 #include "message.h"
 
 uint16_t ecan_message_buffer[NUM_OF_ECAN_BUFFERS][8] __attribute__((aligned(NUM_OF_ECAN_BUFFERS * 16)));
-
 int16_t n_connected_devices = 0;
 
 // internal functions of message.c

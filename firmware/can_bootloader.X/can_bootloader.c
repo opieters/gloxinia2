@@ -9,15 +9,13 @@
 
 
 volatile bool received_bootloader_message = false;
-static bool executionImageRequiresValidation = true;
-static bool executionImageValid = false;
-
+static bool app_image_run_validation = true;
+static bool app_image_valid = false;
 
 volatile uint32_t last_address_written = 0xf;
 
 void system_initialise(void)
 {
-    bootloader_init();
     pins_init();  // configure pins and connect to peripherals
     clock_init(); // start 8MHz external clock
     can2_init();
@@ -25,6 +23,8 @@ void system_initialise(void)
 
     // set CORCON back to original values
     CORCON = (CORCON & 0x00F2) | CORCON_MODE_PORVALUES;
+    
+    bootloader_init();
 }
 
 void bootloader_init()
@@ -44,22 +44,16 @@ void bootloader_run(void)
 {
     uint32_t checksum;
 
-    if (received_bootloader_message)
+    if (!received_bootloader_message)
     {
-        // no nothing, commands are processed async
-        // BOOT_ImageVerify(EXECUTION_IMAGE);
-    }
-    else
-    {
-        if (executionImageRequiresValidation == true)
+        if (app_image_run_validation)
         {
-            executionImageValid = app_image_verification(EXECUTION_IMAGE, &checksum);
+            app_image_valid = app_image_verification(EXECUTION_IMAGE, &checksum);
         }
 
-        // TODO: forced bootloader mode for now, remove later
-        // executionImageValid = false;
-        if (executionImageValid == false)
+        if (!app_image_valid)
         {
+            // stay in bootloader mode since the image is not valid
             received_bootloader_message = true;
         }
         else
@@ -70,7 +64,7 @@ void bootloader_run(void)
              * the application code. */
             pins_reset();
             can2_disable();
-            bootloader_start_application_image();
+            bootloader_start_app_image();
         }
     }
 }

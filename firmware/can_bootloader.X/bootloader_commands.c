@@ -1,3 +1,5 @@
+#include <xc.h>
+#include <stdint.h>
 #include <libpic30.h>
 #include "pin_manager.h"
 #include "can_bootloader.h"
@@ -8,8 +10,9 @@
 
 extern volatile uint32_t last_address_written;
 extern volatile bool received_bootloader_message;
+uint32_t live_checksum = 0;
 
-static void boot_cmd_reset_device(can2_message_t *m);
+static boot_command_response_t boot_cmd_reset_device(can2_message_t *m);
 static boot_command_response_t bootloader_cmd_erase_flash(can2_message_t *m);
 static boot_command_response_t bootloader_cmd_write_flash(can2_message_t *m);
 static boot_command_response_t bootloader_cmd_read_flash(can2_message_t *m);
@@ -121,7 +124,7 @@ static boot_command_response_t bootloader_cmd_read_version(can2_message_t *m)
     return COMMAND_SUCCESS;
 }
 
-static void boot_cmd_reset_device(can2_message_t *m)
+static boot_command_response_t boot_cmd_reset_device(can2_message_t *m)
 {
     can2_message_t response;
 
@@ -145,6 +148,8 @@ static void boot_cmd_reset_device(can2_message_t *m)
         ; // wait for mode switch
 
     // asm ("reset");
+    
+    return BOOT_CMD_ERROR;
 }
 
 static boot_command_response_t bootloader_cmd_erase_flash(can2_message_t *m)
@@ -195,7 +200,7 @@ static boot_command_response_t bootloader_cmd_erase_flash(can2_message_t *m)
     return BOOT_CMD_ERROR;
 }
 
-uint32_t live_checksum = 0;
+
 static boot_command_response_t bootloader_cmd_write_flash(can2_message_t *m)
 {
     uint32_t flash_address = 0;

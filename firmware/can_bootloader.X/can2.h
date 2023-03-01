@@ -10,6 +10,7 @@
 
 /// @brief Memory unlock sequence
 #define CAN2_UNLOCK_SEQUENCE (0x5AU)
+#define CAN2_BUFFER_LENGTH (0x10)
 
 #ifdef __cplusplus
 extern "C"

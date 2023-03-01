@@ -10,7 +10,7 @@ const static app_image_t images[] =
     },
 };
 
-void bootloader_start_application_image()
+void bootloader_start_app_image()
 {
     int (*user_application)(void);
     user_application = (int(*)(void))BOOT_CONFIG_APPLICATION_RESET_ADDRESS;

@@ -50,13 +50,12 @@
 
 int main(void)
 {
-    // initialize the device
+    // initialise the device
     system_initialise();
-    bootloader_init();
-    
+
+    // run the bootloader
     while (1)
-    {
-        // Add your application code
+    {   
         bootloader_run();
     }
     return 1; 

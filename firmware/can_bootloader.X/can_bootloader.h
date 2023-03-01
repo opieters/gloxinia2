@@ -139,7 +139,7 @@ extern "C"
     boot_command_response_t boot_process_command(can2_message_t *m);
 
     void bootloader_init(void);
-    void bootloader_start_application_image(void);
+    void bootloader_start_app_image(void);
     bool bootloader_verify_application_image(uint32_t *checksum);
 
     void clock_init(void);
