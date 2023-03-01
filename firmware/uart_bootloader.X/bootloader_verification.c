@@ -3,12 +3,11 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "boot_config.h"
-#include "boot_image.h"
-#include "../uart1.h"
-#include "../uart_bootloader.X/mcc_generated_files/memory/flash.h"
-
+#include "flash_memory.h"
+#include "bootloader_config.h"
 #include <stdio.h>
+#include "uart_bootloader.h"
+#include "app_image.h"
 
 #define MEMCPY_BUFFERS_MATCH 0
 
@@ -37,7 +36,7 @@ static void ApplicationHeaderRead(uint32_t sourceAddress, struct BOOT_VERIFY_APP
     BOOT_Read32Data (&applicationHeader->endAddress,   sourceAddress + 8);
 }
 
-bool BOOT_ImageVerify(enum BOOT_IMAGE image, uint32_t* checksum)
+bool app_image_verification(boot_image_t image, uint32_t* checksum)
 {   
     struct BOOT_VERIFY_APPLICATION_HEADER applicationHeader;
     uint32_t c;
@@ -48,7 +47,7 @@ bool BOOT_ImageVerify(enum BOOT_IMAGE image, uint32_t* checksum)
         return false;
     }
 
-    ApplicationHeaderRead(BOOT_ImageAddressGet(image, applicationHeaderAddress), &applicationHeader);
+    ApplicationHeaderRead(app_image_address_get(image, applicationHeaderAddress), &applicationHeader);
 
     if( isOdd(applicationHeader.startAddress) )
     {
@@ -102,7 +101,7 @@ bool BOOT_ImageVerify(enum BOOT_IMAGE image, uint32_t* checksum)
     return ( c  == applicationHeader.crc32 );
 }
 
-bool BOOT_Verify(uint32_t* checksum)
+bool bootloader_verify_application_image(uint32_t* checksum)
 {
-    return BOOT_ImageVerify(0, checksum);
+    return app_image_verification(0, checksum);
 }

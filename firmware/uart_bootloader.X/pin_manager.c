@@ -4,12 +4,12 @@
 
 #include <xc.h>
 #include <stdio.h>
-#include "pin_manager.h"
+#include "uart_bootloader.h"
 
 /**
  Section: Driver Interface Function Definitions
 */
-void PIN_MANAGER_Initialize (void)
+void pins_init (void)
 {
     /****************************************************************************
      * Setting the Output Latch SFR(s)
@@ -77,7 +77,7 @@ void PIN_MANAGER_Initialize (void)
     __builtin_write_OSCCONL(OSCCON | 0x40); // lock PPS
 }
 
-void PIN_MANAGER_Deactivate (void)
+void pins_reset (void)
 {
     /****************************************************************************
      * Setting the Output Latch SFR(s)

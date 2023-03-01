@@ -41,8 +41,8 @@
     </code>
 
 */
-void PIN_MANAGER_Initialize (void);
-void PIN_MANAGER_Deactivate (void);
+void pins_init (void);
+void pins_reset (void);
 
 
 

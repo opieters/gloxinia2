@@ -7,19 +7,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "boot/boot_config.h"
+#include "bootloader_config.h"
 #include <message.h>
-
-
-typedef enum
-{
-    COMMAND_SUCCESS = 0x01,
-    UNSUPPORTED_COMMAND = 0xFF,
-    BAD_ADDRESS = 0xFE,
-    BAD_LENGTH  = 0xFD,
-    VERIFY_FAIL = 0xFC,
-    FLASH_INIT_FAIL,
-} boot_command_response_t;
 
 typedef struct {
     uint8_t data[BOOT_CONFIG_MAX_PACKET_SIZE+10];
@@ -59,9 +48,9 @@ typedef struct {
   @Comment
     
 */
-void UART1_Initialize(void);
+void uart1_init(void);
 
-void UART1_Deactivate(void);
+void uart1_deactivate(void);
 
 
 /**

@@ -1,52 +1,79 @@
-/**
-  @Generated PIC24 / dsPIC33 / PIC32MM MCUs Source File
+#include <xc.h>
+#include <libpic30.h>
+#include "uart_bootloader.h"
+#include "uart1.h"
+#include "flash.h"
+#include "traps.h"
 
-  @Company:
-    Microchip Technology Inc.
+#define DOWNLOADED_IMAGE    0u
+#define EXECUTION_IMAGE     0u
 
-  @File Name:
-    clock.c
+static bool app_image_run_validation = true;
+static bool app_image_valid = false;
 
-  @Summary:
-    This is the clock.c file generated using PIC24 / dsPIC33 / PIC32MM MCUs
+volatile bool received_bootloader_message = false;
+volatile uint32_t last_address_written = 0xf;
 
-  @Description:
-    This header file provides implementations for driver APIs for all modules selected in the GUI.
-    Generation Information :
-        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.171.1
-        Device            :  dsPIC33EP512MC806
-    The generated drivers are tested against the following:
-        Compiler          :  XC16 v1.70
-        MPLAB             :  MPLAB X v5.50
-*/
+void system_initialise(void)
+{
+    pins_init(); // configure pins and connect to peripherals
+    clock_init(); // start 8MHz external clock
+    //INTERRUPT_Initialize();
+    uart1_init();
+    __builtin_enable_interrupts();
+    
+    // set CORCON back to original values
+    CORCON = (CORCON & 0x00F2) | CORCON_MODE_PORVALUES;
 
-/*
-    (c) 2020 Microchip Technology Inc. and its subsidiaries. You may use this
-    software and any derivatives exclusively with Microchip products.
+    bootloader_init();
+}
 
-    THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER
-    EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE, INCLUDING ANY IMPLIED
-    WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, AND FITNESS FOR A
-    PARTICULAR PURPOSE, OR ITS INTERACTION WITH MICROCHIP PRODUCTS, COMBINATION
-    WITH ANY OTHER PRODUCTS, OR USE IN ANY APPLICATION.
+void bootloader_init(void) {
+    received_bootloader_message = false;
+    last_address_written = 0x0;
+    
+    uart1_message_t broadcast;
+    broadcast.command = M_BOOT_READY;
+    broadcast.unlock = false;
+    broadcast.length = 0;
+    __delay_ms(100);
+    uart1_tx_message(&broadcast);
+    uart1_wait_tx();    
+}
 
-    IN NO EVENT WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE,
-    INCIDENTAL OR CONSEQUENTIAL LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND
-    WHATSOEVER RELATED TO THE SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP HAS
-    BEEN ADVISED OF THE POSSIBILITY OR THE DAMAGES ARE FORESEEABLE. TO THE
-    FULLEST EXTENT ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL CLAIMS IN
-    ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
-    THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
+void bootloader_run(void) {
+    uint32_t checksum;
+    
+    if (!received_bootloader_message) {
+        if (app_image_run_validation == true) {
+            app_image_valid = app_image_verification(EXECUTION_IMAGE, &checksum);
+        }
 
-    MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE
-    TERMS.
-*/
+        if (!app_image_valid) {
+            // stay in bootloader mode since the image is not valid
+            received_bootloader_message = true;
+        } else {
+            /* NOTE: Before starting the application, all interrupts used
+             * by the bootloader must be disabled. Add code here to return
+             * the peripherals/interrupts to the reset state before starting
+             * the application code. */
+            pins_reset();
+            uart1_deactivate();
+            bootloader_start_app_image();
+        }
+    }
+    if(_U1RXIE == 0){
+        boot_process_command();
+        _U1RXIE = 1;
+    }   
+    // make sure overflow does not block the UART module
+    if(U1STAbits.OERR == 1){
+        U1STAbits.OERR = 0;
+    }
+}
 
-#include <stdint.h>
-#include "xc.h"
-#include "clock.h"
 
-void CLOCK_Initialize(void)
+void clock_init(void)
 {
     // FRCDIV FRC/1; PLLPRE 2; DOZE 1:8; PLLPOST 1:2; DOZEN disabled; ROI disabled; 
     CLKDIV = 0x3000;
@@ -81,4 +108,5 @@ void CLOCK_Initialize(void)
     while (OSCCONbits.OSWEN != 0);
     while (OSCCONbits.LOCK != 1);
 }
+
 

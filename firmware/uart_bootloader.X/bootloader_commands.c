@@ -3,15 +3,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-
-#include "com_adaptor.h"
-#include "boot_private.h"
-#include "boot_process.h"
-#include "boot_image.h"
-#include "boot_config.h"
-#include "../uart1.h"
 #include <message.h>
 #include <utilities.h>
+#include "bootloader_config.h"
+#include "uart1.h"
+#include "flash.h"
+#include "app_image.h"
 
 
 #define EXECUTABLE_IMAGE_FIRST_ADDRESS BOOT_CONFIG_PROGRAMMABLE_ADDRESS_LOW
@@ -30,7 +27,7 @@
 static boot_command_response_t CommandError(boot_command_response_t);
 static boot_command_response_t ReadVersion(void);
 
-static void ResetDevice(void);
+static boot_command_response_t ResetDevice(void);
 static boot_command_response_t EraseFlash(void);
 static boot_command_response_t WriteFlash(void);
 static boot_command_response_t ReadFlash(void);
@@ -40,20 +37,12 @@ static boot_command_response_t WriteFlashInit(void);
 static boot_command_response_t WriteFlashDone(void);
 
 extern volatile bool received_bootloader_message;
-volatile uint32_t last_address_written = 0xf;
+extern volatile uint32_t last_address_written;
 
-/******************************************************************************/
-/* Public Functions                                                           */
-/******************************************************************************/
-void BOOT_Initialize() 
-{
-    received_bootloader_message = false;
-    last_address_written = 0x0;
-}
 
 extern uart1_message_t uart1_rx_m;
 
-boot_command_result_t BOOT_ProcessCommand(void)
+boot_command_response_t boot_process_command(void)
 {    
     received_bootloader_message = true;
     
@@ -74,7 +63,7 @@ boot_command_result_t BOOT_ProcessCommand(void)
 
     case M_BOOT_RESET_DEVICE:
         ResetDevice();
-        return BOOT_COMMAND_SUCCESS;
+        return COMMAND_SUCCESS;
 
     case M_BOOT_SELF_VERIFY:
         return SelfVerify();
@@ -92,15 +81,8 @@ boot_command_result_t BOOT_ProcessCommand(void)
         return CommandError(UNSUPPORTED_COMMAND);
     }
     
-    return BOOT_COMMAND_ERROR;
+    return BOOT_CMD_ERROR;
 }
-
-void BOOT_StartApplication()
-{
-    int (*user_application)(void);
-    user_application = (int(*)(void))BOOT_CONFIG_APPLICATION_RESET_ADDRESS;
-    user_application();       
-}  
 
 /******************************************************************************/
 /* Private Functions                                                          */
@@ -119,7 +101,7 @@ static boot_command_response_t CommandError(boot_command_response_t errorType)
 
     uart1_tx_message(&err_response);
     
-    return BOOT_COMMAND_ERROR;
+    return BOOT_CMD_ERROR;
 }
 
 static boot_command_response_t ReadVersion(void)
@@ -166,15 +148,10 @@ static boot_command_response_t ReadVersion(void)
 
     uart1_tx_message(&response);
 
-    return BOOT_COMMAND_SUCCESS;
+    return COMMAND_SUCCESS;
 }
 
-
-static void Reset(void){
-    asm ("reset");
-}
-
-static void ResetDevice(void)
+static boot_command_response_t ResetDevice(void)
 {
     uart1_message_t response;    
     
@@ -196,7 +173,9 @@ static void ResetDevice(void)
      uart1_tx_message(&broadcast);
      uart1_wait_tx();
     
-    //Reset();
+    //asm ("reset");
+     
+     return COMMAND_SUCCESS;
  }
 
 
@@ -238,10 +217,10 @@ static boot_command_response_t EraseFlash(void)
     
     if(success == COMMAND_SUCCESS)
     {
-        return BOOT_COMMAND_SUCCESS;
+        return COMMAND_SUCCESS;
     }
     
-    return BOOT_COMMAND_ERROR;
+    return BOOT_CMD_ERROR;
 }
 
 uint32_t live_checksum = 0;
@@ -275,7 +254,7 @@ static boot_command_response_t WriteFlash(void)
         unlock_sequence = 0;
     }
     
-    NVM_RETURN_STATUS s = BOOT_BlockWrite(flash_address, data_length, &uart1_rx_m.data[4], unlock_sequence);
+    nvm_return_status_t s = BOOT_BlockWrite(flash_address, data_length, &uart1_rx_m.data[4], unlock_sequence);
     
     last_address_written = MAX(flash_address,last_address_written);
     
@@ -289,10 +268,10 @@ static boot_command_response_t WriteFlash(void)
     
     if(response.data[4] == COMMAND_SUCCESS)
     {
-        return BOOT_COMMAND_SUCCESS;
+        return COMMAND_SUCCESS;
     }
     
-    return BOOT_COMMAND_ERROR;
+    return BOOT_CMD_ERROR;
 }
 static boot_command_response_t ReadFlash(void)
 {
@@ -307,7 +286,7 @@ static boot_command_response_t ReadFlash(void)
         flash_address = (flash_address << 8) | uart1_rx_m.data[i];
     }
         
-    NVM_RETURN_STATUS readStatus = BOOT_BlockRead ((uint8_t *)&response.data[4], data_length, flash_address );
+    nvm_return_status_t readStatus = BOOT_BlockRead ((uint8_t *)&response.data[4], data_length, flash_address );
     if (readStatus == NVM_SUCCESS)
     {    
         response.data[4] = COMMAND_SUCCESS;
@@ -324,10 +303,10 @@ static boot_command_response_t ReadFlash(void)
 
     if(response.data[4] == COMMAND_SUCCESS)
     {
-        return BOOT_COMMAND_SUCCESS;
+        return COMMAND_SUCCESS;
     }
     
-    return BOOT_COMMAND_ERROR;
+    return BOOT_CMD_ERROR;
 }
 
 static boot_command_response_t SelfVerify(void)
@@ -337,7 +316,7 @@ static boot_command_response_t SelfVerify(void)
     
     copy_uart1_message(&uart1_rx_m, &response);
 
-    if(BOOT_ImageVerify(DOWNLOAD_IMAGE_NUMBER, &checksum) == false)
+    if(app_image_verification(DOWNLOAD_IMAGE_NUMBER, &checksum) == false)
     {
         response.data[4] = VERIFY_FAIL;
     }
@@ -351,10 +330,10 @@ static boot_command_response_t SelfVerify(void)
     
     if(response.data[4] == COMMAND_SUCCESS)
     {
-        return BOOT_COMMAND_SUCCESS;
+        return COMMAND_SUCCESS;
     }
     
-    return BOOT_COMMAND_ERROR;
+    return BOOT_CMD_ERROR;
 } 
 
 static boot_command_response_t GetMemoryAddressRange(void)
@@ -382,7 +361,7 @@ static boot_command_response_t GetMemoryAddressRange(void)
 
     uart1_tx_message(&response);
 
-    return BOOT_COMMAND_SUCCESS;
+    return COMMAND_SUCCESS;
 }
 
 
@@ -391,7 +370,7 @@ static boot_command_response_t WriteFlashInit(void)
     return COMMAND_SUCCESS;
 }
 
-#include "../uart_bootloader.X/mcc_generated_files/memory/flash.h"
+
 static boot_command_response_t WriteFlashDone(void)
 {
     uint32_t data[2] = {0};

@@ -1,10 +1,9 @@
 #include <xc.h>
 #include <libpic30.h>
 #include "uart1.h"
-#include "boot/boot_config.h"
+#include "bootloader_config.h"
 #include <uart.h>
 #include <utilities.h>
-#include "boot/boot_process.h"
 
 
 uint8_t uart1_tx_buffer[10]; // TODO: check 10
@@ -18,7 +17,7 @@ uint16_t uart_rx_data_idx = 0;
 uart1_message_t uart1_rx_m;
 
 
-void UART1_Initialize(void)
+void uart1_init(void)
 {
 /**    
      Set the UART1 module to the options selected in the user interface.
@@ -56,7 +55,7 @@ void UART1_Initialize(void)
     _U1EIE = 1;
 }
 
-void UART1_Deactivate(void)
+void uart1_deactivate(void)
 {
     // disable UART module
     U1MODEbits.UARTEN = 0;  // disabling UARTEN bit
