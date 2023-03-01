@@ -9,6 +9,7 @@
 #include <sensor_analog.h>
 #include <sensor_common.h>
 #include <event_controller.h>
+#include <adc12.h>
 
 /// @brief Number of sensor interfaces of dicio board
 #define DICIO_N_SENSOR_IFS 4
@@ -34,6 +35,7 @@ typedef union sensor_config_s
     sensor_sht35_config_t sht35;               ///< SHT35 sensor configuration
     sensor_analogue_config_t analogue;         ///< Analogue sensor configuration
     sensor_apds9306_065_config_t apds9306_065; ///< APDS9306-065 sensor configuration
+    sensor_adc12_config_t adc12;               ///< Internal 12-bit sensor configuration
 } sensor_config_t;
 
 /**

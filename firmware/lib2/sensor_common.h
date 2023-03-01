@@ -17,6 +17,7 @@ typedef enum {
     SENSOR_NOT_SET,             ///< Sensor not set
     SENSOR_TYPE_SHT35,          ///< SHT35 sensor
     SENSOR_TYPE_APDS9306_065,   ///< APDS9306_065 sensor
+    SENSOR_TYPE_ADC12,          ///< 12-bit ADC readout
     SENSOR_TYPE_ANALOGUE,       ///< Analogue sensor (12 bit)
 } sensor_type_t;
 
