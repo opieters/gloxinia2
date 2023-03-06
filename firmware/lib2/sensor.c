@@ -41,8 +41,8 @@ void sensor_get_config(uint8_t interface_id, uint8_t reg, uint8_t* buffer, uint8
         case SENSOR_TYPE_APDS9306_065:
             sensor_apds9306_065_get_config(intf, reg, buffer, length);
             break;
-        case SENSOR_TYPE_ANALOGUE:
-            //TODO
+        case SENSOR_TYPE_ADC12:
+            sensor_adc12_get_config(intf, reg, buffer, length);
             break;
         case SENSOR_NOT_SET:
         default:
@@ -81,6 +81,9 @@ void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t *buffer, uint8_
             break;
         case SENSOR_TYPE_APDS9306_065:
             status = sensor_apds9306_065_config(intf, &buffer[1], length - 1);
+            break;
+        case SENSOR_TYPE_ADC12:
+            status = sensor_adc12_config(intf, &buffer[1], length - 1);
             break;
         case SENSOR_TYPE_ANALOGUE:
             // TODO
@@ -145,6 +148,9 @@ void sensor_set_status(uint8_t interface_id, sensor_status_t status) {
                         break;
                     case SENSOR_TYPE_APDS9306_065:
                         sensor_apds9306_065_activate(intf);
+                        break;
+                    case SENSOR_TYPE_ADC12:
+                        sensor_adc12_activate(intf);
                         break;
                     case SENSOR_TYPE_ANALOGUE:
                         // TODO
