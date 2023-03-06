@@ -156,6 +156,9 @@ void message_process(const message_t *m) {
         case M_SENSOR_CONFIG:
             cmd_sensor_config(m);
             break;
+        case M_SENSOR_CONFIG_END:
+            cmd_sensor_config_end(m);
+            break;
         case M_NODE_RESET:
         {
             can_disable();
