@@ -9,7 +9,7 @@
 #include <sensor_analog.h>
 #include <sensor_common.h>
 #include <event_controller.h>
-#include <adc12.h>
+#include <sensor_adc12.h>
 
 /// @brief Number of sensor interfaces of dicio board
 #define DICIO_N_SENSOR_IFS 4
