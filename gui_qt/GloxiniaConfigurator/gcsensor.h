@@ -3,56 +3,155 @@
 
 #include <Qt>
 #include <QString>
+#include <QList>
 #include <QAbstractItemModel>
+#include <QFile>
+#include "gmessage.h"
+#include "gcnode.h"
+#include <QLineSeries>
 
 class GCSensor
 {
 
 public:
-    enum SensorType {
-        Disabeled = 0,
-        SHT35 = 1,
-        APDS9306 = 2
+    GCSensor(GCNode* const node = nullptr, quint8 id = 0x0);
+    virtual ~GCSensor();
+
+    enum sensor_class
+    {
+        NOT_SET = 0x00,
+        SHT35 = 0x01,
+        APDS9306_065 = 0x02,
+        ANALOGUE = 0x03,
     };
 
-    GCSensor(SensorType t = Disabeled, quint8 id = 0);
-    ~GCSensor();
+    enum GCSensorStatus
+    {
+        INACTIVE = 0x00,
+        IDLE = 0x01,
+        ACTIVE = 0x02,
+        RUNNING = 0x03,
+        STOPPED = 0x04,
+        ERROR = 0x05
+    };
 
-    static QString sensorTypeToString(SensorType t);
+    enum VariableType {
+        Temperature,
+        RelativeHumidity,
+        Light,
+        Analogue,
+    };
 
-    SensorType getSensorType(void);
-    quint8 getSensorID(void);
+    // static QString sensorTypeToString(SensorType t);
 
-    void setSensorID(quint8 id);
+    // SensorType getSensorType(void);
+    quint8 getInterfaceID(void);
+
+    QString getLabel(void) const;
+    void setLabel(const QString label);
+    quint16 getMeasurementPeriod(void) const;
+    void setMeasurementPeriod(quint16 period);
+    bool getUseGlobalPeriodFlag(void) const;
+    void setUseGlobalPeriodFlag(bool flag);
+    void setStatus(GCSensorStatus s);
+    GCSensorStatus getStatus() const;
+    QList<VariableType> getVariableTypes() const;
+    QList<QLineSeries*> getPlotSeries() const;
+
+    static GCSensor* fromQVariant(const QVariant data);
+
+    static QString statusToString(GCSensorStatus s);
+
+    virtual bool startMeasurement(void);
+    GMessage getStartMessage(void);
+    GMessage getStopMessage(void);
+    virtual void stopMeasurement(void);
+    virtual void saveData(std::vector<quint8>& data) = 0;
+    virtual void printHeader(void) = 0;
+
+    friend QDebug operator<<(QDebug dbg, const GCSensor &);
+
+    virtual QString toString(void) const = 0;
+    virtual QString toConfigString(void) const = 0;
+    virtual bool fromConfigString(const QStringList &config) = 0;
+    virtual QList<GMessage> getConfigurationMessages() = 0;
+    virtual QList<GMessage> getConfigurationRequests() = 0;
+
+    friend QDataStream &operator<<(QDataStream &out, const GCSensor &myObj);
+    friend QDataStream &operator>>(QDataStream &in, GCSensor &myObj);
+
+    static void setSensorFileDir(const QString dir);
+    static QString getSensorFileDir(void);
+
+    static QString VariableTypeToString(VariableType t);
+
+    unsigned int getMaxPlotSize(void);
+    void setMaxPlotSize(unsigned int value);
+
 protected:
-    SensorType sensorType;
-    quint8 sensorID;
+    GCNode* const node;
+    const quint8 interfaceID;
+
+    GCSensorStatus status = INACTIVE;
+    quint16 measurementPeriod = 9;
+    bool useGlobalPeriod = false;
+    QString label;
+    QFile* file = nullptr;
+    QString filePath;
+
+    static QString sensorFileDir;
+    unsigned int maxPlotSize = 100;
+
+    // data storage for plotting
+    QList<QLineSeries*> plotSeries;
+    QList<VariableType> measurementVariableTypes;
 };
 
-Q_DECLARE_METATYPE(GCSensor)
+Q_DECLARE_METATYPE(GCSensor *)
 
 class GCSensorI2C : public GCSensor
 {
 public:
-    GCSensorI2C(quint8 i2cAddress, SensorType t = Disabeled, quint8 id = 0);
-    ~GCSensorI2C();
+    GCSensorI2C(GCNode* const node = nullptr, quint8 id = 0, quint8 i2cAddress = 0x0);
+    virtual ~GCSensorI2C() = 0;
 
     virtual bool setI2CAddress(const quint8 a);
 
     const quint8 getI2CAddress(void);
 
     virtual int i2cAddressToInt(quint8 a);
+
+    virtual QString toString(void) const = 0;
+    virtual QString toConfigString(void) const = 0;
+    virtual bool fromConfigString(const QStringList &config) = 0;
+
 protected:
     quint8 i2cAddress;
 };
 
-Q_DECLARE_METATYPE(GCSensorI2C)
+Q_DECLARE_METATYPE(GCSensorI2C *)
+
+typedef struct {
+    quint8 repeatability;
+    quint8 clockStretching;
+    quint8 rate;
+    quint8 periodicity;
+} sensor_config_sht35_t;
 
 class GCSensorSHT35 : public GCSensorI2C
 {
 public:
-    GCSensorSHT35(quint8 i2cAddress = I2CAddressA, quint8 id = 0);
-    ~GCSensorSHT35();
+    enum Register
+    {
+        MEASUREMENT = 0x00,
+        CONFIG = 0x01,
+    };
+
+    static constexpr uint8_t crcPolynomial = 0x31U;
+
+    GCSensorSHT35(GCNode* const node = nullptr, quint8 id = 0, quint8 i2cAddress = I2CAddressA);
+    GCSensorSHT35(const GCSensorSHT35 &s) = default;
+    ~GCSensorSHT35() override;
 
     static constexpr quint8 I2CAddressA = 0x44;
     static constexpr quint8 I2CAddressB = 0x45;
@@ -71,31 +170,74 @@ public:
 
     int i2cAddressToInt(quint8 a) override;
 
+    QString toString(void) const override;
+    QString toConfigString(void) const override;
+    bool fromConfigString(const QStringList &config) override;
+    QList<GMessage> getConfigurationMessages() override;
+    QList<GMessage> getConfigurationRequests() override;
+    void saveData(std::vector<quint8>& data) override;
+    void printHeader(void) override;
+
+private:
+    uint8_t calculateCrc(uint8_t b, uint8_t crc, uint8_t poly);
+
 protected:
-    quint8 repeatability;
-    quint8 clockStretching;
-    quint8 rate;
-    quint8 periodicity;
+    sensor_config_sht35_t config;
+
+
 };
 
-Q_DECLARE_METATYPE(GCSensorSHT35)
+Q_DECLARE_METATYPE(GCSensorSHT35 *)
 
 class GCSensorAPDS9306 : public GCSensorI2C
 {
 public:
-    GCSensorAPDS9306(quint8 i2cAddress, quint8 id = 0);
-    ~GCSensorAPDS9306();
+    enum Register {
+        MEASUREMENT = 0x0,
+        CONFIG = 0x1,
+        TH_HIGH = 0x2,
+        TH_LOW = 0x3,
+    };
 
-    bool setI2CAddress(const quint8 a) override ;
+    GCSensorAPDS9306(GCNode* const node = nullptr, quint8 id = 0, quint8 i2cAddress = 0x52);
+    GCSensorAPDS9306(const GCSensorAPDS9306 &s) = default;
+    ~GCSensorAPDS9306() override;
 
-    const quint8 getI2CAddress(void);
+    bool setI2CAddress(const quint8 a) override;
+    bool setAlsMeasurementRate(quint8);
+    bool setAlsResolution(quint8);
+    bool setAlsGain(quint8);
+    bool setAlsIVCount(quint8);
+    bool setAlsTHHigh(quint32);
+    bool setAlsTHLow(quint32);
+
+    quint8 getAlsMeasurementRate(void);
+    quint8 getAlsResolution(void);
+    quint8 getAlsGain(void);
+    quint8 getAlsIVCount(void);
+    quint32 getAlsTHHigh(void);
+    quint32 getAlsTHLow(void);
 
     int i2cAddressToInt(quint8 a) override;
 
+    QString toString(void) const override;
+    QString toConfigString(void) const override;
+    bool fromConfigString(const QStringList &config) override;
+    QList<GMessage> getConfigurationMessages() override;
+    QList<GMessage> getConfigurationRequests() override;
+    void saveData(std::vector<quint8>& data) override;
+    void printHeader(void) override;
+
 private:
-    quint8 i2cAddress;
+    quint8 alsMeasurementRate;
+    quint8 alsResolution;
+    quint8 alsGain;
+    quint8 alsIVCount;
+
+    quint32 alsTHHigh;
+    quint32 alsTHLow;
 };
 
-Q_DECLARE_METATYPE(GCSensorAPDS9306)
+Q_DECLARE_METATYPE(GCSensorAPDS9306 *)
 
 #endif // GCSENSOR_H

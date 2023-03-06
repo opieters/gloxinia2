@@ -1,135 +1,213 @@
 #include "gmessage.h"
+#include <QDateTime>
+#include "gcsensor.h"
 
-
-GMessage::GMessage(GMessageCode code, uint8_t messageID, uint16_t sensorID, char* data, uint64_t size):code(code), messageID(messageID), sensorID(sensorID){
-    this->data = std::vector<char>(data, data+size);
+/*
+GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, bool request, quint8* data, uint64_t size):
+    code(code),
+    messageID(messageID),
+    sensorID(sensorID),
+    request(request)
+{
+    this->data = std::vector<quint8>(data, data+size);
+}*/
+GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, bool request, std::vector<quint8> data) : code(code),
+    messageID(messageID),
+    sensorID(sensorID),
+    request(request),
+    data(data)
+{
 }
-GMessage::GMessage(GMessageCode code, uint8_t messageID, uint16_t sensorID, std::vector<char> data):code(code), messageID(messageID), sensorID(sensorID), data(data){
 
-}
-
-int GMessage::toBytes(char* data, unsigned int maxLength){
-    if(maxLength < (headerSize +this->data.size())){
+int GMessage::toBytes(quint8 *data, unsigned int maxLength) const
+{
+    if (maxLength < (headerSize + this->data.size()))
+    {
         return -1;
     }
+    quint8 cmd = (quint8)code;
 
     data[0] = GMessage::GMessageStartByte;
     data[headerSize + this->data.size() - 1] = GMessage::GMessageStopByte;
-    data[1] = messageID;
-    data[2] = sensorID >> 8;
-    data[3] = sensorID & 0xff;
-    data[4] = this->data.size();
-    for(int i =0; i < this->data.size(); i++){
-        data[5+i] = this->data[i];
+    data[1] = (quint8)(messageID >> 8);
+    data[2] = (quint8)messageID;
+    data[3] = cmd;
+    data[4] = request ? 1 : 0;
+    data[5] = (quint8)(sensorID >> 8);
+    data[6] = (quint8)(sensorID & 0xff);
+    data[7] = this->data.size();
+    for (int i = 0; i < this->data.size(); i++)
+    {
+        data[headerSize - 1 + i] = this->data[i];
     }
 
     return headerSize + this->data.size();
 }
 
-
-std::ostream& operator << ( std::ostream& outs, const GMessage & m )
+QString GMessage::toString() const
 {
-  return outs << "[" << (int) m.code << "," << m.messageID << ")";
+    QString formattedData;
+    for (quint8 i : data)
+    {
+        formattedData.append(QStringLiteral("%1").arg(i, 2, 16, QLatin1Char('0')) + " ");
+    }
+    return "[" + GMessage::codeToString(code) + "] (" + QString::number(messageID) + ", " + QString::number(sensorID) + ")" + formattedData;
 }
 
-
-std::ostream& operator << ( std::ostream& outs, const GMessageCode &code)
+std::ostream &operator<<(std::ostream &outs, const GMessage &m)
 {
-    switch(code){
-        case GMessageCode::startMeasurement:
-            outs << "start measurement";
+    return outs << m.toString().toStdString();
+}
+
+QString GMessage::codeToString(GMessage::Code code)
+{
+    switch (code)
+    {
+    case REQUEST_ADDRESS_AVAILABLE:
+        return "request address available";
+        break;
+    case ADDRESS_TAKEN:
+        return "address taken";
+        break;
+    case UPDATE_ADDRESS:
+        return "update address";
+        break;
+    case READY:
+        return "node ready";
+    case DISCOVERY:
+        return "node discovery";
+        break;
+    case HELLO:
+        return "hello";
+    case MSG_TEXT:
+        return "text";
+    case NODE_INFO:
+        return "node info";
+    case NODE_RESET:
+        return "node reset";
+    case SENSOR_STATUS:
+        return "sensor status";
+    case SENSOR_ERROR:
+        return "sensor error";
+    case SENSOR_DATA:
+        return "sensor data";
+    case SENSOR_CONFIG:
+        return "sensor config";
+    case SENSOR_START:
+        return "sensor start";
+    case SENSOR_STOP:
+        return "sensor stop";
+    case ACTUATOR_STATUS:
+        return "actuator config";
+    case TX_ERROR:
+        return "transmit error";
+    case DATA_CLEAR:
+        return "clear data";
+    case DATA_READ :
+        return "read data";
+    case DATA_WRITE:
+        return "data write";
+    case DATA_BURST_START:
+        return "start data burst";
+    case DATA_BURST:
+        return "data burst";
+    case DATA_BURST_STOP:
+        return "stop data burst";
+    case BOOT_READ_VERSION:
+        return "read bootloader version";
+    case BOOT_READ_FLASH:
+        return "read flash";
+    case BOOT_WRITE_FLASH:
+        return "write flash";
+    case  BOOT_ERASE_FLASH :
+        return "erase flash";
+    case BOOT_RESET_DEVICE:
+        return "reset device";
+    case BOOT_SELF_VERIFY:
+        return "self verification";
+    case BOOT_GET_MEMORY_ADDRESS_RANGE_COMMAND:
+        return "flash memory range";
+    case BOOT_READY:
+        return "bootloader ready";
+    default:
+        return "unknown (" + QString::number((int)code, 16) + ")";
+        break;
+    }
+}
+
+std::ostream &operator<<(std::ostream &outs, const GMessage::Code &code)
+{
+    return outs << GMessage::codeToString(code).toStdString();
+}
+
+GMessage::Code GMessage::getCode(void) const
+{
+    return code;
+}
+
+quint8 GMessage::getMessageID(void) const
+{
+    return messageID;
+}
+quint16 GMessage::getSensorID(void) const
+{
+    return sensorID;
+}
+std::vector<quint8> GMessage::getData(void) const
+{
+    return std::vector<quint8>(data);
+}
+
+bool GMessage::getRequest(void) const
+{
+    return request;
+}
+
+QString GMessage::toLogString() const
+{
+    QString formattedData;
+    QString cTime = QDateTime::currentDateTime().toString("hh:mm:ss");
+    if(!data.empty()){
+        switch (code)
+        {
+        case MSG_TEXT:
+        {
+            std::string s(data.begin(), data.end());
+            formattedData = QString::fromStdString(s);
             break;
-        case GMessageCode::stopMeasurement:
-            outs << "stop measurement";
-            break;
-        case GMessageCode::activate_sensor:
-            outs << "activate senosr";
-            break;
-        case GMessageCode::deactivate_sensor:
-            outs << "deactivate sensor";
-            break;
-        case GMessageCode::reset_node:
-            outs << "reset node";
-            break;
-        case GMessageCode::reset_system:
-            outs << "reset system";
-            break;
-        case GMessageCode::text_message:
-            outs << "text message";
-            break;
-        case GMessageCode::sensor_data:
-            outs << "sensor data";
-            break;
-        case GMessageCode::sensor_status:
-            outs << "sensor status";
-            break;
-        case GMessageCode::measurement_period:
-            outs << "measurement period";
-            break;
-        case GMessageCode::error_message:
-            outs << "error message";
-            break;
-        case GMessageCode::loopback_message:
-            outs << "loopback message";
-            break;
-        case GMessageCode::actuator_status:
-            outs << "actuator status";
-            break;
-        case GMessageCode:: hello_message:
-            outs << "hello message";
-            break;
-            case GMessageCode::init_sampling:
-            outs << "init sampling";
-            break;
-        case GMessageCode:: init_sensors:
-            outs << "init sensors";
-            break;
-        case GMessageCode:: sensor_error:
-            outs << "sensor error";
-            break;
-        case GMessageCode::lia_gain:
-            outs << "lia gain";
-            break;
-        case GMessageCode::unknown :
-            outs << "unkown";
-            break;
-        case GMessageCode::meas_trigger :
-            outs << "measurement trigger";
-            break;
-        case GMessageCode::sensor_config:
-            outs << "sensor config";
-            break;
-        case GMessageCode:: actuator_data :
-            outs << "actuator data";
-            break;
-        case GMessageCode:: actuator_error:
-            outs << "actuator error";
-            break;
-        case GMessageCode::actuator_trigger:
-            outs << "actuator trigger";
-            break;
-        case GMessageCode::actuator_gc_temp :
-            outs << "actuator gc temperature";
-            break;
-        case GMessageCode::actuator_gc_rh    :
-            outs << "actuator gc relative humidity";
-            break;
-        case GMessageCode:: sensor_start:
-            outs << "sensor start";
-            break;
-        case GMessageCode::actuator_relay:
-            outs << "actuator relay";
-            break;
-        case GMessageCode::sensor_actuator_enable:
-            outs << "sensor actuator enable";
-            break;
-        case GMessageCode::actuator_relay_now:
-            outs << "actuator relay now";
+        }
+        case SENSOR_STATUS:
+            switch ((GCSensor::GCSensorStatus)data[0])
+            {
+            case GCSensor::GCSensorStatus::INACTIVE:
+                formattedData.append("inactive");
+                break;
+            case GCSensor::GCSensorStatus::IDLE:
+                formattedData.append("idle");
+                break;
+            case GCSensor::GCSensorStatus::ACTIVE:
+                formattedData.append("active");
+                break;
+            case GCSensor::GCSensorStatus::RUNNING:
+                formattedData.append("running");
+                break;
+            case GCSensor::GCSensorStatus::STOPPED:
+                formattedData.append("stopped");
+                break;
+            case GCSensor::GCSensorStatus::ERROR:
+                formattedData.append("error");
+                break;
+            }
+
             break;
         default:
-            outs << "unknown";
-            break;
+        {
+            for (quint8 i : data)
+            {
+                formattedData.append(QStringLiteral("%1").arg(i, 2, 16, QLatin1Char('0')) + " ");
+            }
+        }
+        }
     }
-
-    return outs;
+    return "[" + cTime + "] (" + QString::number(messageID) + ", " + QString::number(sensorID) + ") " + GMessage::codeToString(code) + " " + formattedData;
 }

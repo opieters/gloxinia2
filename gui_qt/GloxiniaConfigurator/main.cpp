@@ -10,7 +10,14 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     // register convertors
-    QMetaType::registerConverter<GCNode, QString>(&GCNode::toString);
+    /*QMetaType::registerConverter<GCNode, QString>(&GCNode::toString);
+    QMetaType::registerConverter<GCSensor, QString>(&GCSensor::toString);
+    QMetaType::registerConverter<GCSensorSHT35, QString>(&GCSensorSHT35::toString);
+    QMetaType::registerConverter<GCSensorAPDS9306, QString>(&GCSensorAPDS9306::toString);*/
+
+    QCoreApplication::setOrganizationName("Ghent University");
+    QCoreApplication::setOrganizationDomain("ugent.be");
+    QCoreApplication::setApplicationName("Gloxinia Configurator");
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
@@ -21,6 +28,7 @@ int main(int argc, char *argv[])
             break;
         }
     }
+
     GloxiniaConfigurator w;
     w.show();
     return a.exec();

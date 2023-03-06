@@ -309,98 +309,76 @@ void init_sylvatica(void){
     set_error_loop_fn(i2c1_detect_stop);
    
     init_pins_sylvatica();
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised pins.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif    
+
+    UART_DEBUG_PRINT("Initialised pins.");
+  
 
     // read I2C slave address (sets slave address for communication with dicio)
     gconfig.i2c_config.i2c_address = i2c_get_address_sylvatica(&gconfig);
     
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised I2C slave address to 0x%x.", gconfig.i2c_config.i2c_address);
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+
+    UART_DEBUG_PRINT("Initialised I2C slave address to 0x%x.", gconfig.i2c_config.i2c_address);
+
     
     i2c1_init(&gconfig.i2c_config);
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised I2C.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Initialised I2C.");
+
     
     spi1_init();
     spi2_init();
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised SPI.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+
+    UART_DEBUG_PRINT("Initialised SPI.");
     
     for(i = 0; i < SYLVATICA_N_CHANNELS; i++){
         gconfig.pga_config[i].status = PGA_STATUS_ON;
         init_pga(&gconfig.pga_config[i]);
     }
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised PGAs.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Initialised PGAs.");
     
     blinky_init(&gconfig.blinky_pin, 1);
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised blinky.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Initialised blinky.");
+
     
     init_filters();
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised filters.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Initialised filters.");
+
     
     init_adc(&gconfig.adc_config);
         
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised ADC.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Initialised ADC.");
+
     
-#ifdef ENABLE_DEBUG        
-    for(i = 0; i < 8; i++){
+      
+    /*for(i = 0; i < 8; i++){
         uint8_t pga_config_data = SYLVATICA_CH_CONFIG_ON;
 
         sylvatica_i2c_channel_config(i, &pga_config_data);
-    }
-#endif
+    }*/
+
     
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Running calibration...");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+
+    UART_DEBUG_PRINT("Running calibration...");
     //sylvatica_run_calibration(&gconfig);
  
     /*
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Running gain calibration...");
-    uart_print(print_buffer, strlen(print_buffer));
+
+    UART_DEBUG_PRINT("Running gain calibration...");
 
     for(i = 0; i < SYLVATICA_N_CHANNELS; i++){
         sylvatica_gain_calibration(&gconfig, i);
     }
-#endif
+
      */
     
     sylvatica_status = SYLVATICA_STATUS_READY;
     
-/*#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Starting ADC.");
-    uart_print(print_buffer, strlen(print_buffer));
+/*
+    UART_DEBUG_PRINT("Starting ADC.");
     
     adc_start(&gconfig.adc_config);
-#endif*/
+*/
     
-#ifdef ENABLE_DEBUG
-    //sprintf(print_buffer, "Initialising calibration timer.");
-    //uart_print(print_buffer, strlen(print_buffer));
-#endif
+    //UART_DEBUG_PRINT("Initialising calibration timer.");
     //init_calibration_timer();
     
     for(i = 0; i < SYLVATICA_N_CHANNELS; i++){
@@ -416,10 +394,7 @@ void init_sylvatica(void){
 
 
 void loop_sylvatica(void){ 
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Executing main loop.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Executing main loop.");
     
     while(1){
         

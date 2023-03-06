@@ -4,18 +4,17 @@
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
+#include <gcsensor.h>
 
 class TreeItem;
 
-//! [0]
 class TreeModel : public QAbstractItemModel
 {
     Q_OBJECT
 
 public:
-    TreeModel(const QString &data, QObject *parent = nullptr);
+    TreeModel(QObject *parent = nullptr);
     ~TreeModel();
-//! [0] //! [1]
 
     QVariant data(const QModelIndex &index, int role) const override;
 
@@ -25,9 +24,7 @@ public:
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-//! [1]
 
-//! [2]
     Qt::ItemFlags flags(const QModelIndex &index) const override;
     bool setData(const QModelIndex &index, const QVariant &value,
                  int role = Qt::EditRole) override;
@@ -37,12 +34,25 @@ public:
     bool removeRows(int position, int rows,
                     const QModelIndex &parent = QModelIndex()) override;
 
+    QStringList toTextConfig(void);
+    bool fromTextConfig(const QStringList& config);
+
+    bool checkUniqueNodeID(int id);
+
+    GCNode* getNode(int nodeID);
+    GCSensor* getSensor(int nodeID, int sensorID);
+    QModelIndex getIndex(int nodeID, int sensorID = -1);
+
 private:
     void setupModelData(const QStringList &lines, TreeItem *parent);
+    void loadFile(const QStringList &lines, TreeItem *parent);
+    bool parseNode(const QStringList &args, TreeItem* parent);
+    bool parseSensor(const QStringList &args, TreeItem* parent);
+
     TreeItem *getItem(const QModelIndex &index) const;
 
     TreeItem *rootItem;
 };
-//! [2]
+
 
 #endif // TREEMODEL_H

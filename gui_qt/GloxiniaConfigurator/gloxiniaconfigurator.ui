@@ -6,29 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>1307</width>
+    <height>908</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>GloxiniaConfigurator</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
-     <widget class="QTreeView" name="systemOverview"/>
-    </item>
-    <item>
-     <widget class="QListView" name="messageView"/>
-    </item>
-   </layout>
-  </widget>
+  <widget class="QWidget" name="centralwidget"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>1307</width>
      <height>22</height>
     </rect>
    </property>
@@ -36,39 +27,41 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
-    <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
      <string>Edit</string>
     </property>
-    <addaction name="actionAddSensor"/>
-    <addaction name="actionAddNode"/>
+    <addaction name="actionEditNode"/>
     <addaction name="actionEditSensor"/>
-    <addaction name="actionEditSystem"/>
+    <addaction name="actionDelete"/>
+    <addaction name="separator"/>
+    <addaction name="actionPreferences"/>
    </widget>
    <widget class="QMenu" name="menuSystem">
     <property name="title">
      <string>System</string>
     </property>
-    <widget class="QMenu" name="menuPort_selection">
-     <property name="title">
-      <string>Port selection</string>
-     </property>
-    </widget>
     <addaction name="actionConnect"/>
-    <addaction name="actionUpdate"/>
+    <addaction name="actionLoadDeviceConfig"/>
     <addaction name="actionDisconnect"/>
-    <addaction name="actionConfigure"/>
-    <addaction name="menuPort_selection"/>
+    <addaction name="separator"/>
+    <addaction name="actionStartMeasuring"/>
+    <addaction name="actionStopMeasuring"/>
+    <addaction name="actionMeasurementSettings"/>
+    <addaction name="actionRunDiscovery"/>
+    <addaction name="actionReset"/>
+    <addaction name="actionUpdateDevice"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -76,29 +69,36 @@
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionOpen">
+  <action name="actionNew">
    <property name="text">
-    <string>Open</string>
+    <string>New project</string>
+   </property>
+   <property name="toolTip">
+    <string>Create a new project</string>
    </property>
   </action>
   <action name="actionSave">
    <property name="text">
-    <string>Save</string>
+    <string>Save project</string>
+   </property>
+   <property name="toolTip">
+    <string>Save current project</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open project</string>
+   </property>
+   <property name="toolTip">
+    <string>Open existing project</string>
    </property>
   </action>
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
    </property>
-  </action>
-  <action name="actionAddSensor">
-   <property name="text">
-    <string>Add sensor</string>
-   </property>
-  </action>
-  <action name="actionAddNode">
-   <property name="text">
-    <string>Add node</string>
+   <property name="toolTip">
+    <string>Closes application (without saving)</string>
    </property>
   </action>
   <action name="actionEditSensor">
@@ -106,14 +106,14 @@
     <string>Edit sensor</string>
    </property>
   </action>
-  <action name="actionEditSystem">
+  <action name="actionPreferences">
    <property name="text">
-    <string>Edit system</string>
+    <string>Preferences</string>
    </property>
   </action>
-  <action name="actionUpdate">
+  <action name="actionLoadDeviceConfig">
    <property name="text">
-    <string>Update</string>
+    <string>Load device configuration</string>
    </property>
   </action>
   <action name="actionConnect">
@@ -126,9 +126,59 @@
     <string>Disconnect</string>
    </property>
   </action>
-  <action name="actionConfigure">
+  <action name="actionConfigureSerial">
    <property name="text">
-    <string>Configure</string>
+    <string>Configure serial</string>
+   </property>
+  </action>
+  <action name="actionDelete">
+   <property name="text">
+    <string>Delete</string>
+   </property>
+  </action>
+  <action name="actionEditNode">
+   <property name="text">
+    <string>Edit node</string>
+   </property>
+  </action>
+  <action name="actionRefreshPorts">
+   <property name="text">
+    <string>Refresh ports</string>
+   </property>
+  </action>
+  <action name="actionStartMeasuring">
+   <property name="text">
+    <string>Start measuring</string>
+   </property>
+  </action>
+  <action name="actionStopMeasuring">
+   <property name="text">
+    <string>Stop measuring</string>
+   </property>
+  </action>
+  <action name="actionMeasurementSettings">
+   <property name="text">
+    <string>Measurement settings</string>
+   </property>
+  </action>
+  <action name="actionRunDiscovery">
+   <property name="text">
+    <string>Run discovery</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionReset">
+   <property name="text">
+    <string>Reset</string>
+   </property>
+  </action>
+  <action name="actionUpdateDevice">
+   <property name="text">
+    <string>Update device</string>
    </property>
   </action>
  </widget>

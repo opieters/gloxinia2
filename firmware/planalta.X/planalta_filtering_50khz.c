@@ -241,10 +241,8 @@ void run_filter5_50khz(void){
 }
 
 void planalta_filter_50khz(void) {
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "LIA at 50kHz activated.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif    
+    UART_DEBUG_PRINT("LIA at 50kHz activated.");
+
     
     // enable PGA
     //_RF1 = 1;

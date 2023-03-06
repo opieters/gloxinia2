@@ -131,16 +131,14 @@ uint8_t i2c_get_address_planalta(planalta_config_t* config){
     address = ~address;
     address &= 0x7f;
     
-    sprintf(print_buffer, "Read address: %x", address);
-    uart_print(print_buffer, strlen(print_buffer));
+    UART_DEBUG_PRINT("Read address: %x", address);
    
     // if the address is not valid, use the default one
     if(!i2c_check_address(address)){
         address = PLANALTA_I2C_BASE_ADDRESS;
     }
     
-    sprintf(print_buffer, "Actual address: %x", address);
-    uart_print(print_buffer, strlen(print_buffer));
+    sprintf("Actual address: %x", address);
     
     return address;
 }
@@ -276,39 +274,25 @@ void init_planalta(void){
     planalta_clear_buffers();
     
     init_pins_planalta();
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised pins.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Initialised pins.");
     
     blinky_init(&gconfig.blinky_pin, 1);
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised blinky.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Initialised blinky.");
     
     // read I2C slave address (sets slave address for communication with dicio)
     gconfig.i2c_config.i2c_address = i2c_get_address_planalta(&gconfig);
     
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised I2C slave address to 0x%x.", gconfig.i2c_config.i2c_address);
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT( "Initialised I2C slave address to 0x%x.", gconfig.i2c_config.i2c_address);
+
     
     i2c1_init(&gconfig.i2c_config);
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised I2C.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Initialised I2C.");
     
     update_config_variables(&gconfig);
     
     spi1_init();
     spi2_init();
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised SPI2.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Initialised SPI2.");
     
     delay_ms(100);
     
@@ -319,33 +303,22 @@ void init_planalta(void){
         }
         delay_ms(100);
     }
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised PGAs.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif    
+    UART_DEBUG_PRINT("Initialised PGAs.");  
     
     init_dac(&gconfig, false);
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised DAC.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Initialised DAC.");
+
     
     init_adc(&gconfig.adc_config);  
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Initialised ADC.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Initialised ADC.");
     
-/*#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Calibrating input channels...");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+/*
+    UART_DEBUG_PRINT("Calibrating input channels...");
     //planalta_input_calibration(&gconfig);
     
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Calibrating output channels...");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+
+    UART_DEBUG_PRINT( "Calibrating output channels...");
+
     //planalta_output_calibration(&gconfig);*/
     
     // TODO: fix to READY
@@ -357,10 +330,7 @@ void init_planalta(void){
 
 
 void loop_planalta(void){
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Entering loop...");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Entering loop...");
     
     while(1){
         
@@ -428,8 +398,7 @@ void i2c_mw_sr_cb_planalta(i2c_message_t* m){
         
     i2c_write_reg = (planalta_reg_t) m->data[0];
     
-    //sprintf(print_buffer, "MW SR reg: %x", i2c_write_reg);
-    //uart_print(print_buffer, strlen(print_buffer));
+    //UART_DEBUG_PRINT("MW SR reg: %x", i2c_write_reg);
     
     switch(i2c_write_reg){
         case PLANALTA_REG_STATUS:
@@ -581,9 +550,7 @@ void planalta_fs_i2c_copy_data(){
         i2c_set_read_message(&i2c_mr_message);
         SET_PORT_BIT(gconfig.int_pin);
         
-        #ifdef ENABLE_DEBUG
-            uart_simple_print("FS error.");
-        #endif
+            UART_DEBUG_PRINT("FS error.");
 
         return;
     }
@@ -596,10 +563,7 @@ void planalta_fs_i2c_copy_data(){
             i2c_set_read_message(&i2c_mr_message);
             SET_PORT_BIT(gconfig.int_pin);
 
-            #ifdef ENABLE_DEBUG
-                sprintf(print_buffer, "No new data available in channel %d", i);
-                uart_print(print_buffer, strlen(print_buffer));
-            #endif
+                UART_DEBUG_PRINT("No new data available in channel %d", i);
 
             return;
         }
@@ -632,9 +596,7 @@ void planalta_fs_i2c_copy_data(){
 
     i2c_set_read_message(&i2c_mr_message);
 
-    #ifdef ENABLE_DEBUG
-        uart_simple_print("Copied data of channels to buffer.");
-    #endif
+        UART_DEBUG_PRINT("Copied data of channels to buffer.");
     
     SET_PORT_BIT(gconfig.int_pin);
 }

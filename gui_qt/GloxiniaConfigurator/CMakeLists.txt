@@ -13,8 +13,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
-# load serial port headers
-find_package(Qt6 REQUIRED COMPONENTS SerialPort)
+# load serial port and charts headers
+find_package(Qt6 REQUIRED COMPONENTS SerialPort Charts)
 
 set(TS_FILES GloxiniaConfigurator_en_GB.ts)
 
@@ -24,16 +24,28 @@ set(PROJECT_SOURCES
         gmessage.h gmessage.cpp
         gloxiniaconfigurator.cpp gloxiniaconfigurator.h gloxiniaconfigurator.ui
         settingsdialog.h settingsdialog.cpp settingsdialog.ui
-        nodedialog.ui
+        measurementsettingsdialog.h measurementsettingsdialog.cpp measurementsettingsdialog.ui
         sensordialog.h sensordialog.cpp sensordialog.ui
-        configuresht35dialog.h configuresht35dialog.cpp configuresht35dialog.ui
-        gcsystem.h gcsystem.cpp
+        sensormeasurementdialog.h sensormeasurementdialog.cpp sensormeasurementdialog.ui
+        sensoranaloguedialog.h sensoranaloguedialog.cpp sensoranaloguedialog.ui
+        sensorapds9306_065dialog.h sensorapds9306_065dialog.cpp sensorapds9306_065dialog.ui
+        sensorsht35dialog.h sensorsht35dialog.cpp sensorsht35dialog.ui
+        globalmeasurementpolicydialog.h globalmeasurementpolicydialog.cpp globalmeasurementpolicydialog.ui
+        serialsettingsdialog.h serialsettingsdialog.cpp serialsettingsdialog.ui
+        newprojectdialog.h newprojectdialog.cpp newprojectdialog.ui
+        updatedialog.h updatedialog.cpp updatedialog.ui
+        gcmessagehandling.cpp
+        gcfileoperations.cpp
+        gcserialcommunication.cpp
+        nodediciodialog.h nodediciodialog.cpp nodediciodialog.ui
+        #gcsystem.h gcsystem.cpp
         gcnode.h gcnode.cpp
         gcsensor.h gcsensor.cpp
+        gcsamplepoint.h gcsamplepoint.cpp
         treeitem.h treeitem.cpp
         treemodel.h treemodel.cpp
-        moduledialog.h moduledialog.cpp moduledialog.ui
         resources.qrc
+        exampleConfig.txt
         ${TS_FILES}
 )
 
@@ -66,6 +78,7 @@ endif()
 
 target_link_libraries(GloxiniaConfigurator PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(GloxiniaConfigurator PRIVATE Qt${QT_VERSION_MAJOR}::SerialPort)
+target_link_libraries(GloxiniaConfigurator PRIVATE Qt${QT_VERSION_MAJOR}::Charts)
 
 # resources
 

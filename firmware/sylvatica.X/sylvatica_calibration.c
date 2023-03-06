@@ -55,10 +55,9 @@ void sylvatica_run_calibration(sylvatica_config_t* config){
         adc_config.channel = i;
         config->adc_config.channel_offset[i] = run_calibration(&adc_config, 0);
         
-#ifdef ENABLE_DEBUG
-        sprintf(print_buffer, "Calibration offset CH%d: %04x.", i, config->adc_config.channel_offset[i]);
-        uart_print(print_buffer, strlen(print_buffer));
-#endif
+
+        UART_DEBUG_PRINT("Calibration offset CH%d: %04x.", i, config->adc_config.channel_offset[i]);
+
         
         // turn PGA off
         config->pga_config[i].status = PGA_STATUS_OFF;
@@ -195,16 +194,10 @@ void sylvatica_gain_calibration(sylvatica_config_t* config, const uint8_t channe
         config->pga_config[channel_n].gain = PGA_GAIN_1;
         update_pga_status(&config->pga_config[channel_n]);
         
-#ifdef ENABLE_DEBUG
-        sprintf(print_buffer, "Conversion error for CH%d.", channel_n);
-        uart_print(print_buffer, strlen(print_buffer));
-#endif
+        UART_DEBUG_PRINT("Conversion error for CH%d.", channel_n);
     }
     
-#ifdef ENABLE_DEBUG
-    sprintf(print_buffer, "Gain selected for CH%d: %01x (%d).", channel_n, config->pga_config[channel_n].gain, gain);
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Gain selected for CH%d: %01x (%d).", channel_n, config->pga_config[channel_n].gain, gain);
     
     // restore ADC to previous configuration
     update_adc(&config->adc_config);
@@ -264,9 +257,8 @@ void init_calibration_timer(void){
     // start timer
     T6CONbits.TON = 1; 
     
-#ifdef ENABLE_DEBUG
-    _T7IF = 1;
-#endif
+/*    _T7IF = 1;
+*/
 }
 
 void __attribute__((__interrupt__, no_auto_psv)) _T6Interrupt(void) {

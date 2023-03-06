@@ -89,8 +89,11 @@ _autosave-*
 # Exported BOM files
 *.xml
 *.csv
-gui/dist/
-gui/node_modules/
+
+# Electron GUI
+gui_electron/dist/
+gui_electron/node_modules/
+
 firmware/dicio.X/.generated_files/
 firmware/dicio.X/build/
 firmware/dicio.X/dist/
@@ -119,3 +122,21 @@ fp-lib-table
 *.zip
 sym-lib-table
 pcb_design/dicio_pic32/gerber/
+
+# GUI Qt
+gui_qt/build-*
+
+
+pcb_design/reflexa/gerber/
+*.step
+firmware/dicio2.X/.generated_files/
+firmware/sylvatica2.X/.generated_files/
+firmware/dicio2.X/debug/default/queuelogs/debugtool
+pcb_design/samtec/how-to-import.htm
+firmware/can_bootloader.X/.generated_files/
+firmware/fatfs/
+firmware/mcc_generated_files/
+firmware/uart_bootloader.X/.generated_files/
+firmware/dicio_debug.X/.generated_files/
+firmware/uart_bootloader.X/debug/
+firmware/dicio_debug.X/debug/

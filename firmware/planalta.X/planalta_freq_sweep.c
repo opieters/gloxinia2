@@ -205,15 +205,11 @@ void planalta_sweep_frequency(planalta_config_t* config){
     _RD11 = 1;
     
     for(j = 0; j < PLANALTA_FS_CHANNELS; j++){
-        #ifdef ENABLE_DEBUG
-        uart_simple_print("Reading next channel");
-        #endif
+        UART_DEBUG_PRINT("Reading next channel");
         
         // check if channel was activated
         if(config->channel_status[j % 4] == PLANALTA_CHANNEL_DISABLED){
-            #ifdef ENABLE_DEBUG
-            uart_simple_print("Skipping channel");
-            #endif
+            UART_DEBUG_PRINT("Skipping channel");
             
             continue;
         }

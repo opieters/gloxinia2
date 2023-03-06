@@ -13,10 +13,10 @@ typedef void (*event_t)(void);
 
 typedef struct task_schedule_s {
     event_t task;
-    
+
     uint16_t period_s; // expressed in seconds
     unsigned int trigger_time;
-    
+
     uint32_t id; // unique identifier
 } task_schedule_t;
 
@@ -28,13 +28,13 @@ extern task_schedule_t schedule_list[MAX_N_SCHEDULES];
 extern "C" {
 #endif /* __cplusplus */
 
-int schedule_event(task_schedule_t s);
+    int schedule_event(task_schedule_t s);
 
-uint32_t schedule_specific_event(task_schedule_t s, uint32_t id);
+    uint32_t schedule_specific_event(task_schedule_t s, uint32_t id);
 
-event_t pop_queued_task(void);
+    event_t pop_queued_task(void);
 
-int push_queued_task(event_t task);
+    bool push_queued_task(event_t task);
 
 #ifdef	__cplusplus
 }

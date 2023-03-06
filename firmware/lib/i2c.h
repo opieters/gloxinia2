@@ -28,8 +28,8 @@ extern "C" {
      * @details TODO
      */
     typedef enum {
-        I2C_NO_ERROR = 0, 
-        I2C_NO_ACK, 
+        I2C_NO_ERROR = 0,
+        I2C_NO_ACK,
         I2C_NO_ADDRESS_ACK,
         I2C_NO_REPEATED_ADDRESS_ACK,
         I2C_NO_FINAL_NACK,
@@ -41,9 +41,7 @@ extern "C" {
         I2C_TOO_MANY_READS,
         I2C_MSG_NOT_INITIALISED,
     } i2c_error_t;
-    
-    
-    
+
     typedef enum {
         I2C_MESSAGE_HANDLED,
         I2C_MESSAGE_QUEUED,
@@ -54,27 +52,27 @@ extern "C" {
         I2C_MESSAGE_READ_READY,
         n_i2c_status
     } i2c_mstatus_t;
-    
+
     typedef enum {
         I2C1_BUS,
         I2C2_BUS,
         N_I2C_BUS,
     } i2c_bus_t;
-    
+
     typedef enum {
         I2C_BUS_DISABLED,
         I2C_BUS_ENABLED,
-        I2C_BUS_ERROR,        
+        I2C_BUS_ERROR,
     } i2c_bus_status_t;
-    
+
     /*
      * Forward declaration if I2C struct and message type without 
      * initialisation. This is needed to allow the data_processor attribute to 
      * use i2c_message_t as argument. 
-     */ 
+     */
     typedef struct i2c_message_s i2c_message_t;
     typedef void (*i2c_controller_t)(i2c_message_t*);
-    
+
     /**
      * Struct to store data fields associated with an I2C message.
      * 
@@ -84,7 +82,7 @@ extern "C" {
      * @attribute controller: controller that implements FSM to exchange data
      * @attribute data_processor: function that is called after data exchange
      */
-    
+
     struct i2c_message_s {
         uint8_t address;
         i2c_bus_t i2c_bus;
@@ -101,13 +99,12 @@ extern "C" {
         uint8_t callback_data_length;
         void (*cancelled_callback)(i2c_message_t* m);
     };
-    
+
     typedef struct i2c_reset_sensor_s {
         i2c_bus_t i2c_bus;
         void (*reset)(void);
         bool (*init)(void);
     } i2c_reset_sensor_t;
-    
 
     typedef enum {
         I2C_STATUS_SLAVE_OFF,
@@ -119,22 +116,22 @@ extern "C" {
     typedef struct {
         uint16_t i2c_address;
         i2c_status_t status;
-        void (*mw_sr_cb) (i2c_message_t*); 
+        void (*mw_sr_cb) (i2c_message_t*);
         void (*mr_sw_cb) (i2c_message_t*);
         pin_t scl_pin;
         pin_t sda_pin;
     } i2c_config_t;
-    
+
     typedef enum {
         I2C_SLAVE_STATE_IDLE,
         I2C_SLAVE_STATE_NO_MESSAGE,
         I2C_SLAVE_STATE_WRITE,
-        I2C_SLAVE_STATE_READ, 
+        I2C_SLAVE_STATE_READ,
         I2C_SLAVE_STATE_ADDRESS,
         I2C_SLAVE_STATE_REPEAT_START,
         I2C_SLAVE_STATE_STOP,
     } i2c_slave_state_t;
-    
+
     typedef enum {
         I2C_CALLBACK_NONE,
         I2C_CALLBACK_M_READ_S_WRITE,
@@ -153,7 +150,7 @@ extern "C" {
      * @return I2C_NO_ERROR
      */
     void i2c_auto_queue_message(i2c_message_t* message);
-    
+
     /**
      * @brief Same as `queue_simple_i2c_message` but the controller must be 
      * set correctly.
@@ -162,7 +159,7 @@ extern "C" {
      * @return I2C_NO_ERROR
      */
     void i2c_queue_message(i2c_message_t* message);
-    
+
     /**
      * 
      * @brief FSM implementing an I2C read data transfer. 
@@ -173,7 +170,7 @@ extern "C" {
      * is ongoing, I2C_TRANSFER_COMPLETE at transfer completion or error.
      */
     void i2c1_read_controller(i2c_message_t* m);
-    
+
     /**
      * @brief Same as default_i2c_read_controller, but for writing a message to 
      * an I2C slave.
@@ -181,20 +178,20 @@ extern "C" {
      * is ongoing, I2C_TRANSFER_COMPLETE at transfer completion or error.
      */
     void i2c1_write_controller(i2c_message_t* m);
-    
+
     /**
      * @brief Same as `default_i2c_read_controller` but with second I2C module.
      */
     void i2c2_read_controller(i2c_message_t* m);
-    
+
     void i2c1_write_read_controller(i2c_message_t* m);
     void i2c2_write_read_controller(i2c_message_t* m);
-    
+
     /**
      * @brief Same as `default_i2c_write_controller` but with second I2C module.
      */
     void i2c2_write_controller(i2c_message_t* m);
-    
+
     /**
      * @brief Same as `default_i2c_read_controller` but blocking. 
      * 
@@ -203,7 +200,7 @@ extern "C" {
      * @return see `default_i2c_read_controller`.
      */
     void i2c_blocking_read_controller(i2c_message_t* m);
-    
+
     /**
      * @brief Same as `default_i2c_write_controller` but blocking. 
      * 
@@ -212,7 +209,7 @@ extern "C" {
      * @return See `default_i2c_write_controller`.
      */
     void i2c_blocking_write_controller(i2c_message_t* m);
-    
+
     /**
      * @brief Handles pending messages in the I2C buffer queue. 
      * 
@@ -226,18 +223,18 @@ extern "C" {
      * @brief Initialises the I2C1 module.
      */
     void i2c1_init(i2c_config_t* config);
-    
+
     void i2c1_init_slave(i2c_config_t* config);
     void i2c1_init_master(i2c_config_t* config);
-    
+
     /**
      * @brief Initialises the I2C2 module.
      */
     void i2c2_init(i2c_config_t* config);
-    
+
     void i2c2_init_slave(i2c_config_t* config);
     void i2c2_init_master(i2c_config_t* config);
-    
+
     /**
      * @brief Checks if an I2C error occurred.
      * 
@@ -246,61 +243,61 @@ extern "C" {
      * @return I2C_NO_ACK or I2C_NO_ERROR
      */
     i2c_mstatus_t i2c_handle_error(void);
-    
+
     // old functions, TODO: remove 
-    i2c_mstatus_t i2c_start_transfer(i2c_mstatus_t (*controller)(void));
+    i2c_mstatus_t i2c_start_transfer(i2c_mstatus_t(*controller)(void));
     i2c_mstatus_t i2c_finish_transfer_blocking(void);
     i2c_mstatus_t i2c_finish_transfer_blocking_retry(uint8_t max_n_attempts);
-    
+
     void i2c_dummy_callback(i2c_message_t* m);
     void i2c_free_callback(i2c_message_t* m);
-    
+
     void i2c_add_reset_callback(i2c_bus_t i2c_bus, void (*reset)(void), bool (*init)(void));
     void i2c_reset_callback_init(void);
-    
+
     void i2c_init_message(
-        i2c_message_t* m, 
-        uint8_t address,
-        i2c_bus_t i2c_bus,
-        uint8_t* write_data,
-        size_t write_length,
-        uint8_t* read_data,
-        uint8_t read_length,
-        void (*controller)(i2c_message_t* m),
-        int8_t n_attempts,
-        void (*callback)(i2c_message_t* m),
-        void* callback_data,
-        uint8_t callback_data_length);
-    
+            i2c_message_t* m,
+            uint8_t address,
+            i2c_bus_t i2c_bus,
+            uint8_t* write_data,
+            size_t write_length,
+            uint8_t* read_data,
+            uint8_t read_length,
+            void (*controller)(i2c_message_t* m),
+            int8_t n_attempts,
+            void (*callback)(i2c_message_t* m),
+            void* callback_data,
+            uint8_t callback_data_length);
+
     void i2c_init_read_message(
-        i2c_message_t* m,
-        uint8_t* data,
-        uint16_t data_length);
-    
+            i2c_message_t* m,
+            uint8_t* data,
+            uint16_t data_length);
+
     void i2c_init_connected_message(i2c_message_t* sm,
             i2c_message_t* mm,
             uint8_t* data,
             uint16_t data_length);
-    
+
     void i2c_reset_message(i2c_message_t* m, uint8_t n_attempts);
-    
+
     void i2c_set_read_message(i2c_message_t* m);
-    
+
     void i2c_process_slave_auto(void);
-    
+
     void i2c_empty_queue(void);
-    
+
     void i2c1_detect_stop(void);
-    
+
     void i2c_slave_dummy_mw_sr_callback(i2c_message_t*);
-    void i2c_slave_dummy_mr_sw_callback (i2c_message_t*);
-    
+    void i2c_slave_dummy_mr_sw_callback(i2c_message_t*);
+
     bool i2c_check_address(uint8_t address);
-    
+
     bool i2c_check_message_sent(i2c_message_t* m);
-    
+
     void i2c1_init_slave_timer(void);
-    
+
     i2c_controller_t get_write_controller(i2c_bus_t bus);
     i2c_controller_t get_read_controller(i2c_bus_t bus);
 

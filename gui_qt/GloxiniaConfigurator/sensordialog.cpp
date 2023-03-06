@@ -43,7 +43,7 @@ GCSensor* SensorDialog::add(void)
 
     int idx = ui->sensorSelect->currentIndex();
     qInfo() << idx;
-    GCSensor *sensor = new GCSensor();
+    GCSensor *sensor;// = new GCSensor();
 
     switch(idx)
     {

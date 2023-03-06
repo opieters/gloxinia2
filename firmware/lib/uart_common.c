@@ -1,11 +1,11 @@
 #include <uart_common.h>
 
-void uart_init_message(uart_message_t* m, 
-        uint8_t command,
+void uart_init_message(uart_message_t* m,
+        serial_cmd_t command,
         uint8_t id,
-        uint16_t extended_id,            
+        uint16_t extended_id,
         uint8_t* data,
-        uint16_t length){
+        uint16_t length) {
     m->command = command;
     m->data = data;
     m->id = id;
@@ -14,8 +14,8 @@ void uart_init_message(uart_message_t* m,
     m->status = UART_MSG_INIT_DONE;
 }
 
-void uart_reset_message(uart_message_t* m){
-    if((m->status != UART_MSG_QUEUED) && (m->status != UART_MSG_TRANSFERRED)){
+void uart_reset_message(uart_message_t* m) {
+    if ((m->status != UART_MSG_QUEUED) && (m->status != UART_MSG_TRANSFERRED)) {
         m->status = UART_MSG_INIT_DONE;
     }
 }

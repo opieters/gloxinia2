@@ -8,10 +8,8 @@
 uint8_t spi1_transfer_status = 0, spi2_transfer_status = 0, spi3_transfer_status = 0;
 
 void spi1_init(void){
-#ifdef __DEBUG__
-    sprintf(print_buffer, "Initialising SPI 1.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
+    UART_DEBUG_PRINT("Initialising SPI 1.");
+=
     
     _SPI1IF = 0; // clear interrupt flag
     _SPI1IE = 0; // disable SPI interrupt

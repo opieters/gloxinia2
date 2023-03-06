@@ -1,0 +1,23 @@
+# This is an example configuration of a Gloxinia Configuration file that stores
+# the node and sensor settings and their interconectivity
+
+
+# format details:
+#
+# # represents a comment
+# N is a node (dicio, sylvatica or planalta)
+# S is a sensor (SHT35)
+#
+# The number of spaces between fields is unimportant. Fields that can include a space should start and end with a double quote.
+# The double quote can be escaped using a backslach (TODO).
+#
+# Each configuration component should be delimitered using semi-colon (;)
+#
+# After the comment character, all data is ignored. Comments cannot be inline!
+
+
+# this is an example of a dicio node
+N dicio 1 logger;
+# all sensors listed before the next node are automatically added to the node that was defined last
+# this is an example of an SHT35 configuration
+S SHT35 0 temp/rh 0x44 SS H 0.5 0;

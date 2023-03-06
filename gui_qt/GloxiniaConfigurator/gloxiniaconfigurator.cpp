@@ -1,6 +1,5 @@
 #include "gloxiniaconfigurator.h"
 #include "./ui_gloxiniaconfigurator.h"
-
 #include <QMessageBox>
 #include <QStringList>
 #include <QStringListModel>
@@ -8,51 +7,164 @@
 #include <gmessage.h>
 #include <QSerialPortInfo>
 #include <QInputDialog>
-#include <configuresht35dialog.h>
-
+#include <sensorsht35dialog.h>
+#include <QLineSeries>
+#include <QDateTimeAxis>
+#include <QChartView>
+#include <QValueAxis>
+#include <QFileDialog>
+#include <QThread>
+#include <QSettings>
+#include <QStandardPaths>
+#include <cfloat>
+#include <QtGlobal>
+#include <QRandomGenerator>
 
 GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::GloxiniaConfigurator)
-    , serial(new QSerialPort(this))
-    , status(new QLabel)
-    , systemSettings(new SettingsDialog)
-    , sensorSettings(new SensorDialog)
-    , configureSHT35Dialog(new ConfigureSHT35Dialog)
-    , moduleDialog(new ModuleDialog)
+    : QMainWindow(parent),
+      ui(new Ui::GloxiniaConfigurator),
+      serial(new QSerialPort(this)),
+      status(new QLabel),
+      systemSettings(new SettingsDialog),
+      sensorSettings(new SensorDialog),
+      globalMeasurementPolicyDialog(new GlobalMeasurementPolicyDialog),
+      sensorAnalogueDialog(new SensorAnalogueDialog),
+      sensorAPDS9306_065Dialog(new SensorAPDS9306_065Dialog),
+      sensorSHT35Dialog(new SensorSHT35Dialog),
+      nodeDicioDialog(new NodeDicioDialog),
+      chart(new QChart),
+      messageModel(new QStringListModel),
+      measurementSettings(new MeasurementSettingsDialog),
+      newProjectDialog(new NewProjectDialog),
+      updateDialog(new UpdateDialog)
 {
+    // build UI
     ui->setupUi(this);
     ui->statusbar->addWidget(status);
 
-    const QStringList headers({tr("Title"), tr("Description")});
+    mainLayout = new QHBoxLayout;
+    // horizontal layout
+    splitter = new QSplitter;
+    splitter2 = new QSplitter;
+    messageView = new QListView;
+    systemOverview = new QTreeView;
+    chartView = new QChartView(chart);
 
-    QFile file(":/empty.txt");
-    file.open(QIODevice::ReadOnly);
+    mainLayout->addWidget(splitter);
 
-    this->treeModel = new TreeModel(file.readAll(), this);
+    splitter->setOrientation(Qt::Horizontal);
+    splitter->addWidget(systemOverview);
+    splitter->addWidget(splitter2);
 
+    splitter2->setOrientation(Qt::Vertical);
+    splitter2->addWidget(messageView);
+    splitter2->addWidget(chartView);
+
+    chartView->setRenderHint(QPainter::Antialiasing);
+
+    ui->centralwidget->setLayout(mainLayout);
+
+    // auto update when points are removed/added
+    //connect(series, &QXYSeries::pointAdded, this, &GloxiniaConfigurator::autoScaleChart);
+    //seriesConnections.insert(0, connect(dummySeries, &QXYSeries::pointAdded, this, [this]{autoScaleSeries(dummySeries); }));
+
+    this->treeModel = new TreeModel(this);
+
+    // create recent files actions
+    ui->menuFile->insertSeparator(ui->actionExit);
+    QAction* pAction = ui->actionSave, *cAction;
+    for(int i = 0; i < maxRecentFiles; i++)
+    {
+        cAction = new QAction(this);
+        recentFileActions.append(cAction);
+        ui->menuFile->insertAction(pAction, cAction);
+    }
+    recentFileSeparatorAction = ui->menuFile->insertSeparator(recentFileActions[0]);
+
+    // serial data readout trigger
     connect(serial, &QSerialPort::readyRead, this, &GloxiniaConfigurator::readData);
-    connect(ui->actionConnect, &QAction::triggered, this, &GloxiniaConfigurator::openSerialPort);
+    updateDialog->setConfigurator(this);
+
+    // connect File menu to functions
+    connect(ui->actionSave, &QAction::triggered, this, &GloxiniaConfigurator::saveProject);
+    connect(ui->actionOpen, &QAction::triggered, this, &GloxiniaConfigurator::openProject);
+    connect(ui->actionNew, &QAction::triggered, this, &GloxiniaConfigurator::newProject);
+    connect(ui->actionExit, &QAction::triggered, this, &GloxiniaConfigurator::exit);
+
+    // connect Edit menu to functions
+    connect(ui->actionEditNode, &QAction::triggered, this, &GloxiniaConfigurator::editNode);
+    connect(ui->actionEditSensor, &QAction::triggered, this, &GloxiniaConfigurator::editSensor);
+    connect(ui->actionDelete, &QAction::triggered, this, &GloxiniaConfigurator::removeItems);
+    connect(ui->actionPreferences, &QAction::triggered, this, &GloxiniaConfigurator::updatePreferences);
+    connect(ui->actionRunDiscovery, &QAction::triggered, this, &GloxiniaConfigurator::runDiscovery);
+    connect(ui->actionStartMeasuring, &QAction::triggered, this, &GloxiniaConfigurator::startMeasuring);
+    connect(ui->actionStopMeasuring, &QAction::triggered, this, &GloxiniaConfigurator::stopMeasuring);
+    connect(ui->actionMeasurementSettings, &QAction::triggered, this, &GloxiniaConfigurator::editMeasurementSettings);
+
+    // connect System menu to functions
+    connect(ui->actionConnect, &QAction::triggered, this, &GloxiniaConfigurator::connectToDevice);
+    // connect(ui->actionUpdate, &QAction::triggered, this, &GloxiniaConfigurator::);
     connect(ui->actionDisconnect, &QAction::triggered, this, &GloxiniaConfigurator::closeSerialPort);
-    connect(ui->actionConfigure, &QAction::triggered, systemSettings, &SettingsDialog::show);
-    //connect(ui->actionAdd_sensor, &QAction::triggered, sensorSettings, &SensorDialog::show);
-    connect(ui->actionAddSensor, &QAction::triggered, this, &GloxiniaConfigurator::addSensor);
-    connect(ui->actionAddNode, &QAction::triggered, this, &GloxiniaConfigurator::addNode);
-    ui->actionDisconnect->setEnabled(false);
-    ui->actionUpdate->setEnabled(false);
+    connect(ui->actionReset, &QAction::triggered, this, &GloxiniaConfigurator::resetSystem);
+    connect(ui->actionUpdateDevice, &QAction::triggered, this, &GloxiniaConfigurator::updateDevice);
 
-    ui->messageView->setModel(this->treeModel);
 
-    ui->systemOverview->setModel(this->treeModel);
-    //ui->systemOverview->setModel(this->model);
-    //ui->systemOverview->setColumnCount(1);
-    ui->systemOverview->setHeaderHidden(true);
-    ui->systemOverview->setContextMenuPolicy(Qt::CustomContextMenu);
-    //connect(ui->systemOverview, &QTreeView::customContextMenuRequested,this, &GloxiniaConfigurator::showContextMenu);
+    // set data models
+    messageView->setModel(this->messageModel);
+    systemOverview->setModel(this->treeModel);
 
-    updateSerialPortList();
+    // set model properties
+    systemOverview->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    // systemOverview->setModel(this->model);
+    // systemOverview->setColumnCount(1);
+    systemOverview->setHeaderHidden(true);
+    systemOverview->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    //addNode(new GCNodeModel(GCNodeModel::DicioNode));
+    // right-click action in the system tree view
+    connect(systemOverview, &QTreeView::customContextMenuRequested, this, &GloxiniaConfigurator::showContextMenu);
+
+    // connect sample period settings dialogs
+    sensorSHT35Dialog->setPeriodDialog(globalMeasurementPolicyDialog);
+    sensorAPDS9306_065Dialog->setPeriodDialog(globalMeasurementPolicyDialog);
+
+    // add plot window to UI
+    dummySeries = new QLineSeries();
+    chart->addSeries(dummySeries);
+    //chart->legend()->hide();
+    //chart->setTitle("Analog readout [a.u.]");
+
+    xAxis = new QDateTimeAxis;
+    xAxis->setTickCount(10);
+    xAxis->setFormat("mm:ss");
+    xAxis->setTitleText("time");
+    chart->addAxis(xAxis, Qt::AlignBottom);
+    dummySeries->attachAxis(xAxis);
+
+
+
+    // timer use to send discovery messages
+    discoveryTimer = new QTimer();
+    connect(discoveryTimer, &QTimer::timeout, this, &GloxiniaConfigurator::runDiscovery);
+
+    // Load application configuration and set default values
+    readSettings();
+    settings.success = false;
+
+    updateUI();
+
+    // application settings
+    settings.messageBufferSize = 1000;
+    settings.plotBufferWindow = 250;
+
+    // update status
+    //messageModel->insertRow(0);
+    //QModelIndex mIndex = messageModel->index(0, 0);
+    //messageModel->setData(mIndex, "Application started.");
+    showStatusMessage("No file open.");
+
+    QList<int> splitterSizes = {300, 600};
+    splitter->setSizes(splitterSizes);
+    splitter2->setSizes(splitterSizes);
 }
 
 GloxiniaConfigurator::~GloxiniaConfigurator()
@@ -60,225 +172,291 @@ GloxiniaConfigurator::~GloxiniaConfigurator()
     delete ui;
 }
 
-// https://code.qt.io/cgit/qt/qtserialport.git/tree/examples/serialport/terminal/mainwindow.cpp?h=5.15
-void GloxiniaConfigurator::openSerialPort()
+void GloxiniaConfigurator::autoScaleSeries(QXYSeries* series)
 {
-    //const SettingsDialog::Settings p = m_settings->settings();
-    serial->setPortName("COM12");
-    serial->setBaudRate(500000);
-    serial->setDataBits(QSerialPort::Data8);
-    serial->setParity(QSerialPort::NoParity);
-    serial->setStopBits(QSerialPort::OneStop);
-    serial->setFlowControl(QSerialPort::NoFlowControl);
-    if (serial->open(QIODevice::ReadWrite)) {
-        //m_console->setEnabled(true);
-        //m_console->setLocalEchoEnabled(p.localEchoEnabled);
-        ui->actionConnect->setEnabled(false);
-        ui->actionDisconnect->setEnabled(true);
-        ui->actionUpdate->setEnabled(true);
-        ui->actionConfigure->setEnabled(false);
-        showStatusMessage(tr("Connected to COM12"));
-        /*showStatusMessage(tr("Connected to %1 : %2, %3, %4, %5, %6")
-                          .arg(p.name).arg(p.stringBaudRate).arg(p.stringDataBits)
-                          .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl));*/
+    // TODO: update scales!!
+    auto axes = series->attachedAxes();
+    for(QAbstractAxis* i : axes)
+    {
+        QValueAxis* yAx = dynamic_cast<QValueAxis*>(i);
+
+        if(yAx == nullptr)
+            continue;
+
+        qreal ymax = yAx->max();
+        qreal ymin = yAx->min();
+        QPointF p = series->at(series->count()-1);
+
+        yAx->setRange(std::min(ymin,p.y() ), std::max(ymax, p.y()));
+    }
+
+    // scale x-axis
+    qint64 xmax = xAxis->max().toMSecsSinceEpoch();
+    qint64 vlast = (qint64) series->at(series->count() - 1).x();
+    xmax = std::max(xmax,vlast);
+
+    xAxis->setRange(QDateTime::fromMSecsSinceEpoch(xmax - settings.plotBufferWindow * 1000), QDateTime::fromMSecsSinceEpoch(xmax));
+
+}
+
+void GloxiniaConfigurator::resetSystem(void)
+{
+    GMessage reset(GMessage::Code::NODE_RESET, GMessage::ComputerAddress, GMessage::NoSensorID, true);
+
+    sendSerialMessage(reset);
+
+    // disable start option, enable stop option
+    updateUI();
+
+    treeModel->removeRows(0, treeModel->rowCount());
+}
+
+void GloxiniaConfigurator::updateDevice(void)
+{
+    // get selected node
+
+    discoveryTimer->stop();
+
+    const QModelIndex index = systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = systemOverview->model();
+    GCNode* node = new GCNodeDicio(1, "dicio node");
+
+    updateDialog->setNode(node);
+    updateDialog->setWindowModality(Qt::ApplicationModal);
+    int result = updateDialog->exec();
+    if(result == QDialog::Rejected){
+        return;
+    }
+    if(node != nullptr)
+        delete node;
+    updateDialog->setNode(nullptr);
+
+    discoveryTimer->start();
+
+    return;
+
+    // node is selected -> run menu
+    if (index.isValid() && !index.parent().isValid())
+    {
+        QVariant data = model->data(index, Qt::EditRole);
+
+
+        GCNodeDicio *nodeD = data.value<GCNodeDicio*>();
+        GCNodeSylvatica *nodeS = data.value<GCNodeSylvatica*>();
+        GCNodePlanalta *nodeP = data.value<GCNodePlanalta*>();
+
+        if(nodeD != nullptr)
+            node = new GCNodeDicio(*nodeD);
+        else if(nodeS != nullptr)
+            node = new GCNodeSylvatica(*nodeS);
+        else if(nodeP != nullptr)
+            node = new GCNodePlanalta(*nodeP);
+        else
+            return;
+        removeNode(index);
+        updateDialog->setNode(node);
     } else {
-        QMessageBox::critical(this, tr("Error"), serial->errorString());
+        updateDialog->setNode(nullptr);
 
-        showStatusMessage(tr("Open error"));
-    }
-}
-
-void GloxiniaConfigurator::closeSerialPort()
-{
-    if (serial->isOpen()){
-        serial->close();
-    }
-    //m_console->setEnabled(false);
-    ui->actionConnect->setEnabled(true);
-    ui->actionDisconnect->setEnabled(false);
-    ui->actionConfigure->setEnabled(true);
-    ui->actionUpdate->setEnabled(false);
-    showStatusMessage(tr("Disconnected"));
-}
-
-void GloxiniaConfigurator::readData()
-{
-    static short readoutState = 0;
-    short n_read = 0;
-    static short read_length = 0;
-    static char data[255+5];
-
-    do {
-        switch(readoutState){
-            case 0:
-                n_read = serial->read(data, 1);
-                if(n_read != 1){
-                    return;
-                }
-                if(data[0] == GMessage::GMessageStartByte){
-                    readoutState++;
-                }
-                break;
-            case 1:
-                n_read = serial->read(data, 1); // read code
-                if(n_read < 0){
-                    // an error occurred -> return to initial state
-                    readoutState = 0;
-                    return;
-                }
-                if(n_read == 1){
-                    // we were able to read code -> read id H
-                    readoutState++;
-                }
-                break;
-            case 2:
-                n_read = serial->read(&data[1], 1); // read id H
-                if(n_read < 0){
-                    readoutState = 0;
-                    return;
-                }
-                if(n_read == 1){
-                    // we were able to read -> read id M
-                    readoutState++;
-                    read_length = 0;
-                }
-                break;
-            case 3:
-                n_read = serial->read(&data[1], 1); // read id M
-                if(n_read < 0){
-                    readoutState = 0;
-                    return;
-                }
-                if(n_read == 1){
-                    // we were able to read -> read id L
-                    readoutState++;
-                    read_length = 0;
-                }
-                break;
-            case 4:
-                n_read = serial->read(&data[2], 1); // read id L
-                if(n_read < 0){
-                    readoutState = 0;
-                    return;
-                }
-                if(n_read == 1){
-                    // we were able to read -> read length
-                    readoutState++;
-                    read_length = 0;
-                }
-                break;
-            case 5:
-                n_read = serial->read(&data[3], 1); // read length
-                if(n_read < 0){
-                    readoutState = 0;
-                    return;
-                }
-                if(n_read == 1){
-                    // we were able to read the length -> read data (if any)
-                    read_length = 0;
-                    if(data[3] == 0){
-                        readoutState += 2;
-                    } else {
-                        readoutState++;
-                    }
-                }
-                break;
-            case 6:
-                n_read = serial->read(&data[4+read_length], data[4]-read_length);
-                if(n_read < 0){
-                    readoutState = 0;
-                    return;
-                }
-                read_length += n_read;
-                if(read_length == data[3]){
-                    readoutState++;
-                }
-                break;
-            case 7:
-                n_read = serial->read(&data[4+read_length], 1);
-                if(n_read < 0){
-                    readoutState = 0;
-                    return;
-                }
-                if(n_read == 1) {
-                    if(data[4+read_length] == GMessage::GMessageStopByte){
-                        GMessage((GMessageCode) data[0], data[1], ((uint16_t) data[2] << 8) | data[3], &data[4], read_length);
-                        // TODO: process message
-
-                        /*if(model->insertRow(model->rowCount())){
-                            QModelIndex index = model->index(model->rowCount() - 1, 0);
-                            model->setData(index, "Data received!");
-                        }*/
-
-                    } else {
-                        // incorrect data byte received -> reset state
-                    }
-                    readoutState = 0;
-                }
-
-                break;
-            default:
-                readoutState = 0;
-                break;
-        }
-    } while(n_read > 0);
-}
-
-void GloxiniaConfigurator::updateSerialPortList(void)
-{
-    auto list = QSerialPortInfo::availablePorts();
-
-    // remove items
-     for(QAction* i : serialPortActionList)
-     {
-        bool serialPortFound = false;
-        for(const QSerialPortInfo &j : list)
-        {
-            if(j.portName() == i->text())
-            {
-                serialPortFound = true;
-                break;
-            }
-        }
-        if(!serialPortFound)
-        {
-            ui->menuPort_selection->removeAction(i);
-        }
+        QMessageBox msgBox;
+        msgBox.setText("No node selected, cannot update firmware.");
+        msgBox.exec();
+        return;
     }
 
-    // add new items
-    for(const QSerialPortInfo &i : list)
+    updateDialog->setWindowModality(Qt::ApplicationModal);
+    //int result = updateDialog->exec();
+    if(result == QDialog::Rejected){
+        return;
+    }
+    if(node != nullptr)
+        delete node;
+}
+
+void GloxiniaConfigurator::updatePreferences(void)
+{
+    systemSettings->updateDialog(settings);
+    systemSettings->setWindowModality(Qt::ApplicationModal);
+    int result = systemSettings->exec();
+    if(result == QDialog::Rejected){
+        return;
+    }
+
+    systemSettings->updateApplicationSettings(settings);
+
+    // update buffer lengths of sensors
+    // loop over all nodes and sensors
+    for(int i = 0; i < treeModel->rowCount(); i++)
     {
-        bool serialPortFound = false;
-        for(QAction* j : serialPortActionList)
+        QModelIndex index = treeModel->index(i, 0);
+        QVariant data = treeModel->data(index, Qt::EditRole);
+        GCNode* node = GCNode::fromQVariant(data);
+
+        if(node == nullptr)
+            continue;
+
+        for(int j = 0; j < treeModel->rowCount(index); j++)
         {
-            if(i.portName() == j->text()){
-                serialPortFound = true;
-                break;
-            }
-        }
-        if(!serialPortFound)
-        {
-            QAction* action = ui->menuPort_selection->addAction(i.portName());
-            action->setCheckable(true);
-            connect(action,  &QAction::triggered, this, &GloxiniaConfigurator::setSerialPort);
-            serialPortActionList.append(action);
+            QModelIndex sIndex = treeModel->index(j, 0, index);
+            QVariant sData = treeModel->data(sIndex, Qt::EditRole);
+            GCSensor* sensor = GCSensor::fromQVariant(sData);
+
+            if(sensor == nullptr)
+                continue;
+
+            sensor->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensor->getMeasurementPeriod() + 1));
         }
     }
 }
 
-void GloxiniaConfigurator::setSerialPort(void)
+void GloxiniaConfigurator::autoScaleChart(void)
 {
-    QAction* button = qobject_cast<QAction*>(sender());
-    if( button != NULL )
+    auto series = chart->series();
+    double xMin = DBL_MAX, xMax = 0, yMin, yMax;
+
+    for(QAbstractSeries* i : series)
     {
-        // disable other buttons
-        for(QAction* i : serialPortActionList){
-            if(i != button){
-                i->setChecked(false);
-            }
-        }
+        auto j = dynamic_cast<QXYSeries*>(i);
+        xMin = std::min(xMin, j->at(0).x());
+        xMax = std::max(xMax, j->at(j->count()-1).x());
     }
+    //chart->ax
+}
+
+void GloxiniaConfigurator::readSettings(void)
+{
+    QSettings settings;
+
+    settings.beginGroup("main");
+
+    const auto geometry = settings.value("geometry", QByteArray()).toByteArray();
+
+    if(!geometry.isEmpty())
+        restoreGeometry(geometry);
+
+    this->settings.projectDir = settings.value("projectDir", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
+    this->settings.runDiscovery = settings.value("runDiscovery", true).toBool();
+    updateRecentProjects();
+
+
+    settings.endGroup();
+}
+
+void GloxiniaConfigurator::updateRecentProjects(void)
+{
+    QSettings settings;
+
+    settings.beginGroup("main");
+    const auto recentProjects = settings.value("recentProjets", QStringList()).toStringList();
+
+    for(int i = 0; i < recentProjects.size(); i++)
+    {
+        QString text = tr("&%1 %2").arg(i + 1).arg(QFileInfo(recentProjects[i]).fileName());
+        recentFileActions[i]->setText(text);
+        recentFileActions[i]->setData(recentProjects[i]);
+        recentFileActions[i]->setVisible(true);
+    }
+    for(int i = recentProjects.size(); i < maxRecentFiles; i++)
+    {
+        recentFileActions[i]->setVisible(false);
+    }
+
+    recentFileSeparatorAction->setVisible(recentProjects.size() > 0);
+
+    settings.endGroup();
+}
+
+void GloxiniaConfigurator::writeSettings(void)
+{
+    QSettings settings;
+
+    settings.beginGroup("main");
+    settings.setValue("geometry", saveGeometry());
+    settings.setValue("projectDir", this->settings.projectDir);
+    settings.setValue("runDiscovery", this->settings.runDiscovery);
+
+    QStringList files = settings.value("recentProjects").toStringList();
+    files.prepend(QDir::cleanPath(this->settings.projectDir + "/" + this->settings.projectName + ".gc"));
+    if(files.size() > GloxiniaConfigurator::maxRecentFiles){
+        files.removeLast();
+    }
+    settings.setValue("recentProjects", files);
+
+    settings.endGroup();
+}
+
+void GloxiniaConfigurator::closeEvent(QCloseEvent *event)
+{
+    // TODO: pop-up
+    //if (userReallyWantsToQuit()) {
+        writeSettings();
+        event->accept();
+    //} else {
+    //    event->ignore();
+    //}
+}
+
+void GloxiniaConfigurator::exit(void)
+{
+    // TODO: check if config saved??
+
+    close();
+}
+
+void GloxiniaConfigurator::setProject(GCProjectSettings& settings){
+    this->settings = settings;
+}
+
+void GloxiniaConfigurator::updateUI(){
+
+
+    if(settings.success){
+        ui->actionSave->setEnabled(true);
+
+        if(serial->isOpen()){
+            ui->actionConnect->setEnabled(false);
+            ui->actionDisconnect->setEnabled(true);
+            ui->actionLoadDeviceConfig->setEnabled(true);
+            ui->actionConfigureSerial->setEnabled(false);
+            ui->actionEditNode->setEnabled(true);
+            ui->actionEditSensor->setEnabled(true);
+            ui->actionDelete->setEnabled(true);
+            ui->actionStartMeasuring->setEnabled(true);
+            ui->actionReset->setEnabled(true);
+            ui->actionStopMeasuring->setEnabled(true);
+            ui->actionMeasurementSettings->setEnabled(true);
+            ui->actionRunDiscovery->setEnabled(true);
+        } else {
+            ui->actionConnect->setEnabled(true);
+            ui->actionDisconnect->setEnabled(false);
+            ui->actionConfigureSerial->setEnabled(true);
+            ui->actionLoadDeviceConfig->setEnabled(false);
+            ui->actionEditNode->setEnabled(false);
+            ui->actionEditSensor->setEnabled(false);
+            ui->actionDelete->setEnabled(false);
+            ui->actionStartMeasuring->setEnabled(false);
+            ui->actionReset->setEnabled(false);
+            ui->actionStopMeasuring->setEnabled(false);
+            ui->actionMeasurementSettings->setEnabled(true);
+            ui->actionRunDiscovery->setEnabled(false);
+        }
+    } else {
+        ui->actionSave->setDisabled(true);
+        ui->actionConnect->setDisabled(true);
+        ui->actionDisconnect->setEnabled(false);
+        ui->actionConfigureSerial->setEnabled(false);
+        ui->actionLoadDeviceConfig->setEnabled(false);
+        ui->actionEditNode->setEnabled(false);
+        ui->actionEditSensor->setEnabled(false);
+        ui->actionDelete->setEnabled(false);
+        ui->actionStartMeasuring->setEnabled(false);
+        ui->actionReset->setEnabled(false);
+        ui->actionStopMeasuring->setEnabled(false);
+        ui->actionMeasurementSettings->setEnabled(false);
+        ui->actionRunDiscovery->setEnabled(false);
+    }
+
+
 }
 
 void GloxiniaConfigurator::showStatusMessage(const QString &message)
@@ -351,39 +529,34 @@ QString GloxiniaConfigurator::getSensorLabel(GCSensor* s){
     return label;
 }*/
 
-void GloxiniaConfigurator::addNode()
+void GloxiniaConfigurator::runDiscovery()
 {
-    // add node to the list
-    /*nodeList.append(node);
+    // check if there already is a node in the system, if not send address update to finish first assignment
+    /*if(treeModel->rowCount() == 0){
+        qInfo() << "Assiging address of node conncted to computer.";
+        std::vector<uint8_t> data = {(uint8_t) (GMessage::SearchStartAddress >> 8), (uint8_t) GMessage::SearchStartAddress};
+        GMessage m(GMessage::Code::UPDATE_ADDRESS, GMessage::UnsetAddress, GMessage::NoSensorID, false, data);
+        length = m.toBytes(rawData, 32);
+    } else {*/
+    qInfo() << "Running discovery broadcast";
 
-    // create tree item
-    QTreeWidgetItem* itemNode = new QTreeWidgetItem(ui->systemOverview);
-    QIcon nodeIcon = getNodeIcon(node);
-    QString nodeLabel = getNodeLabel(node);
-    itemNode->setText(0, nodeLabel);
-    itemNode->setIcon(0, nodeIcon);
-    ui->systemOverview->insertTopLevelItem(node->getID(), itemNode);
+    GMessage m(GMessage::Code::DISCOVERY, 0, 0, true, std::vector<quint8>());
+    sendSerialMessage(m);
+}
 
-    // create sensors
-    for(int i = 0; i < node->rowCount(); i++){
-        QTreeWidgetItem* item = new QTreeWidgetItem(itemNode);
-        GCSensor* sensor = node->getSensor(i);
-        QString sensorLabel = getSensorLabel(sensor) + "(" + QString::number(i) + ")";
-        QIcon sensorIcon = getSensorIcon(sensor);
+/*void GloxiniaConfigurator::addNode()
+{
+    const QModelIndex index = systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = systemOverview->model();
 
-        item->setText(0, sensorLabel);
-        item->setIcon(0, sensorIcon);
-        itemNode->addChild(item);
+    auto parent = index.parent();
 
-    }*/
-    //const QModelIndex index = ui->systemOverview->selectionModel();//)->currentIndex();
-    //auto sm = ui->systemOverview->selectionModel();
-    //qInfo() << sm;
-    //QAbstractItemModel *model = ui->systemOverview->model();
-
-    //updateActions();
-    const QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
-    QAbstractItemModel *model = ui->systemOverview->model();
+    if(parent.isValid()){
+        QMessageBox msgBox;
+        msgBox.setText("Nodes cannot be added to other nodes.");
+        msgBox.exec();
+        return;
+    }
 
     if (!model->insertRow(index.row()+1, index.parent()))
         return;
@@ -391,160 +564,709 @@ void GloxiniaConfigurator::addNode()
     updateActions();
 
     const QModelIndex child = model->index(index.row() + 1, 0, index.parent());
-    moduleDialog->setWindowModality(Qt::ApplicationModal);
-    moduleDialog->exec();
-    const GCNode data = moduleDialog->getNode();
+    nodeDicioDialog->setWindowModality(Qt::ApplicationModal);
+    nodeDicioDialog->exec();
+    GCNode* data = nodeDicioDialog->getNode();
     model->setData(child, QVariant::fromValue(data), Qt::EditRole);
-}
 
+    //systemOverview->selectionModel()->setCurrentIndex(index, QItemSelectionModel::ClearAndSelect);
 
-void GloxiniaConfigurator::addSensor()
+    //updateActions();
+}*/
+
+void GloxiniaConfigurator::startMeasuring(void)
 {
-    const QModelIndex index = ui->systemOverview->selectionModel()->currentIndex();
-    QAbstractItemModel *model = ui->systemOverview->model();
+    // cancel discovery
+    discoveryTimer->stop();
 
-    /*if (model->columnCount(index) == 0)
-    {
-        if (!model->insertColumn(0, index))
-        {
-            return;
-        }
-    }*/
-
-    auto parent = index.parent();
-    bool cond1 = !index.parent().isValid();
-    QVariant data = model->data(index, Qt::EditRole);
-
-    bool cond2 = !model->insertRow(0, index);
-
-    if (cond1 || cond2)
-    {
+    // create directory for sensor data
+    QDateTime now = QDateTime::currentDateTime();
+    QString sensorDataName = settings.projectDir + "/" + now.toString("yyyy-MM-dd_hh-mm-ss");
+    QDir sensorDataDir(sensorDataName);
+    if(!sensorDataDir.mkpath(sensorDataName)){
         QMessageBox msgBox;
-        msgBox.setText("Cannot add a sensor here. Select/add a node instead.");
+        msgBox.setText("Unable to create sensor data directory " + sensorDataName + ".");
         msgBox.exec();
         return;
     }
 
-    for (int column = 0; column < model->columnCount(index); ++column)
+    // set path prefix for sensor data
+    GCSensor::setSensorFileDir(sensorDataName);
+
+    // disable start option, enable stop option
+    updateUI();
+
+    // loop over all nodes and sensors and trigger measurement
+    for(int i = 0; i < treeModel->rowCount(); i++)
     {
-        const QModelIndex child = model->index(0, column, index);
-        model->setData(child, QVariant(tr("[No data]")), Qt::EditRole);
+        QModelIndex index = treeModel->index(i, 0);
+        QVariant data = treeModel->data(index, Qt::EditRole);
+        GCNode* node = GCNode::fromQVariant(data);
+
+        if(node == nullptr)
+            continue;
+
+        for(int j = 0; j < treeModel->rowCount(index); j++)
+        {
+            QModelIndex sIndex = treeModel->index(j, 0, index);
+            QVariant sData = treeModel->data(sIndex, Qt::EditRole);
+            GCSensor* sensor = GCSensor::fromQVariant(sData);
+
+            if(sensor == nullptr)
+                continue;
+
+            continue;
+
+            if(sensor->startMeasurement())
+            {
+                GMessage mStart = sensor->getStartMessage();
+
+                sendSerialMessage(mStart);
+                qInfo() << "Sending sensor start" << mStart.toString();
+            }
+
+        }
     }
 
-    ui->systemOverview->selectionModel()->setCurrentIndex(model->index(0, 0, index),
-                                            QItemSelectionModel::ClearAndSelect);
-    updateActions();
+    GMessage mStart = GMessage(GMessage::Code::SENSOR_START, GMessage::ComputerAddress, GMessage::NoSensorID, true);
+    sendSerialMessage(mStart);
+
+    qInfo() << "Started measuring";
+}
+void GloxiniaConfigurator::stopMeasuring(void)
+{
+    GMessage mStop = GMessage(GMessage::Code::SENSOR_STOP, GMessage::ComputerAddress, GMessage::NoSensorID, true);
+    sendSerialMessage(mStop);
+
+    // enable start option, disable stop option
+    updateUI();
+
+    // loop over all nodes and sensora and cancel measurement
+    for(int i = 0; i < treeModel->rowCount(); i++)
+    {
+        QModelIndex index = treeModel->index(i, 0);
+        QVariant data = treeModel->data(index, Qt::EditRole);
+        GCNode* node = GCNode::fromQVariant(data);
+
+        if(node == nullptr)
+            continue;
+
+        for(int j = 0; j < treeModel->rowCount(index); j++)
+        {
+            QModelIndex sIndex = treeModel->index(j, 0, index);
+            QVariant sData = treeModel->data(sIndex, Qt::EditRole);
+            GCSensor* sensor = GCSensor::fromQVariant(sData);
+
+            if(sensor == nullptr)
+                continue;
+
+            sensor->stopMeasurement();
+        }
+
+    }
+
+    qInfo() << "Stopped measuring";
 }
 
-
-
-
-void GloxiniaConfigurator::removeNode(uint8_t id)
+void GloxiniaConfigurator::editMeasurementSettings(void)
 {
-    // TODO
+    nodeDicioDialog->setWindowModality(Qt::ApplicationModal);
+    measurementSettings->exec();
+    measurementSettings->getSettings();
 }
 
-/*
-void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
+bool GloxiniaConfigurator::removeNode(const QModelIndex &index)
 {
-    QMenu m(tr("Context menu"), this);
 
-    QAction a("Delete", this);
-    connect(&a, &QAction::triggered, this, &GloxiniaConfigurator::removeNode);
+    QAbstractItemModel *model = systemOverview->model();
+
+    if (index.isValid() && !index.parent().isValid())
+    {
+        return model->removeRow(index.row(), index.parent());
+    }
+
+    messageModel->insertRow(0);
+    QModelIndex mIndex = messageModel->index(0, 0);
+    messageModel->setData(mIndex, "Could not remove node.");
+
+    return false;
 
     // get item at selected position:
-    QTreeWidgetItem *nd = this->ui->systemOverview->itemAt( pos );
-    // https://stackoverflow.com/questions/14237020/qtreewidget-right-click-menu
+    QItemSelectionModel *selectionModel = this->systemOverview->selectionModel();
 
-    qInfo() << "Index is " << this->ui->systemOverview->indexFromItem(nd);
+    const QModelIndexList indexes = selectionModel->selectedIndexes();
 
-    m.addAction(&a);
+    GCSensor *s;
+    GCNode *n;
+    bool containsNode = false, containsSensor = false;
 
-    m.exec(ui->systemOverview->mapToGlobal(pos));
-}*/
-
-/*
-void GloxiniaConfigurator::setSensor(void)
-{
-    QStringList nodeList;
-    for(GCNodeModel* i : this->nodeList){
-        QString label = tr("Node ");
-        label.append(QString::number(i->getID()));
-        nodeList << label;
+    for (const QModelIndex &index : indexes)
+    {
+        QString text = QString("(%1,%2)").arg(index.row()).arg(index.column());
+        QVariant data = systemOverview->model()->data(index, Qt::EditRole);
+        s = data.value<GCSensor *>();
+        n = data.value<GCNode *>();
+        if (s != nullptr)
+        {
+            containsSensor = true;
+        }
+        if (n != nullptr)
+        {
+            containsNode = true;
+        }
     }
 
-    // select node
-    bool ok;
-    QString item = QInputDialog::getItem(this, tr("Select node"), tr("Node:"), nodeList, 0, false, &ok);
-    int nodeIndex = nodeList.indexOf(item);
+    // https://stackoverflow.com/questions/14237020/qtreewidget-right-click-menu
 
-    if(ok && !item.isEmpty()){
-        // all OK, we go to next screen
-    } else {
-        // TODO: add error dialog?
+    // qInfo() << "Index is " << this->systemOverview->indexFromItem(nd);
+}
+
+void GloxiniaConfigurator::editNode()
+{
+
+    const QModelIndex index = systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = systemOverview->model();
+    int result;
+
+    // node is selected -> run menu
+    if (index.isValid() && !index.parent().isValid())
+    {
+        QVariant data = model->data(index, Qt::EditRole);
+        GCNodeDicio *nDicio = data.value<GCNodeDicio *>();
+        GCNodePlanalta *nPlanalta = data.value<GCNodePlanalta *>();
+        GCNodeSylvatica *nSylvatica = data.value<GCNodeSylvatica *>();
+
+        if (nDicio != nullptr)
+        {
+            nodeDicioDialog->setNodeSettings(nDicio);
+            nodeDicioDialog->setWindowModality(Qt::ApplicationModal);
+            result = nodeDicioDialog->exec();
+            if(result == QDialog::Rejected){
+                return;
+            }
+            nodeDicioDialog->updateNode(nDicio);
+            model->setData(index, QVariant::fromValue(nDicio), Qt::EditRole);
+            return;
+        }
+
+        if (nPlanalta != nullptr)
+        {
+            // TODO
+        }
+
+        if (nSylvatica != nullptr)
+        {
+            // TODO
+        }
+    }
+}
+
+void GloxiniaConfigurator::addSensor()
+{
+    const QModelIndex index = systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = systemOverview->model();
+
+    // node is selected -> add sensor as child
+    if (index.isValid() && !index.parent().isValid())
+    {
+
+        if (!model->insertRow(0, index))
+        {
+            QMessageBox msgBox;
+            msgBox.setText("Error inserting the sensor into the system.");
+            msgBox.exec();
+            return;
+        }
+
+        for (int column = 0; column < model->columnCount(index); ++column)
+        {
+            const QModelIndex child = model->index(0, column, index);
+            GCSensor *sensor = selectSensor();
+            model->setData(child, QVariant::fromValue(sensor), Qt::EditRole);
+            // model->setData(child, QVariant::fromValue(GCNode()), Qt::EditRole);
+        }
+
+        systemOverview->selectionModel()->setCurrentIndex(model->index(0, 0, index),
+                                                              QItemSelectionModel::ClearAndSelect);
+        updateActions();
+
         return;
     }
 
-    GCNodeModel* node = this->nodeList[nodeIndex];
+    // sensor is selected -> add sensor as new row
+    if (index.isValid() && index.parent().isValid())
+    {
+        if (!model->insertRow(index.row() + 1, index.parent()))
+            return;
 
-    // select port on the node
-    // TODO
-    int port = 0;
-    GCSensor* sensor = node->getSensor(port);
+        updateActions();
 
+        const QModelIndex child = model->index(index.row() + 1, 0, index.parent());
+        selectSensor();
+        GCSensor *sensor = selectSensor();
+        model->setData(child, QVariant::fromValue(sensor), Qt::EditRole);
+        // model->setData(child, QVariant::fromValue(GCNode()), Qt::EditRole);
+
+        systemOverview->selectionModel()->setCurrentIndex(model->index(0, 0, index),
+                                                              QItemSelectionModel::ClearAndSelect);
+        updateActions();
+
+        return;
+    }
+
+    QMessageBox msgBox;
+    msgBox.setText("Sensors can only be added to nodes.");
+    msgBox.exec();
+    return;
+}
+
+bool GloxiniaConfigurator::removeSensor(const QModelIndex &index)
+{
+    QAbstractItemModel *model = systemOverview->model();
+
+    if (index.isValid() && index.parent().isValid())
+    {
+
+        QVariant data = model->data(index, Qt::EditRole);
+        GCSensorSHT35 *sensorSHT35;
+        GCSensorAPDS9306 *sensorAPDS9306;
+
+        sensorSHT35 = data.value<GCSensorSHT35 *>();
+        sensorAPDS9306 = data.value<GCSensorAPDS9306 *>();
+
+        if(sensorSHT35 != nullptr)
+            delete sensorSHT35;
+        if(sensorAPDS9306 != nullptr)
+            delete sensorAPDS9306;
+
+        return model->setData(index, QVariant());
+        //return model->removeRow(index.row(), index.parent());
+    }
+
+    return false;
+}
+
+void GloxiniaConfigurator::removeItems()
+{
+    QItemSelectionModel *selectionModel = systemOverview->selectionModel();
+    //QAbstractItemModel *model = systemOverview->model();
+
+    const QModelIndexList indexes = selectionModel->selectedIndexes();
+    QModelIndexList nodeIndices;
+
+    for (const QModelIndex &index : indexes)
+    {
+        if (!removeSensor(index))
+        {
+            nodeIndices.append(index);
+        }
+    }
+
+    for (const QModelIndex &index : nodeIndices)
+    {
+        removeNode(index);
+    }
+}
+
+void GloxiniaConfigurator::editSensor()
+{
+    const QModelIndex index = systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = systemOverview->model();
+    GCSensorSHT35 *sensorSHT35;
+    GCSensorAPDS9306 *sensorAPDS9306;
+    int result;
+
+    QList<GMessage> configMs;
+
+    // sensor is selected -> run menu
+    if (index.isValid() && index.parent().isValid())
+    {
+        QVariant data = model->data(index, Qt::EditRole);
+        sensorSHT35 = data.value<GCSensorSHT35 *>();
+        sensorAPDS9306 = data.value<GCSensorAPDS9306 *>();
+
+        // selected sensor is SHT35 -> edit parameters of this sensor
+        if (sensorSHT35 != nullptr)
+        {
+            sensorSHT35Dialog->updateUISettings(sensorSHT35);
+            sensorSHT35Dialog->setWindowModality(Qt::ApplicationModal);
+            result = sensorSHT35Dialog->exec();
+            if(result == QDialog::Rejected){
+                return;
+            }
+            sensorSHT35Dialog->apply(sensorSHT35);
+            model->setData(index, QVariant::fromValue(sensorSHT35), Qt::EditRole);
+
+            configMs = sensorSHT35->getConfigurationMessages();
+
+            for(const GMessage &m : configMs){
+                sendSerialMessage(m);
+                qInfo() << "Send SHT35 config" << m.toString();
+
+            }
+
+            sensorSHT35->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorSHT35->getMeasurementPeriod() + 1));
+
+            return;
+        }
+
+        // selected sensor is APDS9306 065 -> edit parameters of this sensor
+        if (sensorAPDS9306 != nullptr)
+        {
+            sensorAPDS9306_065Dialog->updateUISettings(sensorAPDS9306);
+            sensorAPDS9306_065Dialog->setWindowModality(Qt::ApplicationModal);
+            result = sensorAPDS9306_065Dialog->exec();
+            if(result == QDialog::Rejected){
+                return;
+            }
+            sensorAPDS9306_065Dialog->apply(sensorAPDS9306);
+            model->setData(index, QVariant::fromValue(sensorAPDS9306), Qt::EditRole);
+
+            configMs = sensorAPDS9306->getConfigurationMessages();
+
+            for(const GMessage &m : configMs){
+                sendSerialMessage(m);
+                qInfo() << "Send APDS9306 065 config" << m.toString();
+
+            }
+
+            sensorAPDS9306->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorAPDS9306->getMeasurementPeriod() + 1));
+
+            return;
+        }
+
+        // there is no sensor in the system (nullptr) -> we need to select a sensor
+        QStringList items;
+        items << "-- select sensor--";
+        items << "SHT35";
+        items << "APDS9306 065";
+
+        bool ok;
+        GCSensor *sensor = nullptr;
+        GCNode *node = nullptr;
+        QVariant nodeData = model->data(index.parent(), Qt::EditRole);
+        GCNodeDicio *nodeD = nodeData.value<GCNodeDicio*>();
+        GCNodeSylvatica *nodeS = nodeData.value<GCNodeSylvatica*>();
+        GCNodePlanalta *nodeP = nodeData.value<GCNodePlanalta*>();
+
+        if(nodeD != nullptr){
+            node = nodeD;
+        }
+        if(nodeS != nullptr){
+            node = nodeS;
+        }
+        if(nodeP != nullptr){
+            node = nodeP;
+        }
+
+        if(node == nullptr)
+        {
+            // TODO: something went wrong, display error message to the user
+        }
+
+        // request sensor type from user
+        QString item = QInputDialog::getItem(this, tr("Select sensor type"), tr("Sensor:"), items, 0, false, &ok);
+        int sensorIndex = items.indexOf(item);
+
+        // using the index, we pop-up the sensor configuration dialog and add it at the relevant location
+        if (ok && !item.isEmpty())
+        {
+            switch (sensorIndex)
+            {
+            case 1:
+                sensorSHT35Dialog->setWindowModality(Qt::ApplicationModal);
+                result = sensorSHT35Dialog->exec();
+                if (result == QDialog::Rejected)
+                {
+                    return;
+                }
+                sensorSHT35 = new GCSensorSHT35(node, (quint8)index.row());
+                sensorSHT35Dialog->apply(sensorSHT35);
+                model->setData(index, QVariant::fromValue(sensorSHT35), Qt::EditRole);
+
+                // update hardware configuration
+                configMs = sensorSHT35->getConfigurationMessages();
+
+                for(const GMessage &m : configMs){
+                    sendSerialMessage(m);
+                    qInfo() << "Send SHT35 config" << m.toString();
+                }
+                sensorSHT35->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorSHT35->getMeasurementPeriod() + 1));
+
+                break;
+            case 2:
+                sensorAPDS9306_065Dialog->setWindowModality(Qt::ApplicationModal);
+                result = sensorAPDS9306_065Dialog->exec();
+                if (result == QDialog::Rejected)
+                {
+                    return;
+                }
+                sensorAPDS9306 = new GCSensorAPDS9306(node, (quint8)index.row());
+                sensorAPDS9306_065Dialog->apply(sensorAPDS9306);
+                model->setData(index, QVariant::fromValue(sensorAPDS9306), Qt::EditRole);
+
+                configMs = sensorAPDS9306->getConfigurationMessages();
+
+                for(const GMessage &m : configMs){
+                    sendSerialMessage(m);
+                    qInfo() << "Send APDS9306 065 config" << m.toString();
+
+                }
+                sensorAPDS9306->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorAPDS9306->getMeasurementPeriod() + 1));
+
+                break;
+            default:
+                sensor = nullptr;
+                break;
+            }
+        }
+    }
+}
+
+void GloxiniaConfigurator::addToPlot(void)
+{
+    const QModelIndex index = systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = systemOverview->model();
+    GCSensor *sensor;
+    int result;
+    QXYSeries* series = nullptr;
+    GCSensor::VariableType seriesType;
+
+    // sensor is selected -> run menu
+    if (index.isValid() && index.parent().isValid())
+    {
+        QVariant data = model->data(index, Qt::EditRole);
+        sensor = GCSensor::fromQVariant(data);
+        if(sensor == nullptr)
+            return;
+        auto plotSeries = sensor->getPlotSeries();
+        if(plotSeries.size() > 1){
+            QStringList labels;
+            for(int i = 0; i < plotSeries.size(); i++)
+            {
+                labels.append(plotSeries[i]->name());
+            }
+            // todo: load menu to select plots
+            bool ok;
+            QString text = QInputDialog::getItem(this, tr("Select variable to plot from ") + sensor->getLabel(),
+                                                 tr("Variables:"), labels, 0, false, &ok);
+            if (ok && !text.isEmpty()){
+                int index = labels.indexOf(text);
+                if((index < 0) || (index > plotSeries.size()))
+                    return;
+                series = plotSeries[index];
+                seriesType = sensor->getVariableTypes().at(index);
+            }
+        } else {
+            series = plotSeries[0];
+            seriesType = sensor->getVariableTypes().at(0);
+        }
+    }
+
+    // add item if not yet in list
+    if(series != nullptr){
+        QList<QAbstractSeries*> cSeries = chart->series();
+
+        if(cSeries.indexOf(series) < 0){
+            // check if axes exists already
+
+            seriesConnections.append(connect(series, &QXYSeries::pointAdded, this, [this,series]{autoScaleSeries(series); }));
+
+            if(yAxisTypes.contains(seriesType))
+            {
+                int index = yAxisTypes.indexOf(seriesType);
+
+                chart->addSeries(series);
+                series->attachAxis(yAxes.at(index));
+                series->attachAxis(xAxis);
+
+            } else {
+                QValueAxis *axisY = new QValueAxis;
+
+                axisY->setLabelFormat("%.1f");
+                axisY->setTitleText(GCSensor::VariableTypeToString(seriesType));
+                chart->addAxis(axisY, Qt::AlignLeft);
+
+                yAxes.append(axisY);
+                yAxisTypes.append(seriesType);
+
+                chart->addSeries(series);
+                series->attachAxis(axisY);
+                series->attachAxis(xAxis);
+
+            }
+            chartView->update();
+        }
+    }
+
+    // if there is at least one plot, remove dummy plot
+    if((chart->series().count() > 1) && (chart->series().contains(dummySeries)))
+    {
+        chart->removeSeries(dummySeries);
+    }
+
+}
+void GloxiniaConfigurator::removeFromPlot(void)
+{
+    // request plot to remove
+    QStringList labels;
+    for(auto i : chart->series())
+    {
+        labels.append(i->name());
+    }
+
+    if(labels.isEmpty())
+        return;
+
+    // todo: load menu to select plots
+    bool ok;
+    QString text = QInputDialog::getItem(this, tr("Select plot to remove"),
+                                         tr("Plots:"), labels, 0, false, &ok);
+    if(!ok)
+        return;
+
+    int index = labels.indexOf(text);
+    // TODO: add dummy plot if it is the last one left, keep the last y axis alive also
+    QObject::disconnect(seriesConnections.at(index));
+    seriesConnections.removeAt(index);
+
+    chart->removeSeries(chart->series().at(index));
+
+    // there are not more series, so we have to re-add the dummySeries
+    if(seriesConnections.isEmpty()){
+        chart->addSeries(dummySeries);
+    }
+}
+
+void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
+{
+    // only show menu when an item is selected
+
+    const QModelIndex index = systemOverview->selectionModel()->currentIndex();
+    QAbstractItemModel *model = systemOverview->model();
+
+    bool nodeCurrent = false, sensorCurrent = false;
+
+    // node is selected
+    if (index.isValid() && !index.parent().isValid())
+    {
+        nodeCurrent = true;
+    }
+
+    // sensor is selected
+    if (index.isValid() && index.parent().isValid())
+    {
+        sensorCurrent = true;
+    }
+
+    QMenu m(tr("Context menu"), this);
+
+    QAction mDelete("Delete", this);
+    connect(&mDelete, &QAction::triggered, this, &GloxiniaConfigurator::removeItems);
+    m.addAction(&mDelete);
+
+    // QAction mAddNode("Add node", this);
+    // connect(&mAddNode, &QAction::triggered, this, &GloxiniaConfigurator::addNode);
+    // m.addAction(&mAddNode);
+
+    //QAction mAddSensor("Add sensor", this);
+    //connect(&mAddSensor, &QAction::triggered, this, &GloxiniaConfigurator::addSensor);
+    //m.addAction(&mAddSensor);
+
+    QAction mEditNode("Edit node", this);
+    connect(&mEditNode, &QAction::triggered, this, &GloxiniaConfigurator::editNode);
+    m.addAction(&mEditNode);
+
+    QAction mEditSensor("Edit sensor", this);
+    connect(&mEditSensor, &QAction::triggered, this, &GloxiniaConfigurator::editSensor);
+    m.addAction(&mEditSensor);
+
+    QAction mAddToPlot("Add to plot", this);
+    connect(&mAddToPlot, &QAction::triggered, this, &GloxiniaConfigurator::addToPlot);
+    m.addAction(&mAddToPlot);
+
+    QAction mRemoveFromPlot("Remove from plot", this);
+    connect(&mRemoveFromPlot, &QAction::triggered, this, &GloxiniaConfigurator::removeFromPlot);
+    m.addAction(&mRemoveFromPlot);
+
+    mDelete.setEnabled(false);
+    mEditNode.setEnabled(false);
+    mEditSensor.setEnabled(false);
+    mAddToPlot.setEnabled(false);
+    mRemoveFromPlot.setEnabled(false);
+
+    if (sensorCurrent)
+    {
+
+        mEditSensor.setEnabled(true);
+        // todo: check if data displayed in plot
+        QVariant data = treeModel->data(index, Qt::EditRole);
+        GCSensor* sensor = GCSensor::fromQVariant(data);
+        if(sensor != nullptr){
+            mDelete.setEnabled(true);
+            mAddToPlot.setEnabled(true);
+        }
+        if(!chart->series().contains(dummySeries))
+            mRemoveFromPlot.setEnabled(true);
+    }
+
+    if (nodeCurrent)
+    {
+        mDelete.setEnabled(true);
+        mEditNode.setEnabled(true);
+        if(!chart->series().contains(dummySeries))
+            mRemoveFromPlot.setEnabled(true);
+    }
+
+    m.exec(systemOverview->mapToGlobal(pos));
+}
+
+GCSensor *GloxiniaConfigurator::selectSensor(void)
+{
     QStringList items;
-    //items << "-- select sensor--";
+    // items << "-- select sensor--";
     items << "SHT35";
     items << "APDS9306";
 
-    item = QInputDialog::getItem(this, tr("Select sensor type"), tr("Sensor:"), items, 0, false, &ok);
+    bool ok;
+    GCSensor *sensor = nullptr;
+
+    QString item = QInputDialog::getItem(this, tr("Select sensor type"), tr("Sensor:"), items, 0, false, &ok);
     int sensorIndex = items.indexOf(item);
-    if(ok && !item.isEmpty()){
-        switch(sensorIndex){
-            case 0:
-                if((sensor != nullptr) && (sensor->getSensorType() == GCSensor::SensorType::SHT35)){
-                    GCSensorSHT35* specific_sensor = static_cast<GCSensorSHT35*>(sensor);
-                    configureSHT35Dialog->setSensorSettings(*specific_sensor);
-                    //free(specific_sensor);
-                }
-                configureSHT35Dialog->show();
-                sensor = new GCSensorSHT35(configureSHT35Dialog->getSensor());
-                sensor = node->replaceSensor(port, sensor);
-                if(sensor != nullptr){
-                    free(sensor);
-                }
-
-                // add sensor to layout
-                QTreeWidgetItem* nodeTreeItem = ui->systemOverview->itemAt(0, node->getID());
-                QTreeWidgetItem* item = new QTreeWidgetItem(nodeTreeItem);
-                QIcon sensorIcon(":/images/temperature-rh-sensor.png");
-                item->setText(0, "SHT35");
-                item->setIcon(0, sensorIcon);
-
-
-
-
-                break;
+    if (ok && !item.isEmpty())
+    {
+        switch (sensorIndex)
+        {
+        case 0:
+            sensorSHT35Dialog->setWindowModality(Qt::ApplicationModal);
+            sensorSHT35Dialog->exec();
+            // sensor = configureSHT35Dialog->getSensor();
+            break;
+        default:
+            sensor = nullptr;
+            break;
         }
     }
-}*/
+    return sensor;
+}
 
 void GloxiniaConfigurator::updateActions()
 {
-    const bool hasSelection = !ui->systemOverview->selectionModel()->selection().isEmpty();
-    //removeRowAction->setEnabled(hasSelection);
-    //removeColumnAction->setEnabled(hasSelection);
+    const bool hasSelection = !systemOverview->selectionModel()->selection().isEmpty();
+    // removeRowAction->setEnabled(hasSelection);
+    // removeColumnAction->setEnabled(hasSelection);
 
-    const bool hasCurrent = ui->systemOverview->selectionModel()->currentIndex().isValid();
-    //insertRowAction->setEnabled(hasCurrent);
-    //insertColumnAction->setEnabled(hasCurrent);
+    const bool hasCurrent = systemOverview->selectionModel()->currentIndex().isValid();
+    // addNode->setEnabled(hasCurrent);
+    // insertColumnAction->setEnabled(hasCurrent);
 
-    if (hasCurrent) {
-        ui->systemOverview->closePersistentEditor(ui->systemOverview->selectionModel()->currentIndex());
+    if (hasCurrent)
+    {
+        systemOverview->closePersistentEditor(systemOverview->selectionModel()->currentIndex());
 
-        const int row = ui->systemOverview->selectionModel()->currentIndex().row();
-        const int column = ui->systemOverview->selectionModel()->currentIndex().column();
-        if (ui->systemOverview->selectionModel()->currentIndex().parent().isValid())
+        const int row = systemOverview->selectionModel()->currentIndex().row();
+        const int column = systemOverview->selectionModel()->currentIndex().column();
+        if (systemOverview->selectionModel()->currentIndex().parent().isValid())
             statusBar()->showMessage(tr("Position: (%1,%2)").arg(row).arg(column));
         else
             statusBar()->showMessage(tr("Position: (%1,%2) in top level").arg(row).arg(column));

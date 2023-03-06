@@ -1,0 +1,1007 @@
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 230, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 240, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 250, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 260, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 280, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 2a0, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 2b0, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 2c0, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 320, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 360, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 600, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 626, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 640, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 900, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 90a, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 914, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 91e, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 928, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 932, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 93c, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 946, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 950, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 95a, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 964, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 96e, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 978, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 982, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 98c, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 996, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = a80, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = c00, Mask = 4000, SetVal = 4000, Type = FileRegs
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = fd0036, Mask = 1, SetVal = 1, Type = Emulation
+290 1675699771752 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Payload End
+290 1675699771753 XXXX 1675699771753, Thread 290: XXXX 1675699771753, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699771753 XXXX 1675699771753, Thread 290: XXXX 1675699771753, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699771757 XXXX 1675699771757, Thread 290: XXXX 1675699771757, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699771757 XXXX 1675699771757, Thread 290: XXXX 1675699771757, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699771757 XXXX 1675699771757, Thread 290: XXXX 1675699771757, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699771796 XXXX 1675699771796, Thread 290: XXXX 1675699771796, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699771796 XXXX 1675699771796, Thread 290: XXXX 1675699771796, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699771796 XXXX 1675699771796, Thread 290: XXXX 1675699771796, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699771801 XXXX 1675699771801, Thread 290: XXXX 1675699771801, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699771801 XXXX 1675699771801, Thread 290: XXXX 1675699771801, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699771801 XXXX 1675699771801, Thread 290: XXXX 1675699771801, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699771838 XXXX 1675699771838, Thread 290: XXXX 1675699771838, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699771838 XXXX 1675699771838, Thread 290: XXXX 1675699771838, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699771838 XXXX 1675699771838, Thread 290: XXXX 1675699771838, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699771844 XXXX 1675699771844, Thread 290: XXXX 1675699771844, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699771844 XXXX 1675699771844, Thread 290: XXXX 1675699771844, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699771844 XXXX 1675699771844, Thread 290: XXXX 1675699771844, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699771882 XXXX 1675699771882, Thread 290: XXXX 1675699771882, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699771882 XXXX 1675699771882, Thread 290: XXXX 1675699771882, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699771883 XXXX 1675699771883, Thread 290: XXXX 1675699771883, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699771887 XXXX 1675699771887, Thread 290: XXXX 1675699771887, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699771887 XXXX 1675699771887, Thread 290: XXXX 1675699771887, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699771887 XXXX 1675699771887, Thread 290: XXXX 1675699771887, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699771924 XXXX 1675699771924, Thread 290: XXXX 1675699771924, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699771924 XXXX 1675699771924, Thread 290: XXXX 1675699771924, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699771925 XXXX 1675699771925, Thread 290: XXXX 1675699771925, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699771931 XXXX 1675699771931, Thread 290: XXXX 1675699771931, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699771931 XXXX 1675699771931, Thread 290: XXXX 1675699771931, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699771931 XXXX 1675699771931, Thread 290: XXXX 1675699771931, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699771969 XXXX 1675699771969, Thread 290: XXXX 1675699771969, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699771969 XXXX 1675699771969, Thread 290: XXXX 1675699771969, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699771969 XXXX 1675699771969, Thread 290: XXXX 1675699771969, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699771974 XXXX 1675699771974, Thread 290: XXXX 1675699771974, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699771974 XXXX 1675699771974, Thread 290: XXXX 1675699771974, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699771975 XXXX 1675699771975, Thread 290: XXXX 1675699771975, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772012 XXXX 1675699772012, Thread 290: XXXX 1675699772012, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772012 XXXX 1675699772012, Thread 290: XXXX 1675699772012, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772012 XXXX 1675699772012, Thread 290: XXXX 1675699772012, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772018 XXXX 1675699772018, Thread 290: XXXX 1675699772018, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772018 XXXX 1675699772018, Thread 290: XXXX 1675699772018, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772018 XXXX 1675699772018, Thread 290: XXXX 1675699772018, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772055 XXXX 1675699772055, Thread 290: XXXX 1675699772055, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772055 XXXX 1675699772055, Thread 290: XXXX 1675699772055, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772056 XXXX 1675699772056, Thread 290: XXXX 1675699772055, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772061 XXXX 1675699772061, Thread 290: XXXX 1675699772061, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772061 XXXX 1675699772061, Thread 290: XXXX 1675699772061, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772061 XXXX 1675699772061, Thread 290: XXXX 1675699772061, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772098 XXXX 1675699772098, Thread 290: XXXX 1675699772098, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772098 XXXX 1675699772098, Thread 290: XXXX 1675699772098, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772098 XXXX 1675699772098, Thread 290: XXXX 1675699772098, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772103 XXXX 1675699772103, Thread 290: XXXX 1675699772103, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772103 XXXX 1675699772103, Thread 290: XXXX 1675699772103, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772103 XXXX 1675699772103, Thread 290: XXXX 1675699772103, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772140 XXXX 1675699772140, Thread 290: XXXX 1675699772140, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772140 XXXX 1675699772140, Thread 290: XXXX 1675699772140, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772141 XXXX 1675699772141, Thread 290: XXXX 1675699772140, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772146 XXXX 1675699772146, Thread 290: XXXX 1675699772146, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772146 XXXX 1675699772146, Thread 290: XXXX 1675699772146, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772146 XXXX 1675699772146, Thread 290: XXXX 1675699772146, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772184 XXXX 1675699772183, Thread 290: XXXX 1675699772183, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772184 XXXX 1675699772184, Thread 290: XXXX 1675699772184, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772184 XXXX 1675699772184, Thread 290: XXXX 1675699772184, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772189 XXXX 1675699772189, Thread 290: XXXX 1675699772189, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772189 XXXX 1675699772189, Thread 290: XXXX 1675699772189, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772189 XXXX 1675699772189, Thread 290: XXXX 1675699772189, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772226 XXXX 1675699772226, Thread 290: XXXX 1675699772226, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772226 XXXX 1675699772226, Thread 290: XXXX 1675699772226, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772226 XXXX 1675699772226, Thread 290: XXXX 1675699772226, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772233 XXXX 1675699772233, Thread 290: XXXX 1675699772233, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772233 XXXX 1675699772233, Thread 290: XXXX 1675699772233, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772233 XXXX 1675699772233, Thread 290: XXXX 1675699772233, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772272 XXXX 1675699772272, Thread 290: XXXX 1675699772272, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772272 XXXX 1675699772272, Thread 290: XXXX 1675699772272, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772272 XXXX 1675699772272, Thread 290: XXXX 1675699772272, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772279 XXXX 1675699772279, Thread 290: XXXX 1675699772279, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772279 XXXX 1675699772279, Thread 290: XXXX 1675699772279, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772279 XXXX 1675699772279, Thread 290: XXXX 1675699772279, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772317 XXXX 1675699772317, Thread 290: XXXX 1675699772317, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772317 XXXX 1675699772317, Thread 290: XXXX 1675699772317, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772317 XXXX 1675699772317, Thread 290: XXXX 1675699772317, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772322 XXXX 1675699772322, Thread 290: XXXX 1675699772322, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772322 XXXX 1675699772322, Thread 290: XXXX 1675699772322, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772322 XXXX 1675699772322, Thread 290: XXXX 1675699772322, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772360 XXXX 1675699772360, Thread 290: XXXX 1675699772360, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772360 XXXX 1675699772360, Thread 290: XXXX 1675699772360, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772360 XXXX 1675699772360, Thread 290: XXXX 1675699772360, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772365 XXXX 1675699772365, Thread 290: XXXX 1675699772365, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772365 XXXX 1675699772365, Thread 290: XXXX 1675699772365, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772365 XXXX 1675699772365, Thread 290: XXXX 1675699772365, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772402 XXXX 1675699772402, Thread 290: XXXX 1675699772402, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772402 XXXX 1675699772402, Thread 290: XXXX 1675699772402, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772403 XXXX 1675699772403, Thread 290: XXXX 1675699772403, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772407 XXXX 1675699772407, Thread 290: XXXX 1675699772407, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772407 XXXX 1675699772407, Thread 290: XXXX 1675699772407, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772407 XXXX 1675699772407, Thread 290: XXXX 1675699772407, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772444 XXXX 1675699772444, Thread 290: XXXX 1675699772444, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772445 XXXX 1675699772445, Thread 290: XXXX 1675699772445, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772445 XXXX 1675699772445, Thread 290: XXXX 1675699772445, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772450 XXXX 1675699772450, Thread 290: XXXX 1675699772450, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772450 XXXX 1675699772450, Thread 290: XXXX 1675699772450, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772450 XXXX 1675699772450, Thread 290: XXXX 1675699772450, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772488 XXXX 1675699772488, Thread 290: XXXX 1675699772488, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772488 XXXX 1675699772488, Thread 290: XXXX 1675699772488, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772488 XXXX 1675699772488, Thread 290: XXXX 1675699772488, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772493 XXXX 1675699772493, Thread 290: XXXX 1675699772493, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772493 XXXX 1675699772493, Thread 290: XXXX 1675699772493, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772493 XXXX 1675699772493, Thread 290: XXXX 1675699772493, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772531 XXXX 1675699772531, Thread 290: XXXX 1675699772531, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772531 XXXX 1675699772531, Thread 290: XXXX 1675699772531, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772531 XXXX 1675699772531, Thread 290: XXXX 1675699772531, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772536 XXXX 1675699772536, Thread 290: XXXX 1675699772536, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772536 XXXX 1675699772536, Thread 290: XXXX 1675699772536, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772536 XXXX 1675699772536, Thread 290: XXXX 1675699772536, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772573 XXXX 1675699772573, Thread 290: XXXX 1675699772573, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772573 XXXX 1675699772573, Thread 290: XXXX 1675699772573, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772573 XXXX 1675699772573, Thread 290: XXXX 1675699772573, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772579 XXXX 1675699772579, Thread 290: XXXX 1675699772579, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772579 XXXX 1675699772579, Thread 290: XXXX 1675699772579, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772579 XXXX 1675699772579, Thread 290: XXXX 1675699772579, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772616 XXXX 1675699772616, Thread 290: XXXX 1675699772616, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772616 XXXX 1675699772616, Thread 290: XXXX 1675699772616, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772616 XXXX 1675699772616, Thread 290: XXXX 1675699772616, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772622 XXXX 1675699772622, Thread 290: XXXX 1675699772622, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772622 XXXX 1675699772622, Thread 290: XXXX 1675699772622, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772622 XXXX 1675699772622, Thread 290: XXXX 1675699772622, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772659 XXXX 1675699772659, Thread 290: XXXX 1675699772659, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772659 XXXX 1675699772659, Thread 290: XXXX 1675699772659, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772659 XXXX 1675699772659, Thread 290: XXXX 1675699772659, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772665 XXXX 1675699772665, Thread 290: XXXX 1675699772665, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772665 XXXX 1675699772665, Thread 290: XXXX 1675699772665, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772665 XXXX 1675699772665, Thread 290: XXXX 1675699772665, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772702 XXXX 1675699772702, Thread 290: XXXX 1675699772702, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772702 XXXX 1675699772702, Thread 290: XXXX 1675699772702, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772702 XXXX 1675699772702, Thread 290: XXXX 1675699772702, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772708 XXXX 1675699772708, Thread 290: XXXX 1675699772708, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772708 XXXX 1675699772708, Thread 290: XXXX 1675699772708, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772708 XXXX 1675699772708, Thread 290: XXXX 1675699772708, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772744 XXXX 1675699772744, Thread 290: XXXX 1675699772744, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772744 XXXX 1675699772744, Thread 290: XXXX 1675699772744, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772744 XXXX 1675699772744, Thread 290: XXXX 1675699772744, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772751 XXXX 1675699772751, Thread 290: XXXX 1675699772751, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772751 XXXX 1675699772751, Thread 290: XXXX 1675699772751, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772751 XXXX 1675699772751, Thread 290: XXXX 1675699772751, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772789 XXXX 1675699772789, Thread 290: XXXX 1675699772789, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772789 XXXX 1675699772789, Thread 290: XXXX 1675699772789, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772789 XXXX 1675699772789, Thread 290: XXXX 1675699772789, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772794 XXXX 1675699772794, Thread 290: XXXX 1675699772794, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772794 XXXX 1675699772794, Thread 290: XXXX 1675699772794, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772794 XXXX 1675699772794, Thread 290: XXXX 1675699772794, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772831 XXXX 1675699772831, Thread 290: XXXX 1675699772831, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772831 XXXX 1675699772831, Thread 290: XXXX 1675699772831, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772831 XXXX 1675699772831, Thread 290: XXXX 1675699772831, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772836 XXXX 1675699772836, Thread 290: XXXX 1675699772836, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772836 XXXX 1675699772836, Thread 290: XXXX 1675699772836, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772836 XXXX 1675699772836, Thread 290: XXXX 1675699772836, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772874 XXXX 1675699772874, Thread 290: XXXX 1675699772874, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772874 XXXX 1675699772874, Thread 290: XXXX 1675699772874, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772874 XXXX 1675699772874, Thread 290: XXXX 1675699772874, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772879 XXXX 1675699772879, Thread 290: XXXX 1675699772879, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772879 XXXX 1675699772879, Thread 290: XXXX 1675699772879, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772879 XXXX 1675699772879, Thread 290: XXXX 1675699772879, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772917 XXXX 1675699772917, Thread 290: XXXX 1675699772917, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772917 XXXX 1675699772917, Thread 290: XXXX 1675699772917, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772917 XXXX 1675699772917, Thread 290: XXXX 1675699772917, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772922 XXXX 1675699772922, Thread 290: XXXX 1675699772922, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772922 XXXX 1675699772922, Thread 290: XXXX 1675699772922, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772922 XXXX 1675699772922, Thread 290: XXXX 1675699772922, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699772959 XXXX 1675699772959, Thread 290: XXXX 1675699772959, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699772959 XXXX 1675699772959, Thread 290: XXXX 1675699772959, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699772959 XXXX 1675699772959, Thread 290: XXXX 1675699772959, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699772965 XXXX 1675699772965, Thread 290: XXXX 1675699772965, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699772965 XXXX 1675699772965, Thread 290: XXXX 1675699772965, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699772965 XXXX 1675699772965, Thread 290: XXXX 1675699772965, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773003 XXXX 1675699773003, Thread 290: XXXX 1675699773003, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773003 XXXX 1675699773003, Thread 290: XXXX 1675699773003, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773003 XXXX 1675699773003, Thread 290: XXXX 1675699773003, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773008 XXXX 1675699773008, Thread 290: XXXX 1675699773008, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773008 XXXX 1675699773008, Thread 290: XXXX 1675699773008, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773008 XXXX 1675699773008, Thread 290: XXXX 1675699773008, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773045 XXXX 1675699773045, Thread 290: XXXX 1675699773045, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773045 XXXX 1675699773045, Thread 290: XXXX 1675699773045, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773045 XXXX 1675699773045, Thread 290: XXXX 1675699773045, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773050 XXXX 1675699773050, Thread 290: XXXX 1675699773050, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773050 XXXX 1675699773050, Thread 290: XXXX 1675699773050, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773051 XXXX 1675699773051, Thread 290: XXXX 1675699773051, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773088 XXXX 1675699773088, Thread 290: XXXX 1675699773088, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773088 XXXX 1675699773088, Thread 290: XXXX 1675699773088, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773088 XXXX 1675699773088, Thread 290: XXXX 1675699773088, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773093 XXXX 1675699773093, Thread 290: XXXX 1675699773093, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773093 XXXX 1675699773093, Thread 290: XXXX 1675699773093, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773093 XXXX 1675699773093, Thread 290: XXXX 1675699773093, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773131 XXXX 1675699773131, Thread 290: XXXX 1675699773131, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773131 XXXX 1675699773131, Thread 290: XXXX 1675699773131, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773131 XXXX 1675699773131, Thread 290: XXXX 1675699773131, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773136 XXXX 1675699773136, Thread 290: XXXX 1675699773136, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773136 XXXX 1675699773136, Thread 290: XXXX 1675699773136, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773136 XXXX 1675699773136, Thread 290: XXXX 1675699773136, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773174 XXXX 1675699773174, Thread 290: XXXX 1675699773174, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773174 XXXX 1675699773174, Thread 290: XXXX 1675699773174, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773174 XXXX 1675699773174, Thread 290: XXXX 1675699773174, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773180 XXXX 1675699773180, Thread 290: XXXX 1675699773180, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773180 XXXX 1675699773180, Thread 290: XXXX 1675699773180, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773180 XXXX 1675699773180, Thread 290: XXXX 1675699773180, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773218 XXXX 1675699773218, Thread 290: XXXX 1675699773218, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773218 XXXX 1675699773218, Thread 290: XXXX 1675699773218, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773218 XXXX 1675699773218, Thread 290: XXXX 1675699773218, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773223 XXXX 1675699773223, Thread 290: XXXX 1675699773223, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773223 XXXX 1675699773223, Thread 290: XXXX 1675699773223, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773223 XXXX 1675699773223, Thread 290: XXXX 1675699773223, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773260 XXXX 1675699773260, Thread 290: XXXX 1675699773260, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773261 XXXX 1675699773261, Thread 290: XXXX 1675699773261, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773261 XXXX 1675699773261, Thread 290: XXXX 1675699773261, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773265 XXXX 1675699773265, Thread 290: XXXX 1675699773265, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773265 XXXX 1675699773265, Thread 290: XXXX 1675699773265, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773265 XXXX 1675699773265, Thread 290: XXXX 1675699773265, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773303 XXXX 1675699773302, Thread 290: XXXX 1675699773302, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773303 XXXX 1675699773303, Thread 290: XXXX 1675699773303, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773303 XXXX 1675699773303, Thread 290: XXXX 1675699773303, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773308 XXXX 1675699773308, Thread 290: XXXX 1675699773308, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773308 XXXX 1675699773308, Thread 290: XXXX 1675699773308, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773308 XXXX 1675699773308, Thread 290: XXXX 1675699773308, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773346 XXXX 1675699773346, Thread 290: XXXX 1675699773346, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773346 XXXX 1675699773346, Thread 290: XXXX 1675699773346, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773346 XXXX 1675699773346, Thread 290: XXXX 1675699773346, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773351 XXXX 1675699773351, Thread 290: XXXX 1675699773351, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773351 XXXX 1675699773351, Thread 290: XXXX 1675699773351, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773351 XXXX 1675699773351, Thread 290: XXXX 1675699773351, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773388 XXXX 1675699773388, Thread 290: XXXX 1675699773388, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773388 XXXX 1675699773388, Thread 290: XXXX 1675699773388, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773388 XXXX 1675699773388, Thread 290: XXXX 1675699773388, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773394 XXXX 1675699773394, Thread 290: XXXX 1675699773394, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773394 XXXX 1675699773394, Thread 290: XXXX 1675699773394, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773394 XXXX 1675699773394, Thread 290: XXXX 1675699773394, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773432 XXXX 1675699773432, Thread 290: XXXX 1675699773432, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773432 XXXX 1675699773432, Thread 290: XXXX 1675699773432, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773432 XXXX 1675699773432, Thread 290: XXXX 1675699773432, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773437 XXXX 1675699773437, Thread 290: XXXX 1675699773437, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773437 XXXX 1675699773437, Thread 290: XXXX 1675699773437, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773437 XXXX 1675699773437, Thread 290: XXXX 1675699773437, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773474 XXXX 1675699773474, Thread 290: XXXX 1675699773474, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773474 XXXX 1675699773474, Thread 290: XXXX 1675699773474, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773475 XXXX 1675699773475, Thread 290: XXXX 1675699773475, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773479 XXXX 1675699773479, Thread 290: XXXX 1675699773479, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773479 XXXX 1675699773479, Thread 290: XXXX 1675699773479, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773479 XXXX 1675699773479, Thread 290: XXXX 1675699773479, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773517 XXXX 1675699773517, Thread 290: XXXX 1675699773517, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773517 XXXX 1675699773517, Thread 290: XXXX 1675699773517, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773517 XXXX 1675699773517, Thread 290: XXXX 1675699773517, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773522 XXXX 1675699773522, Thread 290: XXXX 1675699773522, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773522 XXXX 1675699773522, Thread 290: XXXX 1675699773522, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773522 XXXX 1675699773522, Thread 290: XXXX 1675699773522, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773560 XXXX 1675699773560, Thread 290: XXXX 1675699773560, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773560 XXXX 1675699773560, Thread 290: XXXX 1675699773560, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773561 XXXX 1675699773561, Thread 290: XXXX 1675699773561, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773565 XXXX 1675699773565, Thread 290: XXXX 1675699773565, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773565 XXXX 1675699773565, Thread 290: XXXX 1675699773565, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773565 XXXX 1675699773565, Thread 290: XXXX 1675699773565, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773602 XXXX 1675699773602, Thread 290: XXXX 1675699773602, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773602 XXXX 1675699773602, Thread 290: XXXX 1675699773602, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773603 XXXX 1675699773602, Thread 290: XXXX 1675699773602, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773609 XXXX 1675699773609, Thread 290: XXXX 1675699773609, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773609 XXXX 1675699773609, Thread 290: XXXX 1675699773609, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773609 XXXX 1675699773609, Thread 290: XXXX 1675699773609, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773647 XXXX 1675699773647, Thread 290: XXXX 1675699773647, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773647 XXXX 1675699773647, Thread 290: XXXX 1675699773647, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773647 XXXX 1675699773647, Thread 290: XXXX 1675699773647, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773652 XXXX 1675699773652, Thread 290: XXXX 1675699773652, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773652 XXXX 1675699773652, Thread 290: XXXX 1675699773652, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773652 XXXX 1675699773652, Thread 290: XXXX 1675699773652, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773689 XXXX 1675699773689, Thread 290: XXXX 1675699773689, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773689 XXXX 1675699773689, Thread 290: XXXX 1675699773689, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773690 XXXX 1675699773690, Thread 290: XXXX 1675699773690, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773694 XXXX 1675699773694, Thread 290: XXXX 1675699773694, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773694 XXXX 1675699773694, Thread 290: XXXX 1675699773694, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773694 XXXX 1675699773694, Thread 290: XXXX 1675699773694, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773732 XXXX 1675699773732, Thread 290: XXXX 1675699773732, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773732 XXXX 1675699773732, Thread 290: XXXX 1675699773732, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773732 XXXX 1675699773732, Thread 290: XXXX 1675699773732, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773737 XXXX 1675699773737, Thread 290: XXXX 1675699773737, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773737 XXXX 1675699773737, Thread 290: XXXX 1675699773737, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773737 XXXX 1675699773737, Thread 290: XXXX 1675699773737, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773775 XXXX 1675699773775, Thread 290: XXXX 1675699773775, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773775 XXXX 1675699773775, Thread 290: XXXX 1675699773775, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773775 XXXX 1675699773775, Thread 290: XXXX 1675699773775, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773780 XXXX 1675699773780, Thread 290: XXXX 1675699773780, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773780 XXXX 1675699773780, Thread 290: XXXX 1675699773780, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773780 XXXX 1675699773780, Thread 290: XXXX 1675699773780, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773818 XXXX 1675699773818, Thread 290: XXXX 1675699773818, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773818 XXXX 1675699773818, Thread 290: XXXX 1675699773818, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773818 XXXX 1675699773818, Thread 290: XXXX 1675699773818, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773824 XXXX 1675699773824, Thread 290: XXXX 1675699773824, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773824 XXXX 1675699773824, Thread 290: XXXX 1675699773824, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773824 XXXX 1675699773824, Thread 290: XXXX 1675699773824, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773862 XXXX 1675699773862, Thread 290: XXXX 1675699773862, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773862 XXXX 1675699773862, Thread 290: XXXX 1675699773862, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773862 XXXX 1675699773862, Thread 290: XXXX 1675699773862, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773867 XXXX 1675699773867, Thread 290: XXXX 1675699773867, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773867 XXXX 1675699773867, Thread 290: XXXX 1675699773867, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773867 XXXX 1675699773867, Thread 290: XXXX 1675699773867, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773904 XXXX 1675699773904, Thread 290: XXXX 1675699773904, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773904 XXXX 1675699773904, Thread 290: XXXX 1675699773904, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773905 XXXX 1675699773905, Thread 290: XXXX 1675699773905, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773910 XXXX 1675699773910, Thread 290: XXXX 1675699773910, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773910 XXXX 1675699773910, Thread 290: XXXX 1675699773910, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773910 XXXX 1675699773910, Thread 290: XXXX 1675699773910, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773948 XXXX 1675699773948, Thread 290: XXXX 1675699773948, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773948 XXXX 1675699773948, Thread 290: XXXX 1675699773948, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773948 XXXX 1675699773948, Thread 290: XXXX 1675699773948, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773954 XXXX 1675699773954, Thread 290: XXXX 1675699773954, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773954 XXXX 1675699773954, Thread 290: XXXX 1675699773954, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773954 XXXX 1675699773954, Thread 290: XXXX 1675699773954, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699773992 XXXX 1675699773992, Thread 290: XXXX 1675699773992, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699773992 XXXX 1675699773992, Thread 290: XXXX 1675699773992, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699773992 XXXX 1675699773992, Thread 290: XXXX 1675699773992, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699773996 XXXX 1675699773996, Thread 290: XXXX 1675699773996, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699773996 XXXX 1675699773996, Thread 290: XXXX 1675699773996, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699773996 XXXX 1675699773996, Thread 290: XXXX 1675699773996, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699774034 XXXX 1675699774034, Thread 290: XXXX 1675699774034, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699774034 XXXX 1675699774034, Thread 290: XXXX 1675699774034, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699774034 XXXX 1675699774034, Thread 290: XXXX 1675699774034, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699774040 XXXX 1675699774040, Thread 290: XXXX 1675699774040, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699774040 XXXX 1675699774040, Thread 290: XXXX 1675699774040, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699774040 XXXX 1675699774040, Thread 290: XXXX 1675699774040, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699774077 XXXX 1675699774077, Thread 290: XXXX 1675699774077, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699774077 XXXX 1675699774077, Thread 290: XXXX 1675699774077, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699774077 XXXX 1675699774077, Thread 290: XXXX 1675699774077, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699774092 XXXX 1675699774092, Thread 290: XXXX 1675699774092, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699774092 XXXX 1675699774092, Thread 290: XXXX 1675699774092, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699774093 XXXX 1675699774092, Thread 290: XXXX 1675699774092, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699774129 XXXX 1675699774129, Thread 290: XXXX 1675699774129, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699774129 XXXX 1675699774129, Thread 290: XXXX 1675699774129, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699774129 XXXX 1675699774129, Thread 290: XXXX 1675699774129, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699774134 XXXX 1675699774134, Thread 290: XXXX 1675699774134, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699774134 XXXX 1675699774134, Thread 290: XXXX 1675699774134, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699774134 XXXX 1675699774134, Thread 290: XXXX 1675699774134, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699774171 XXXX 1675699774171, Thread 290: XXXX 1675699774171, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699774171 XXXX 1675699774171, Thread 290: XXXX 1675699774171, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699774172 XXXX 1675699774172, Thread 290: XXXX 1675699774172, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699774178 XXXX 1675699774178, Thread 290: XXXX 1675699774178, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699774178 XXXX 1675699774178, Thread 290: XXXX 1675699774178, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699774178 XXXX 1675699774178, Thread 290: XXXX 1675699774178, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699774216 XXXX 1675699774216, Thread 290: XXXX 1675699774216, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699774216 XXXX 1675699774216, Thread 290: XXXX 1675699774216, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699774216 XXXX 1675699774216, Thread 290: XXXX 1675699774216, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699774221 XXXX 1675699774221, Thread 290: XXXX 1675699774221, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699774221 XXXX 1675699774221, Thread 290: XXXX 1675699774221, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699774221 XXXX 1675699774221, Thread 290: XXXX 1675699774221, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699774259 XXXX 1675699774259, Thread 290: XXXX 1675699774259, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699774259 XXXX 1675699774259, Thread 290: XXXX 1675699774259, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699774259 XXXX 1675699774259, Thread 290: XXXX 1675699774259, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699774263 XXXX 1675699774263, Thread 290: XXXX 1675699774263, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699774263 XXXX 1675699774263, Thread 290: XXXX 1675699774263, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699774263 XXXX 1675699774263, Thread 290: XXXX 1675699774263, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699774301 XXXX 1675699774301, Thread 290: XXXX 1675699774301, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699774301 XXXX 1675699774301, Thread 290: XXXX 1675699774301, Entering Thread 290: Commands::runScriptWithUpload, script name = ReadSFR  
+290 1675699774301 XXXX 1675699774301, Thread 290: XXXX 1675699774301, Entering Thread 290: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+290 1675699774308 XXXX 1675699774308, Thread 290: XXXX 1675699774308, Exiting Thread 290: ToolCommUsb::readTransfer,  cr.status = 0x0  
+290 1675699774309 XXXX 1675699774308, Thread 290: XXXX 1675699774308, Exiting Thread 290: Commands::runScriptWithUpload  
+290 1675699774309 XXXX 1675699774309, Thread 290: XXXX 1675699774309, Entering Thread 290: Commands::runScriptWithDownload, script name = WriteSFR  
+290 1675699774346 XXXX 1675699774346, Thread 290: XXXX 1675699774346, Exiting Thread 290: Commands::runScriptWithDownload(WriteSFR)  
+290 1675699774347 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Post:SetFreezePerihperalInfo
+290 1675699774347 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Return Value
+290 1675699774347 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 none
+290 1675699774347 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Return End
+
+428 1675699775412 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Pre:IsTargetInDebugMode
+428 1675699775412 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Payload
+428 1675699775412 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 null
+428 1675699775412 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Payload End
+428 1675699775413 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Post:IsTargetInDebugMode
+428 1675699775413 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Return Value
+428 1675699775413 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 true
+428 1675699775413 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Return End
+
+428 1675699775417 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Pre:DebugReadTargetMemory
+428 1675699775417 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Payload
+428 1675699775417 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Emulation
+428 1675699775417 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 fd0000
+428 1675699775417 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 fd000b
+428 1675699775417 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Length = 12
+428 1675699775417 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Payload End
+428 1675699775418 XXXX 1675699775418, Thread 428: XXXX 1675699775418, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadEmu  
+428 1675699775418 XXXX 1675699775418, Thread 428: XXXX 1675699775418, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0xc bytes long  
+428 1675699775424 XXXX 1675699775424, Thread 428: XXXX 1675699775424, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699775424 XXXX 1675699775424, Thread 428: XXXX 1675699775424, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699775424 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Post:DebugReadTargetMemory
+428 1675699775424 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Return Value
+428 1675699775424 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 true
+428 1675699775424 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Return End
+
+428 1675699775427 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Pre:DebugWriteTargetMemory
+428 1675699775428 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Payload
+428 1675699775428 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Emulation
+428 1675699775428 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 fd0000
+428 1675699775428 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 fd006b
+428 1675699775428 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Length = 108
+428 1675699775428 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Payload End
+428 1675699775428 XXXX 1675699775428, Thread 428: XXXX 1675699775428, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadEmu  
+428 1675699775428 XXXX 1675699775428, Thread 428: XXXX 1675699775428, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x6c bytes long  
+428 1675699775442 XXXX 1675699775442, Thread 428: XXXX 1675699775442, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699775442 XXXX 1675699775442, Thread 428: XXXX 1675699775442, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699775442 XXXX 1675699775442, Thread 428: XXXX 1675699775442, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteEmu  
+428 1675699775447 XXXX 1675699775447, Thread 428: XXXX 1675699775447, Exiting Thread 428: Commands::runScriptWithDownload(WriteEmu)  
+428 1675699775447 XXXX 1675699775447, Thread 428: XXXX 1675699775447, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteEmu  
+428 1675699775461 XXXX 1675699775461, Thread 428: XXXX 1675699775461, Exiting Thread 428: Commands::runScriptWithDownload(WriteEmu)  
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Post:DebugWriteTargetMemory
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Return Value
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 true
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Return End
+
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Pre:SetFreezePerihperalInfo
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Payload
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 104, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 110, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 112, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 11e, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 120, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 12c, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 12e, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 13a, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 13c, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 140, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 148, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 150, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 158, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 160, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 168, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 170, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 178, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 180, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 188, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 190, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 198, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 1a0, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 1a8, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 1b0, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 1b8, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 206, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 216, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 220, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 230, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 240, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 250, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 260, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 280, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 2a0, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 2b0, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 2c0, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 320, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 360, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 600, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 626, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 640, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 900, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 90a, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 914, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 91e, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 928, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 932, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 93c, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 946, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 950, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 95a, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 964, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 96e, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 978, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 982, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 98c, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = 996, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = a80, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775461 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = c00, Mask = 4000, SetVal = 4000, Type = FileRegs
+428 1675699775462 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Values:
+428 1675699775462 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 BitSetInfo: Address = fd0036, Mask = 1, SetVal = 1, Type = Emulation
+428 1675699775462 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Payload End
+428 1675699775462 XXXX 1675699775462, Thread 428: XXXX 1675699775462, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699775462 XXXX 1675699775462, Thread 428: XXXX 1675699775462, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699775467 XXXX 1675699775467, Thread 428: XXXX 1675699775467, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699775467 XXXX 1675699775467, Thread 428: XXXX 1675699775467, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699775467 XXXX 1675699775467, Thread 428: XXXX 1675699775467, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699775505 XXXX 1675699775505, Thread 428: XXXX 1675699775505, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699775505 XXXX 1675699775505, Thread 428: XXXX 1675699775505, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699775505 XXXX 1675699775505, Thread 428: XXXX 1675699775505, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699775510 XXXX 1675699775510, Thread 428: XXXX 1675699775510, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699775510 XXXX 1675699775510, Thread 428: XXXX 1675699775510, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699775511 XXXX 1675699775511, Thread 428: XXXX 1675699775511, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699775547 XXXX 1675699775547, Thread 428: XXXX 1675699775547, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699775548 XXXX 1675699775548, Thread 428: XXXX 1675699775548, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699775548 XXXX 1675699775548, Thread 428: XXXX 1675699775548, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699775554 XXXX 1675699775554, Thread 428: XXXX 1675699775554, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699775554 XXXX 1675699775554, Thread 428: XXXX 1675699775554, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699775554 XXXX 1675699775554, Thread 428: XXXX 1675699775554, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699775592 XXXX 1675699775592, Thread 428: XXXX 1675699775592, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699775593 XXXX 1675699775593, Thread 428: XXXX 1675699775593, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699775593 XXXX 1675699775593, Thread 428: XXXX 1675699775593, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699775597 XXXX 1675699775597, Thread 428: XXXX 1675699775597, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699775597 XXXX 1675699775597, Thread 428: XXXX 1675699775597, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699775597 XXXX 1675699775597, Thread 428: XXXX 1675699775597, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699775634 XXXX 1675699775634, Thread 428: XXXX 1675699775634, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699775634 XXXX 1675699775634, Thread 428: XXXX 1675699775634, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699775635 XXXX 1675699775635, Thread 428: XXXX 1675699775635, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699775639 XXXX 1675699775639, Thread 428: XXXX 1675699775639, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699775639 XXXX 1675699775639, Thread 428: XXXX 1675699775639, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699775639 XXXX 1675699775639, Thread 428: XXXX 1675699775639, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699775677 XXXX 1675699775677, Thread 428: XXXX 1675699775677, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699775677 XXXX 1675699775677, Thread 428: XXXX 1675699775677, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699775677 XXXX 1675699775677, Thread 428: XXXX 1675699775677, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699775682 XXXX 1675699775682, Thread 428: XXXX 1675699775682, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699775682 XXXX 1675699775682, Thread 428: XXXX 1675699775682, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699775682 XXXX 1675699775682, Thread 428: XXXX 1675699775682, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699775720 XXXX 1675699775720, Thread 428: XXXX 1675699775720, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699775720 XXXX 1675699775720, Thread 428: XXXX 1675699775720, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699775720 XXXX 1675699775720, Thread 428: XXXX 1675699775720, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699775725 XXXX 1675699775725, Thread 428: XXXX 1675699775725, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699775725 XXXX 1675699775725, Thread 428: XXXX 1675699775725, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699775725 XXXX 1675699775725, Thread 428: XXXX 1675699775725, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699775762 XXXX 1675699775762, Thread 428: XXXX 1675699775762, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699775763 XXXX 1675699775763, Thread 428: XXXX 1675699775763, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699775763 XXXX 1675699775763, Thread 428: XXXX 1675699775763, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699775768 XXXX 1675699775768, Thread 428: XXXX 1675699775768, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699775768 XXXX 1675699775768, Thread 428: XXXX 1675699775768, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699775769 XXXX 1675699775769, Thread 428: XXXX 1675699775769, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699775806 XXXX 1675699775806, Thread 428: XXXX 1675699775806, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699775807 XXXX 1675699775807, Thread 428: XXXX 1675699775807, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699775807 XXXX 1675699775807, Thread 428: XXXX 1675699775807, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699775811 XXXX 1675699775811, Thread 428: XXXX 1675699775811, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699775811 XXXX 1675699775811, Thread 428: XXXX 1675699775811, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699775811 XXXX 1675699775811, Thread 428: XXXX 1675699775811, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699775848 XXXX 1675699775848, Thread 428: XXXX 1675699775848, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699775848 XXXX 1675699775848, Thread 428: XXXX 1675699775848, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699775848 XXXX 1675699775848, Thread 428: XXXX 1675699775848, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699775853 XXXX 1675699775853, Thread 428: XXXX 1675699775853, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699775853 XXXX 1675699775853, Thread 428: XXXX 1675699775853, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699775853 XXXX 1675699775853, Thread 428: XXXX 1675699775853, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699775890 XXXX 1675699775890, Thread 428: XXXX 1675699775890, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699775890 XXXX 1675699775890, Thread 428: XXXX 1675699775890, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699775891 XXXX 1675699775891, Thread 428: XXXX 1675699775891, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699775896 XXXX 1675699775896, Thread 428: XXXX 1675699775896, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699775896 XXXX 1675699775896, Thread 428: XXXX 1675699775896, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699775896 XXXX 1675699775896, Thread 428: XXXX 1675699775896, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699775934 XXXX 1675699775934, Thread 428: XXXX 1675699775934, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699775934 XXXX 1675699775934, Thread 428: XXXX 1675699775934, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699775934 XXXX 1675699775934, Thread 428: XXXX 1675699775934, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699775939 XXXX 1675699775939, Thread 428: XXXX 1675699775939, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699775939 XXXX 1675699775939, Thread 428: XXXX 1675699775939, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699775939 XXXX 1675699775939, Thread 428: XXXX 1675699775939, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699775976 XXXX 1675699775976, Thread 428: XXXX 1675699775976, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699775976 XXXX 1675699775976, Thread 428: XXXX 1675699775976, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699775977 XXXX 1675699775977, Thread 428: XXXX 1675699775977, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699775981 XXXX 1675699775981, Thread 428: XXXX 1675699775981, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699775981 XXXX 1675699775981, Thread 428: XXXX 1675699775981, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699775982 XXXX 1675699775982, Thread 428: XXXX 1675699775981, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776019 XXXX 1675699776019, Thread 428: XXXX 1675699776019, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776019 XXXX 1675699776019, Thread 428: XXXX 1675699776019, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776019 XXXX 1675699776019, Thread 428: XXXX 1675699776019, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776024 XXXX 1675699776024, Thread 428: XXXX 1675699776024, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776024 XXXX 1675699776024, Thread 428: XXXX 1675699776024, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776024 XXXX 1675699776024, Thread 428: XXXX 1675699776024, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776062 XXXX 1675699776062, Thread 428: XXXX 1675699776062, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776062 XXXX 1675699776062, Thread 428: XXXX 1675699776062, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776062 XXXX 1675699776062, Thread 428: XXXX 1675699776062, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776067 XXXX 1675699776067, Thread 428: XXXX 1675699776067, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776067 XXXX 1675699776067, Thread 428: XXXX 1675699776067, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776067 XXXX 1675699776067, Thread 428: XXXX 1675699776067, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776105 XXXX 1675699776105, Thread 428: XXXX 1675699776105, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776105 XXXX 1675699776105, Thread 428: XXXX 1675699776105, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776105 XXXX 1675699776105, Thread 428: XXXX 1675699776105, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776110 XXXX 1675699776110, Thread 428: XXXX 1675699776110, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776110 XXXX 1675699776110, Thread 428: XXXX 1675699776110, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776110 XXXX 1675699776110, Thread 428: XXXX 1675699776110, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776147 XXXX 1675699776147, Thread 428: XXXX 1675699776147, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776147 XXXX 1675699776147, Thread 428: XXXX 1675699776147, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776147 XXXX 1675699776147, Thread 428: XXXX 1675699776147, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776153 XXXX 1675699776153, Thread 428: XXXX 1675699776153, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776153 XXXX 1675699776153, Thread 428: XXXX 1675699776153, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776153 XXXX 1675699776153, Thread 428: XXXX 1675699776153, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776191 XXXX 1675699776191, Thread 428: XXXX 1675699776191, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776191 XXXX 1675699776191, Thread 428: XXXX 1675699776191, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776191 XXXX 1675699776191, Thread 428: XXXX 1675699776191, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776195 XXXX 1675699776195, Thread 428: XXXX 1675699776195, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776195 XXXX 1675699776195, Thread 428: XXXX 1675699776195, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776195 XXXX 1675699776195, Thread 428: XXXX 1675699776195, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776233 XXXX 1675699776233, Thread 428: XXXX 1675699776233, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776233 XXXX 1675699776233, Thread 428: XXXX 1675699776233, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776233 XXXX 1675699776233, Thread 428: XXXX 1675699776233, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776239 XXXX 1675699776239, Thread 428: XXXX 1675699776239, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776239 XXXX 1675699776239, Thread 428: XXXX 1675699776239, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776239 XXXX 1675699776239, Thread 428: XXXX 1675699776239, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776276 XXXX 1675699776276, Thread 428: XXXX 1675699776276, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776276 XXXX 1675699776276, Thread 428: XXXX 1675699776276, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776276 XXXX 1675699776276, Thread 428: XXXX 1675699776276, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776281 XXXX 1675699776281, Thread 428: XXXX 1675699776281, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776281 XXXX 1675699776281, Thread 428: XXXX 1675699776281, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776281 XXXX 1675699776281, Thread 428: XXXX 1675699776281, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776318 XXXX 1675699776318, Thread 428: XXXX 1675699776318, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776318 XXXX 1675699776318, Thread 428: XXXX 1675699776318, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776319 XXXX 1675699776319, Thread 428: XXXX 1675699776319, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776323 XXXX 1675699776323, Thread 428: XXXX 1675699776323, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776323 XXXX 1675699776323, Thread 428: XXXX 1675699776323, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776323 XXXX 1675699776323, Thread 428: XXXX 1675699776323, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776362 XXXX 1675699776362, Thread 428: XXXX 1675699776362, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776362 XXXX 1675699776362, Thread 428: XXXX 1675699776362, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776362 XXXX 1675699776362, Thread 428: XXXX 1675699776362, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776367 XXXX 1675699776367, Thread 428: XXXX 1675699776367, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776367 XXXX 1675699776367, Thread 428: XXXX 1675699776367, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776368 XXXX 1675699776368, Thread 428: XXXX 1675699776368, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776404 XXXX 1675699776404, Thread 428: XXXX 1675699776404, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776405 XXXX 1675699776404, Thread 428: XXXX 1675699776404, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776405 XXXX 1675699776405, Thread 428: XXXX 1675699776405, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776409 XXXX 1675699776409, Thread 428: XXXX 1675699776409, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776409 XXXX 1675699776409, Thread 428: XXXX 1675699776409, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776409 XXXX 1675699776409, Thread 428: XXXX 1675699776409, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776447 XXXX 1675699776447, Thread 428: XXXX 1675699776447, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776447 XXXX 1675699776447, Thread 428: XXXX 1675699776447, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776447 XXXX 1675699776447, Thread 428: XXXX 1675699776447, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776452 XXXX 1675699776452, Thread 428: XXXX 1675699776452, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776452 XXXX 1675699776452, Thread 428: XXXX 1675699776452, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776452 XXXX 1675699776452, Thread 428: XXXX 1675699776452, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776490 XXXX 1675699776490, Thread 428: XXXX 1675699776490, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776490 XXXX 1675699776490, Thread 428: XXXX 1675699776490, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776491 XXXX 1675699776491, Thread 428: XXXX 1675699776491, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776495 XXXX 1675699776495, Thread 428: XXXX 1675699776495, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776495 XXXX 1675699776495, Thread 428: XXXX 1675699776495, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776495 XXXX 1675699776495, Thread 428: XXXX 1675699776495, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776532 XXXX 1675699776532, Thread 428: XXXX 1675699776532, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776532 XXXX 1675699776532, Thread 428: XXXX 1675699776532, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776532 XXXX 1675699776532, Thread 428: XXXX 1675699776532, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776537 XXXX 1675699776537, Thread 428: XXXX 1675699776537, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776537 XXXX 1675699776537, Thread 428: XXXX 1675699776537, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776537 XXXX 1675699776537, Thread 428: XXXX 1675699776537, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776574 XXXX 1675699776574, Thread 428: XXXX 1675699776574, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776574 XXXX 1675699776574, Thread 428: XXXX 1675699776574, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776574 XXXX 1675699776574, Thread 428: XXXX 1675699776574, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776580 XXXX 1675699776580, Thread 428: XXXX 1675699776580, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776580 XXXX 1675699776580, Thread 428: XXXX 1675699776580, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776581 XXXX 1675699776581, Thread 428: XXXX 1675699776581, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776617 XXXX 1675699776617, Thread 428: XXXX 1675699776617, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776617 XXXX 1675699776617, Thread 428: XXXX 1675699776617, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776618 XXXX 1675699776618, Thread 428: XXXX 1675699776618, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776622 XXXX 1675699776622, Thread 428: XXXX 1675699776622, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776623 XXXX 1675699776622, Thread 428: XXXX 1675699776622, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776623 XXXX 1675699776623, Thread 428: XXXX 1675699776623, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776660 XXXX 1675699776660, Thread 428: XXXX 1675699776660, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776660 XXXX 1675699776660, Thread 428: XXXX 1675699776660, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776660 XXXX 1675699776660, Thread 428: XXXX 1675699776660, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776665 XXXX 1675699776665, Thread 428: XXXX 1675699776665, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776665 XXXX 1675699776665, Thread 428: XXXX 1675699776665, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776665 XXXX 1675699776665, Thread 428: XXXX 1675699776665, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776703 XXXX 1675699776703, Thread 428: XXXX 1675699776703, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776703 XXXX 1675699776703, Thread 428: XXXX 1675699776703, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776703 XXXX 1675699776703, Thread 428: XXXX 1675699776703, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776708 XXXX 1675699776708, Thread 428: XXXX 1675699776708, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776708 XXXX 1675699776708, Thread 428: XXXX 1675699776708, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776708 XXXX 1675699776708, Thread 428: XXXX 1675699776708, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776747 XXXX 1675699776747, Thread 428: XXXX 1675699776747, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776747 XXXX 1675699776747, Thread 428: XXXX 1675699776747, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776747 XXXX 1675699776747, Thread 428: XXXX 1675699776747, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776752 XXXX 1675699776752, Thread 428: XXXX 1675699776752, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776752 XXXX 1675699776752, Thread 428: XXXX 1675699776752, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776752 XXXX 1675699776752, Thread 428: XXXX 1675699776752, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776790 XXXX 1675699776790, Thread 428: XXXX 1675699776790, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776790 XXXX 1675699776790, Thread 428: XXXX 1675699776790, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776790 XXXX 1675699776790, Thread 428: XXXX 1675699776790, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776795 XXXX 1675699776795, Thread 428: XXXX 1675699776795, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776795 XXXX 1675699776795, Thread 428: XXXX 1675699776795, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776795 XXXX 1675699776795, Thread 428: XXXX 1675699776795, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776832 XXXX 1675699776832, Thread 428: XXXX 1675699776832, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776832 XXXX 1675699776832, Thread 428: XXXX 1675699776832, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776832 XXXX 1675699776832, Thread 428: XXXX 1675699776832, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776837 XXXX 1675699776837, Thread 428: XXXX 1675699776837, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776837 XXXX 1675699776837, Thread 428: XXXX 1675699776837, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776838 XXXX 1675699776838, Thread 428: XXXX 1675699776838, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776875 XXXX 1675699776875, Thread 428: XXXX 1675699776875, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776875 XXXX 1675699776875, Thread 428: XXXX 1675699776875, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776875 XXXX 1675699776875, Thread 428: XXXX 1675699776875, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776881 XXXX 1675699776881, Thread 428: XXXX 1675699776881, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776881 XXXX 1675699776881, Thread 428: XXXX 1675699776881, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776881 XXXX 1675699776881, Thread 428: XXXX 1675699776881, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776919 XXXX 1675699776919, Thread 428: XXXX 1675699776919, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776919 XXXX 1675699776919, Thread 428: XXXX 1675699776919, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776919 XXXX 1675699776919, Thread 428: XXXX 1675699776919, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776924 XXXX 1675699776924, Thread 428: XXXX 1675699776924, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776924 XXXX 1675699776924, Thread 428: XXXX 1675699776924, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776924 XXXX 1675699776924, Thread 428: XXXX 1675699776924, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699776962 XXXX 1675699776962, Thread 428: XXXX 1675699776962, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699776962 XXXX 1675699776962, Thread 428: XXXX 1675699776962, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699776962 XXXX 1675699776962, Thread 428: XXXX 1675699776962, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699776966 XXXX 1675699776966, Thread 428: XXXX 1675699776966, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699776966 XXXX 1675699776966, Thread 428: XXXX 1675699776966, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699776967 XXXX 1675699776967, Thread 428: XXXX 1675699776967, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777004 XXXX 1675699777004, Thread 428: XXXX 1675699777004, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777004 XXXX 1675699777004, Thread 428: XXXX 1675699777004, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777004 XXXX 1675699777004, Thread 428: XXXX 1675699777004, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777009 XXXX 1675699777009, Thread 428: XXXX 1675699777009, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777009 XXXX 1675699777009, Thread 428: XXXX 1675699777009, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777010 XXXX 1675699777010, Thread 428: XXXX 1675699777010, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777047 XXXX 1675699777047, Thread 428: XXXX 1675699777047, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777047 XXXX 1675699777047, Thread 428: XXXX 1675699777047, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777048 XXXX 1675699777048, Thread 428: XXXX 1675699777047, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777052 XXXX 1675699777052, Thread 428: XXXX 1675699777052, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777052 XXXX 1675699777052, Thread 428: XXXX 1675699777052, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777053 XXXX 1675699777053, Thread 428: XXXX 1675699777053, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777089 XXXX 1675699777089, Thread 428: XXXX 1675699777089, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777090 XXXX 1675699777090, Thread 428: XXXX 1675699777090, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777090 XXXX 1675699777090, Thread 428: XXXX 1675699777090, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777096 XXXX 1675699777096, Thread 428: XXXX 1675699777096, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777096 XXXX 1675699777096, Thread 428: XXXX 1675699777096, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777096 XXXX 1675699777096, Thread 428: XXXX 1675699777096, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777133 XXXX 1675699777133, Thread 428: XXXX 1675699777133, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777133 XXXX 1675699777133, Thread 428: XXXX 1675699777133, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777133 XXXX 1675699777133, Thread 428: XXXX 1675699777133, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777138 XXXX 1675699777138, Thread 428: XXXX 1675699777138, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777138 XXXX 1675699777138, Thread 428: XXXX 1675699777138, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777138 XXXX 1675699777138, Thread 428: XXXX 1675699777138, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777175 XXXX 1675699777175, Thread 428: XXXX 1675699777175, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777176 XXXX 1675699777176, Thread 428: XXXX 1675699777176, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777176 XXXX 1675699777176, Thread 428: XXXX 1675699777176, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777180 XXXX 1675699777180, Thread 428: XXXX 1675699777180, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777180 XXXX 1675699777180, Thread 428: XXXX 1675699777180, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777180 XXXX 1675699777180, Thread 428: XXXX 1675699777180, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777217 XXXX 1675699777217, Thread 428: XXXX 1675699777217, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777217 XXXX 1675699777217, Thread 428: XXXX 1675699777217, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777218 XXXX 1675699777218, Thread 428: XXXX 1675699777218, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777223 XXXX 1675699777223, Thread 428: XXXX 1675699777223, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777223 XXXX 1675699777223, Thread 428: XXXX 1675699777223, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777223 XXXX 1675699777223, Thread 428: XXXX 1675699777223, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777261 XXXX 1675699777261, Thread 428: XXXX 1675699777261, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777261 XXXX 1675699777261, Thread 428: XXXX 1675699777261, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777261 XXXX 1675699777261, Thread 428: XXXX 1675699777261, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777266 XXXX 1675699777266, Thread 428: XXXX 1675699777266, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777266 XXXX 1675699777266, Thread 428: XXXX 1675699777266, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777266 XXXX 1675699777266, Thread 428: XXXX 1675699777266, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777303 XXXX 1675699777303, Thread 428: XXXX 1675699777303, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777303 XXXX 1675699777303, Thread 428: XXXX 1675699777303, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777304 XXXX 1675699777304, Thread 428: XXXX 1675699777304, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777310 XXXX 1675699777310, Thread 428: XXXX 1675699777310, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777310 XXXX 1675699777310, Thread 428: XXXX 1675699777310, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777310 XXXX 1675699777310, Thread 428: XXXX 1675699777310, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777348 XXXX 1675699777348, Thread 428: XXXX 1675699777348, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777348 XXXX 1675699777348, Thread 428: XXXX 1675699777348, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777348 XXXX 1675699777348, Thread 428: XXXX 1675699777348, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777353 XXXX 1675699777353, Thread 428: XXXX 1675699777353, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777354 XXXX 1675699777354, Thread 428: XXXX 1675699777354, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777354 XXXX 1675699777354, Thread 428: XXXX 1675699777354, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777391 XXXX 1675699777391, Thread 428: XXXX 1675699777391, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777391 XXXX 1675699777391, Thread 428: XXXX 1675699777391, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777391 XXXX 1675699777391, Thread 428: XXXX 1675699777391, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777395 XXXX 1675699777395, Thread 428: XXXX 1675699777395, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777395 XXXX 1675699777395, Thread 428: XXXX 1675699777395, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777395 XXXX 1675699777395, Thread 428: XXXX 1675699777395, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777433 XXXX 1675699777433, Thread 428: XXXX 1675699777433, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777433 XXXX 1675699777433, Thread 428: XXXX 1675699777433, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777433 XXXX 1675699777433, Thread 428: XXXX 1675699777433, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777439 XXXX 1675699777439, Thread 428: XXXX 1675699777439, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777439 XXXX 1675699777439, Thread 428: XXXX 1675699777439, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777439 XXXX 1675699777439, Thread 428: XXXX 1675699777439, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777476 XXXX 1675699777476, Thread 428: XXXX 1675699777476, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777476 XXXX 1675699777476, Thread 428: XXXX 1675699777476, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777476 XXXX 1675699777476, Thread 428: XXXX 1675699777476, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777481 XXXX 1675699777481, Thread 428: XXXX 1675699777481, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777481 XXXX 1675699777481, Thread 428: XXXX 1675699777481, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777481 XXXX 1675699777481, Thread 428: XXXX 1675699777481, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777519 XXXX 1675699777519, Thread 428: XXXX 1675699777519, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777519 XXXX 1675699777519, Thread 428: XXXX 1675699777519, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777519 XXXX 1675699777519, Thread 428: XXXX 1675699777519, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777525 XXXX 1675699777525, Thread 428: XXXX 1675699777525, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777525 XXXX 1675699777525, Thread 428: XXXX 1675699777525, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777525 XXXX 1675699777525, Thread 428: XXXX 1675699777525, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777562 XXXX 1675699777562, Thread 428: XXXX 1675699777562, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777562 XXXX 1675699777562, Thread 428: XXXX 1675699777562, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777562 XXXX 1675699777562, Thread 428: XXXX 1675699777562, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777567 XXXX 1675699777567, Thread 428: XXXX 1675699777567, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777567 XXXX 1675699777567, Thread 428: XXXX 1675699777567, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777567 XXXX 1675699777567, Thread 428: XXXX 1675699777567, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777604 XXXX 1675699777604, Thread 428: XXXX 1675699777604, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777604 XXXX 1675699777604, Thread 428: XXXX 1675699777604, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777604 XXXX 1675699777604, Thread 428: XXXX 1675699777604, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777609 XXXX 1675699777609, Thread 428: XXXX 1675699777609, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777609 XXXX 1675699777609, Thread 428: XXXX 1675699777609, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777609 XXXX 1675699777609, Thread 428: XXXX 1675699777609, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777647 XXXX 1675699777647, Thread 428: XXXX 1675699777647, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777647 XXXX 1675699777647, Thread 428: XXXX 1675699777647, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777647 XXXX 1675699777647, Thread 428: XXXX 1675699777647, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777653 XXXX 1675699777653, Thread 428: XXXX 1675699777653, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777653 XXXX 1675699777653, Thread 428: XXXX 1675699777653, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777653 XXXX 1675699777653, Thread 428: XXXX 1675699777653, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777690 XXXX 1675699777690, Thread 428: XXXX 1675699777690, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777690 XXXX 1675699777690, Thread 428: XXXX 1675699777690, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777690 XXXX 1675699777690, Thread 428: XXXX 1675699777690, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777696 XXXX 1675699777696, Thread 428: XXXX 1675699777696, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777696 XXXX 1675699777696, Thread 428: XXXX 1675699777696, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777696 XXXX 1675699777696, Thread 428: XXXX 1675699777696, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777734 XXXX 1675699777734, Thread 428: XXXX 1675699777734, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777734 XXXX 1675699777734, Thread 428: XXXX 1675699777734, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777734 XXXX 1675699777734, Thread 428: XXXX 1675699777734, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777739 XXXX 1675699777739, Thread 428: XXXX 1675699777739, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777739 XXXX 1675699777739, Thread 428: XXXX 1675699777739, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777739 XXXX 1675699777739, Thread 428: XXXX 1675699777739, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777777 XXXX 1675699777777, Thread 428: XXXX 1675699777777, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777777 XXXX 1675699777777, Thread 428: XXXX 1675699777777, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777777 XXXX 1675699777777, Thread 428: XXXX 1675699777777, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777782 XXXX 1675699777782, Thread 428: XXXX 1675699777782, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777782 XXXX 1675699777782, Thread 428: XXXX 1675699777782, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777782 XXXX 1675699777782, Thread 428: XXXX 1675699777782, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777820 XXXX 1675699777820, Thread 428: XXXX 1675699777820, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777820 XXXX 1675699777820, Thread 428: XXXX 1675699777820, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777820 XXXX 1675699777820, Thread 428: XXXX 1675699777820, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777824 XXXX 1675699777824, Thread 428: XXXX 1675699777824, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777824 XXXX 1675699777824, Thread 428: XXXX 1675699777824, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777824 XXXX 1675699777824, Thread 428: XXXX 1675699777824, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777861 XXXX 1675699777861, Thread 428: XXXX 1675699777861, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777862 XXXX 1675699777862, Thread 428: XXXX 1675699777862, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777862 XXXX 1675699777862, Thread 428: XXXX 1675699777862, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777867 XXXX 1675699777867, Thread 428: XXXX 1675699777867, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777867 XXXX 1675699777867, Thread 428: XXXX 1675699777867, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777867 XXXX 1675699777867, Thread 428: XXXX 1675699777867, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777905 XXXX 1675699777905, Thread 428: XXXX 1675699777905, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777905 XXXX 1675699777905, Thread 428: XXXX 1675699777905, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777905 XXXX 1675699777905, Thread 428: XXXX 1675699777905, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777911 XXXX 1675699777911, Thread 428: XXXX 1675699777911, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777911 XXXX 1675699777911, Thread 428: XXXX 1675699777911, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777911 XXXX 1675699777911, Thread 428: XXXX 1675699777911, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777948 XXXX 1675699777948, Thread 428: XXXX 1675699777948, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777948 XXXX 1675699777948, Thread 428: XXXX 1675699777948, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777948 XXXX 1675699777948, Thread 428: XXXX 1675699777948, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777954 XXXX 1675699777954, Thread 428: XXXX 1675699777954, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777954 XXXX 1675699777954, Thread 428: XXXX 1675699777954, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777954 XXXX 1675699777954, Thread 428: XXXX 1675699777954, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699777991 XXXX 1675699777991, Thread 428: XXXX 1675699777991, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699777991 XXXX 1675699777991, Thread 428: XXXX 1675699777991, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadSFR  
+428 1675699777991 XXXX 1675699777991, Thread 428: XXXX 1675699777991, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x2 bytes long  
+428 1675699777997 XXXX 1675699777997, Thread 428: XXXX 1675699777997, Exiting Thread 428: ToolCommUsb::readTransfer,  cr.status = 0x0  
+428 1675699777997 XXXX 1675699777997, Thread 428: XXXX 1675699777997, Exiting Thread 428: Commands::runScriptWithUpload  
+428 1675699777997 XXXX 1675699777997, Thread 428: XXXX 1675699777997, Entering Thread 428: Commands::runScriptWithDownload, script name = WriteSFR  
+428 1675699778034 XXXX 1675699778034, Thread 428: XXXX 1675699778034, Exiting Thread 428: Commands::runScriptWithDownload(WriteSFR)  
+428 1675699778034 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Post:SetFreezePerihperalInfo
+428 1675699778034 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Return Value
+428 1675699778034 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 none
+428 1675699778034 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Return End
+
+428 1675699778034 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Pre:GetPC
+428 1675699778034 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Payload
+428 1675699778034 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 null
+428 1675699778034 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Payload End
+428 1675699778034 XXXX 1675699778034, Thread 428: XXXX 1675699778034, Entering Thread 428: Commands::runScriptBasic, script name = GetPC, timeOut = -1 ms  
+428 1675699778039 XXXX 1675699778039, Thread 428: XXXX 1675699778039, Exiting Thread 428: Commands::runScriptBasic  
+428 1675699778039 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Post:GetPC
+428 1675699778039 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Return Value
+428 1675699778039 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 0
+428 1675699778039 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Return End
+
+428 1675699778041 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Pre:RunTarget
+428 1675699778041 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Payload
+428 1675699778041 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 com.microchip.mplab.mdbcore.RI4Tool.DebugHandler@423632cf
+428 1675699778041 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Payload End
+428 1675699778041 XXXX 1675699778041, Thread 428: XXXX 1675699778041, Entering Thread 428: Commands::runScriptBasic, script name = Run, timeOut = -1 ms  
+428 1675699778044 XXXX 1675699778044, Thread 428: XXXX 1675699778044, Exiting Thread 428: Commands::runScriptBasic  
+428 1675699778044 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Post:RunTarget
+428 1675699778044 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Return Value
+428 1675699778044 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 true
+428 1675699778044 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Return End
+428 1675699778306 XXXX 1675699778306, Thread 428: XXXX 1675699778306, Entering Thread 428: Commands::runScriptBasic, script name = GetHaltStatus, timeOut = -1 ms  
+428 1675699778308 XXXX 1675699778308, Thread 428: XXXX 1675699778308, Exiting Thread 428: Commands::runScriptBasic  
+428 1675699778408 XXXX 1675699778408, Thread 428: XXXX 1675699778408, Entering Thread 428: Commands::runScriptBasic, script name = GetHaltStatus, timeOut = -1 ms  
+428 1675699778446 XXXX 1675699778446, Thread 428: XXXX 1675699778446, Exiting Thread 428: Commands::runScriptBasic  
+
+428 1675699778448 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Pre:DebugReadTargetMemory
+428 1675699778448 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Payload
+428 1675699778448 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Emulation
+428 1675699778448 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 fd0068
+428 1675699778448 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 fd006b
+428 1675699778448 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Length = 4
+428 1675699778448 GEN4_TO_CONTROLLER_LOG:GEN4_DEBUG_INT_LOG_dsPIC33EP512MC806 Payload End
+428 1675699778449 XXXX 1675699778449, Thread 428: XXXX 1675699778449, Entering Thread 428: Commands::runScriptWithUpload, script name = ReadEmu  
+428 1675699778449 XXXX 1675699778449, Thread 428: XXXX 1675699778449, Entering Thread 428: ToolCommUsb::readTransfer, sideData is 0x18 bytes long, transferDataLength is 0x4 bytes long  
+428 1675699809013 XXXX 1675699809013, Thread 428:        fatal: rx did not increment 
+428 1675699809013 XXXX 1675699809013, Thread 428: XXXX 1675699809013, Entering Thread 428: ToolCommUsb::recoverFromProtocolError, type = SCRIPT_UPLOAD  
+428 1675699809013 XXXX 1675699809013, Thread 428: Send Abort Script Engine Command 
+428 1675699809013 XXXX 1675699809013, Thread 428: XXXX 1675699809013, Entering Thread 428: ToolCommUsb::killScriptEngine  
+428 1675699809013 XXXX 1675699809013, Thread 428: XXXX 1675699809013, Exiting Thread 428: ToolCommUsb::killScriptEngine  
+428 1675699809013 XXXX 1675699809013, Thread 428: Successfully Sent Abort Script EngineCommand 
+428 1675699809013 XXXX 1675699809013, Thread 428: Send flush data upload Command 
+428 1675699809014 XXXX 1675699809014, Thread 428: Successfully Sent flush data upload Command 
+428 1675699809014 XXXX 1675699809014, Thread 428: Exiting recoverFromProtocolError 
+428 1675699809014 XXXX 1675699809014, Thread 428: XXXX 1675699809014, Exiting Thread 428: ToolCommUsb::recoverFromProtocolError,  

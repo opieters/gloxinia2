@@ -9,10 +9,10 @@
 extern volatile uint8_t i2c_transfer_status;
 extern volatile uint8_t transfer_done;
 
-void i2c1_read_controller(i2c_message_t* m){
+void i2c1_read_controller(i2c_message_t* m) {
     static uint8_t n_transfers = 0;
-   
-    switch(i2c_transfer_status){
+
+    switch (i2c_transfer_status) {
         case 0:
             i2c_transfer_status = 1;
             n_transfers = 0;
@@ -31,7 +31,7 @@ void i2c1_read_controller(i2c_message_t* m){
         case 3:
             // enable receive mode
             transfer_done = 0;
-            if(I2C1STATbits.ACKSTAT == 1) {
+            if (I2C1STATbits.ACKSTAT == 1) {
                 m->error = I2C_NO_ACK;
                 i2c_transfer_status = 6;
                 I2C1CONbits.PEN = 1;
@@ -43,19 +43,19 @@ void i2c1_read_controller(i2c_message_t* m){
         case 4:
             // receive data byte
             transfer_done = 0;
-            
+
             m->read_data[n_transfers] = I2C1RCV;
             n_transfers++;
-            
-            if(n_transfers == m->read_length){
+
+            if (n_transfers == m->read_length) {
                 I2C1CONbits.ACKDT = 1; // send NACK
-                i2c_transfer_status = 5;  
+                i2c_transfer_status = 5;
             } else {
                 I2C1CONbits.ACKDT = 0; // send ACK
                 i2c_transfer_status = 3;
             }
             I2C1CONbits.ACKEN = 1; // start ACK event
-            
+
             break;
         case 5:
             // send stop event
@@ -77,11 +77,10 @@ void i2c1_read_controller(i2c_message_t* m){
     }
 }
 
-
-void i2c1_write_read_controller(i2c_message_t* m){
+void i2c1_write_read_controller(i2c_message_t* m) {
     static uint16_t n_transfers = 0;
-   
-    switch(i2c_transfer_status){
+
+    switch (i2c_transfer_status) {
         case 0:
             i2c_transfer_status = 1;
             n_transfers = 0;
@@ -100,15 +99,15 @@ void i2c1_write_read_controller(i2c_message_t* m){
         case 3:
             // transfer data byte
             transfer_done = 0;
-            if(I2C1STATbits.ACKSTAT == 1) {
+            if (I2C1STATbits.ACKSTAT == 1) {
                 m->error = I2C_NO_ACK;
                 i2c_transfer_status = 9;
                 I2C1CONbits.PEN = 1;
             } else {
                 I2C1TRN = m->write_data[n_transfers];
                 n_transfers++;
-                
-                if(n_transfers == m->write_length){
+
+                if (n_transfers == m->write_length) {
                     i2c_transfer_status = 4;
                 } else {
                     i2c_transfer_status = 3;
@@ -118,10 +117,10 @@ void i2c1_write_read_controller(i2c_message_t* m){
         case 4:
             // check final ACK and send repeated start event
             transfer_done = 0;
-            if(I2C1STATbits.ACKSTAT == 1) {
+            if (I2C1STATbits.ACKSTAT == 1) {
                 m->error = I2C_NO_ACK;
                 i2c_transfer_status = 9;
-                I2C1CONbits.PEN = 1;           
+                I2C1CONbits.PEN = 1;
             } else {
                 I2C1CONbits.RSEN = 1;
                 i2c_transfer_status = 5;
@@ -137,31 +136,31 @@ void i2c1_write_read_controller(i2c_message_t* m){
         case 6:
             // enable receive mode
             transfer_done = 0;
-            if(I2C1STATbits.ACKSTAT == 1) {
+            if (I2C1STATbits.ACKSTAT == 1) {
                 m->error = I2C_NO_ACK;
                 i2c_transfer_status = 9;
-                I2C1CONbits.PEN = 1;  
+                I2C1CONbits.PEN = 1;
             } else {
                 I2C1CONbits.RCEN = 1;
-                i2c_transfer_status = 7;      
+                i2c_transfer_status = 7;
             }
             break;
         case 7:
             // receive data byte
             transfer_done = 0;
-            
+
             m->read_data[n_transfers] = I2C1RCV;
             n_transfers++;
-            
-            if(n_transfers == m->read_length){
+
+            if (n_transfers == m->read_length) {
                 I2C1CONbits.ACKDT = 1; // send NACK
-                i2c_transfer_status = 8;  
+                i2c_transfer_status = 8;
             } else {
                 I2C1CONbits.ACKDT = 0; // send ACK
                 i2c_transfer_status = 6;
             }
             I2C1CONbits.ACKEN = 1; // start ACK event
-            
+
             break;
         case 8:
             // send stop event
@@ -183,11 +182,10 @@ void i2c1_write_read_controller(i2c_message_t* m){
     }
 }
 
-
-void i2c2_write_read_controller(i2c_message_t* m){
+void i2c2_write_read_controller(i2c_message_t* m) {
     static uint16_t n_transfers = 0;
-   
-    switch(i2c_transfer_status){
+
+    switch (i2c_transfer_status) {
         case 0:
             i2c_transfer_status = 1;
             n_transfers = 0;
@@ -206,8 +204,8 @@ void i2c2_write_read_controller(i2c_message_t* m){
         case 3:
             // transfer data byte
             transfer_done = 0;
-            if(I2C2STATbits.ACKSTAT == 1) {
-                if(n_transfers == 0){
+            if (I2C2STATbits.ACKSTAT == 1) {
+                if (n_transfers == 0) {
                     m->error = I2C_NO_ADDRESS_ACK;
                 } else {
                     m->error = I2C_NO_ACK;
@@ -217,8 +215,8 @@ void i2c2_write_read_controller(i2c_message_t* m){
             } else {
                 I2C2TRN = m->write_data[n_transfers];
                 n_transfers++;
-                
-                if(n_transfers == m->write_length){
+
+                if (n_transfers == m->write_length) {
                     i2c_transfer_status = 4;
                 } else {
                     i2c_transfer_status = 3;
@@ -228,10 +226,10 @@ void i2c2_write_read_controller(i2c_message_t* m){
         case 4:
             // check final ACK and send repeated start event
             transfer_done = 0;
-            if(I2C2STATbits.ACKSTAT == 1) {
+            if (I2C2STATbits.ACKSTAT == 1) {
                 m->error = I2C_NO_ACK;
                 i2c_transfer_status = 9;
-                I2C2CONbits.PEN = 1;           
+                I2C2CONbits.PEN = 1;
             } else {
                 I2C2CONbits.RSEN = 1;
                 i2c_transfer_status = 5;
@@ -247,31 +245,31 @@ void i2c2_write_read_controller(i2c_message_t* m){
         case 6:
             // enable receive mode
             transfer_done = 0;
-            if(I2C2STATbits.ACKSTAT == 1) {
+            if (I2C2STATbits.ACKSTAT == 1) {
                 m->error = I2C_NO_REPEATED_ADDRESS_ACK;
                 i2c_transfer_status = 9;
-                I2C2CONbits.PEN = 1;  
+                I2C2CONbits.PEN = 1;
             } else {
                 I2C2CONbits.RCEN = 1;
-                i2c_transfer_status = 7;      
+                i2c_transfer_status = 7;
             }
             break;
         case 7:
             // receive data byte
             transfer_done = 0;
-            
+
             m->read_data[n_transfers] = I2C2RCV;
             n_transfers++;
-            
-            if(n_transfers == m->read_length){
+
+            if (n_transfers == m->read_length) {
                 I2C2CONbits.ACKDT = 1; // send NACK
-                i2c_transfer_status = 8;  
+                i2c_transfer_status = 8;
             } else {
                 I2C2CONbits.ACKDT = 0; // send ACK
                 i2c_transfer_status = 6;
             }
             I2C2CONbits.ACKEN = 1; // start ACK event
-            
+
             break;
         case 8:
             // send stop event
@@ -293,11 +291,10 @@ void i2c2_write_read_controller(i2c_message_t* m){
     }
 };
 
-
-void i2c2_read_controller(i2c_message_t* m){
+void i2c2_read_controller(i2c_message_t* m) {
     static uint16_t n_transfers = 0;
-   
-    switch(i2c_transfer_status){
+
+    switch (i2c_transfer_status) {
         case 0:
             i2c_transfer_status = 1;
             n_transfers = 0;
@@ -316,32 +313,32 @@ void i2c2_read_controller(i2c_message_t* m){
         case 3:
             // enable receive mode
             transfer_done = 0;
-            if(I2C2STATbits.ACKSTAT == 1) {
+            if (I2C2STATbits.ACKSTAT == 1) {
                 m->error = I2C_NO_ACK;
                 i2c_transfer_status = 6;
                 I2C2CONbits.PEN = 1;
             } else {
                 I2C2CONbits.RCEN = 1;
-                i2c_transfer_status = 4;    
+                i2c_transfer_status = 4;
             }
             break;
         case 4:
             // receive data byte
             transfer_done = 0;
-            
+
             m->read_data[n_transfers] = I2C2RCV;
             n_transfers++;
-            
-            if(n_transfers == m->read_length){
+
+            if (n_transfers == m->read_length) {
                 I2C2CONbits.ACKDT = 1; // send NACK
-                i2c_transfer_status = 5;  
+                i2c_transfer_status = 5;
             } else {
                 I2C2CONbits.ACKDT = 0; // send ACK
                 i2c_transfer_status = 3;
             }
-            
+
             I2C2CONbits.ACKEN = 1; // start ACK event        
-            
+
             break;
         case 5:
             // send stop event
@@ -363,11 +360,10 @@ void i2c2_read_controller(i2c_message_t* m){
     }
 }
 
-
-void i2c1_write_controller(i2c_message_t* m){
+void i2c1_write_controller(i2c_message_t* m) {
     static uint16_t n_transfers = 0;
-   
-    switch(i2c_transfer_status){
+
+    switch (i2c_transfer_status) {
         case 0:
             n_transfers = 0;
             i2c_transfer_status = 1;
@@ -387,7 +383,7 @@ void i2c1_write_controller(i2c_message_t* m){
         case 3:
             // transfer data byte
             transfer_done = 0;
-            if(I2C1STATbits.ACKSTAT == 1) {
+            if (I2C1STATbits.ACKSTAT == 1) {
                 m->error = I2C_NO_ACK;
                 i2c_transfer_status = 0;
                 I2C1CONbits.PEN = 1;
@@ -395,8 +391,8 @@ void i2c1_write_controller(i2c_message_t* m){
             } else {
                 I2C1TRN = m->write_data[n_transfers];
                 n_transfers++;
-                
-                if(n_transfers == m->write_length){
+
+                if (n_transfers == m->write_length) {
                     i2c_transfer_status = 4;
                 } else {
                     i2c_transfer_status = 3;
@@ -424,11 +420,10 @@ void i2c1_write_controller(i2c_message_t* m){
     }
 }
 
-
-void i2c2_write_controller(i2c_message_t* m){
+void i2c2_write_controller(i2c_message_t* m) {
     static uint16_t n_transfers = 0;
-   
-    switch(i2c_transfer_status){
+
+    switch (i2c_transfer_status) {
         case 0:
             n_transfers = 0;
             i2c_transfer_status = 1;
@@ -448,7 +443,7 @@ void i2c2_write_controller(i2c_message_t* m){
         case 3:
             // transfer data byte
             transfer_done = 0;
-            if(I2C2STATbits.ACKSTAT == 1) {
+            if (I2C2STATbits.ACKSTAT == 1) {
                 m->error = I2C_NO_ACK;
                 i2c_transfer_status = 0;
                 I2C2CONbits.PEN = 1;
@@ -456,8 +451,8 @@ void i2c2_write_controller(i2c_message_t* m){
             } else {
                 I2C2TRN = m->write_data[n_transfers];
                 n_transfers++;
-                
-                if(n_transfers == m->write_length ){
+
+                if (n_transfers == m->write_length) {
                     i2c_transfer_status = 4;
                 } else {
                     i2c_transfer_status = 3;
@@ -485,16 +480,15 @@ void i2c2_write_controller(i2c_message_t* m){
     }
 }
 
-
-void i2c_blocking_read_controller(i2c_message_t* m){
-    switch(m->i2c_bus) {
+void i2c_blocking_read_controller(i2c_message_t* m) {
+    switch (m->i2c_bus) {
         case I2C1_BUS:
-            while(m->status != I2C_MESSAGE_HANDLED){
+            while (m->status != I2C_MESSAGE_HANDLED) {
                 i2c1_read_controller(m);
             }
             break;
         case I2C2_BUS:
-            while(m->status != I2C_MESSAGE_HANDLED){
+            while (m->status != I2C_MESSAGE_HANDLED) {
                 i2c2_read_controller(m);
             }
             break;
@@ -503,16 +497,15 @@ void i2c_blocking_read_controller(i2c_message_t* m){
     }
 }
 
-
-void i2c_blocking_write_controller(i2c_message_t* m){
-    switch(m->i2c_bus) {
+void i2c_blocking_write_controller(i2c_message_t* m) {
+    switch (m->i2c_bus) {
         case I2C1_BUS:
-            while(m->status != I2C_MESSAGE_HANDLED){
+            while (m->status != I2C_MESSAGE_HANDLED) {
                 i2c1_write_controller(m);
             }
             break;
         case I2C2_BUS:
-            while(m->status != I2C_MESSAGE_HANDLED){
+            while (m->status != I2C_MESSAGE_HANDLED) {
                 i2c2_write_controller(m);
             }
             break;

@@ -1,12 +1,8 @@
 #include <xc.h>
-#include <uart.h>
 #include "sylvatica.h"
+#include <event_controller.h>
 #include <utilities.h>
-
-#ifdef ENABLE_DEBUG
-#include <stdio.h>
-#include <string.h>
-#endif
+#include <i2c.h>
 
 #pragma config GWRP = OFF                       // General Segment Write-Protect bit (General Segment may be written)
 #pragma config GSS = OFF                        // General Segment Code-Protect bit (General Segment Code protect is disabled)
@@ -44,6 +40,8 @@
 #pragma config APL = OFF                        // Auxiliary Segment Code-protect bit (Aux Flash Code protect is disabled)
 #pragma config APLK = OFF                       // Auxiliary Segment Key bits (Aux Flash Write Protection and Code Protection is Disabled)
 
+static task_t task;
+
 int main(void) {
     // configure operating frequency
     // system clock frequency = 64MHz
@@ -74,16 +72,18 @@ int main(void) {
     while( OSCCONbits.LOCK != 1 );
 
     // UART serial communication (debug + print interface)
-#ifdef ENABLE_DEBUG
-    uart_init(500000);
+    sylvatica_init();
     
-    sprintf(print_buffer, "Configured UART.");
-    uart_print(print_buffer, strlen(print_buffer));
-#endif
-     
-    init_sylvatica();
-    
-    loop_sylvatica();
+    while(1)
+    {
+        i2c_process_queue();
+        
+        if(n_queued_tasks > 0)
+        {
+            task = pop_queued_task();
+            task.cb(task.data);
+        }
+    }
     
     return 0;
 }

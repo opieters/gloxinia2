@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SensorAPDS9306_065Dialog</class>
+ <widget class="QDialog" name="SensorAPDS9306_065Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>251</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QFormLayout" name="formLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="addressLabel">
+     <property name="text">
+      <string>I2C address</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QComboBox" name="addressBox">
+     <item>
+      <property name="text">
+       <string>0x52</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="rateLabel">
+     <property name="text">
+      <string>Measurement rate</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QComboBox" name="rateBox">
+     <item>
+      <property name="text">
+       <string>25ms</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>50ms</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>100ms</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>200ms</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>500ms</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>1000ms</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>2000ms</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="resolutionLabel">
+     <property name="text">
+      <string>Resolution</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QComboBox" name="resolutionBox">
+     <item>
+      <property name="text">
+       <string>13 bit</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>16 bit</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>17 bit</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>18 bit</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>19 bit</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>20 bit</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="gainLabel">
+     <property name="text">
+      <string>Sensor gain</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QComboBox" name="gainBox">
+     <item>
+      <property name="text">
+       <string>1</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>3</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>6</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>9</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>18</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="8" column="0" colspan="2">
+    <widget class="QDialogButtonBox" name="confirmBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="periodLabel">
+     <property name="text">
+      <string>Measurement Period</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1">
+    <widget class="QCheckBox" name="gperiodBox">
+     <property name="text">
+      <string>Use global measurement policy</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1">
+    <widget class="QPushButton" name="gperiodButton">
+     <property name="text">
+      <string>Edit global measurement policy</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QDoubleSpinBox" name="periodBox">
+     <property name="suffix">
+      <string notr="true">s</string>
+     </property>
+     <property name="decimals">
+      <number>1</number>
+     </property>
+     <property name="minimum">
+      <double>0.100000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>6553.600000000000364</double>
+     </property>
+     <property name="singleStep">
+      <double>0.100000000000000</double>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>confirmBox</sender>
+   <signal>accepted()</signal>
+   <receiver>SensorAPDS9306_065Dialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>confirmBox</sender>
+   <signal>rejected()</signal>
+   <receiver>SensorAPDS9306_065Dialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
