@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 #include "spi.h"
+#include "spi1.h"
 
 #include "sdcard.h"
 #include "utilities.h"
