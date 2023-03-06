@@ -9,8 +9,8 @@ static void sensor_apds9306_065_config_phase4(sensor_interface_t* intf);
 static void sensor_apds9306_065_config_phase4_cb(i2c_message_t* m);
 static void sensor_apds9306_065_config_phase5(sensor_interface_t* intf);
 static void sensor_apds9306_065_config_phase5_cb(i2c_message_t* m);
-static void sensor_apds9306_065_config_phase6_cb(i2c_message_t* m);
-static void sensor_apds9306_065_config_phase7_cb(i2c_message_t* m);
+//static void sensor_apds9306_065_config_phase6_cb(i2c_message_t* m);
+//static void sensor_apds9306_065_config_phase7_cb(i2c_message_t* m);
 
 void sensor_apds9306_065_get_config(struct sensor_interface_s* intf, uint8_t reg, uint8_t* buffer, uint8_t* length){
     sensor_apds9306_065_config_t* config = &intf->config.apds9306_065;
@@ -361,7 +361,7 @@ static void sensor_apds9306_065_config_phase5(sensor_interface_t* intf) {
     UART_DEBUG_PRINT("Configuring APDS9306 065 TH low");
 }
 
-static void sensor_apds9306_065_config_phase6_cb(i2c_message_t* m) {
+/*static void sensor_apds9306_065_config_phase6_cb(i2c_message_t* m) {
     sensor_interface_t* intf = (sensor_interface_t*) m->callback_data;
 
     if (m->error != I2C_NO_ERROR) {
@@ -393,7 +393,7 @@ static void sensor_apds9306_065_config_phase7_cb(i2c_message_t* m) {
     } else {
         intf->status = SENSOR_STATUS_IDLE;
     }
-}
+}*/
 
 void sensor_apds9306_065_activate(struct sensor_interface_s* intf){
     // activate sensor 
