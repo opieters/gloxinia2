@@ -1,5 +1,5 @@
 #include <xc.h>
-#include <adc16.h>
+#include <sensor_adc16.h>
 #include <utilities.h>
 #include <dsp.h>
 #include <fir_common.h>
