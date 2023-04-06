@@ -6,10 +6,10 @@
 #include <stdbool.h>
 #include <sensor_common.h>
 
-#define ADC12_CHANNEL_SAMPLE_RATE         20000
-#define ADC12_N_CHANNELS                      8
-#define ADC12_DMA_BUFFER_SIZE                 8
-#define ADC12_FULL_SAMPLE_CONVERSION_T_AD    20
+#define ADC12_CHANNEL_SAMPLE_RATE         20000UL
+#define ADC12_N_CHANNELS                      8U
+#define ADC12_DMA_BUFFER_SIZE                 8U
+#define ADC12_FULL_SAMPLE_CONVERSION_T_AD    20U
 
 /// @brief Internal 12-bit ADC sensor configuration structure
 
@@ -70,6 +70,7 @@ extern "C" {
     void sensor_adc12_activate(struct sensor_interface_s *intf);
     
     bool validate_sensor_adc12_config(sensor_adc12_config_t *config);
+    bool validate_adc12_config(sensor_adc12_config_t *config);
     
     void sensor_adc12_measure(void *data);
 

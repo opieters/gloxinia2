@@ -205,7 +205,7 @@ void sensor_adc12_init_sensor(struct sensor_interface_s *intf)
     DMA0CONbits.AMODE = 0;   // Configure DMA for register indirect with post increment
     DMA0CONbits.MODE  = 2;   // Configure DMA for Continuous Ping-Pong mode
 
-    DMA0PAD = &ADC1BUF0;
+    DMA0PAD = (volatile unsigned int) &ADC1BUF0;
     DMA0CNT = (ADC12_N_CHANNELS * ADC12_DMA_BUFFER_SIZE - 1);    
 
     DMA0REQ = 13; // ADC1 -> DMA request source
