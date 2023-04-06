@@ -5,7 +5,7 @@
 #include <spi.h>
 #include <pga.h>
 #include <dsp.h>
-#include <adc16.h>
+#include <sensor_adc16.h>
 #include <fir_common.h>
 
 i2c_config_t sylvatica_i2c1_config =  {
