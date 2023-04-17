@@ -1435,6 +1435,7 @@ static SD_RESPONSE SD_SendCmd (uint8_t cmd, uint32_t address)
         longTimeout = SD_WRITE_TIMEOUT;
         do
         {
+            // TODO: change back to previous version
             response.r1._byte = SD_SPI_exchangeByte (0xFF);
             longTimeout--;
         }while((response.r1._byte == 0x00) && (longTimeout != 0));

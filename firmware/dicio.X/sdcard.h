@@ -12,8 +12,8 @@
 #endif
 
 #ifdef __dsPIC33EP512MC806__
-#define SDCard_CS_SetLow() (_RB10 = 0)
-#define SDCard_CS_SetHigh() (_RB10 = 1)
+#define SDCard_CS_SetLow() (_RD11 = 0)
+#define SDCard_CS_SetHigh() (_RD11 = 1)
 #endif
 
 #define SDCARD_SECTOR_SIZE (512U)
