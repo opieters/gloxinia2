@@ -655,31 +655,25 @@ void dicio_init_pins(void)
     /*
      *  I2C1 pins
      */
-
-    _TRISG2 = 0;
-    _TRISG3 = 0;
-    _LATG2 = 1;
-    _LATG3 = 0;
+    _TRISD9 = 0;
+    _TRISD10 = 0;
+    _LATD9 = 0;
+    _LATD10 = 1;
     __delay_ms(1);
-    _LATG2 = 1;
-    _LATG3 = 1;
+    _LATD9 = 1;
+    _LATD10 = 1;
     __delay_ms(1);
-    _ODCG2 = 1; // configure I2C pins as open drain output
-    _ODCG3 = 1; // configure I2C pins as open drain outputs
+    _ODCD9 = 1; // configure I2C pins as open drain output
+    _ODCD10 = 1; // configure I2C pins as open drain outputs
 
-    _ANSC13 = 0;  // configure nINT1 as digital pin
-    _TRISC13 = 1; // configure nINT1 as digital input pin
-    _ANSC14 = 0;  // configure nRST1 as digital pin
-    //_ODCC14 = 1; // nRST1 cannot be configured as open-drain pin -> set as input
-    _TRISC14 = 1; // configure nRST1 as digital input pin
-    _LATC14 = 1;
+    _ANSB4 = 0;  // configure nINT1 as digital pin
+    _TRISB4 = 1; // configure nINT1 as digital input pin
 
     /*
      * I2C2 pins
      */
     _TRISF4 = 0;
     _TRISF5 = 0;
-
     _LATF5 = 1;
     _LATF4 = 0;
     __delay_ms(1);
@@ -689,130 +683,154 @@ void dicio_init_pins(void)
     _ODCF4 = 1; // configure I2C pins as open drain output
     _ODCF5 = 1; // configure I2C pins as open drain output
 
-    _ANSB15 = 0;  // configure nINT1 as digital pin
-    _TRISB15 = 1; // configure nINT2 as digital input pin
-    _ODCD8 = 1;
-    _CNPUD8 = 1;
-    _TRISD8 = 0; // configure nRST2 as digital output pin
-    _LATD8 = 1;
+    _ANSE2 = 0;  // configure nINT2 as digital pin
+    _TRISE2 = 1; // configure nINT2 as digital input pin
 
     /*
-     * Address selection
+     * communication UART
      */
-
-    _ANSB8 = 0; // dedicated reset to address selector
-    _TRISB8 = 0;
-    _LATB8 = 1;
-
+    _TRISF6 = 0; // U2 RTS
+    _RP102R = _RPOUT_U2RTS;
+    _ANSB12 = 0; // U2 CTS
+    _U2CTSR = 44;
+    _TRISB12 = 1;
+    _TRISF2 = 1; // U2 RX
+    _RP99R = _RPOUT_U2TX;
+    _TRISF3 = 0; // U2 TX
+    _U2RXR = 98;
+    
     /*
-     * UART to PC logging
+     * debug UART
      */
-    _ANSE5 = 0; // U2 RTS
+    _ANSE5 = 0; // U1 RTS
     _TRISE5 = 0;
-    _RP85R = _RPOUT_U2RTS;
-    _ANSE6 = 0; // U2 CTS
-    _U2CTSR = 86;
-    _TRISE6 = 1;
-    _ANSE7 = 0; // U2 TX
-    _TRISE7 = 0;
-    _RP87R = _RPOUT_U2TX;
-    _ANSG7 = 0; // U2 RX
+    _RP85R = _RPOUT_U1RTS;
+    _ANSG7 = 0; // U1 CTS
+    _U1CTSR = 119;
     _TRISG7 = 1;
-    _U2RXR = 119;
-
-    /*
-     * UART to peripheral (not used currently)
-     */
-    //_TRISF3 = 0;            // U1 RTS
-    //_RP99R = _RPOUT_U1RTS;
-    _TRISF2 = 0; // U1 TX
-    _LATF2 = 0;
-    //_RP98R = _RPOUT_U1TX;
-    //_TRISD9 = 1;            // U1 CTS
-    //_U1CTSR = 73;
-    _TRISD10 = 1; // U1 RX
-    _U1RXR = 74;
-
-    /*
-     * UART to peripheral (not used currently)
-     */
-
-    /*_TRISF3 = 0;            // U3 TX
-    _RP99R = _RPOUT_U3TX;
-    _TRISD9 = 1;           // U3 RX
-    _U3RXR = 73;*/
-    _TRISF3 = 1;
-    _TRISD9 = 0;
-    _LATD9 = 0;
+    _ANSG6 = 0; // U1 TX
+    _TRISG6 = 0;
+    _RP118R = _RPOUT_U1TX;
+    _ANSG8 = 0; // U1 RX
+    _TRISG8 = 1;
+    _U1RXR = 120;
 
     /*
      * ECAN pin configuration
      */
-    _ANSE4 = 0; // CAN1 TX
-    _TRISE4 = 0;
-    _RP84R = _RPOUT_C1TX;
-    _ANSE3 = 0; // CAN1 RX
-    _TRISE3 = 1;
-    _C1RXR = 83;
+    _TRISD3 = 0; // CAN1 TX
+    _RP67R = _RPOUT_C1TX;
+    _ANSB13 = 0; // CAN1 RX
+    _TRISB13 = 1;
+    _C1RXR = 45;
+    _ANSB14 = 0; // TERM 
+    _TRISB14 = 0;
+    _LATB14 = 1;
+    _ANSB11 = 0; // CAN_C1
+    _TRISB11 = 1;
+    _ANSB10 = 0; // CAN_C2
+    _TRISB10 = 1;
+    
+    /* 
+     * one wire interfaces (1W)
+     * 
+     * These can also be used as analogue input interfaces. By default they are 
+     * configured as digital inputs
+     */
+    _ANSE6 = 0;
+    _TRISE6 = 1;
+    _ANSB3 = 0;
+    _TRISB3 = 1;
+    _ANSE7 = 0;
+    _TRISE7 = 1;
+    _ANSB1 = 0;
+    _TRISB1 = 1;
+    _ANSB0 = 0;
+    _TRISB0 = 1;
 
     /*
-     * SPI3 configuration
+     * SPI configuration
+     * SD card communication
      */
-    _ANSB9 = 0; // SDI3
-    _TRISB9 = 1;
-    _SDI1R = 41;
-    _ANSG8 = 0; // SCK3
-    _TRISG8 = 0;
-    _RP120R = _RPOUT_SCK1;
-    _ANSG6 = 0; // SDO1
-    _TRISG6 = 0;
-    _RP118R = _RPOUT_SDO1;
-    _ANSB10 = 0; // CS
-    _TRISB10 = 0;
-    _LATB10 = 1;
+    _ANSD6 = 0;
+    _TRISD6 = 1;// SDI
+     _RD6 = 0;
+    //_SDI3R = 70; 
+    //_ANSD5 = 0;
+    _TRISD5 = 1;
+    _RD5 = 0;
+    _SDI1R = 70;
+    
+    _TRISD1 = 0; // SCK
+    _RP65R = _RPOUT_SCK1;
+    
+    _TRISD0 = 0; // SDO1
+    _RP64R = _RPOUT_SDO1;
+    
+    _TRISD11 = 0;  // CS
+    _RD11 = 1;
+    
+    /*
+     * SPI configuration
+     * Flash memory communication
+     */
+    _ANSE1 = 0; // nHOLD
+    _TRISE1 = 0;
+    _LATE1 = 1;
+    _TRISF0 = 0; // nRESET
+    _LATF0 = 0;
+    __delay_ms(10);
+    _LATF0 = 1;
+    _TRISD5 = 0; // nSQICS1
+    _LATD5 = 1;
+    _TRISD4 = 0; // nSQICS0
+    _LATD4 = 1;
+    _TRISF1 = 0; // SO
+    _RP97R = _RPOUT_SDO3;
+    _ANSD7 = 0; // SQICLK
+    _TRISD7 = 0;
+    _RP71R = _RPOUT_SCK3;
+    _ANSE0 = 0; // SI
+    _TRISE0 = 0;  
+    //_SDI3R = 80;
+    _ANSB15 = 0; // nWP
+    _TRISB15 = 0;
+    _LATB15 = 1;
 
     /*
-     * SYNC configuration
+     * misc configuration
      */
-    _TRISD5 = 0;
-    _RP69R = _RPOUT_OC1;
-    _LATD5 = 0;
+    _ANSB9 = 0; // SYNC
+    _TRISB9 = 1; 
+    _LATD9 = 0;
+    _TRISD8 = 1; // BTN
+    _LATD8 = 0;
+    _ANSB8 = 0;// EN_VA
+    _TRISB8 = 0; 
+    _LATB8 = 0;
+    _ANSB5 = 0; // S_PS_SW
+    _TRISB5 = 0;
+    _LATB5 = 0;
+    _TRISG3 = 0; // ERR (LED)
+    _LATG3 = 0;
+
+    
+    /*
+     * analogue readout pins
+     */
+    _ANSE4 = 1;
+    _ANSB2 = 1;
+    _ANSE3 = 1;
+    _ANSB0 = 1;
 
     /*
-     * external pins: default config is digital input
+     * secondary clock source for high precision RTCC
      */
-    _ANSE2 = 0; // E0 / CLK
-    _TRISE2 = 1;
-    _ANSE1 = 0; // E1
-    _TRISE1 = 1;
-    _ANSE0 = 0; // E2
-    _TRISE0 = 1;
-    _TRISF1 = 1; // E3
-
-    /*
-     * control pins: default config is digital input
-     */
-    _ANSD6 = 0; // D0
-    _TRISD6 = 1;
-    _ANSD7 = 0; // D1
-    _TRISD7 = 1;
-    _TRISF0 = 1; // D2
-
-    // CAN ETH IO
-    //_TRISD0 = 1;
-
-    // LED (BLINKY, ERROR)
-    _ANSB5 = 0;
-    _ANSB4 = 0;
-
-    // one wire interface (1W)
-    _TRISD9 = 1;
-
-    // reset sensors
-    // CLEAR_BIT(config.rst_sensor_pin.tris_r, config.rst_sensor_pin.n);
-    // SET_BIT(config.rst_sensor_pin.lat_r, config.rst_sensor_pin.n);
+    _ANSC14 = 0;
+    _ANSC13 = 0;
+    
 #endif
-    __builtin_write_OSCCONL(OSCCON | 0x40); // lock PPS
+   // __builtin_write_OSCCONL(OSCCON | 0x40); // lock PPS
 }
 
 void dicio_send_ready_message(void *data)
