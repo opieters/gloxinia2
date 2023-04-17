@@ -36,7 +36,7 @@ bool spi_master_open(spi_master_configurations_t config);   //for backwards comp
 typedef enum { 
     SDFAST_CONFIG,
     SDSLOW_CONFIG,
-    SPI1_DEFAULT
+    SPI3_DEFAULT
 } spi1_modes;
 
 

@@ -11,13 +11,14 @@ void spi1_close(void)
 //con1 == SPIxCON1, con2 == SPIxCON2, stat == SPIxSTAT, operation == Master/Slave
 typedef struct { uint16_t con1; uint16_t con2; uint16_t stat; uint8_t operation;} spi1_configuration_t;
 static const spi1_configuration_t spi1_configuration[] = {   
-    { 0x007D, 0x0000, 0x0000, 0 },
     { 0x0060, 0x0000, 0x0000, 0 },
-    { 0x0126, 0x0000, 0x0000, 0 }
+    { 0x0060, 0x0000, 0x0000, 0 },
+    { 0x0060, 0x0000, 0x0000, 0 }
 };
 
 bool spi1_open(spi1_modes spiUniqueConfiguration)
 {
+    spiUniqueConfiguration = 0;
     if(!SPI1STATbits.SPIEN)
     {
         SPI1CON1 = spi1_configuration[spiUniqueConfiguration].con1;
@@ -29,7 +30,7 @@ bool spi1_open(spi1_modes spiUniqueConfiguration)
         
         //TODO: fix
         //TRISDbits.TRISD1 = spi1_configuration[spiUniqueConfiguration].operation;
-        TRISBbits.TRISB10 = spi1_configuration[spiUniqueConfiguration].operation;
+        //TRISDbits.TRISD11 = spi1_configuration[spiUniqueConfiguration].operation;
         return true;
     }
     return false;
@@ -88,11 +89,11 @@ uint8_t spi1_readByte(void)
  */
 void __attribute__((interrupt, no_auto_psv)) _SPI1Interrupt(void)
 {
-    if(IFS0bits.SPI1IF == 1){
+    if(_SPI1IF == 1){
         if(spi1_interruptHandler){
             spi1_interruptHandler();
         }
-        IFS0bits.SPI1IF = 0;
+        _SPI1IF = 0;
     }
 }
 
