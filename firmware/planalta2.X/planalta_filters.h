@@ -6,6 +6,7 @@
 #include <dsp.h>
 #include <stdbool.h>
 #include <sensor_adc12.h>
+#include <sensor_lia.h>
 #include "planalta_definitions.h"
 
 #define ADC_FS_BUFFER_LENGTH            200
@@ -534,29 +535,29 @@ void adc_rx_callback_25khz(void);
 void adc_rx_callback_10khz(void);
 void adc_rx_callback_5khz(void);
 
-void run_filter2_5khz(void);
-void run_filter3_5khz(void);
-void run_filter4_5khz(void);
-void run_filter5_5khz(void);
-void run_filter6_5khz(void);
+void run_filter2_5khz(void *data);
+void run_filter3_5khz(void *data);
+void run_filter4_5khz(void *data);
+void run_filter5_5khz(void *data);
+void run_filter6_5khz(void *data);
 
-void run_filter2_10khz(void);
-void run_filter3_10khz(void);
-void run_filter4_10khz(void);
-void run_filter5_10khz(void);
-void run_filter6_10khz(void);
+void run_filter2_10khz(void *data);
+void run_filter3_10khz(void *data);
+void run_filter4_10khz(void *data);
+void run_filter5_10khz(void *data);
+void run_filter6_10khz(void *data);
 
-void run_filter2_25khz(void);
-void run_filter3_25khz(void);
-void run_filter4_25khz(void);
-void run_filter5_25khz(void);
-void run_filter6_25khz(void);
+void run_filter2_25khz(void *data);
+void run_filter3_25khz(void *data);
+void run_filter4_25khz(void *data);
+void run_filter5_25khz(void *data);
+void run_filter6_25khz(void *data);
 
-void run_filter2_50khz(void);
-void run_filter3_50khz(void);
-void run_filter4_50khz(void);
-void run_filter5_50khz(void);
-void run_filter6_50khz(void);
+void run_filter2_50khz(void *data);
+void run_filter3_50khz(void *data);
+void run_filter4_50khz(void *data);
+void run_filter5_50khz(void *data);
+void run_filter6_50khz(void *data);
 
 void init_filtering(void);
 
@@ -568,10 +569,10 @@ void planalta_filter_10khz(void);
 void planalta_filter_5khz(void);
 
 void planalta_fs_sample_50khz(void);
-void planalta_fs_sample_20khz_10khz_5khz(planalta_fs_freq_t freq);
-void planalta_fs_sample_2khz_1khz_500hz(planalta_fs_freq_t freq);
-void planalta_fs_sample_200hz_100hz_50hz(planalta_fs_freq_t freq);
-void planalta_fs_sample_20hz_10hz(planalta_fs_freq_t freq);
+void planalta_fs_sample_20khz_10khz_5khz(sensor_lia_fs_freq_t freq);
+void planalta_fs_sample_2khz_1khz_500hz(sensor_lia_fs_freq_t freq);
+void planalta_fs_sample_200hz_100hz_50hz(sensor_lia_fs_freq_t freq);
+void planalta_fs_sample_20hz_10hz(sensor_lia_fs_freq_t freq);
 
 void adc_rx_callback_fs_50khz(void);
 void adc_rx_callback_fs_20khz_10khz_5khz(void);

@@ -195,7 +195,7 @@ typedef struct
     const pin_t conv_pin;
     uint16_t channel_offset[ADC16_N_CHANNELS];
     void (*rx_callback)(void);
-} adc16_config_t;
+} sensor_adc16_config_t;
 
 #ifdef __cplusplus
 extern "C"
@@ -217,7 +217,7 @@ extern "C"
      *
      * @param config ADC16 configuration structure.
      */
-    void adc16_init(adc16_config_t *config);
+    void adc16_init(sensor_adc16_config_t *config);
 
     /**
      * @brief Fast initialisation function of ADC.
@@ -229,28 +229,28 @@ extern "C"
      *
      * @param config ADC16 configuration structure.
      */
-    void adc16_init_fast(adc16_config_t *config);
+    void adc16_init_fast(sensor_adc16_config_t *config);
 
     /**
      * @brief Update function for ADC.
      *
      * @param config ADC16 configuration structure.
      */
-    void adc16_update(adc16_config_t *config);
+    void adc16_update(sensor_adc16_config_t *config);
 
     /**
      * @brief Start ADC.
      *
      * @param config ADC16 configuration structure.
      */
-    void adc16_start(adc16_config_t *config);
+    void adc16_start(sensor_adc16_config_t *config);
 
     /**
      * @brief Stop ADC.
      *
      * @param config ADC16 configuration structure.
      */
-    void adc16_stop(adc16_config_t *config);
+    void adc16_stop(sensor_adc16_config_t *config);
 
     /// @brief ADC16 dummy callback used in the default initalisation.
     void adc16_callback_dummy(void);
@@ -272,7 +272,7 @@ extern "C"
      *
      * @return ADC reading.
      */
-    uint16_t adc16_read_channel(adc16_config_t *config);
+    uint16_t adc16_read_channel(sensor_adc16_config_t *config);
 
     /**
      * @brief Runs calibration of ADC.
@@ -288,7 +288,7 @@ extern "C"
      * @param ref Reference voltage.
      * @return ADC reading.
      */
-    uint16_t adc16_run_calibration(adc16_config_t *config, const uint16_t ref);
+    uint16_t adc16_run_calibration(sensor_adc16_config_t *config, const uint16_t ref);
 
     /**
      * @brief Runs variance calibration of ADC.
@@ -303,7 +303,7 @@ extern "C"
      * @param max_value Maximum value.
      * @param mean Mean value.
     */
-    void adc16_run_max_var(adc16_config_t *config, uint16_t *const max_value,
+    void adc16_run_max_var(sensor_adc16_config_t *config, uint16_t *const max_value,
                            uint16_t *const min_value, uint16_t *const mean);
 
 #ifdef __cplusplus

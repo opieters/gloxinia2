@@ -88,6 +88,11 @@ void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t *buffer, uint8_
         case SENSOR_TYPE_ANALOGUE:
             // TODO
             break;
+#ifdef __PLANALTA__
+        case SENSOR_TYPE_LIA:
+            status = sensor_lia_config(intf, &buffer[1], length - 1);
+            break;
+#endif
         default:
             break;
     }
@@ -253,6 +258,12 @@ i2c_bus_t sensor_i2c_get_bus(uint8_t sensor_interface_n) {
     }
 #elif defined __SYLVATICA__
     if (sensor_interface_n < 4) {
+        return I2C1_BUS;
+    } else {
+        return I2C2_BUS;
+    }
+#elif defined __PLANALTA__
+    if (sensor_interface_n < 2) {
         return I2C1_BUS;
     } else {
         return I2C2_BUS;

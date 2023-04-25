@@ -4,6 +4,9 @@
 #include <xc.h> 
 #include <dsp.h>
 #include <i2c.h>
+#include "dac.h"
+#include <sensor_lia.h>
+
 
 #define PLANALTA_N_CHANNELS               8
 #define PLANALTA_N_ADC_CHANNELS           8
@@ -29,12 +32,14 @@
 extern "C" {
 #endif
     
+    void planalta_clock_init(void);
     void planalta_init(void);
     void planalta_send_ready_message(void *data);
     void planalta_init_pins(void);
     void planalta_filters_init(void);
     void planalta_clear_filter_buffers(void);
     void planalta_adc16_callback(void);
+    void planalta_init_dac_config(dac_config_t* config, sensor_lia_op_mode_t operation_mode, sensor_lia_fs_freq_t sweep_frequency, bool calibration);
     
     
 #ifdef	__cplusplus

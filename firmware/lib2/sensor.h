@@ -10,6 +10,7 @@
 #include <sensor_common.h>
 #include <event_controller.h>
 #include <sensor_adc12.h>
+#include <sensor_lia.h>
 
 /// @brief Number of sensor interfaces of dicio board
 #define DICIO_N_SENSOR_IFS 4
@@ -36,6 +37,8 @@ typedef union sensor_config_s
     sensor_analogue_config_t analogue;         ///< Analogue sensor configuration
     sensor_apds9306_065_config_t apds9306_065; ///< APDS9306-065 sensor configuration
     sensor_adc12_config_t adc12;               ///< Internal 12-bit sensor configuration
+    sensor_adc16_config_t adc16;               ///< 16-bit ADC sensor configuration
+    sensor_lia_config_t lia;                   ///< lock-in amplifier sensor configuration
 } sensor_config_t;
 
 /**

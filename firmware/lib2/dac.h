@@ -36,17 +36,14 @@ typedef struct dac_config_s {
 extern "C" {
 #endif   
     
-    // forward declaration 
-    struct planalta_config_s;
-    
-    void init_dac(struct planalta_config_s* config, bool calibration);
+   // void init_dac(dac_config_t* config, planalta_op_mode_t operation_mode, planalta_fs_freq_t sweep_frequency, bool calibration);
     void stop_dac(void);
     void start_dac();
-    void update_dac(struct planalta_config_s* config);
-    void init_oc(struct planalta_config_s* config);
-    void init_dac_dma(struct planalta_config_s* config);
-    void init_sine_pwm_buffer(struct planalta_config_s* config, __eds__ fractional* buffer);
-    void init_dac_timer(struct planalta_config_s* config);
+    void update_dac(dac_config_t* config);
+    void init_oc(dac_config_t* config);
+    void init_dac_dma(dac_config_t* config);
+    void init_sine_pwm_buffer(dac_config_t* config, __eds__ fractional* buffer);
+    void init_dac_timer(dac_config_t* config);
     void start_dac_timer(void);
     
 

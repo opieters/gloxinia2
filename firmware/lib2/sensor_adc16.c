@@ -19,7 +19,7 @@ void adc16_callback_dummy(void)
 {
 }
 
-uint16_t adc16_parse_cfr_write(adc16_config_t *config)
+uint16_t adc16_parse_cfr_write(sensor_adc16_config_t *config)
 {
     uint16_t word = 0xE000;
 
@@ -28,7 +28,7 @@ uint16_t adc16_parse_cfr_write(adc16_config_t *config)
     return word;
 }
 
-void adc16_update(adc16_config_t *config)
+void adc16_update(sensor_adc16_config_t *config)
 {
     spi_message_t m;
     uint16_t write_data[1];
@@ -77,7 +77,7 @@ void adc16_update(adc16_config_t *config)
     OC4RS = (FCY / config->sample_frequency) - 1;  // frequency
 }
 
-void adc16_init(adc16_config_t *config)
+void adc16_init(sensor_adc16_config_t *config)
 {
     uint16_t i, eds_read;
     spi_message_t m;
@@ -329,7 +329,7 @@ void adc16_init(adc16_config_t *config)
     _OC4IE = 0; // disable OC4 interrupt
 }
 
-void adc16_init_fast(adc16_config_t *config)
+void adc16_init_fast(sensor_adc16_config_t *config)
 {
     spi_message_t m;
     uint16_t write_data[2];
@@ -402,7 +402,7 @@ void __attribute__((__interrupt__, no_auto_psv)) _IC1Interrupt(void)
     _IC1IF = 0;
 }
 
-void adc16_start(adc16_config_t *config)
+void adc16_start(sensor_adc16_config_t *config)
 {
     // reset DMA transfer lengths (just in case)
     DMA5CNT = config->adc16_buffer_size - 1;
@@ -446,7 +446,7 @@ void adc16_start(adc16_config_t *config)
         "mov w0, OC4CON1    \n");
 }
 
-void adc16_stop(adc16_config_t *config)
+void adc16_stop(sensor_adc16_config_t *config)
 {
     uint16_t dummy_read;
 
@@ -523,7 +523,7 @@ void adc16_spi3_init(void)
     _SPI3IE = 0;
 }
 
-uint16_t adc16_read_channel(adc16_config_t *config)
+uint16_t adc16_read_channel(sensor_adc16_config_t *config)
 {
     uint16_t write_data[2], read_data[2];
     spi_message_t m;
@@ -552,7 +552,7 @@ uint16_t adc16_read_channel(adc16_config_t *config)
     return m.read_data[0];
 }
 
-uint16_t adc16_run_calibration(adc16_config_t *config,
+uint16_t adc16_run_calibration(sensor_adc16_config_t *config,
                               const uint16_t reference_value)
 {
 
@@ -596,7 +596,7 @@ uint16_t adc16_run_calibration(adc16_config_t *config,
     return (uint16_t) sample_data;
 }
 
-void adc16_run_max_var(adc16_config_t *config, uint16_t *const max_value,
+void adc16_run_max_var(sensor_adc16_config_t *config, uint16_t *const max_value,
                        uint16_t *const min_value, uint16_t *const mean)
 {
 

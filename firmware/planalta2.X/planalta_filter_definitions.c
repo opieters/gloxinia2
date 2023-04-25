@@ -1,3 +1,4 @@
+#include <xc.h>
 #include <dsp.h>
 #include "planalta_filters.h"
 //#include "fir_coeffs.h"
@@ -281,7 +282,7 @@ volatile bool planalta_fs_all_coeffs_written = false;
 fractional conversion_buffer[PLANALTA_ADC16_BUFFER_LENGTH];
 fractional sample_buffer[PLANALTA_ADC16_BUFFER_LENGTH];
 
-fractional planalta_fs_data[PLANALTA_FS_CHANNELS][PLANALTA_FS_FREQ_N][2];
+fractional planalta_fs_data[PLANALTA_FS_CHANNELS][LIA_FS_FREQ_N][2];
 
 void init_filters(void){
     uint16_t i;

@@ -45,7 +45,7 @@ uint8_t adc16_buffer_selector = 0;
 volatile uint8_t copy_buffer_selector = 0;
 volatile uint8_t start_filter_block0 = 0;
 
-adc16_config_t adc16_config = {
+sensor_adc16_config_t adc16_config = {
     .channel_select = ADC16_CHANNEL_SELECT_MODE_AUTO,
     .conversion_clock_source = ADC16_CONVERSION_CLOCK_SOURCE_INTERNAL,
     .trigger_select = ADC16_TRIGGER_SELECT_MANUAL,

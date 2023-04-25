@@ -26,9 +26,6 @@ i2c_config_t planalta_i2c2_config =  {
     .scl_pin = PIN_INIT(F, 5),
     .sda_pin = PIN_INIT(F, 4)};
 
-pga_config_t pga_config[N_SENSOR_INTERFACES];
-
-
 uint16_t copy_buffers_a[PLANALTA_N_CHANNELS][PLANALTA_COPY_BUFFER_SIZE];
 uint16_t copy_buffers_b[PLANALTA_N_CHANNELS][PLANALTA_COPY_BUFFER_SIZE];
 
@@ -36,11 +33,9 @@ bool uart_connection_active = false;
 
 uint8_t adc16_buffer_selector = 0;
 volatile uint8_t copy_buffer_selector = 0;
-extern volatile uint8_t start_filter_block0;
 
 
-
-adc16_config_t adc16_config = {
+sensor_adc16_config_t adc16_config = {
     .channel_select = ADC16_CHANNEL_SELECT_MODE_AUTO,
     .conversion_clock_source = ADC16_CONVERSION_CLOCK_SOURCE_INTERNAL,
     .trigger_select = ADC16_TRIGGER_SELECT_MANUAL,
@@ -56,12 +51,46 @@ adc16_config_t adc16_config = {
     .channel = ADC16_CH0,
     //.sample_frequency = PLANALTA_ADC16_SAMPLE_FREQUENCY, // TODO: should be set somewhere
     .adc16_buffer_size = PLANALTA_ADC16_BUFFER_LENGTH,
-    .rx_callback = planalta_adc16_callback,
+    .rx_callback = adc_rx_callback_5khz,
     .spi_module = SPI_MODULE_SELECTOR_2,
     .rst_pin = PIN_INIT(B, 15),
     .cs_pin = PIN_INIT(E, 5),
     .conv_pin = PIN_INIT(F, 3)}
 ;
+
+void planalta_clock_init(void)
+{
+    // FRCDIV FRC/1; PLLPRE 2; DOZE 1:8; PLLPOST 1:4; DOZEN disabled; ROI disabled; 
+    CLKDIV = 0x3040;
+    // TUN Center frequency; 
+    OSCTUN = 0x00;
+    // ROON disabled; ROSEL FOSC; RODIV 0; ROSSLP disabled; 
+    REFOCON = 0x00;
+    // PLLDIV 50; 
+    PLLFBD = 0x32;
+    // ENAPLL disabled; APLLPOST 1:256; FRCSEL FRC; SELACLK Auxiliary Oscillators; ASRCSEL Auxiliary Oscillator; AOSCMD AUX; APLLPRE 1:1; 
+    ACLKCON3 = 0x2200;
+    // APLLDIV 15; 
+    ACLKDIV3 = 0x00;
+    // AD1MD enabled; PWMMD enabled; T3MD enabled; T4MD enabled; T1MD enabled; U2MD enabled; T2MD enabled; U1MD enabled; QEI1MD enabled; SPI2MD enabled; SPI1MD enabled; C2MD enabled; C1MD enabled; DCIMD enabled; T5MD enabled; I2C1MD enabled; 
+    PMD1 = 0x00;
+    // OC5MD enabled; OC6MD enabled; OC7MD enabled; OC8MD enabled; OC1MD enabled; IC2MD enabled; OC2MD enabled; IC1MD enabled; OC3MD enabled; OC4MD enabled; IC6MD enabled; IC7MD enabled; IC5MD enabled; IC8MD enabled; IC4MD enabled; IC3MD enabled; 
+    PMD2 = 0x00;
+    // AD2MD enabled; PMPMD enabled; CMPMD enabled; U3MD enabled; QEI2MD enabled; RTCCMD enabled; T9MD enabled; T8MD enabled; CRCMD enabled; T7MD enabled; I2C2MD enabled; DAC1MD enabled; T6MD enabled; 
+    PMD3 = 0x00;
+    // U4MD enabled; REFOMD enabled; 
+    PMD4 = 0x00;
+    // OC9MD enabled; OC16MD enabled; IC10MD enabled; IC11MD enabled; IC12MD enabled; IC13MD enabled; IC14MD enabled; IC15MD enabled; IC16MD enabled; IC9MD enabled; OC14MD enabled; OC15MD enabled; OC12MD enabled; OC13MD enabled; OC10MD enabled; OC11MD enabled; 
+    PMD5 = 0x00;
+    // PWM2MD enabled; PWM1MD enabled; SPI4MD enabled; PWM4MD enabled; SPI3MD enabled; PWM3MD enabled; 
+    PMD6 = 0x00;
+    // DMA8MD enabled; DMA4MD enabled; DMA12MD enabled; DMA0MD enabled; 
+    PMD7 = 0x00;
+    // CF no clock failure; NOSC FRCDIV; LPOSCEN disabled; CLKLOCK unlocked; OSWEN Switch is Complete; IOLOCK not-active; 
+    __builtin_write_OSCCONH((uint8_t) (0x07));
+    __builtin_write_OSCCONL((uint8_t) (0x00));
+}
+
 
 void planalta_init_pins(void){
    // I2C configuration
@@ -72,6 +101,9 @@ void planalta_init_pins(void){
     _ODCD0 = 1; // nINT
     _TRISD0 = 0;
     _RD0 = 1;
+    _CNPUG2 = 1;
+    _CNPUG3 = 1;
+    _CNPUD0 = 1;
     
     // UART
     _TRISD3 = 1; // U2RX
@@ -208,13 +240,6 @@ void planalta_init(void){
     spi1_init();
     spi2_init();
     UART_DEBUG_PRINT("Initialised SPI.");
-    
-    // TODO: there are only 4 PGAs on the board
-    for(int i = 0; i < PLANALTA_N_CHANNELS; i++){
-        pga_config[i].status = PGA_STATUS_ON;
-        pga_init(&pga_config[i]);
-    }
-    UART_DEBUG_PRINT("Initialised PGAs.");
     
     planalta_filters_init();
     planalta_clear_filter_buffers();
@@ -353,10 +378,48 @@ void planalta_adc16_callback(void){
     copy_counter += PLANALTA_ADC16_BUFFER_LENGTH / PLANALTA_N_CHANNELS;
     
     if(copy_counter == PLANALTA_COPY_BUFFER_SIZE){
-        start_filter_block0 = 1;
+        //push_queued_task(planalta_process_task);
         copy_buffer_selector ^= 1;
         copy_counter = 0;
     }
     
     adc16_buffer_selector ^= 1;
+}
+
+
+void planalta_start_lia(void)
+{
+   /*     size_t i;
+    
+    UART_DEBUG_PRINT("LIA at 5kHz activated.");
+
+    
+    // enable PGA
+    //_RF1 = 1;
+    //_RD11 = 1;
+    
+    gconfig.adc16_config.channel_select = ADC16_CHANNEL_SELECT_MODE_AUTO;
+    gconfig.adc16_config.channel = ADC16_CH0;
+    gconfig.adc16_config.sample_frequency = 5000UL*4*8;
+    gconfig.adc16_config.rx_callback = adc_rx_callback_5khz;
+    gconfig.adc16_config.adc16_buffer_size = ADC_5KHZ_BUFFER_LENGTH;
+    
+    init_filters_5khz_lia();
+    
+    // update DAC configuration
+    init_dac(&gconfig, false); // also starts DAC
+    
+    init_adc(&gconfig.adc_config);
+    
+    for(i = 0; i < PLANALTA_N_ADC_CHANNELS; i+=2){
+        gconfig.pga_config[i].status = PGA_STATUS_ON;
+        init_pga(&gconfig.pga_config[i]);
+    }
+    
+    planalta_set_filters(&gconfig);
+    
+    adc_start(&gconfig.adc_config); 
+    
+
+    stop_dac();*/
 }
