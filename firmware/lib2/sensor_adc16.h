@@ -4,6 +4,7 @@
 #include <xc.h>
 #include <utilities.h>
 #include <spi.h>
+#include <pga.h> 
 
 /// @brief ADC16 ping-pong buffer length for incoming data.
 #define ADC16_MAX_BUFFER_LENGTH 200
@@ -19,6 +20,8 @@
 
 /// @brief ADC16 number of channels.
 #define ADC16_N_CHANNELS 8
+
+#define SENSOR_ADC16_CAN_DATA_LENGTH (2+sizeof(uint32_t))
 
 /// @brief ADC16 command codes.
 typedef enum
@@ -144,7 +147,7 @@ typedef enum
 } adc16_status_t;
 
 /**
- * @brief ADC16 configuration structure.
+ * @brief ADC16 hardware configuration structure.
  *
  * This structure holds the configuration settings for the ADC16 peripheral.
  *
@@ -195,7 +198,39 @@ typedef struct
     const pin_t conv_pin;
     uint16_t channel_offset[ADC16_N_CHANNELS];
     void (*rx_callback)(void);
+} sensor_adc16_hw_config_t;
+
+/**
+ * @brief ADC16 software configuration structure
+ * 
+ * @param enable_ch_a: enable 16-bit ADC channel
+ * @param enable_ch_b: enable 12-bit ADC channel
+ * 
+ * @param normalise_ch_a: normalise accumulation of 16-bit readout to 16-bit
+ * @param normalise_ch_b: normalise accumulation of 12-bit readout to 12-bit
+ * 
+ * @param result_ch_a: 16-bit register result (unnormalised)
+ * @param result_ch_b: 12-bit register result (unnormalised)
+ */
+typedef struct {
+    bool enable_ch;
+    
+    bool normalise_ch;
+    
+    uint32_t result_ch;
+    uint16_t count;
+    
+    pga_config_t* pga;
 } sensor_adc16_config_t;
+
+/**
+ * @brief ADC16 sensor configuration registers
+ */
+typedef enum {
+    sensor_adc16_gloxinia_register_general = 0x00, ///< General register with sample rate info
+    sensor_adc16_gloxinia_register_config = 0x01,  ///< Channel and normalisation enable/disable register
+            sensor_adc16_gloxinia_register_pga = 0x02,
+} sensor_adc16_gloxinia_register_t;
 
 #ifdef __cplusplus
 extern "C"
@@ -208,6 +243,15 @@ extern "C"
     /// @brief ADC16 receive buffers.
     extern unsigned int adc16_rx_buffer_a[ADC16_MAX_BUFFER_LENGTH] __attribute__((space(dma), eds));
     extern unsigned int adc16_rx_buffer_b[ADC16_MAX_BUFFER_LENGTH] __attribute__((space(dma), eds));
+    
+    struct sensor_gconfig_s;
+    void sensor_adc16_get_config(struct sensor_gconfig_s* intf, uint8_t reg, uint8_t* buffer, uint8_t* length);
+    sensor_status_t sensor_adc16_config(struct sensor_gconfig_s *intf, uint8_t *buffer, uint8_t length);
+    bool validate_adc16_config(sensor_adc16_config_t *config);
+    
+    void sensor_adc16_activate(struct sensor_gconfig_s* intf);
+    
+    void sensor_adc16_measure(void *data);
 
     /**
      * @brief Initialisation function for ADC.
@@ -217,7 +261,7 @@ extern "C"
      *
      * @param config ADC16 configuration structure.
      */
-    void adc16_init(sensor_adc16_config_t *config);
+    void adc16_init(sensor_adc16_hw_config_t *config);
 
     /**
      * @brief Fast initialisation function of ADC.
@@ -229,28 +273,28 @@ extern "C"
      *
      * @param config ADC16 configuration structure.
      */
-    void adc16_init_fast(sensor_adc16_config_t *config);
+    void adc16_init_fast(sensor_adc16_hw_config_t *config);
 
     /**
      * @brief Update function for ADC.
      *
      * @param config ADC16 configuration structure.
      */
-    void adc16_update(sensor_adc16_config_t *config);
+    void adc16_update(sensor_adc16_hw_config_t *config);
 
     /**
      * @brief Start ADC.
      *
      * @param config ADC16 configuration structure.
      */
-    void adc16_start(sensor_adc16_config_t *config);
+    void adc16_start(sensor_adc16_hw_config_t *config);
 
     /**
      * @brief Stop ADC.
      *
      * @param config ADC16 configuration structure.
      */
-    void adc16_stop(sensor_adc16_config_t *config);
+    void adc16_stop(sensor_adc16_hw_config_t *config);
 
     /// @brief ADC16 dummy callback used in the default initalisation.
     void adc16_callback_dummy(void);
@@ -272,7 +316,7 @@ extern "C"
      *
      * @return ADC reading.
      */
-    uint16_t adc16_read_channel(sensor_adc16_config_t *config);
+    uint16_t adc16_read_channel(sensor_adc16_hw_config_t *config);
 
     /**
      * @brief Runs calibration of ADC.
@@ -288,7 +332,7 @@ extern "C"
      * @param ref Reference voltage.
      * @return ADC reading.
      */
-    uint16_t adc16_run_calibration(sensor_adc16_config_t *config, const uint16_t ref);
+    uint16_t adc16_run_calibration(sensor_adc16_hw_config_t *config, const uint16_t ref);
 
     /**
      * @brief Runs variance calibration of ADC.
@@ -303,7 +347,7 @@ extern "C"
      * @param max_value Maximum value.
      * @param mean Mean value.
     */
-    void adc16_run_max_var(sensor_adc16_config_t *config, uint16_t *const max_value,
+    void adc16_run_max_var(sensor_adc16_hw_config_t *config, uint16_t *const max_value,
                            uint16_t *const min_value, uint16_t *const mean);
 
 #ifdef __cplusplus

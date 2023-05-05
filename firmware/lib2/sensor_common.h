@@ -14,14 +14,13 @@ extern "C" {
 
 /// @brief Sensor type enumeration.
 typedef enum {
-    SENSOR_NOT_SET,             ///< Sensor not set
-    SENSOR_TYPE_SHT35,          ///< SHT35 sensor
-    SENSOR_TYPE_APDS9306_065,   ///< APDS9306_065 sensor
-    SENSOR_TYPE_ADC12,          ///< 12-bit ADC readout
-    SENSOR_TYPE_ADC16,          ///< 16-bit ADC readour
-    SENSOR_TYPE_LIA,            ///< lock-in amplifier sensor
-    SENSOR_TYPE_TWO_ADCs,       ///< combined 12- and 16-bit ADC readout
-    SENSOR_TYPE_ANALOGUE,       ///< Analogue sensor (12 bit)
+    SENSOR_NOT_SET           = 0,
+    SENSOR_TYPE_SHT35        = 1,   ///< SHT35 sensor
+    SENSOR_TYPE_APDS9306_065 = 2,   ///< APDS9306_065 sensor
+    SENSOR_TYPE_ADC12        = 3,   ///< 12-bit ADC readout
+    SENSOR_TYPE_ADC16        = 4,   ///< 16-bit ADC readour
+    SENSOR_TYPE_LIA          = 5,   ///< lock-in amplifier sensor
+    SENSOR_TYPE_ADC12_ADC12  = 6,   ///< combined 12- and 12-bit ADC readout
 } sensor_type_t;
 
 /// @brief Sensor status enumeration.

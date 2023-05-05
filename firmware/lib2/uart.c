@@ -43,8 +43,12 @@ void uart_init(uint32_t baudrate)
     U2MODEbits.URXINV = 0;
     U2BRG = ((FCY / baudrate) / 16) - 1; // BAUD Rate Setting for 9600
 
+#ifdef __DICIO__
     U2MODEbits.UEN = 0b10; // use flow control
-
+#else 
+    U2MODEbits.UEN = 0b00; // no control flow
+#endif
+    
     //  Configure UART for DMA transfers
     U2STAbits.UTXISEL0 = 0; // Interrupt after one Tx character is transmitted
     U2STAbits.UTXISEL1 = 0;

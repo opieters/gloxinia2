@@ -157,8 +157,8 @@ extern "C"
         uint8_t m_read_address[1];
         uint8_t m_read_data[3];
     } sensor_apds9306_065_config_t;
-
-    struct sensor_interface_s;
+    
+    struct sensor_gconfig_s;
 
     /**
      * @brief Initialisation of APDS9306-065 sensor.
@@ -167,11 +167,11 @@ extern "C"
      *
      * @return i2c_status_t indicating status of the I2C transfer.
      */
-    sensor_status_t sensor_apds9306_065_config(struct sensor_interface_s *intf, uint8_t *buffer, uint8_t length);
-    void sensor_apds9306_065_get_config(struct sensor_interface_s *intf, uint8_t reg, uint8_t *buffer, uint8_t *length);
+    sensor_status_t sensor_apds9306_065_config(struct sensor_gconfig_s *intf, uint8_t *buffer, uint8_t length);
+    void sensor_apds9306_065_get_config(struct sensor_gconfig_s *intf, uint8_t reg, uint8_t *buffer, uint8_t *length);
 
-    void sensor_apds9306_065_init_sensor(struct sensor_interface_s *intf);
-    void sensor_apds9306_065_activate(struct sensor_interface_s *intf);
+    void sensor_apds9306_065_init_sensor(struct sensor_gconfig_s *intf);
+    void sensor_apds9306_065_activate(struct sensor_gconfig_s *intf);
 
     /**
      * @brief Send APDS9306-065 I2C data over CAN bus.

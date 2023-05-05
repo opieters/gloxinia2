@@ -4,13 +4,18 @@
 #include <xc.h>
 #include <can.h>
 #include <i2c.h>
-#include <sensor_sht35.h>
-#include <sensor_apds9306_065.h>
-#include <sensor_analog.h>
 #include <sensor_common.h>
 #include <event_controller.h>
+
 #include <sensor_adc12.h>
+#include <sensor_adc16.h>
+#include <sensor_analog.h>
+#include <sensor_apds9306_065.h>
 #include <sensor_lia.h>
+#include <sensor_sht35.h>
+
+/// @brief Maximum number of distinct sensors connected to a single interface
+#define SENSOR_INTERFACE_MAX_SENSORS 4
 
 /// @brief Number of sensor interfaces of dicio board
 #define DICIO_N_SENSOR_IFS 4
@@ -34,18 +39,35 @@
 typedef union sensor_config_s
 {
     sensor_sht35_config_t sht35;               ///< SHT35 sensor configuration
-    sensor_analogue_config_t analogue;         ///< Analogue sensor configuration
+    //sensor_analogue_config_t analogue;         ///< Analogue sensor configuration
     sensor_apds9306_065_config_t apds9306_065; ///< APDS9306-065 sensor configuration
     sensor_adc12_config_t adc12;               ///< Internal 12-bit sensor configuration
     sensor_adc16_config_t adc16;               ///< 16-bit ADC sensor configuration
     sensor_lia_config_t lia;                   ///< lock-in amplifier sensor configuration
 } sensor_config_t;
 
+typedef struct sensor_gconfig_s
+{
+    uint8_t sensor_id;
+    
+    sensor_type_t sensor_type;
+    sensor_status_t status;
+    sensor_config_t sensor_config;
+
+    task_schedule_t measure;
+
+    message_t log;
+    uint8_t log_data[CAN_MAX_N_BYTES];
+    
+    struct sensor_interface_s* interface;
+} sensor_gconfig_t;
+
+
 /**
  * @brief Sensor interface structure
  *
- * @param sensor_type Sensor type
- * @param sensor_id Sensor ID
+ * @param sensor_types_enabled Indicated if certain sensor is activated or not
+ * @param sensor_id Interface ID
  * @param config Sensor configuration
  * @param status Sensor status
  * @param measure Task schedule for measurement
@@ -54,20 +76,14 @@ typedef union sensor_config_s
  */
 typedef struct sensor_interface_s
 {
-    sensor_type_t sensor_type;
-    uint8_t sensor_id;
-    sensor_config_t config;
+    uint8_t interface_id;
 
-    sensor_status_t status;
-
-    task_schedule_t measure;
-
-    message_t log;
-    uint8_t log_data[CAN_MAX_N_BYTES];
+    sensor_gconfig_t gsensor_config[SENSOR_INTERFACE_MAX_SENSORS];
 } sensor_interface_t;
 
+
 /// @brief // Sensor interface array
-extern sensor_interface_t sensor_interfaces[N_SENSOR_INTERFACES];
+extern sensor_interface_t* sensor_interfaces[];//[N_SENSOR_INTERFACES];
 
 #ifdef __cplusplus
 extern "C"
@@ -115,7 +131,7 @@ extern "C"
      * @param data Error data
      * @param length Length of error data
      */
-    void sensor_error_log(sensor_interface_t *intf, uint8_t *data, uint8_t length);
+    void sensor_error_log(sensor_gconfig_t *gsc, uint8_t *data, uint8_t length);
 
     /**
      * @brief Handle sensor error (general method)
@@ -124,7 +140,7 @@ extern "C"
      *
      * @details This method is called when an error occurs on a sensor interface. It logs the error by transmitting the current sensor status. It also removes the sensor from the measurement schedule.
      */
-    void sensor_error_handle(sensor_interface_t *intf);
+    void sensor_error_handle(sensor_gconfig_t *gsc);
 
     /**
      * @brief Handle sensor error (I2C)
@@ -135,7 +151,7 @@ extern "C"
      * @param m I2C message
      * @param location Location where error occurred
      */
-    void sensor_i2c_error_handle(sensor_interface_t *intf, i2c_message_t *m, uint8_t location);
+    void sensor_i2c_error_handle(sensor_gconfig_t *gsc, i2c_message_t *m, uint8_t location);
 
     /**
      * @brief Updates sensor status to SENSOR_STATUS_ACTIVE

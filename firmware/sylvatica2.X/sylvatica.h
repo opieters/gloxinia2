@@ -96,6 +96,12 @@ extern "C" {
     void sylvatica_filters_init(void);
     void sylvatic_adc16_callback(void);
     
+    void process_filter_block0(void* data);
+    void process_filter_block1(void* data);
+    void process_filter_block2(void* data);
+    void process_filter_block3(void* data);
+    void sylatica_clock_init(void);
+    
     
 #ifdef	__cplusplus
 }

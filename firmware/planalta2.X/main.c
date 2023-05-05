@@ -32,7 +32,7 @@
 #pragma config ALTI2C1 = OFF    //Alternate I2C pins for I2C1->SDA1/SCK1 pins are selected as the I/O pins for I2C1
 
 // FICD
-#pragma config ICS = PGD1    //ICD Communication Channel Select bits->Communicate on PGEC1 and PGED1
+#pragma config ICS = PGD2    //ICD Communication Channel Select bits->Communicate on PGEC1 and PGED1
 #pragma config RSTPRI = PF    //Reset Target Vector Select bit->Device will obtain reset instruction from Primary flash
 #pragma config JTAGEN = OFF    //JTAG Enable bit->JTAG is disabled
 

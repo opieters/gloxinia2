@@ -1,63 +1,16 @@
-/**
-  @Generated PIC24 / dsPIC33 / PIC32MM MCUs Source File
-
-  @Company:
-    Microchip Technology Inc.
-
-  @File Name:
-    system.h
-
-  @Summary:
-    This is the sysetm.h file generated using PIC24 / dsPIC33 / PIC32MM MCUs
-
-  @Description:
-    This header file provides implementations for driver APIs for all modules selected in the GUI.
-    Generation Information :
-        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.171.1
-        Device            :  dsPIC33EP512MC806
-    The generated drivers are tested against the following:
-        Compiler          :  XC16 v1.70
-        MPLAB             :  MPLAB X v5.50
-*/
-
-/*
-    (c) 2020 Microchip Technology Inc. and its subsidiaries. You may use this
-    software and any derivatives exclusively with Microchip products.
-
-    THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER
-    EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE, INCLUDING ANY IMPLIED
-    WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, AND FITNESS FOR A
-    PARTICULAR PURPOSE, OR ITS INTERACTION WITH MICROCHIP PRODUCTS, COMBINATION
-    WITH ANY OTHER PRODUCTS, OR USE IN ANY APPLICATION.
-
-    IN NO EVENT WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE,
-    INCIDENTAL OR CONSEQUENTIAL LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND
-    WHATSOEVER RELATED TO THE SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP HAS
-    BEEN ADVISED OF THE POSSIBILITY OR THE DAMAGES ARE FORESEEABLE. TO THE
-    FULLEST EXTENT ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL CLAIMS IN
-    ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
-    THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
-
-    MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE
-    TERMS.
-*/
-
-// Configuration bits: selected in the GUI
-
-// FGS
 #pragma config GWRP = OFF    //General Segment Write-Protect bit->General Segment may be written
 #pragma config GSS = OFF    //General Segment Code-Protect bit->General Segment Code protect is disabled
 #pragma config GSSK = OFF    //General Segment Key bits->General Segment Write Protection and Code Protection is Disabled
 
 // FOSCSEL
-#pragma config FNOSC = FRCDIVN    //Initial Oscillator Source Selection bits->Internal Fast RC (FRC) Oscillator with postscaler
+#pragma config FNOSC = FRC    //Initial Oscillator Source Selection bits->Internal Fast RC (FRC) Oscillator with postscaler
 #pragma config IESO = OFF    //Two-speed Oscillator Start-up Enable bit->Start up with user-selected oscillator source
 
 // FOSC
-#pragma config POSCMD = NONE    //Primary Oscillator Mode Select bits->Primary Oscillator disabled
+#pragma config POSCMD = XT    //Primary Oscillator Mode Select bits->Primary Oscillator disabled
 #pragma config OSCIOFNC = OFF    //OSC2 Pin Function bit->OSC2 is clock output
-#pragma config IOL1WAY = ON    //Peripheral pin select configuration->Allow only one reconfiguration
-#pragma config FCKSM = CSDCMD    //Clock Switching Mode bits->Both Clock switching and Fail-safe Clock Monitor are disabled
+#pragma config IOL1WAY = OFF    //Peripheral pin select configuration->Allow only one reconfiguration
+#pragma config FCKSM = CSECMD    //Clock Switching Mode bits->Both Clock switching and Fail-safe Clock Monitor are disabled
 
 // FWDT
 #pragma config WDTPOST = PS32768    //Watchdog Timer Postscaler bits->1:32768
@@ -69,7 +22,7 @@
 // FPOR
 #pragma config FPWRT = PWR128    //Power-on Reset Timer Value Select bits->128ms
 #pragma config BOREN = ON    //Brown-out Reset (BOR) Detection Enable bit->BOR is enabled
-#pragma config ALTI2C1 = OFF    //Alternate I2C pins for I2C1->SDA1/SCK1 pins are selected as the I/O pins for I2C1
+#pragma config ALTI2C1 = ON    //Alternate I2C pins for I2C1
 
 // FICD
 #pragma config ICS = PGD1    //ICD Communication Channel Select bits->Communicate on PGEC1 and PGED1

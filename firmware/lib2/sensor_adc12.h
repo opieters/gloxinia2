@@ -1,15 +1,30 @@
-#ifndef __ADC_H__
-#define	__ADC_H__
+#ifndef __ADC12_H__
+#define	__ADC12_H__
 
 #include <xc.h>
+#include <dsp.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <sensor_common.h>
 
-#define ADC12_CHANNEL_SAMPLE_RATE         20000UL
+#define ADC12_CHANNEL_SAMPLE_RATE         8000UL
 #define ADC12_N_CHANNELS                      8U
-#define ADC12_DMA_BUFFER_SIZE                 8U
+#define ADC12_DMA_BUFFER_SIZE               100U
 #define ADC12_FULL_SAMPLE_CONVERSION_T_AD    20U
+
+#define SENSOR_ADC12_DEC_FACT_F0 10
+#define SENSOR_ADC12_DEC_FACT_F1 10
+#define SENSOR_ADC12_DEC_FACT_F2 10
+#define SENSOR_ADC12_DEC_FACT_F3 5
+
+#define SENSOR_ADC12_COPY_BUFFER_SIZE         (10*SENSOR_ADC12_DEC_FACT_F0)
+#define SENSOR_ADC12_BLOCK1_INPUT_SIZE        (10*SENSOR_ADC12_DEC_FACT_F1)
+#define SENSOR_ADC12_BLOCK2_INPUT_SIZE        (1*SENSOR_ADC12_DEC_FACT_F2)
+#define SENSOR_ADC12_BLOCK3_INPUT_SIZE        (SENSOR_ADC12_DEC_FACT_F3)
+#define SENSOR_ADC12_BLOCK0_OUTPUT_SIZE       (SENSOR_ADC12_COPY_BUFFER_SIZE  / SENSOR_ADC12_DEC_FACT_F0)
+#define SENSOR_ADC12_BLOCK1_OUTPUT_SIZE       (SENSOR_ADC12_BLOCK1_INPUT_SIZE / SENSOR_ADC12_DEC_FACT_F1)
+#define SENSOR_ADC12_BLOCK2_OUTPUT_SIZE       (SENSOR_ADC12_BLOCK2_INPUT_SIZE / SENSOR_ADC12_DEC_FACT_F2)
+#define SENSOR_ADC12_BLOCK3_OUTPUT_SIZE       (SENSOR_ADC12_BLOCK3_INPUT_SIZE / SENSOR_ADC12_DEC_FACT_F3)
 
 /// @brief Internal 12-bit ADC sensor configuration structure
 
@@ -46,7 +61,14 @@ typedef struct sensor_adc12_engine_config_s {
     sensor_adc12_config_t* channel_config[ADC12_N_CHANNELS];
 } sensor_adc12_engine_config_t;
 
-struct sensor_interface_s;
+struct sensor_gconfig_s;
+
+extern fractional adc12_output_buffer[ADC12_N_CHANNELS];
+extern int32_t adc12_output_sum_buffer[ADC12_N_CHANNELS];
+extern uint16_t adc12_output_sum_counter[ADC12_N_CHANNELS];
+extern volatile uint8_t sensor_adc12_adc_buffer_selector;
+extern fractional adc12_buffer_a[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (eds, aligned(256), space(xmemory)) );
+extern fractional adc12_buffer_b[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (eds, aligned(256), space(xmemory)) );
 
 #ifdef	__cplusplus
 extern "C" {
@@ -62,12 +84,12 @@ extern "C" {
      *
      * @return  indicating status of the I2C transfer.
      */
-    sensor_status_t sensor_adc12_config(struct sensor_interface_s *intf, uint8_t *buffer, uint8_t length);
-    void sensor_adc12_get_config(struct sensor_interface_s *intf, uint8_t reg, uint8_t *buffer, uint8_t *length);
+    sensor_status_t sensor_adc12_config(struct sensor_gconfig_s *intf, uint8_t *buffer, uint8_t length);
+    void sensor_adc12_get_config(struct sensor_gconfig_s *intf, uint8_t reg, uint8_t *buffer, uint8_t *length);
 
     
-    void sensor_adc12_init_sensor(struct sensor_interface_s *intf);
-    void sensor_adc12_activate(struct sensor_interface_s *intf);
+    void sensor_adc12_init_sensor(struct sensor_gconfig_s *config);
+    void sensor_adc12_activate(struct sensor_gconfig_s *config);
     
     bool validate_sensor_adc12_config(sensor_adc12_config_t *config);
     bool validate_adc12_config(sensor_adc12_config_t *config);

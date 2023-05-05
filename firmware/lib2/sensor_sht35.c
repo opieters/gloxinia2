@@ -6,19 +6,19 @@
 static void sht35_config_phase1_cb(i2c_message_t *m);
 static void sht35_config_phase2_cb(i2c_message_t *m);
 
-void sensor_sht35_get_config(struct sensor_interface_s* intf, uint8_t reg, uint8_t* buffer, uint8_t* length){
-    sensor_sht35_config_t *config = &intf->config.sht35;
+void sensor_sht35_get_config(struct sensor_gconfig_s* gsc, uint8_t reg, uint8_t* buffer, uint8_t* length){
+    sensor_sht35_config_t *config = &gsc->sensor_config.sht35;
     
     buffer[0] = SENSOR_TYPE_SHT35;
     buffer[1] = reg;
     
     switch(reg){
         case sensor_sht35_gloxinia_register_general:
-            intf->measure.task.cb = sensor_sht35_measure;
-            intf->measure.task.data = (void *)intf;
+            gsc->measure.task.cb = sensor_sht35_measure;
+            gsc->measure.task.data = (void *)gsc;
 
-            buffer[2] = intf->measure.period >> 8;
-            buffer[3] = intf->measure.period & 0x0ff;
+            buffer[2] = gsc->measure.period >> 8;
+            buffer[3] = gsc->measure.period & 0x0ff;
             *length = 4;
             break;
         case sensor_sht35_gloxinia_register_config:
@@ -34,7 +34,7 @@ void sensor_sht35_get_config(struct sensor_interface_s* intf, uint8_t reg, uint8
     }
 }
 
-sensor_status_t sensor_sht35_config(struct sensor_interface_s *intf, uint8_t *buffer, uint8_t length)
+sensor_status_t sensor_sht35_config(struct sensor_gconfig_s *gsc, uint8_t *buffer, uint8_t length)
 {
     if (length < 1)
     {
@@ -43,7 +43,7 @@ sensor_status_t sensor_sht35_config(struct sensor_interface_s *intf, uint8_t *bu
 
     UART_DEBUG_PRINT("Configuring SHT35 sensor");
 
-    sensor_sht35_config_t *config = &intf->config.sht35;
+    sensor_sht35_config_t *config = &gsc->sensor_config.sht35;
     
     config->data_ready = false;
     
@@ -51,10 +51,10 @@ sensor_status_t sensor_sht35_config(struct sensor_interface_s *intf, uint8_t *bu
         case sensor_sht35_gloxinia_register_general:
             if (length != 3){ return SENSOR_STATUS_ERROR; }
             
-            intf->measure.task.cb = sensor_sht35_measure;
-            intf->measure.task.data = (void *)intf;
+            gsc->measure.task.cb = sensor_sht35_measure;
+            gsc->measure.task.data = (void *)gsc;
 
-            schedule_init(&intf->measure, intf->measure.task, (((uint16_t)buffer[1]) << 8) | buffer[2]);
+            schedule_init(&gsc->measure, gsc->measure.task, (((uint16_t)buffer[1]) << 8) | buffer[2]);
 
             return SENSOR_STATUS_IDLE;
             
@@ -64,7 +64,7 @@ sensor_status_t sensor_sht35_config(struct sensor_interface_s *intf, uint8_t *bu
             
             // load configuration from buffer into data structure
             config->address = buffer[1];
-            config->i2c_bus = sensor_get_i2c_bus(intf->sensor_id);
+            config->i2c_bus = sensor_get_i2c_bus(gsc->interface->interface_id);
             config->repeatability = (sensor_sht35_repeatability_t)buffer[2];
             config->clock = (sensor_sht35_clock_stretching_t)buffer[3];
             config->rate = (sensor_sht35_sample_rate_t)buffer[4];
@@ -76,7 +76,7 @@ sensor_status_t sensor_sht35_config(struct sensor_interface_s *intf, uint8_t *bu
                 return SENSOR_STATUS_ERROR;
             } else {
                 // start sensor initialisation (async) only when configuration is OK
-                sht35_init_sensor(intf);
+                sht35_init_sensor(gsc);
             }
             break;
         default:
@@ -88,54 +88,54 @@ sensor_status_t sensor_sht35_config(struct sensor_interface_s *intf, uint8_t *bu
 
 void sensor_sht35_measure(void *data)
 {
-    struct sensor_interface_s *intf = (struct sensor_interface_s *)data;
+    sensor_gconfig_t* gsc = (struct sensor_gconfig_s *)data;
 
-    if (intf->config.sht35.periodicity == S_SHT35_SINGLE_SHOT)
+    if (gsc->sensor_config.sht35.periodicity == S_SHT35_SINGLE_SHOT)
     {
-        if (i2c_check_message_sent(&intf->config.sht35.m_read) &&
-            i2c_check_message_sent(&intf->config.sht35.m_config))
+        if (i2c_check_message_sent(&gsc->sensor_config.sht35.m_read) &&
+            i2c_check_message_sent(&gsc->sensor_config.sht35.m_config))
         {
-            i2c_reset_message(&intf->config.sht35.m_read, 1);
-            i2c_queue_message(&intf->config.sht35.m_read);
-            i2c_reset_message(&intf->config.sht35.m_config, 1);
-            i2c_queue_message(&intf->config.sht35.m_config);
+            i2c_reset_message(&gsc->sensor_config.sht35.m_read, 1);
+            i2c_queue_message(&gsc->sensor_config.sht35.m_read);
+            i2c_reset_message(&gsc->sensor_config.sht35.m_config, 1);
+            i2c_queue_message(&gsc->sensor_config.sht35.m_config);
         }
         else
         {
-            UART_DEBUG_PRINT("SHT35 on %x not fully processed.", intf->sensor_id);
-            intf->config.sht35.m_read.status = I2C_MESSAGE_CANCELED;
-            intf->config.sht35.m_config.status = I2C_MESSAGE_CANCELED;
+            UART_DEBUG_PRINT("SHT35 on %x not fully processed.", gsc->sensor_id | (gsc->interface->interface_id << 4));
+            gsc->sensor_config.sht35.m_read.status = I2C_MESSAGE_CANCELED;
+            gsc->sensor_config.sht35.m_config.status = I2C_MESSAGE_CANCELED;
 
-            intf->status = SENSOR_STATUS_ERROR;
-            sensor_error_handle(intf);
+            gsc->status = SENSOR_STATUS_ERROR;
+            sensor_error_handle(gsc);
         }
     }
     else
     {
-        if (i2c_check_message_sent(&intf->config.sht35.m_fetch))
+        if (i2c_check_message_sent(&gsc->sensor_config.sht35.m_fetch))
         {
-            i2c_reset_message(&intf->config.sht35.m_fetch, 1);
-            i2c_queue_message(&intf->config.sht35.m_fetch);
+            i2c_reset_message(&gsc->sensor_config.sht35.m_fetch, 1);
+            i2c_queue_message(&gsc->sensor_config.sht35.m_fetch);
         }
         else
         {
-            UART_DEBUG_PRINT("SHT35 %x not fully processed.", intf->sensor_id);
-            intf->status = SENSOR_STATUS_ERROR;
+            UART_DEBUG_PRINT("SHT35 %x not fully processed.", gsc->sensor_id | (gsc->interface->interface_id << 4));
+            gsc->status = SENSOR_STATUS_ERROR;
 
-            sensor_error_handle(intf);
+            sensor_error_handle(gsc);
         }
     }
 }
 
-void sht35_init_sensor(struct sensor_interface_s *intf)
+void sht35_init_sensor(struct sensor_gconfig_s *gsc)
 {
     void (*callback)(i2c_message_t * m);
 
-    sensor_sht35_config_t *config = &intf->config.sht35;
+    sensor_sht35_config_t *config = &gsc->sensor_config.sht35;
     
     UART_DEBUG_PRINT("Configuring SHT35 init sensor");
 
-    switch (intf->config.sht35.periodicity)
+    switch (config->periodicity)
     {
     case S_SHT35_SINGLE_SHOT:
         callback = sht35_i2c_cb_single_shot_m_read;
@@ -158,7 +158,7 @@ void sht35_init_sensor(struct sensor_interface_s *intf)
         i2c_get_read_controller(config->i2c_bus),
         3,
         callback,
-        (uint8_t *)intf,
+        (uint8_t *)gsc,
         0);
 
     // send break command to stop acquisition if one is ongoing
@@ -176,7 +176,7 @@ void sht35_init_sensor(struct sensor_interface_s *intf)
         i2c_get_write_controller(config->i2c_bus),
         3,
         sht35_config_phase1_cb,
-        (uint8_t *)intf,
+        (uint8_t *)gsc,
         0);
 
     i2c_queue_message(&config->m_config);
@@ -184,20 +184,20 @@ void sht35_init_sensor(struct sensor_interface_s *intf)
 
 static void sht35_config_phase1_cb(i2c_message_t *m)
 {
-    struct sensor_interface_s *intf = (struct sensor_interface_s *)m->callback_data;
-    sensor_sht35_config_t *config = (sensor_sht35_config_t *)&intf->config.sht35;
+    struct sensor_gconfig_s *gsc = (struct sensor_gconfig_s *)m->callback_data;
+    sensor_sht35_config_t *config = (sensor_sht35_config_t *)&gsc->sensor_config.sht35;
     
     if (m->error != I2C_NO_ERROR)
     {
-        intf->log_data[0] = m->status;
-        intf->log_data[1] = m->error;
-        intf->log_data[2] = S_SHT35_ERROR_PHASE1_CB;
-        sensor_error_log(intf, intf->log_data, 3);
+        gsc->log_data[0] = m->status;
+        gsc->log_data[1] = m->error;
+        gsc->log_data[2] = S_SHT35_ERROR_PHASE1_CB;
+        sensor_error_log(gsc, gsc->log_data, 3);
         
         UART_DEBUG_PRINT("Configuring SHT35 CB1 ERR");
         
-        intf->status = SENSOR_STATUS_ERROR;
-        sensor_error_handle(intf);
+        gsc->status = SENSOR_STATUS_ERROR;
+        sensor_error_handle(gsc);
         return;
     }
     
@@ -298,7 +298,7 @@ static void sht35_config_phase1_cb(i2c_message_t *m)
             i2c_get_write_controller(config->i2c_bus),
             3,
             sht35_i2c_cb_periodic_m_fetch,
-            (uint8_t *)intf,
+            (uint8_t *)gsc,
             0);
     }
     else
@@ -348,7 +348,7 @@ static void sht35_config_phase1_cb(i2c_message_t *m)
                      i2c_get_write_controller(config->i2c_bus),
                      3,
                      sht35_config_phase2_cb,
-                     (uint8_t *)intf,
+                     (uint8_t *)gsc,
                      0);
 
     i2c_queue_message(&config->m_config2);
@@ -356,8 +356,8 @@ static void sht35_config_phase1_cb(i2c_message_t *m)
 
 static void sht35_config_phase2_cb(i2c_message_t *m)
 {
-    struct sensor_interface_s *intf = (struct sensor_interface_s *)m->callback_data;
-    sensor_sht35_config_t *config = (sensor_sht35_config_t *)&intf->config.sht35;
+    struct sensor_gconfig_s *gsc = (struct sensor_gconfig_s *)m->callback_data;
+    sensor_sht35_config_t *config = (sensor_sht35_config_t *)&gsc->sensor_config.sht35;
     message_t m_status;
     uint8_t data[1];
     void (*callback)(i2c_message_t * m);
@@ -366,13 +366,13 @@ static void sht35_config_phase2_cb(i2c_message_t *m)
     {
         UART_DEBUG_PRINT("Configuring SHT35 CB2 ERR");
         
-        intf->log_data[0] = m->status;
-        intf->log_data[1] = m->error;
-        intf->log_data[2] = S_SHT35_ERROR_PHASE2_CB;
-        sensor_error_log(intf, intf->log_data, 3);
+        gsc->log_data[0] = m->status;
+        gsc->log_data[1] = m->error;
+        gsc->log_data[2] = S_SHT35_ERROR_PHASE2_CB;
+        sensor_error_log(gsc, gsc->log_data, 3);
         
-        intf->status = SENSOR_STATUS_ERROR;
-        sensor_error_handle(intf);
+        gsc->status = SENSOR_STATUS_ERROR;
+        sensor_error_handle(gsc);
         return;
     }
     
@@ -398,44 +398,44 @@ static void sht35_config_phase2_cb(i2c_message_t *m)
                      i2c_get_write_controller(config->i2c_bus),
                      3,
                      callback,
-                     (uint8_t *)intf,
+                     (uint8_t *)gsc,
                      0);
 
     if (m->error != I2C_NO_ERROR)
     {
-        intf->status = SENSOR_STATUS_ERROR;
+        gsc->status = SENSOR_STATUS_ERROR;
     }
     else
     {
-        intf->status = SENSOR_STATUS_IDLE;
+        gsc->status = SENSOR_STATUS_IDLE;
     }
 
     message_init(&m_status, controller_address, MESSAGE_NO_REQUEST, M_SENSOR_STATUS,
-                 intf->sensor_id, data, ARRAY_LENGTH(data));
-    data[0] = intf->status;
+                 gsc->sensor_id | (gsc->interface->interface_id << 4), data, ARRAY_LENGTH(data));
+    data[0] = gsc->status;
 
     message_send(&m_status);
 }
 
-void sensor_sht35_activate(sensor_interface_t* intf){
-    intf->status = SENSOR_STATUS_RUNNING;
+void sensor_sht35_activate(struct sensor_gconfig_s* gsc){
+    gsc->status = SENSOR_STATUS_RUNNING;
 }
 
 void sht35_i2c_cb_periodic_m_fetch(i2c_message_t *m)
 {
-    struct sensor_interface_s *intf = (struct sensor_interface_s *)m->callback_data;
-    sensor_sht35_config_t *config = (sensor_sht35_config_t *)&intf->config.sht35;
+    struct sensor_gconfig_s *gsc = (struct sensor_gconfig_s *)m->callback_data;
+    sensor_sht35_config_t *config = (sensor_sht35_config_t *)&gsc->sensor_config.sht35;
 
     if (m->error != I2C_NO_ERROR)
     {
-        intf->log_data[0] = m->status;
-        intf->log_data[1] = m->error;
-        intf->log_data[2] = S_SHT35_ERROR_FETCH_PERIODIC;
+        gsc->log_data[0] = m->status;
+        gsc->log_data[1] = m->error;
+        gsc->log_data[2] = S_SHT35_ERROR_FETCH_PERIODIC;
 
-        sensor_error_log(intf, intf->log_data, 3);
+        sensor_error_log(gsc, gsc->log_data, 3);
         
-        intf->status = SENSOR_STATUS_ERROR;
-        sensor_error_handle(intf);
+        gsc->status = SENSOR_STATUS_ERROR;
+        sensor_error_handle(gsc);
         
     }
     else
@@ -449,7 +449,7 @@ void sht35_i2c_cb_periodic_m_read(i2c_message_t *m)
 {
     // check CRC
     uint8_t crc_temperature = 0xFF, crc_rh = 0xFF;
-    struct sensor_interface_s *intf = (struct sensor_interface_s *)m->callback_data;
+    struct sensor_gconfig_s *gsc = (struct sensor_gconfig_s *)m->callback_data;
 
     if (m->error == I2C_NO_ERROR)
     {
@@ -465,14 +465,14 @@ void sht35_i2c_cb_periodic_m_read(i2c_message_t *m)
         }
         else
         {
-            message_init(&intf->log,
+            message_init(&gsc->log,
                          controller_address,
                          MESSAGE_NO_REQUEST,
                          M_SENSOR_DATA,
-                         intf->sensor_id,
+                         gsc->sensor_id | (gsc->interface->interface_id << 4),
                          m->read_data,
                          SENSOR_SHT35_CAN_DATA_LENGTH);
-            message_send(&intf->log);
+            message_send(&gsc->log);
             
 #ifdef __DICIO__
             sdcard_save_sensor_data(SENSOR_TYPE_SHT35, m->read_data, SENSOR_SHT35_CAN_DATA_LENGTH);
@@ -481,32 +481,32 @@ void sht35_i2c_cb_periodic_m_read(i2c_message_t *m)
     }
     if (m->error != I2C_NO_ERROR)
     {
-        intf->log_data[0] = m->status;
-        intf->log_data[1] = m->error;
-        intf->log_data[2] = S_SHT35_ERROR_READOUT_PERIODIC;
+        gsc->log_data[0] = m->status;
+        gsc->log_data[1] = m->error;
+        gsc->log_data[2] = S_SHT35_ERROR_READOUT_PERIODIC;
 
-        sensor_error_log(intf, intf->log_data, 3);
+        sensor_error_log(gsc, gsc->log_data, 3);
         
-        intf->status = SENSOR_STATUS_ERROR;
-        sensor_error_handle(intf);
+        gsc->status = SENSOR_STATUS_ERROR;
+        sensor_error_handle(gsc);
     }
 }
 
 void sht35_i2c_cb_single_shot_m_config(i2c_message_t *m)
 {
-    struct sensor_interface_s *intf = (struct sensor_interface_s *)m->callback_data;
-    sensor_sht35_config_t *config = (sensor_sht35_config_t *)&intf->config.sht35;
+    struct sensor_gconfig_s *gsc = (struct sensor_gconfig_s *)m->callback_data;
+    sensor_sht35_config_t *config = (sensor_sht35_config_t *)&gsc->sensor_config.sht35;
     
     if (m->error != I2C_NO_ERROR)
     {
-        intf->log_data[0] = m->status;
-        intf->log_data[1] = m->error;
-        intf->log_data[2] = S_SHT35_ERROR_CONFIG_SINGLE_SHOT;
+        gsc->log_data[0] = m->status;
+        gsc->log_data[1] = m->error;
+        gsc->log_data[2] = S_SHT35_ERROR_CONFIG_SINGLE_SHOT;
 
-        sensor_error_log(intf, intf->log_data, 3);
+        sensor_error_log(gsc, gsc->log_data, 3);
         
-        intf->status = SENSOR_STATUS_ERROR;
-        sensor_error_handle(intf);
+        gsc->status = SENSOR_STATUS_ERROR;
+        sensor_error_handle(gsc);
         
         config->data_ready = false;
     } else {
@@ -516,9 +516,9 @@ void sht35_i2c_cb_single_shot_m_config(i2c_message_t *m)
 
 void sht35_i2c_cb_single_shot_m_read(i2c_message_t *m)
 {
-    struct sensor_interface_s *intf = (struct sensor_interface_s *)m->callback_data;
+    struct sensor_gconfig_s* gsc = (struct sensor_gconfig_s *)m->callback_data;
     uint8_t crc_temperature = 0xFF, crc_rh = 0xFF;
-    sensor_sht35_config_t *config = (sensor_sht35_config_t *)&intf->config.sht35;
+    sensor_sht35_config_t *config = (sensor_sht35_config_t *)&gsc->sensor_config.sht35;
     
     // if there is no data, stop processing
     if(!config->data_ready)
@@ -540,14 +540,14 @@ void sht35_i2c_cb_single_shot_m_read(i2c_message_t *m)
         }
         else
         {
-            message_init(&intf->log,
+            message_init(&gsc->log,
                          controller_address,
                          MESSAGE_NO_REQUEST,
                          M_SENSOR_DATA,
-                         intf->sensor_id,
+                         gsc->sensor_id | (gsc->interface->interface_id),
                          m->read_data,
                          SENSOR_SHT35_CAN_DATA_LENGTH);
-            message_send(&intf->log);
+            message_send(&gsc->log);
             
 #ifdef __DICIO__
             sdcard_save_sensor_data(SENSOR_TYPE_SHT35, m->read_data, SENSOR_SHT35_CAN_DATA_LENGTH);
@@ -556,14 +556,14 @@ void sht35_i2c_cb_single_shot_m_read(i2c_message_t *m)
     }
     if (m->error != I2C_NO_ERROR)
     {
-        intf->log_data[0] = m->status;
-        intf->log_data[1] = m->error;
-        intf->log_data[2] = S_SHT35_ERROR_READOUT_SINGLE_SHOT;
+        gsc->log_data[0] = m->status;
+        gsc->log_data[1] = m->error;
+        gsc->log_data[2] = S_SHT35_ERROR_READOUT_SINGLE_SHOT;
 
-        sensor_error_log(intf, intf->log_data, 3);
+        sensor_error_log(gsc, gsc->log_data, 3);
         
-        intf->status = SENSOR_STATUS_ERROR;
-        sensor_error_handle(intf);
+        gsc->status = SENSOR_STATUS_ERROR;
+        sensor_error_handle(gsc);
     }
 }
 

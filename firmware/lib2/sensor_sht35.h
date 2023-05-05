@@ -124,7 +124,7 @@ extern "C"
 
     // forward declaration of sensor_interface_s since cyclic dependency is not
     // allowed.
-    struct sensor_interface_s;
+    struct sensor_gconfig_s;
 
     /**
      * @brief Handle SHT35 sensor configuration data.
@@ -137,7 +137,7 @@ extern "C"
      *
      * @return sensor_status_t: Status of operation
      */
-    sensor_status_t sensor_sht35_config(struct sensor_interface_s *intf, uint8_t *buffer, uint8_t length);
+    sensor_status_t sensor_sht35_config(struct sensor_gconfig_s *config, uint8_t *buffer, uint8_t length);
 
     /**
      * @brief Write SHT35 sensor configuration to buffer.
@@ -149,7 +149,7 @@ extern "C"
      * @param buffer: Buffer to write configuration data to, should have sufficient length (min. 7 bytes)
      * @param length: Length of buffer
      */
-    void sensor_sht35_get_config(struct sensor_interface_s *intf, uint8_t reg, uint8_t *buffer, uint8_t *length);
+    void sensor_sht35_get_config(struct sensor_gconfig_s *config, uint8_t reg, uint8_t *buffer, uint8_t *length);
 
     /**
      * @brief Initialize SHT35 sensor over I2C bus.
@@ -163,7 +163,7 @@ extern "C"
      *
      * @param intf: Sensor interface
      */
-    void sht35_init_sensor(struct sensor_interface_s *intf);
+    void sht35_init_sensor(struct sensor_gconfig_s *intf);
 
     /**
      * @brief Activate SHT35 sensor readout.
@@ -172,7 +172,7 @@ extern "C"
      * It will only do this if the sensors is not yet scheduled and if the
      * configuration was successful.
      */
-    void sensor_sht35_activate(struct sensor_interface_s *intf);
+    void sensor_sht35_activate(struct sensor_gconfig_s *intf);
 
     /**
      * @brief Prepare SHT35 measurement.

@@ -3,7 +3,6 @@
 #include <event_controller.h>
 #include <utilities.h>
 #include <i2c.h>
-#include "mcc_generated_files/clock.h"
 
 /*
 #pragma config GWRP = OFF                       // General Segment Write-Protect bit (General Segment may be written)
@@ -46,10 +45,7 @@
 static task_t task;
 
 int main(void) 
-{
-    
-    CLOCK_Initialize();
-    
+{   
     sylvatica_init();
 
     while (1) {

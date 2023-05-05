@@ -35,7 +35,7 @@ uint8_t adc16_buffer_selector = 0;
 volatile uint8_t copy_buffer_selector = 0;
 
 
-sensor_adc16_config_t adc16_config = {
+sensor_adc16_hw_config_t adc16_config = {
     .channel_select = ADC16_CHANNEL_SELECT_MODE_AUTO,
     .conversion_clock_source = ADC16_CONVERSION_CLOCK_SOURCE_INTERNAL,
     .trigger_select = ADC16_TRIGGER_SELECT_MANUAL,
@@ -57,6 +57,29 @@ sensor_adc16_config_t adc16_config = {
     .cs_pin = PIN_INIT(E, 5),
     .conv_pin = PIN_INIT(F, 3)}
 ;
+
+sensor_interface_t sensor_interface1;
+sensor_interface_t sensor_interface2;
+sensor_interface_t sensor_interface3;
+sensor_interface_t sensor_interface4;
+
+sensor_interface_t* sensor_interfaces[N_SENSOR_INTERFACES] = 
+{
+    &sensor_interface1,
+    &sensor_interface2,
+    &sensor_interface3,
+    &sensor_interface4,
+};
+
+pga_config_t pga_config[N_SENSOR_INTERFACES] = {
+    { .cs_pin = PIN_INIT(B, 14) },
+    { .cs_pin = PIN_INIT(B, 2) },
+    { .cs_pin = PIN_INIT(B, 0) },
+    { .cs_pin = PIN_INIT(B, 1) }
+};
+
+const uint8_t n_sensor_interfaces = N_SENSOR_INTERFACES;
+
 
 void planalta_clock_init(void)
 {
@@ -240,6 +263,15 @@ void planalta_init(void){
     spi1_init();
     spi2_init();
     UART_DEBUG_PRINT("Initialised SPI.");
+    
+    for(int i = 0; i < N_SENSOR_INTERFACES; i++){
+        pga_config[i].status = PGA_STATUS_ON;
+        pga_config[i].spi_message_handler = spi1_send_message;
+        pga_init(&pga_config[i]);
+        
+        sensor_interfaces[i]->gsensor_config[0].sensor_config.adc16.pga = &pga_config[i];
+    }
+    UART_DEBUG_PRINT("Initialised PGAs.");
     
     planalta_filters_init();
     planalta_clear_filter_buffers();

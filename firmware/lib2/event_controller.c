@@ -2,8 +2,7 @@
 #include <xc.h>
 #include <event_controller.h>
 #include <stdbool.h>
-
-#include "utilities.h"
+#include <utilities.h>
 
 // variables for event scheduling and handling
 volatile uint16_t n_queued_tasks = 0;

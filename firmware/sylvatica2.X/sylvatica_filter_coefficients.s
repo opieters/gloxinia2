@@ -1,7 +1,7 @@
 ; number of filter taps
 .equ fir_coeffs_0_ntaps, 100
 
-.section ybss, ymemory, eds, data
+.section xbss, xmemory, eds, data
 .align 256
 
 .global _fir_coeffs_0
@@ -23,7 +23,7 @@ _fir_coeffs_0:
 ; number of filter taps
 .equ fir_coeffs_1_ntaps, 100
 
-.section ybss, ymemory, eds, data
+.section xbss, xmemory, eds, data
 .align 256
 
 .global _fir_coeffs_1
@@ -45,7 +45,7 @@ _fir_coeffs_1:
 ; number of filter taps
 .equ fir_coeffs_2_ntaps, 100
 
-.section ybss, ymemory, eds, data
+.section xbss, xmemory, eds, data
 .align 256
 
 .global _fir_coeffs_2
@@ -67,7 +67,7 @@ _fir_coeffs_2:
 ; number of filter taps
 .equ fir_coeffs_3_ntaps, 192
 
-.section ybss, ymemory, eds, data
+.section xbss, xmemory, eds, data
 .align 512
 
 .global _fir_coeffs_3

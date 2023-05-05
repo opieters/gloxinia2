@@ -4,13 +4,23 @@
 #include <sensor.h>
 #include <address.h>
 #include <utilities.h>
+#include <fir_common.h>
 
-fractional adc12_buffer_a[ADC12_N_CHANNELS][ADC12_DMA_BUFFER_SIZE]  __attribute__( (eds, aligned(256), space(xmemory)) );
-fractional adc12_buffer_b[ADC12_N_CHANNELS][ADC12_DMA_BUFFER_SIZE]  __attribute__( (eds, aligned(256), space(xmemory)) );
+fractional adc12_buffer_a[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (eds, aligned(256), space(xmemory)) );
+fractional adc12_buffer_b[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (eds, aligned(256), space(xmemory)) );
+
+fractional adc12_output_buffer[ADC12_N_CHANNELS];
+int32_t adc12_output_sum_buffer[ADC12_N_CHANNELS];
+uint16_t adc12_output_sum_counter[ADC12_N_CHANNELS];
+
+volatile uint8_t sensor_adc12_adc_buffer_selector = 0;
 
 
-void sensor_adc12_get_config(struct sensor_interface_s* intf, uint8_t reg, uint8_t* buffer, uint8_t* length){
-    sensor_adc12_config_t *config = &intf->config.adc12;
+
+
+
+void sensor_adc12_get_config(struct sensor_gconfig_s* intf, uint8_t reg, uint8_t* buffer, uint8_t* length){
+    sensor_adc12_config_t *config = &intf->sensor_config.adc12;
     
     buffer[0] = SENSOR_TYPE_ADC12;
     buffer[1] = reg;
@@ -36,7 +46,7 @@ void sensor_adc12_get_config(struct sensor_interface_s* intf, uint8_t reg, uint8
     }
 }
 
-sensor_status_t sensor_adc12_config(struct sensor_interface_s *intf, uint8_t *buffer, uint8_t length)
+sensor_status_t sensor_adc12_config(struct sensor_gconfig_s *intf, uint8_t *buffer, uint8_t length)
 {
     if (length < 1)
     {
@@ -45,7 +55,7 @@ sensor_status_t sensor_adc12_config(struct sensor_interface_s *intf, uint8_t *bu
 
     UART_DEBUG_PRINT("Configuring ADC12");
 
-    sensor_adc12_config_t *config = &intf->config.adc12;
+    sensor_adc12_config_t *config = &intf->sensor_config.adc12;
     
     config->result_ch_a = 0;
     config->result_ch_b = 0;
@@ -89,46 +99,47 @@ sensor_status_t sensor_adc12_config(struct sensor_interface_s *intf, uint8_t *bu
 
 void sensor_adc12_measure(void *data)
 {
-    struct sensor_interface_s *intf = (struct sensor_interface_s *)data;
+    struct sensor_gconfig_s *gsc = (struct sensor_gconfig_s *)data;
+    sensor_sht35_config_t* config = &gsc->sensor_config.sht35;
 
-    if (intf->config.sht35.periodicity == S_SHT35_SINGLE_SHOT)
+    if (config->periodicity == S_SHT35_SINGLE_SHOT)
     {
-        if (i2c_check_message_sent(&intf->config.sht35.m_read) &&
-            i2c_check_message_sent(&intf->config.sht35.m_config))
+        if (i2c_check_message_sent(&gsc->sensor_config.sht35.m_read) &&
+            i2c_check_message_sent(&config->m_config))
         {
-            i2c_reset_message(&intf->config.sht35.m_read, 1);
-            i2c_queue_message(&intf->config.sht35.m_read);
-            i2c_reset_message(&intf->config.sht35.m_config, 1);
-            i2c_queue_message(&intf->config.sht35.m_config);
+            i2c_reset_message(&config->m_read, 1);
+            i2c_queue_message(&config->m_read);
+            i2c_reset_message(&config->m_config, 1);
+            i2c_queue_message(&config->m_config);
         }
         else
         {
-            UART_DEBUG_PRINT("SHT35 on %x not fully processed.", intf->sensor_id);
-            intf->config.sht35.m_read.status = I2C_MESSAGE_CANCELED;
-            intf->config.sht35.m_config.status = I2C_MESSAGE_CANCELED;
+            UART_DEBUG_PRINT("SHT35 on %x not fully processed.", gsc->sensor_id | (gsc->interface->interface_id << 4));
+            config->m_read.status = I2C_MESSAGE_CANCELED;
+            config->m_config.status = I2C_MESSAGE_CANCELED;
 
-            intf->status = SENSOR_STATUS_ERROR;
-            sensor_error_handle(intf);
+            gsc->status = SENSOR_STATUS_ERROR;
+            sensor_error_handle(gsc);
         }
     }
     else
     {
-        if (i2c_check_message_sent(&intf->config.sht35.m_fetch))
+        if (i2c_check_message_sent(&config->m_fetch))
         {
-            i2c_reset_message(&intf->config.sht35.m_fetch, 1);
-            i2c_queue_message(&intf->config.sht35.m_fetch);
+            i2c_reset_message(&config->m_fetch, 1);
+            i2c_queue_message(&config->m_fetch);
         }
         else
         {
-            UART_DEBUG_PRINT("SHT35 %x not fully processed.", intf->sensor_id);
-            intf->status = SENSOR_STATUS_ERROR;
+            UART_DEBUG_PRINT("ADC12 %x not fully processed.",gsc->sensor_id | (gsc->interface->interface_id << 4));
+            gsc->status = SENSOR_STATUS_ERROR;
 
-            sensor_error_handle(intf);
+            sensor_error_handle(gsc);
         }
     }
 }
 
-void sensor_adc12_init_sensor(struct sensor_interface_s *intf)
+void sensor_adc12_init_sensor(struct sensor_gconfig_s *intf)
 {
     // each channel is converted at a rate of 20kHz
     // the ADC converts at 160kHz in total
@@ -165,15 +176,79 @@ void sensor_adc12_init_sensor(struct sensor_interface_s *intf)
     AD1CSSH = 0x0;
     AD1CSSL = 0x0;
     
-    // for dicio
-    AD1CSSHbits.CSS31 = 1; // OW3
-    AD1CSSHbits.CSS30 = 1; // OW1
-    AD1CSSHbits.CSS27 = 1; // AS3
-    AD1CSSHbits.CSS28 = 1; // AS1
-    AD1CSSLbits.CSS1 = 1; // OW4
-    AD1CSSLbits.CSS3 = 1; // OW2
-    AD1CSSLbits.CSS0 = 1; // AS4
-    AD1CSSLbits.CSS2 = 1; // AS2
+#ifdef __DICIO__
+    switch(intf->interface_id)
+    {
+        case 0:
+            AD1CSSHbits.CSS28 = 1; // AS1
+            AD1CSSHbits.CSS30 = 1; // OW1;
+            break;
+        case 1:
+            AD1CSSLbits.CSS2 = 1; // AS2
+            AD1CSSLbits.CSS3 = 1; // OW2
+            break;
+        case 2:
+            AD1CSSHbits.CSS31 = 1; // OW3
+            AD1CSSHbits.CSS27 = 1; // AS3
+            break;
+        case 3:
+            AD1CSSLbits.CSS0 = 1; // AS4
+            AD1CSSLbits.CSS1 = 1; // OW4
+            break;
+        default:
+            break;
+    }
+#endif
+#ifdef __SYLVATICA__
+    switch(intf->interface->interface_id)
+    {
+        case 0:
+            _ANSB9 = 1;
+            _TRISB9 = 1;
+            AD1CSSLbits.CSS9 = 1; // OW1
+            break;
+        case 1:
+            _ANSB8 = 1;
+            _TRISB8 = 1;
+            AD1CSSLbits.CSS8 = 1; // OW2
+            break;
+        case 2:
+            _ANSB5 = 1;
+            _TRISB5 = 1;
+            AD1CSSLbits.CSS5 = 1; // OW3
+            break;
+        case 3:
+            _ANSE4 = 1;
+            _TRISE4 = 1;
+            AD1CSSHbits.CSS28 = 1; // OW4
+            break;
+        case 4:
+            _ANSB14 = 1;
+            _TRISB14 = 1;
+            AD1CSSLbits.CSS14 = 1; // OW5
+            break;
+        case 5:
+            _ANSB13 = 1;
+            _TRISB13 = 1;
+            AD1CSSLbits.CSS13 = 1; // OW6
+            break;
+        case 6:
+            _ANSB4 = 1;
+            _TRISB4 = 1;
+            AD1CSSLbits.CSS4 = 1; // OW7
+            break;
+        case 7:
+            _ANSB3 = 1;
+            _TRISB3 = 1;
+            AD1CSSLbits.CSS3 = 1; // OW8
+            break;
+        default:
+            break;
+    }
+#endif
+#ifdef __PLANALTA__
+#error "Planalta board does not support 12-bit ADC sensors"
+#endif
     
     // determine number of channels to be scanned
     int num_scan_channels = 0;
@@ -215,6 +290,8 @@ void sensor_adc12_init_sensor(struct sensor_interface_s *intf)
 
     DMA0STBL = __builtin_dmaoffset(adc12_buffer_b);
     DMA0STBH = __builtin_dmapage(adc12_buffer_b);
+    
+    sensor_adc12_adc_buffer_selector = 0;
 
 
     _DMA0IF = 0;   //Clear the DMA interrupt flag bit
@@ -227,7 +304,9 @@ void sensor_adc12_init_sensor(struct sensor_interface_s *intf)
 
 
 void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA0Interrupt ( void )
-{
+{ 
+    sensor_adc12_adc_buffer_selector ^= 1;
+    
     _DMA0IF = 0; 
 }
 
@@ -243,7 +322,7 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _AD1Interrupt ( void )
 
 
 
-void sensor_adc12_activate(sensor_interface_t* intf){
+void sensor_adc12_activate(sensor_gconfig_t* intf){
     intf->status = SENSOR_STATUS_RUNNING;
     
     // Start ADC
@@ -258,3 +337,5 @@ bool validate_adc12_config(sensor_adc12_config_t *config)
     
     return true;
 }
+
+

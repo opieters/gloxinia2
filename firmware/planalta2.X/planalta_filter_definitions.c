@@ -35,163 +35,163 @@ FIRStruct planalta_fs_filters_5_i;
 FIRStruct planalta_fs_filters_5_q;
 
 
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_0_0[N_FIR_COEFFS0];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_0_1[N_FIR_COEFFS0];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_0_2[N_FIR_COEFFS0];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_0_3[N_FIR_COEFFS0];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_0_4[N_FIR_COEFFS0];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_0_5[N_FIR_COEFFS0];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_0_6[N_FIR_COEFFS0];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_0_7[N_FIR_COEFFS0];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_0_0[N_FIR_COEFFS0];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_0_1[N_FIR_COEFFS0];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_0_2[N_FIR_COEFFS0];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_0_3[N_FIR_COEFFS0];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_0_4[N_FIR_COEFFS0];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_0_5[N_FIR_COEFFS0];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_0_6[N_FIR_COEFFS0];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_0_7[N_FIR_COEFFS0];
 
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_q_0[N_FIR_COEFFS1_Q];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_i_0[N_FIR_COEFFS1_I];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_q_1[N_FIR_COEFFS1_Q];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_i_1[N_FIR_COEFFS1_I];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_q_2[N_FIR_COEFFS1_Q];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_i_2[N_FIR_COEFFS1_I];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_q_3[N_FIR_COEFFS1_Q];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_i_3[N_FIR_COEFFS1_I];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_q_4[N_FIR_COEFFS1_Q];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_i_4[N_FIR_COEFFS1_I];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_q_5[N_FIR_COEFFS1_Q];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_i_5[N_FIR_COEFFS1_I];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_q_6[N_FIR_COEFFS1_Q];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_i_6[N_FIR_COEFFS1_I];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_q_7[N_FIR_COEFFS1_Q];
-fractional __attribute__((space(xmemory), aligned(64), eds)) delay_buffers_1_i_7[N_FIR_COEFFS1_I];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_q_0[N_FIR_COEFFS1_Q];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_i_0[N_FIR_COEFFS1_I];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_q_1[N_FIR_COEFFS1_Q];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_i_1[N_FIR_COEFFS1_I];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_q_2[N_FIR_COEFFS1_Q];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_i_2[N_FIR_COEFFS1_I];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_q_3[N_FIR_COEFFS1_Q];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_i_3[N_FIR_COEFFS1_I];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_q_4[N_FIR_COEFFS1_Q];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_i_4[N_FIR_COEFFS1_I];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_q_5[N_FIR_COEFFS1_Q];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_i_5[N_FIR_COEFFS1_I];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_q_6[N_FIR_COEFFS1_Q];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_i_6[N_FIR_COEFFS1_I];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_q_7[N_FIR_COEFFS1_Q];
+fractional __attribute__((space(ymemory), aligned(64), eds)) delay_buffers_1_i_7[N_FIR_COEFFS1_I];
 
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_q_0[N_FIR_COEFFS2];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_i_0[N_FIR_COEFFS2];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_q_1[N_FIR_COEFFS2];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_i_1[N_FIR_COEFFS2];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_q_2[N_FIR_COEFFS2];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_i_2[N_FIR_COEFFS2];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_q_3[N_FIR_COEFFS2];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_i_3[N_FIR_COEFFS2];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_q_4[N_FIR_COEFFS2];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_i_4[N_FIR_COEFFS2];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_q_5[N_FIR_COEFFS2];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_i_5[N_FIR_COEFFS2];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_q_6[N_FIR_COEFFS2];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_i_6[N_FIR_COEFFS2];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_q_7[N_FIR_COEFFS2];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_2_i_7[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_q_0[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_i_0[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_q_1[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_i_1[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_q_2[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_i_2[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_q_3[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_i_3[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_q_4[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_i_4[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_q_5[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_i_5[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_q_6[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_i_6[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_q_7[N_FIR_COEFFS2];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2_i_7[N_FIR_COEFFS2];
 
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_q_0[N_FIR_COEFFS3];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_i_0[N_FIR_COEFFS3];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_q_1[N_FIR_COEFFS3];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_i_1[N_FIR_COEFFS3];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_q_2[N_FIR_COEFFS3];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_i_2[N_FIR_COEFFS3];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_q_3[N_FIR_COEFFS3];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_i_3[N_FIR_COEFFS3];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_q_4[N_FIR_COEFFS3];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_i_4[N_FIR_COEFFS3];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_q_5[N_FIR_COEFFS3];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_i_5[N_FIR_COEFFS3];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_q_6[N_FIR_COEFFS3];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_i_6[N_FIR_COEFFS3];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_q_7[N_FIR_COEFFS3];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_3_i_7[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_q_0[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_i_0[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_q_1[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_i_1[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_q_2[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_i_2[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_q_3[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_i_3[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_q_4[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_i_4[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_q_5[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_i_5[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_q_6[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_i_6[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_q_7[N_FIR_COEFFS3];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3_i_7[N_FIR_COEFFS3];
 
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_q_0[N_FIR_COEFFS4];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_i_0[N_FIR_COEFFS4];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_q_1[N_FIR_COEFFS4];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_i_1[N_FIR_COEFFS4];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_q_2[N_FIR_COEFFS4];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_i_2[N_FIR_COEFFS4];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_q_3[N_FIR_COEFFS4];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_i_3[N_FIR_COEFFS4];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_q_4[N_FIR_COEFFS4];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_i_4[N_FIR_COEFFS4];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_q_5[N_FIR_COEFFS4];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_i_5[N_FIR_COEFFS4];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_q_6[N_FIR_COEFFS4];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_i_6[N_FIR_COEFFS4];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_q_7[N_FIR_COEFFS4];
-fractional __attribute__((space(xmemory), aligned(256), eds)) delay_buffers_4_i_7[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_q_0[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_i_0[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_q_1[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_i_1[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_q_2[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_i_2[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_q_3[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_i_3[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_q_4[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_i_4[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_q_5[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_i_5[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_q_6[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_i_6[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_q_7[N_FIR_COEFFS4];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_4_i_7[N_FIR_COEFFS4];
 
-fractional __attribute__((space(xmemory), aligned(512), eds)) delay_buffers_5_q_0[N_FIR_SHARED];
-fractional __attribute__((space(xmemory), aligned(512), eds)) delay_buffers_5_i_0[N_FIR_SHARED];
-fractional __attribute__((space(xmemory), aligned(512), eds)) delay_buffers_5_q_1[N_FIR_SHARED];
-fractional __attribute__((space(xmemory), aligned(512), eds)) delay_buffers_5_i_1[N_FIR_SHARED];
+fractional __attribute__((space(ymemory), aligned(512), eds)) delay_buffers_5_q_0[N_FIR_SHARED];
+fractional __attribute__((space(ymemory), aligned(512), eds)) delay_buffers_5_i_0[N_FIR_SHARED];
+fractional __attribute__((space(ymemory), aligned(512), eds)) delay_buffers_5_q_1[N_FIR_SHARED];
+fractional __attribute__((space(ymemory), aligned(512), eds)) delay_buffers_5_i_1[N_FIR_SHARED];
 
 
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_0[FIR0_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_0[FIR0_N_COPIES] = {
     delay_buffers_0_0, delay_buffers_0_1, delay_buffers_0_2, delay_buffers_0_3,
     delay_buffers_0_4, delay_buffers_0_5, delay_buffers_0_6, delay_buffers_0_7
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_1_q[FIR1_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_1_q[FIR1_N_COPIES] = {
     delay_buffers_1_q_0, delay_buffers_1_q_1, delay_buffers_1_q_2, 
     delay_buffers_1_q_3, delay_buffers_1_q_4, delay_buffers_1_q_5, 
     delay_buffers_1_q_6, delay_buffers_1_q_7
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_1_i[FIR1_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_1_i[FIR1_N_COPIES] = {
     delay_buffers_1_i_0, delay_buffers_1_i_1, delay_buffers_1_i_2,
     delay_buffers_1_i_3, delay_buffers_1_i_4, delay_buffers_1_i_5, 
     delay_buffers_1_i_6, delay_buffers_1_i_7
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_2_q[FIR2_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_2_q[FIR2_N_COPIES] = {
     delay_buffers_2_q_0, delay_buffers_2_q_1, delay_buffers_2_q_2,
     delay_buffers_2_q_3, delay_buffers_2_q_4, delay_buffers_2_q_5,
     delay_buffers_2_q_6, delay_buffers_2_q_7
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_2_i[FIR2_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_2_i[FIR2_N_COPIES] = {
     delay_buffers_2_i_0, delay_buffers_2_i_1, delay_buffers_2_i_2,
     delay_buffers_2_i_3, delay_buffers_2_i_4, delay_buffers_2_i_5,
     delay_buffers_2_i_6, delay_buffers_2_i_7
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_3_q[FIR3_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_3_q[FIR3_N_COPIES] = {
     delay_buffers_3_q_0, delay_buffers_3_q_1, delay_buffers_3_q_2,
     delay_buffers_3_q_3, delay_buffers_3_q_4, delay_buffers_3_q_5,
     delay_buffers_3_q_6, delay_buffers_3_q_7
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_3_i[FIR3_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_3_i[FIR3_N_COPIES] = {
     delay_buffers_3_i_0, delay_buffers_3_i_1, delay_buffers_3_i_2,
     delay_buffers_3_i_3, delay_buffers_3_i_4, delay_buffers_3_i_5,
     delay_buffers_3_i_6, delay_buffers_3_i_7
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_4_q[FIR4_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_4_q[FIR4_N_COPIES] = {
     delay_buffers_4_q_0, delay_buffers_4_q_1, delay_buffers_4_q_2,
     delay_buffers_4_q_3, delay_buffers_4_q_4, delay_buffers_4_q_5,
     delay_buffers_4_q_6, delay_buffers_4_q_7,
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_4_i[FIR4_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_4_i[FIR4_N_COPIES] = {
     delay_buffers_4_i_0, delay_buffers_4_i_1, delay_buffers_4_i_2,
     delay_buffers_4_i_3, delay_buffers_4_i_4, delay_buffers_4_i_5,
     delay_buffers_4_i_6, delay_buffers_4_i_7,
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_5_q[FIR6_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_5_q[FIR6_N_COPIES] = {
     delay_buffers_5_q_0, delay_buffers_5_q_1
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_5_i[FIR6_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_5_i[FIR6_N_COPIES] = {
     delay_buffers_5_i_0, delay_buffers_5_i_1
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_7_q[FIR7_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_7_q[FIR7_N_COPIES] = {
     &delay_buffers_5_q_0[0], &delay_buffers_5_q_0[128], 
     &delay_buffers_5_q_1[0], &delay_buffers_5_q_1[128]
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_7_i[FIR7_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_7_i[FIR7_N_COPIES] = {
     &delay_buffers_5_i_0[0], &delay_buffers_5_i_0[128], 
     &delay_buffers_5_i_1[0], &delay_buffers_5_i_1[128]
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_8_q[FIR8_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_8_q[FIR8_N_COPIES] = {
     &delay_buffers_5_q_0[0],   &delay_buffers_5_q_0[64], 
     &delay_buffers_5_q_0[128], &delay_buffers_5_q_0[192],
     &delay_buffers_5_q_1[0],   &delay_buffers_5_q_1[64],
     &delay_buffers_5_q_1[128], &delay_buffers_5_q_1[192],
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_8_i[FIR8_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_8_i[FIR8_N_COPIES] = {
     &delay_buffers_5_i_0[0], &delay_buffers_5_i_0[64], 
     &delay_buffers_5_i_0[128], &delay_buffers_5_i_0[192],
     &delay_buffers_5_i_1[0], &delay_buffers_5_i_1[64],
     &delay_buffers_5_i_1[128], &delay_buffers_5_i_1[192],
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_9_q[FIR9_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_9_q[FIR9_N_COPIES] = {
     delay_buffers_5_q_0,
 };
-fractional* const __attribute__((space(xmemory), eds)) delay_buffers_9_i[FIR9_N_COPIES] = {
+fractional* const __attribute__((space(ymemory), eds)) delay_buffers_9_i[FIR9_N_COPIES] = {
     delay_buffers_5_i_0,
 };
 
