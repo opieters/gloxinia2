@@ -261,7 +261,7 @@ extern "C"
      *
      * @param config ADC16 configuration structure.
      */
-    void adc16_init(sensor_adc16_hw_config_t *config);
+    void sensor_adc16_init(sensor_adc16_hw_config_t *config);
 
     /**
      * @brief Fast initialisation function of ADC.

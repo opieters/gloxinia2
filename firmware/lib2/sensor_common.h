@@ -20,7 +20,6 @@ typedef enum {
     SENSOR_TYPE_ADC12        = 3,   ///< 12-bit ADC readout
     SENSOR_TYPE_ADC16        = 4,   ///< 16-bit ADC readour
     SENSOR_TYPE_LIA          = 5,   ///< lock-in amplifier sensor
-    SENSOR_TYPE_ADC12_ADC12  = 6,   ///< combined 12- and 12-bit ADC readout
 } sensor_type_t;
 
 /// @brief Sensor status enumeration.

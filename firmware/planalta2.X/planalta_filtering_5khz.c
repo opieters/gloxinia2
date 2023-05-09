@@ -406,11 +406,6 @@ void run_filter5_5khz(void *data){
         };
     }
     
-        fractional sample_drv_i;
-        fractional sample_drv_q;
-        fractional sample_rx_i;
-        fractional sample_rx_q;
-    
     // TODO: tx data over CAN
     
     

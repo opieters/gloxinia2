@@ -277,7 +277,7 @@ void planalta_init(void){
     planalta_clear_filter_buffers();
     UART_DEBUG_PRINT("Initialised filters.");
 
-    adc16_init(&adc16_config);
+    sensor_adc16_init(&adc16_config);
     UART_DEBUG_PRINT("Initialised ADC.");
 
     task_schedule_t planalta_read_log;

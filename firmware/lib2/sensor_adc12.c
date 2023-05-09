@@ -9,138 +9,26 @@
 fractional adc12_buffer_a[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (eds, aligned(256), space(xmemory)) );
 fractional adc12_buffer_b[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (eds, aligned(256), space(xmemory)) );
 
-fractional adc12_output_buffer[ADC12_N_CHANNELS];
-int32_t adc12_output_sum_buffer[ADC12_N_CHANNELS];
-uint16_t adc12_output_sum_counter[ADC12_N_CHANNELS];
-
 volatile uint8_t sensor_adc12_adc_buffer_selector = 0;
+static bool sensor_adc12_init_done = false;
+static bool sensor_adc12_init2_done = false;
 
+void (*adc12_rx_callback)(void) = adc12_callback_dummy;
 
-
-
-
-void sensor_adc12_get_config(struct sensor_gconfig_s* intf, uint8_t reg, uint8_t* buffer, uint8_t* length){
-    sensor_adc12_config_t *config = &intf->sensor_config.adc12;
-    
-    buffer[0] = SENSOR_TYPE_ADC12;
-    buffer[1] = reg;
-    
-    switch(reg){
-        case sensor_adc12_gloxinia_register_general:
-            intf->measure.task.cb = sensor_adc12_measure;
-            intf->measure.task.data = (void *)intf;
-
-            buffer[2] = intf->measure.period >> 8;
-            buffer[3] = intf->measure.period & 0x0ff;
-            *length = 4;
-            break;
-        case sensor_adc12_gloxinia_register_config:
-            buffer[2] = config->enable_ch_a;
-            buffer[3] = config->enable_ch_b;
-            buffer[4] = config->normalise_ch_a;
-            buffer[5] = config->normalise_ch_b;
-            *length = 7;
-            break;
-        default:
-            *length = 0;
-    }
+void adc12_callback_dummy(void)
+{
 }
 
-sensor_status_t sensor_adc12_config(struct sensor_gconfig_s *intf, uint8_t *buffer, uint8_t length)
+void sensor_adc12_set_callback(void (*cb)(void) )
 {
-    if (length < 1)
-    {
-        return SENSOR_STATUS_ERROR;
-    }
-
-    UART_DEBUG_PRINT("Configuring ADC12");
-
-    sensor_adc12_config_t *config = &intf->sensor_config.adc12;
-    
-    config->result_ch_a = 0;
-    config->result_ch_b = 0;
-    
-    switch(buffer[0]){
-        case sensor_adc12_gloxinia_register_general:
-            if (length != 3){ return SENSOR_STATUS_ERROR; }
-            
-            intf->measure.task.cb = sensor_adc12_measure;
-            intf->measure.task.data = (void *)intf;
-
-            schedule_init(&intf->measure, intf->measure.task, (((uint16_t)buffer[1]) << 8) | buffer[2]);
-
-            return SENSOR_STATUS_IDLE;
-            
-            break;
-        case sensor_adc12_gloxinia_register_config:
-            if(length != 6) { return SENSOR_STATUS_ERROR; }
-            
-            // load configuration from buffer into data structure
-            config->enable_ch_a = buffer[2];
-            config->enable_ch_b = buffer[3];
-            config->normalise_ch_a = buffer[4];
-            config->normalise_ch_b = buffer[5];
-
-            // validate configuration
-            if(!validate_adc12_config(config)){
-                UART_DEBUG_PRINT("Configuring ADC12 INVALID CONFIG");
-                return SENSOR_STATUS_ERROR;
-            } else {
-                // start sensor initialisation (async) only when configuration is OK
-                sensor_adc12_init_sensor(intf);
-            }
-            break;
-        default:
-            break;
-    }
-
-    return SENSOR_STATUS_IDLE;
+    adc12_rx_callback = cb;
 }
 
-void sensor_adc12_measure(void *data)
+void sensor_adc12_shared_config(void)
 {
-    struct sensor_gconfig_s *gsc = (struct sensor_gconfig_s *)data;
-    sensor_sht35_config_t* config = &gsc->sensor_config.sht35;
-
-    if (config->periodicity == S_SHT35_SINGLE_SHOT)
-    {
-        if (i2c_check_message_sent(&gsc->sensor_config.sht35.m_read) &&
-            i2c_check_message_sent(&config->m_config))
-        {
-            i2c_reset_message(&config->m_read, 1);
-            i2c_queue_message(&config->m_read);
-            i2c_reset_message(&config->m_config, 1);
-            i2c_queue_message(&config->m_config);
-        }
-        else
-        {
-            UART_DEBUG_PRINT("SHT35 on %x not fully processed.", gsc->sensor_id | (gsc->interface->interface_id << 4));
-            config->m_read.status = I2C_MESSAGE_CANCELED;
-            config->m_config.status = I2C_MESSAGE_CANCELED;
-
-            gsc->status = SENSOR_STATUS_ERROR;
-            sensor_error_handle(gsc);
-        }
-    }
-    else
-    {
-        if (i2c_check_message_sent(&config->m_fetch))
-        {
-            i2c_reset_message(&config->m_fetch, 1);
-            i2c_queue_message(&config->m_fetch);
-        }
-        else
-        {
-            UART_DEBUG_PRINT("ADC12 %x not fully processed.",gsc->sensor_id | (gsc->interface->interface_id << 4));
-            gsc->status = SENSOR_STATUS_ERROR;
-
-            sensor_error_handle(gsc);
-        }
-    }
-}
-
-void sensor_adc12_init_sensor(struct sensor_gconfig_s *intf)
-{
+    if(sensor_adc12_init_done)
+        return;
+    
     // each channel is converted at a rate of 20kHz
     // the ADC converts at 160kHz in total
     // 12-bit mode required 14T_AD for conversion and at least 2-3 T_AD for sampling
@@ -150,7 +38,7 @@ void sensor_adc12_init_sensor(struct sensor_gconfig_s *intf)
     // power reset the ADC module
     PMD1bits.AD1MD = 1;
     __delay_us(20);
-    PMD1bits.AD1MD = 1;
+    PMD1bits.AD1MD = 0;
     __delay_us(20);
     
     // disable the ADC module
@@ -176,30 +64,214 @@ void sensor_adc12_init_sensor(struct sensor_gconfig_s *intf)
     AD1CSSH = 0x0;
     AD1CSSL = 0x0;
     
+    _AD1IF = 0;
+    _AD1IE = 0;
+    
+
+    
+    _T3IF = 0;
+    _T3IE = 0;
+    
+    
+    ///// configure DMA channel
+    DMA0CONbits.AMODE = 0;   // Configure DMA for register indirect with post increment
+    DMA0CONbits.MODE  = 2;   // Configure DMA for Continuous Ping-Pong mode
+
+    DMA0PAD = (volatile unsigned int) &ADC1BUF0;
+
+
+    DMA0REQ = 13; // ADC1 -> DMA request source
+
+    DMA0STAL = __builtin_dmaoffset(adc12_buffer_a);
+    DMA0STAH = __builtin_dmapage(adc12_buffer_a);
+
+    DMA0STBL = __builtin_dmaoffset(adc12_buffer_b);
+    DMA0STBH = __builtin_dmapage(adc12_buffer_b);
+    
+    sensor_adc12_adc_buffer_selector = 0;
+
+    _DMA0IF = 0;   //Clear the DMA interrupt flag bit
+    _DMA0IE = 1;   //Set the DMA interrupt enable bit
+
+    sensor_adc12_init_done = true;
+}
+
+void sensor_adc12_shared_config2(void)
+{
+    if(sensor_adc12_init2_done)
+        return;
+    
+    // determine number of channels to be scanned
+    int num_scan_channels = 0;
+    for(int i = 0; i < 16; i++)
+    {
+        if(((AD1CSSH >> i) & 0b1) == 1)
+            num_scan_channels++;
+        if(((AD1CSSL >> i) & 0b1) == 1)
+            num_scan_channels++;
+    }
+    // if none of the channels are activated, stop initialisation
+    if(num_scan_channels == 0)
+        return;
+    
+    AD1CON2bits.SMPI = ( num_scan_channels - 1 );
+
+    DMA0CNT = (num_scan_channels * ADC12_DMA_BUFFER_SIZE - 1);    
+    
+    ///// configure conversion timer
+    TMR3 = 0x0;
+    PR3 = (FCY / (num_scan_channels * ADC12_CHANNEL_SAMPLE_RATE)) - 1;
+    
+    DMA0CONbits.CHEN = 1;
+
+    //TRISBbits.TRISB1 = 0;
+    
+    sensor_adc12_init2_done = true;
+}
+
+
+void sensor_adc12_get_config(struct sensor_gconfig_s* intf, uint8_t reg, uint8_t* buffer, uint8_t* length){
+    sensor_adc12_config_t *config = &intf->sensor_config.adc12;
+    
+    buffer[0] = SENSOR_TYPE_ADC12;
+    buffer[1] = reg;
+    
+    switch(reg){
+        case sensor_adc12_gloxinia_register_general:
+            buffer[2] = intf->measure.period >> 8;
+            buffer[3] = intf->measure.period & 0x0ff;
+            *length = 4;
+            break;
+        case sensor_adc12_gloxinia_register_config:
+            buffer[2] = config->enable;
+            *length = 3;
+            break;
+        default:
+            *length = 0;
+    }
+}
+
+sensor_status_t sensor_adc12_config(struct sensor_gconfig_s *intf, uint8_t *buffer, uint8_t length)
+{
+    if (length < 1)
+    {
+        return SENSOR_STATUS_ERROR;
+    }
+
+    UART_DEBUG_PRINT("Configuring ADC12");
+
+    sensor_adc12_config_t *config = &intf->sensor_config.adc12;
+    
+    config->result = 0;
+    
+    switch(buffer[0]){
+        case sensor_adc12_gloxinia_register_general:
+            if (length != 3){ return SENSOR_STATUS_ERROR; }
+            
+            intf->measure.task.cb = sensor_adc12_measure;
+            intf->measure.task.data = (void *)intf;
+
+            schedule_init(&intf->measure, intf->measure.task, (((uint16_t)buffer[1]) << 8) | buffer[2]);
+
+            return SENSOR_STATUS_IDLE;
+            
+            break;
+        case sensor_adc12_gloxinia_register_config:
+            if(length != 2) { return SENSOR_STATUS_ERROR; }
+            
+            // load configuration from buffer into data structure
+            config->enable = buffer[1];
+            
+            // the channel configuration changed, so we need to update the module
+            sensor_adc12_init2_done = false;
+
+            // validate configuration
+            if(!validate_adc12_config(config)){
+                UART_DEBUG_PRINT("Configuring ADC12 INVALID CONFIG");
+                return SENSOR_STATUS_ERROR;
+            } else {
+                // start sensor initialisation (async) only when configuration is OK
+                sensor_adc12_init(intf);
+            }
+            break;
+        default:
+            break;
+    }
+
+    return SENSOR_STATUS_IDLE;
+}
+
+void sensor_adc12_init(struct sensor_gconfig_s *intf)
+{
+
+    sensor_adc12_shared_config();
+    
 #ifdef __DICIO__
-    switch(intf->interface_id)
+    switch(intf->interface->interface_id)
     {
         case 0:
-            AD1CSSHbits.CSS28 = 1; // AS1
-            AD1CSSHbits.CSS30 = 1; // OW1;
+            switch(intf->sensor_id) 
+            {
+                case 1:
+                    AD1CSSHbits.CSS28 = 1; // AS1
+                    break;
+                case 2:
+                    AD1CSSHbits.CSS30 = 1; // OW1;
+                    break;
+                default:
+                    UART_DEBUG_PRINT("Cannot configure ADC12 on %d.%d", intf->interface->interface_id, intf->sensor_id);
+                    break;
+            }
             break;
         case 1:
-            AD1CSSLbits.CSS2 = 1; // AS2
-            AD1CSSLbits.CSS3 = 1; // OW2
+            switch(intf->sensor_id) 
+            {
+                case 1:
+                    AD1CSSLbits.CSS2 = 1; // AS2
+                    break;
+                case 2:
+                    AD1CSSLbits.CSS3 = 1; // OW2
+                    break;
+                default:
+                    UART_DEBUG_PRINT("Cannot configure ADC12 on %d.%d", intf->interface->interface_id, intf->sensor_id);
+                    break;
+            }
             break;
         case 2:
-            AD1CSSHbits.CSS31 = 1; // OW3
-            AD1CSSHbits.CSS27 = 1; // AS3
+            switch(intf->sensor_id) 
+            {
+                case 1:
+                    AD1CSSHbits.CSS27 = 1; // AS3
+                    break;
+                case 2:
+                    AD1CSSHbits.CSS31 = 1; // OW3
+                    break;
+                default:
+                    UART_DEBUG_PRINT("Cannot configure ADC12 on %d.%d", intf->interface->interface_id, intf->sensor_id);
+                    break;
+            }
             break;
         case 3:
-            AD1CSSLbits.CSS0 = 1; // AS4
-            AD1CSSLbits.CSS1 = 1; // OW4
+            switch(intf->sensor_id) 
+            {
+                case 1:
+                    AD1CSSLbits.CSS0 = 1; // AS4
+                    break;
+                case 2:
+                    AD1CSSLbits.CSS1 = 1; // OW4
+                    break;
+                default:
+                    UART_DEBUG_PRINT("Cannot configure ADC12 on %d.%d", intf->interface->interface_id, intf->sensor_id);
+                    break;
+            }
             break;
         default:
             break;
     }
 #endif
 #ifdef __SYLVATICA__
+    if(intf->sensor_id == 1)
+    {
     switch(intf->interface->interface_id)
     {
         case 0:
@@ -245,67 +317,23 @@ void sensor_adc12_init_sensor(struct sensor_gconfig_s *intf)
         default:
             break;
     }
+    } else {
+        UART_DEBUG_PRINT("Cannot configure ADC12 on %d.%d", intf->interface->interface_id, intf->sensor_id);
+    }
 #endif
 #ifdef __PLANALTA__
 #error "Planalta board does not support 12-bit ADC sensors"
 #endif
     
-    // determine number of channels to be scanned
-    int num_scan_channels = 0;
-    for(int i = 0; i < 16; i++)
-    {
-        if(((AD1CSSH >> i) & 0b1) == 1)
-            num_scan_channels++;
-        if(((AD1CSSL >> i) & 0b1) == 1)
-            num_scan_channels++;
-    }
-    // if none of the channels are activated, stop initialisation
-    if(num_scan_channels == 0)
-        return;
     
-    AD1CON2bits.SMPI = ( num_scan_channels - 1 );
-    
-    _AD1IF = 0;
-    _AD1IE = 0;
-    
-    ///// configure conversion timer
-    TMR3 = 0x0;
-    PR3 = (FCY / (ADC12_N_CHANNELS * ADC12_CHANNEL_SAMPLE_RATE)) - 1;
-    
-    _T3IF = 0;
-    _T3IE = 0;
-    
-    
-    ///// configure DMA channel
-    DMA0CONbits.AMODE = 0;   // Configure DMA for register indirect with post increment
-    DMA0CONbits.MODE  = 2;   // Configure DMA for Continuous Ping-Pong mode
-
-    DMA0PAD = (volatile unsigned int) &ADC1BUF0;
-    DMA0CNT = (ADC12_N_CHANNELS * ADC12_DMA_BUFFER_SIZE - 1);    
-
-    DMA0REQ = 13; // ADC1 -> DMA request source
-
-    DMA0STAL = __builtin_dmaoffset(adc12_buffer_a);
-    DMA0STAH = __builtin_dmapage(adc12_buffer_a);
-
-    DMA0STBL = __builtin_dmaoffset(adc12_buffer_b);
-    DMA0STBH = __builtin_dmapage(adc12_buffer_b);
-    
-    sensor_adc12_adc_buffer_selector = 0;
-
-
-    _DMA0IF = 0;   //Clear the DMA interrupt flag bit
-    _DMA0IE = 1;   //Set the DMA interrupt enable bit
-
-    DMA0CONbits.CHEN = 1;
-
-    TRISBbits.TRISB1 = 0;
 }
 
 
-void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA0Interrupt ( void )
+void __attribute__ ( ( interrupt, auto_psv ) ) _DMA0Interrupt ( void )
 { 
     sensor_adc12_adc_buffer_selector ^= 1;
+    
+    adc12_rx_callback();
     
     _DMA0IF = 0; 
 }
@@ -322,8 +350,11 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _AD1Interrupt ( void )
 
 
 
-void sensor_adc12_activate(sensor_gconfig_t* intf){
+void sensor_adc12_activate(sensor_gconfig_t* intf)
+{
     intf->status = SENSOR_STATUS_RUNNING;
+    
+    sensor_adc12_shared_config2();
     
     // Start ADC
     AD1CON1bits.ADON = 1; // enable ADC
@@ -338,4 +369,20 @@ bool validate_adc12_config(sensor_adc12_config_t *config)
     return true;
 }
 
+void sensor_adc12_measure(void *data)
+{
+    sensor_gconfig_t* gsc = (sensor_gconfig_t *) data;
+    sensor_adc12_config_t* config = &gsc->sensor_config.adc12;
+    uint8_t m_data[2] = {(uint8_t) (config->result >> 8), (uint8_t) (config->result & 0xff)};
+    
+    message_init(
+            &gsc->log,
+            controller_address,
+            MESSAGE_NO_REQUEST,
+            M_SENSOR_DATA,
+            GET_FULL_SENSOR_ID(gsc),
+            m_data,
+            SENSOR_ADC12_CAN_DATA_LENGTH);
+    message_send(&gsc->log);
+}
 

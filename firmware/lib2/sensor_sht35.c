@@ -14,9 +14,6 @@ void sensor_sht35_get_config(struct sensor_gconfig_s* gsc, uint8_t reg, uint8_t*
     
     switch(reg){
         case sensor_sht35_gloxinia_register_general:
-            gsc->measure.task.cb = sensor_sht35_measure;
-            gsc->measure.task.data = (void *)gsc;
-
             buffer[2] = gsc->measure.period >> 8;
             buffer[3] = gsc->measure.period & 0x0ff;
             *length = 4;

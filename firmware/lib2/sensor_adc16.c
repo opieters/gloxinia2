@@ -75,7 +75,7 @@ sensor_status_t sensor_adc16_config(struct sensor_gconfig_s *gsc, uint8_t *buffe
             
             break;
         case sensor_adc16_gloxinia_register_config:
-            if(length != 6) { return SENSOR_STATUS_ERROR; }
+            if(length != 3) { return SENSOR_STATUS_ERROR; }
             
             // load configuration from buffer into data structure
             config->enable_ch = buffer[1];
@@ -218,7 +218,7 @@ void adc16_update(sensor_adc16_hw_config_t *config)
     OC4RS = (FCY / config->sample_frequency) - 1;  // frequency
 }
 
-void adc16_init(sensor_adc16_hw_config_t *config)
+void sensor_adc16_init(sensor_adc16_hw_config_t *config)
 {
     uint16_t i, eds_read;
     spi_message_t m;
@@ -385,17 +385,23 @@ void adc16_init(sensor_adc16_hw_config_t *config)
     config->channel_select = ADC16_CHANNEL_SELECT_MODE_MANUAL;
 
     // update configuration to read all registers once in manual mode
+    while(1){
     write_data[0] = adc16_parse_cfr_write(config);
     m.status = SPI_TRANSFER_PENDING;
     send_spi_message(&m);
 
     UART_DEBUG_PRINT("ADC config set: %04x.", m.write_data[0]);
+    
+    __delay_ms(10);
 
     write_data[0] = ADC16_COMMAND_TO_BITS(ADC16_READ_CFR);
     m.status = SPI_TRANSFER_PENDING;
     send_spi_message(&m);
 
     UART_DEBUG_PRINT("ADC config read: %04x.", m.read_data[0]);
+    
+    __delay_ms(10);
+    }
 
     // read all channels once in manual mode
     for (i = 0; i < ADC16_N_CHANNELS; i++)

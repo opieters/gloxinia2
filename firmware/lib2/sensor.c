@@ -209,11 +209,6 @@ void sensor_set_status(uint8_t sensor_id, sensor_status_t status) {
                         sensor_lia_activate(gsc);
                         break;
 #endif
-#ifdef __DICIO__
-                    case SENSOR_TYPE_ADC12_ADC12:
-                        sensor_adc12_adc12_activate(gsc)
-                        break;
-#endif
                     default:
                         break;
                 }

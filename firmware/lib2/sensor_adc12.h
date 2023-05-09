@@ -12,6 +12,12 @@
 #define ADC12_DMA_BUFFER_SIZE               100U
 #define ADC12_FULL_SAMPLE_CONVERSION_T_AD    20U
 
+/// @brief ADC12 sensor sample data length
+#define SENSOR_ADC12_DATA_LENGTH 2
+
+/// @brief ADC12 sensor data length
+#define SENSOR_ADC12_CAN_DATA_LENGTH SENSOR_ADC12_DATA_LENGTH
+
 #define SENSOR_ADC12_DEC_FACT_F0 10
 #define SENSOR_ADC12_DEC_FACT_F1 10
 #define SENSOR_ADC12_DEC_FACT_F2 10
@@ -44,14 +50,9 @@ typedef enum {
  * @param result_ch_b register for intermediate storage of data from channel B
  */
 typedef struct sensor_adc12_config_s {
-    bool enable_ch_a;
-    bool enable_ch_b;
+    bool enable;
     
-    bool normalise_ch_a;
-    bool normalise_ch_b;
-    
-    uint32_t result_ch_a;
-    uint32_t result_ch_b;
+    fractional result;
 } sensor_adc12_config_t;
 
 /**
@@ -88,13 +89,16 @@ extern "C" {
     void sensor_adc12_get_config(struct sensor_gconfig_s *intf, uint8_t reg, uint8_t *buffer, uint8_t *length);
 
     
-    void sensor_adc12_init_sensor(struct sensor_gconfig_s *config);
+    void sensor_adc12_init(struct sensor_gconfig_s *config);
     void sensor_adc12_activate(struct sensor_gconfig_s *config);
     
     bool validate_sensor_adc12_config(sensor_adc12_config_t *config);
     bool validate_adc12_config(sensor_adc12_config_t *config);
     
     void sensor_adc12_measure(void *data);
+    
+    void adc12_callback_dummy(void);
+    void sensor_adc12_set_callback(void (*cb)(void) );
 
 
 #ifdef	__cplusplus

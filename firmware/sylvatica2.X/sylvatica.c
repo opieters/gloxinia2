@@ -38,7 +38,7 @@ pga_config_t pga_config[N_SENSOR_INTERFACES] = {
     { .cs_pin = PIN_INIT(F, 2) },
 };
 
-bool uart_connection_active = false;
+bool uart_connection_active = true; // TODO: false???
 
 
 
@@ -86,7 +86,13 @@ sensor_interface_t* sensor_interfaces[N_SENSOR_INTERFACES] =
     &sensor_interface8,
 };
 
+
 const uint8_t n_sensor_interfaces = N_SENSOR_INTERFACES;
+
+
+void sensor_adc12_process_block0(void);
+void sensor_adc12_init_filters(void);
+
 
 void sylvatica_init_pins(void){
     // I2C 1
@@ -209,7 +215,7 @@ void sylvatica_init_pins(void){
     _RF0 = 0;
     _ANSB15 = 0; // EN_VDDA
     _TRISB15 = 0;
-    _RB15 = 0;
+    _RB15 = 1;
     _ANSE1 = 0; // EN_VDDA2
     _TRISE1 = 0;
     _RE1 = 0;
@@ -262,9 +268,26 @@ void sylatica_clock_init(void)
 }
 
 
+void sylvatica_interface_init(void)
+{
+    for(int i = 0; i < N_SENSOR_INTERFACES; i++)
+    {
+        sensor_interfaces[i]->interface_id = i;
+        for(int j = 0; j < SENSOR_INTERFACE_MAX_SENSORS; j++)
+        {
+            sensor_interfaces[i]->gsensor_config[j].sensor_id = j;
+            sensor_interfaces[i]->gsensor_config[j].interface = sensor_interfaces[i];
+            //sensor_interfaces[i]->gsensor_config[j].measure = NULL;
+            sensor_interfaces[i]->gsensor_config[j].sensor_type = SENSOR_NOT_SET;
+            sensor_interfaces[i]->gsensor_config[j].status = SENSOR_STATUS_INACTIVE;
+        }
+    }
+}
 
 void sylvatica_init(void)
 {
+    sylvatica_interface_init();
+    
     sylvatica_init_pins();
     
     sylatica_clock_init();
@@ -310,13 +333,37 @@ void sylvatica_init(void)
 
     spi3_init();
     UART_DEBUG_PRINT("Initialised SPI for ADC16.");
-    adc16_init(&adc16_config);
+    sensor_adc16_init(&adc16_config);
     UART_DEBUG_PRINT("Initialised ADC16.");
+    
+    sensor_adc12_init_filters();
+    sensor_adc12_set_callback(sensor_adc12_process_block0);
+    UART_DEBUG_PRINT("Initialised ADC12.");
 
     task_schedule_t sylvatica_read_log;
     task_t sylvatica_read_log_task = {sylvatica_send_ready_message, NULL};
     schedule_init(&sylvatica_read_log, sylvatica_read_log_task, 100);
     schedule_specific_event(&sylvatica_read_log, ID_READY_SCHEDULE);
+    
+    // manually configure sensors and interfaces
+    /*uint8_t buffer1[4] = {SENSOR_TYPE_ADC12, sensor_adc12_gloxinia_register_general, 0, 9};
+    sensor_set_config_from_buffer(1, buffer1, 4);
+    
+    uint8_t buffer2[4] = {SENSOR_TYPE_ADC12, sensor_adc12_gloxinia_register_config, true};
+    sensor_set_config_from_buffer(1, buffer2, 3);
+    
+    sensor_set_status( (0<<4) | 1, SENSOR_STATUS_ACTIVE);*/
+    //sensor_adc12_activate(sensor_config);
+    
+    // manually configure sensors and interfaces
+    uint8_t buffer1[4] = {SENSOR_TYPE_ADC16, sensor_adc12_gloxinia_register_general, 0, 9};
+    sensor_set_config_from_buffer(0, buffer1, 4);
+    
+    uint8_t buffer2[4] = {SENSOR_TYPE_ADC16, sensor_adc12_gloxinia_register_config, true, false};
+    sensor_set_config_from_buffer(0, buffer2, 4);
+    
+    sensor_set_status( (0<<4) | 1, SENSOR_STATUS_ACTIVE);
+    //sensor_adc12_activate(sensor_config);
     
 }
 

@@ -3,6 +3,8 @@
 #include "sylvatica.h"
 #include <event_controller.h>
 #include <filtering.h>
+#include <fir_common.h>
+#include <sensor.h>
 
 
 fractional __attribute__((space(ymemory), aligned(256), eds)) sensor_adc12_delay_buffers_0[ADC12_N_CHANNELS][100];
@@ -23,8 +25,10 @@ fractional adc12_output_block1_buffers[ADC12_N_CHANNELS][SENSOR_ADC12_BLOCK2_INP
 fractional adc12_output_block2_buffers[ADC12_N_CHANNELS][SENSOR_ADC12_BLOCK3_INPUT_SIZE];
 fractional adc12_output_block0_buffers_b[ADC12_N_CHANNELS][SENSOR_ADC12_BLOCK1_INPUT_SIZE];
 
+extern sensor_interface_t* sensor_interfaces[];
+extern const uint8_t n_sensor_interfaces;
 
-const fractional  __attribute__((aligned(256))) sensor_adc12_fir_coeffs_0[] = {
+fractional  __attribute__((space(xmemory), aligned(256), eds)) sensor_adc12_fir_coeffs_0[] = {
  0xffff, 0xffff, 0xfffe, 0xfffd, 0xfffc, 0xfffa, 0xfff7, 0xfff4, 0xfff0,
  0xffec, 0xffe6, 0xffdf, 0xffd8, 0xffd0, 0xffc7, 0xffbf, 0xffb5, 0xffad,
  0xffa5, 0xff9e, 0xff9a, 0xff98, 0xff99, 0xff9f, 0xffa9, 0xffb9, 0xffcf,
@@ -41,7 +45,7 @@ const fractional  __attribute__((aligned(256))) sensor_adc12_fir_coeffs_0[] = {
 
 
 
-const fractional  __attribute__((aligned(256))) sensor_adc12_fir_coeffs_1[] = {
+const fractional  __attribute__((space(xmemory), aligned(256), eds)) sensor_adc12_fir_coeffs_1[] = {
  0xffff, 0xffff, 0xfffe, 0xfffd, 0xfffc, 0xfffa, 0xfff7, 0xfff4, 0xfff0,
  0xffec, 0xffe6, 0xffdf, 0xffd8, 0xffd0, 0xffc7, 0xffbf, 0xffb5, 0xffad,
  0xffa5, 0xff9e, 0xff9a, 0xff98, 0xff99, 0xff9f, 0xffa9, 0xffb9, 0xffcf,
@@ -55,7 +59,7 @@ const fractional  __attribute__((aligned(256))) sensor_adc12_fir_coeffs_1[] = {
  0xffec, 0xfff0, 0xfff4, 0xfff7, 0xfffa, 0xfffc, 0xfffd, 0xfffe, 0xffff,
  0xffff};
 
-const fractional  __attribute__((aligned(256))) sensor_adc12_fir_coeffs_2[] = {
+const fractional  __attribute__((space(xmemory), aligned(256), eds)) sensor_adc12_fir_coeffs_2[] = {
  0xffff, 0xffff, 0xfffe, 0xfffd, 0xfffc, 0xfffa, 0xfff7, 0xfff4, 0xfff0,
  0xffec, 0xffe6, 0xffdf, 0xffd8, 0xffd0, 0xffc7, 0xffbf, 0xffb5, 0xffad,
  0xffa5, 0xff9e, 0xff9a, 0xff98, 0xff99, 0xff9f, 0xffa9, 0xffb9, 0xffcf,
@@ -71,7 +75,7 @@ const fractional  __attribute__((aligned(256))) sensor_adc12_fir_coeffs_2[] = {
 
 
 
-const fractional  __attribute__((aligned(512))) sensor_adc12_fir_coeffs_3[] = {
+const fractional  __attribute__((space(xmemory), aligned(512), eds)) sensor_adc12_fir_coeffs_3[] = {
  0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
  0x0000, 0x0000, 0xffff, 0xfffe, 0xfffd, 0xfffc, 0xfffb, 0xfffa, 0xfffa,
  0xfff9, 0xfff9, 0xfffa, 0xfffb, 0xfffc, 0xfffe, 0x0001, 0x0004, 0x0007,
@@ -97,7 +101,7 @@ const fractional  __attribute__((aligned(512))) sensor_adc12_fir_coeffs_3[] = {
 
 
 
-void sensor_adc12_process_block0(void* data);
+void sensor_adc12_process_block0(void);
 void sensor_adc12_process_block1(void* data);
 void sensor_adc12_process_block2(void* data);
 void sensor_adc12_process_block3(void* data);
@@ -107,11 +111,12 @@ void sensor_adc12_init_filters(void)
 {
     uint16_t i;
 
+    
     for(i = 0; i < ADC12_N_CHANNELS; i++){
         FIRStructInit(&sensor_adc12_filters_0[i],
             ARRAY_LENGTH(sensor_adc12_fir_coeffs_0),
             (fractional*) sensor_adc12_fir_coeffs_0,
-            __builtin_psvpage(sensor_adc12_fir_coeffs_0),
+            COEFFS_IN_DATA,
             sensor_adc12_delay_buffers_0[i]
         );
 
@@ -122,7 +127,7 @@ void sensor_adc12_init_filters(void)
         FIRStructInit(&sensor_adc12_filters_1[i],
             ARRAY_LENGTH(sensor_adc12_fir_coeffs_1),
             (fractional*) sensor_adc12_fir_coeffs_1,
-            __builtin_psvpage(sensor_adc12_fir_coeffs_1),
+            COEFFS_IN_DATA,
             sensor_adc12_delay_buffers_1[i]
         );
 
@@ -133,7 +138,7 @@ void sensor_adc12_init_filters(void)
         FIRStructInit(&sensor_adc12_filters_2[i],
             N_FIR_COEFFS2,
             (fractional*) sensor_adc12_fir_coeffs_2,
-            __builtin_psvpage(sensor_adc12_fir_coeffs_2),
+            COEFFS_IN_DATA,
             sensor_adc12_delay_buffers_2[i]
         );
 
@@ -144,16 +149,25 @@ void sensor_adc12_init_filters(void)
         FIRStructInit(&sensor_adc12_filters_3[i],
             N_FIR_COEFFS3,
             (fractional*) sensor_adc12_fir_coeffs_3,
-            __builtin_psvpage(sensor_adc12_fir_coeffs_3),
+            COEFFS_IN_DATA,
             sensor_adc12_delay_buffers_3[i]
         );
 
         FIRDelayInit(&sensor_adc12_filters_3[i]);
     }
+    
+    if(adc12_output_buffer0_select == 0)
+    {
+        for(i = 0; i < ADC12_N_CHANNELS; i++)
+        {
+            adc12_output_block0_buffer[i] = adc12_output_block0_buffers_b[i];
+            adc12_input_block1_buffer[i] = adc12_output_block0_buffers_a[i];
+        }
+    }
 }
 
 
-void sensor_adc12_process_block0(void* data)
+void sensor_adc12_process_block0()
 {
     uint16_t i;
     static uint16_t block_counter = 0;
@@ -247,17 +261,18 @@ void sensor_adc12_process_block2(void* data){
 void sensor_adc12_process_block3(void* data)
 {
     uint16_t i;
+    fractional result;
     
     for(i = 0; i < ADC12_N_CHANNELS; i++)
     {   
-        FIRDecimate(SENSOR_ADC12_BLOCK3_OUTPUT_SIZE, 
-                &adc12_output_buffer[i], 
+        FIRDecimate(1, 
+                &result, 
                 adc12_output_block2_buffers[i], 
                 &sensor_adc12_filters_3[i], 
                 SENSOR_ADC12_DEC_FACT_F3);
-       
-        adc12_output_sum_buffer[i] += adc12_output_buffer[i];
-        adc12_output_sum_counter[i]++;
+        
+        // the interface/sensor alloc guarantees that it's always on this location
+        sensor_interfaces[i]->gsensor_config[0].sensor_config.adc12.result = result;
     }
 }
 

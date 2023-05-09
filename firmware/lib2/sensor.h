@@ -35,6 +35,8 @@
 #define N_SENSOR_INTERFACES DICIO_N_SENSOR_IFS
 #endif
 
+#define GET_FULL_SENSOR_ID(X) ((X)->sensor_id | ((X)->interface->interface_id << 4))
+
 /// @brief Sensor configuration structure union
 typedef union sensor_config_s
 {
