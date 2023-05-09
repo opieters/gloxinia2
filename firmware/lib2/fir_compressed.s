@@ -158,21 +158,21 @@ _noPSVfir:
 ;............................................................................
 
  ; Setup registers for modulo addressing.
- mov #0xC0A8,w10   ; XWM = w8, YWM = w10
+ mov #0xC0A8,w8   ; XWM = w8, YWM = w10
       ; set XMODEND and YMODEND bits
- mov [w3+oDelayEnd],w8  ; w8 -> last byte of d[M-1] 
- mov w10,MODCON   ; enable X,Y modulo addressing
+ mov [w3+oDelayEnd],w10  ; w10 -> last byte of d[M-1] 
+ mov w8,MODCON   ; enable X,Y modulo addressing
  ; do NOT use an indirect read operation to ANY w register after modifying MODCON
  
- mov w8,XMODEND   ; init'ed to coeffs end address
- mov [w3+oCoeffsEnd],w10  ; w10-> last byte of h[M-1]
  mov w10,YMODEND   ; init'ed to delay end address
- mov [w3+oDelayBase],w8  ; w8 -> d[0]
- mov w8,XMODSRT   ; init'ed to coeffs base address
+ mov [w3+oCoeffsEnd],w8  ; w10-> last byte of h[M-1]
+ mov w8,XMODEND   ; init'ed to coeffs end address
+ mov [w3+oDelayBase],w10  ; w10 -> d[0]
+ mov w10,YMODSRT   ; init'ed to delay base address
       ; (increasing buffer,
       ;  2^n aligned)
- mov [w3+oCoeffsBase],w10  ; w10 -> h[0]
- mov w10,YMODSRT   ; init'ed to delay base address
+ mov [w3+oCoeffsBase],w8  ; w8 -> h[0]
+ mov w8,XMODSRT   ; init'ed to coeffs base address
       ; (increasing buffer,
       ;  2^n aligned)
 ; DO NOT read X/Y register indirectly immediately after modifying XMODi, YMODi
@@ -185,7 +185,7 @@ _noPSVfir:
 
  ; Perpare to all filter.
  dec w4, w7
- mov [w3+oDelay],w8   ; w10 points at oldest delay entry
+ mov [w3+oDelay],w10   ; w10 points at oldest delay entry
       ; sample d[m], 0 <= m < M
  mov [w3+oNumCoeffs],w4  ; w4 = M
  sub w4,#2,w4   ; W4 = M-2
@@ -199,7 +199,7 @@ _noPSVfir:
 
  ; Prepare to filter sample.
  repeat w7
- mov [w2++],[w8++]
+ mov [w2++],[w10++]
 ;.ifdef YMEM_ERRATA
 ;	nop
 ;.endif
