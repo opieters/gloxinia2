@@ -26,6 +26,9 @@ void address_find_non_reserved(void) {
     
     controller_address = temp_can_address;
     message_init(&m, controller_address, CAN_NO_REMOTE_FRAME, M_REQUEST_ADDRESS_AVAILABLE, NO_SENSOR_ID, NULL, 0);
+    
+    // configure CAN buffer for this address
+    can_configure_filter(14, controller_address, 0x0, true, 0, CAN_FIFO_BUFFER);
 
     // send message to check for address availability
     message_send(&m);
