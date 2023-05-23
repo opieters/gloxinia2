@@ -34,6 +34,9 @@
 /// @brief Macro to indicate that a CAN message is not an extended frame.
 #define CAN_NO_EXTENDED_FRAME 0
 
+/// @brief Convenience macro to store filter results in FIFO buffer
+#define CAN_FIFO_BUFFER (0xF)
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -196,6 +199,21 @@ extern "C"
      * The system keeps track of the number of active CAN devices internally.
      */
     void can_detect_devices(void);
+    
+    /**
+     * @brief Convenience function to configure CAN filter
+     * 
+     * @param n filter number (0-15)
+     * @param sid standard identifier to match (11-bit)
+     * @param eid extended identifier to match (18-bit)
+     * @param exide true if EID-messages-only filter
+     * @param mask mask to use (0-2)
+     * @param target (target filter 0-15, 15=FIFO)
+     */
+    void can_configure_filter(uint8_t n, uint16_t sid, uint32_t eid, bool exide, uint8_t mask, uint8_t target);
+    
+    // TODO
+    void can_configure_mask(uint8_t n, int16_t sid, uint32_t eid, bool mide) ;
 
 #ifdef __cplusplus
 }
