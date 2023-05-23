@@ -36,6 +36,23 @@ i2c_config_t dicio_i2c2_config = {
     .scl_pin = PIN_INIT(F, 5),
     .sda_pin = PIN_INIT(F, 4)};
 
+sensor_interface_t sensor_interface1;
+sensor_interface_t sensor_interface2;
+sensor_interface_t sensor_interface3;
+sensor_interface_t sensor_interface4;
+
+sensor_interface_t* sensor_interfaces[N_SENSOR_INTERFACES] = 
+{
+    &sensor_interface1,
+    &sensor_interface2,
+    &sensor_interface3,
+    &sensor_interface4,
+};
+
+
+const uint8_t n_sensor_interfaces = N_SENSOR_INTERFACES;
+
+
 void dicio_init(void)
 {
     dicio_init_pins();
@@ -45,9 +62,16 @@ void dicio_init(void)
     uart_init(50000);
 
     UART_DEBUG_PRINT("Configured UART.");
+    
+    // TODO:REMOVE???
+    uart_connection_active = true;
+    
+    //return;
 
     can_init();
     UART_DEBUG_PRINT("Initialised ECAN.");
+    
+    return;
 
     i2c1_init(&dicio_i2c1_config);
     UART_DEBUG_PRINT("Initialised I2C1.");
@@ -73,8 +97,7 @@ void dicio_init(void)
         UART_DEBUG_PRINT("Unable to initialise SD card");
     }
 
-    // TODO:REMOVE???
-    uart_connection_active = true;
+
 
     // task_schedule_t dicio_read_log = {{dicio_send_ready_message, NULL}, 1, 0};
     // schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);
@@ -839,4 +862,17 @@ void dicio_send_ready_message(void *data)
 
     message_init(&m, controller_address, 0, M_READY, 0, NULL, 0);
     message_send(&m);
+}
+
+// TODO: remove
+
+void dicio_can_debug_tx(void)
+{
+    message_t m;
+
+    message_init(&m, ADDRESS_GATEWAY, 0, M_HELLO, 0, NULL, 0);
+    send_message_can(&m);
+    
+    UART_DEBUG_PRINT("Sending HELLO debug message!");
+    UART_DEBUG_PRINT("CAN ERRORS: %04x", C1EC);
 }
