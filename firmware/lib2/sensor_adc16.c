@@ -385,7 +385,6 @@ void sensor_adc16_init(sensor_adc16_hw_config_t *config)
     config->channel_select = ADC16_CHANNEL_SELECT_MODE_MANUAL;
 
     // update configuration to read all registers once in manual mode
-    while(1){
     write_data[0] = adc16_parse_cfr_write(config);
     m.status = SPI_TRANSFER_PENDING;
     send_spi_message(&m);
@@ -401,7 +400,6 @@ void sensor_adc16_init(sensor_adc16_hw_config_t *config)
     UART_DEBUG_PRINT("ADC config read: %04x.", m.read_data[0]);
     
     __delay_ms(10);
-    }
 
     // read all channels once in manual mode
     for (i = 0; i < ADC16_N_CHANNELS; i++)

@@ -181,6 +181,9 @@ void message_process(const message_t *m) {
         case M_DATA_BURST_START:
         case M_DATA_BURST:
         case M_DATA_BURST_STOP:
+        case M_HELLO:
+            UART_DEBUG_PRINT("CAN_HELLO");
+            break;
         default:
             break;
     }
@@ -266,6 +269,8 @@ static void cmd_discovery(const message_t *m) {
             }
         }
     }
+    
+    //TODO: check this if!!
     if (m->request_message_bit && (m->identifier == ADDRESS_GATEWAY) && (controller_address != ADDRESS_UNSET)) {
         // send message back to gateway
         message_t m_discovery;

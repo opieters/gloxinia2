@@ -112,11 +112,6 @@ void sensor_set_config_from_buffer(uint8_t sensor_id, uint8_t *buffer, uint8_t l
             status = sensor_adc12_config(gsc, &buffer[1], length - 1);
             break;
 #endif
-#ifdef __DICIO__
-        case SENSOR_TYPE_ADC12_ADC12:
-            status = sensor_adc12_adc12_config(gsc, &buffer[1], length - 1);
-            break;
-#endif
 #if defined(__SYLVATICA__) || defined(__PLANALTA__)
         case SENSOR_TYPE_ADC16:
             status = sensor_adc16_config(gsc, &buffer[1], length - 1);

@@ -181,7 +181,7 @@ void sylvatica_init_pins(void){
     _C1RXR = 119;
     _ANSB11 = 0; // TERM 
     _TRISB11 = 0;
-    _LATB11 = 1;
+    _RB11 = 1;
     _ANSG9 = 0; // CAN_C1
     _TRISG9 = 1;
     _ANSB2 = 0; // CAN_C2
@@ -339,6 +339,8 @@ void sylvatica_init(void)
     sensor_adc12_init_filters();
     sensor_adc12_set_callback(sensor_adc12_process_block0);
     UART_DEBUG_PRINT("Initialised ADC12.");
+    
+    controller_address = 0x02;
 
     task_schedule_t sylvatica_read_log;
     task_t sylvatica_read_log_task = {sylvatica_send_ready_message, NULL};
@@ -371,7 +373,9 @@ void sylvatica_send_ready_message(void *data)
 {
     message_t m;
 
-    message_init(&m, controller_address, 0, M_READY, 0, NULL, 0);
+    UART_DEBUG_PRINT("READY DEBUGS");
+    
+    message_init(&m, controller_address, 0, M_HELLO, 0, NULL, 0);
     message_send(&m);
     
     _RE3 ^= 1;
