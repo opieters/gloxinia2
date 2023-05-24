@@ -54,7 +54,7 @@ void GloxiniaConfigurator::openSerialPort()
                           .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl));*/
 
         // TODO make timer run/stop based on settings
-        discoveryTimer->start(30 * 1000); // run every 30 seconds
+        //discoveryTimer->start(30 * 1000); // run every 30 seconds
 
         runDiscovery();
     }
