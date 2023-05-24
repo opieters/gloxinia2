@@ -1,5 +1,6 @@
 #include "sylvatica.h"
 #include "address.h"
+#include "address.h"
 #include <can.h>
 #include <sensor.h>
 #include <spi.h>
@@ -303,6 +304,7 @@ void sylvatica_init(void)
     UART_DEBUG_PRINT("Initialised ECAN.");
     
     can_detect_devices();
+    address_find_non_reserved();
 
     i2c1_init(&sylvatica_i2c1_config);
     UART_DEBUG_PRINT("Initialised I2C1.");
@@ -339,13 +341,11 @@ void sylvatica_init(void)
     sensor_adc12_init_filters();
     sensor_adc12_set_callback(sensor_adc12_process_block0);
     UART_DEBUG_PRINT("Initialised ADC12.");
-    
-    controller_address = 0x02;
 
     task_schedule_t sylvatica_read_log;
     task_t sylvatica_read_log_task = {sylvatica_send_ready_message, NULL};
     schedule_init(&sylvatica_read_log, sylvatica_read_log_task, 100);
-    schedule_specific_event(&sylvatica_read_log, ID_READY_SCHEDULE);
+    //schedule_specific_event(&sylvatica_read_log, ID_READY_SCHEDULE);
     
     // manually configure sensors and interfaces
     /*uint8_t buffer1[4] = {SENSOR_TYPE_ADC12, sensor_adc12_gloxinia_register_general, 0, 9};
@@ -364,7 +364,7 @@ void sylvatica_init(void)
     uint8_t buffer2[4] = {SENSOR_TYPE_ADC16, sensor_adc12_gloxinia_register_config, true, false};
     sensor_set_config_from_buffer(0, buffer2, 4);
     
-    sensor_set_status( (0<<4) | 1, SENSOR_STATUS_ACTIVE);
+    //sensor_set_status( (0<<4) | 1, SENSOR_STATUS_ACTIVE);
     //sensor_adc12_activate(sensor_config);
     
 }
@@ -372,8 +372,6 @@ void sylvatica_init(void)
 void sylvatica_send_ready_message(void *data)
 {
     message_t m;
-
-    UART_DEBUG_PRINT("READY DEBUGS");
     
     message_init(&m, controller_address, 0, M_HELLO, 0, NULL, 0);
     message_send(&m);

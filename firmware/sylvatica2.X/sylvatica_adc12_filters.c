@@ -10,7 +10,7 @@
 fractional __attribute__((space(ymemory), aligned(256), eds)) sensor_adc12_delay_buffers_0[ADC12_N_CHANNELS][100];
 fractional __attribute__((space(ymemory), aligned(256), eds)) sensor_adc12_delay_buffers_1[ADC12_N_CHANNELS][100];
 fractional __attribute__((space(ymemory), aligned(256), eds)) sensor_adc12_delay_buffers_2[ADC12_N_CHANNELS][100];
-fractional __attribute__((space(ymemory), aligned(512), eds)) sensor_adc12_delay_buffers_3[ADC12_N_CHANNELS][192];
+fractional __attribute__((space(ymemory), aligned(256), eds)) sensor_adc12_delay_buffers_3[ADC12_N_CHANNELS][128];
 
 FIRStruct sensor_adc12_filters_0[ADC12_N_CHANNELS];
 FIRStruct sensor_adc12_filters_1[ADC12_N_CHANNELS];
@@ -176,6 +176,7 @@ void sensor_adc12_process_block0()
     
     sample_counter += SENSOR_ADC12_COPY_BUFFER_SIZE;
     
+    // TODO: change code to handle "weird" number of coefficients coming from DMA
     if(sensor_adc12_adc_buffer_selector == 0){
         vector_copy_jump(ADC12_DMA_BUFFER_SIZE, sample_buffer, adc12_buffer_b, ADC12_N_CHANNELS);
     } else {

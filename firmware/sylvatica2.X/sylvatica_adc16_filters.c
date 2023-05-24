@@ -18,7 +18,7 @@ FIRStruct filters_3[SYLVATICA_N_CHANNELS];
 fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_0[SYLVATICA_N_CHANNELS][100];
 fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_1[SYLVATICA_N_CHANNELS][100];
 fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_2[SYLVATICA_N_CHANNELS][100];
-fractional __attribute__((space(ymemory), aligned(512), eds)) delay_buffers_3[SYLVATICA_N_CHANNELS][192];
+fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3[SYLVATICA_N_CHANNELS][128];
 
 uint16_t copy_buffers_a[SYLVATICA_N_CHANNELS][SYLVATICA_COPY_BUFFER_SIZE];
 uint16_t copy_buffers_b[SYLVATICA_N_CHANNELS][SYLVATICA_COPY_BUFFER_SIZE];
