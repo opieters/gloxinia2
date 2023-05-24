@@ -3,7 +3,7 @@
 #include <event_controller.h>
 #include <utilities.h>
 #include <i2c.h>
-#include "mcc_generated_files/clock.h"
+#include <libpic30.h>
 
 #pragma config GWRP = OFF           //General Segment Write-Protect bit->General Segment may be written
 #pragma config GSS = OFF            //General Segment Code-Protect bit->General Segment Code protect is disabled
@@ -47,8 +47,6 @@ extern volatile uint16_t controller_address;
 int main(void) 
 {
     
-    CLOCK_Initialize();
-    
     dicio_init();
     
     controller_address = 0x01;
@@ -72,6 +70,10 @@ int main(void)
                     NULL,
                     0);
             can_send_fmessage_any_ch(&m);
+            
+            while(_RD8 == 1);
+            __delay_ms(100);
+            
         }
     }
 
