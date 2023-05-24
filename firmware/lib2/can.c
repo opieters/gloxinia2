@@ -1,10 +1,9 @@
 #include <can.h>
 #include <address.h>
 #include <libpic30.h>
-
 #include "message.h"
 
-uint16_t ecan_message_buffer[NUM_OF_ECAN_BUFFERS][8] __attribute__((space(dma), eds, aligned(NUM_OF_ECAN_BUFFERS * 16)));
+__eds__ uint16_t ecan_message_buffer[NUM_OF_ECAN_BUFFERS][ECAN_BUFFER_SIZE] __attribute__((space(dma), eds, aligned(NUM_OF_ECAN_BUFFERS * ECAN_BUFFER_SIZE * sizeof(uint16_t))));
 
 int16_t n_connected_devices = 0;
 
@@ -18,7 +17,7 @@ void can_tx_dma_init(void) {
     DMA1CONbits.AMODE = 0x2; // peripheral indirect addressing mode
     DMA1CONbits.MODE = 0x0; // Operating Mode: Continuous, Ping-Pong modes disabled
     DMA1REQ = 0b01000110; // select TX data ready as IRQ
-    DMA1CNT = 7; // 8 DMA Transfers per ECAN message
+    DMA1CNT = ECAN_BUFFER_SIZE-1; // 8 DMA Transfers per ECAN message
     DMA1PAD = (volatile unsigned int) &C1TXD; // ECAN transmit register
 
     DMA1STAL = __builtin_dmaoffset(ecan_message_buffer);
@@ -33,18 +32,24 @@ void can_rx_dma_init(void) {
     DMA2CONbits.AMODE = 0x2; // peripheral indirect addressing mode
     DMA2CONbits.MODE = 0x0; // Operating Mode: Continuous, Ping-Pong modes disabled
     DMA2REQ = 0b00100010; // select RX data ready as IRQ
-    DMA2CNT = 7; // 8 DMA Transfers per ECAN message
+    DMA2CNT = ECAN_BUFFER_SIZE-1; // 8 DMA Transfers per ECAN message
     DMA2PAD = (volatile unsigned int) &C1RXD; // ECAN receive register
 
     DMA2STAL = __builtin_dmaoffset(ecan_message_buffer);
     DMA2STAH = __builtin_dmapage(ecan_message_buffer);
     DMA2CONbits.CHEN = 1;
-
-    //_DMA2IF = 0;
-    //_DMA2IE = 1;
 }
 
 void can_init(void) {
+    // clear ECAN memory
+    for(int i = 0; i < NUM_OF_ECAN_BUFFERS; i++)
+    {
+        for(int j = 0; j < CAN_MAX_N_BYTES; j++) 
+        {
+            ecan_message_buffer[i][j] = 0;
+        }
+    }
+    
     // switch ECAN module to configuration mode
     C1CTRL1bits.REQOP = CAN_CONFIG_MODE;
     while (C1CTRL1bits.OPMODE != CAN_CONFIG_MODE)
@@ -75,7 +80,7 @@ void can_init(void) {
     C1CFG2bits.PRSEG = 4; // propagation time segment bits -> 3TQ
 
     /* Configure ECAN module buffers */
-    C1FCTRLbits.DMABS = 0b110; // 32 buffers in device RAM
+    C1FCTRLbits.DMABS = 0b100; // 16 buffers in device RAM
     C1FCTRLbits.FSA = 0b01000; // FIFO start address = read buffer RB8
     // C1FCTRLbits.FSA = 0b11111; // same as example now
 
@@ -103,11 +108,7 @@ void can_init(void) {
 
     // mask for command filtering
     can_configure_mask(2, 0x0000, 0x3FF00, true);
-
-    /* Enter Normal Mode */
-    C1CTRL1bits.REQOP = 0b010;
-    while (C1CTRL1bits.OPMODE != 0b010);
-
+    
     /* ECAN transmit/receive message control */
     C1RXFUL1 = C1RXFUL2 = C1RXOVF1 = C1RXOVF2 = 0x0000;
     // configure first 8 buffers for sending data
@@ -128,62 +129,14 @@ void can_init(void) {
     C1TR67CONbits.TXEN7 = 1; // configure buffer 7 for transmission
     C1TR67CONbits.TX7PRI = 3; // assign priority
 
-    /* Setup I/O pins */
-    // TRISF = 1;
-    // The PPS configuration varies from device to device. Refer the datasheet of the device being used and
-    // use the appropriate values for the RPINR/RPOR registers.
-    //RPINR26 = 0;                    //clear register
-    //RPINR26bits.C1RXR = 96;         //set CAN1 RX to RP96    (87)
-    //RPOR7bits.RP97R = 14;           //RPOR7bits.RP97R = 14; set CAN1TX to RP97        (88)
+    /* Enter Normal Mode */
+    C1CTRL1bits.REQOP = CAN_MODULE_ENABLE;
+    while (C1CTRL1bits.OPMODE != CAN_MODULE_ENABLE);
 
     can_tx_dma_init();
     can_rx_dma_init();
 
     /* Enable ECAN1 Interrupt */
-    IEC2bits.C1IE = 1;
-    C1INTEbits.TBIE = 1;
-    C1INTEbits.RBIE = 1;
-
-    return;
-
-
-    C1CTRL1bits.WIN = 1; // use filter control and status window
-
-
-
-    // we configure filter 0 to receive all EID messages from the gateway
-    C1FEN1bits.FLTEN0 = 1; // enable filter
-    C1RXF0SIDbits.SID = ADDRESS_GATEWAY; // set address
-    C1RXF0SIDbits.EXIDE = 1; // only look at EID messages
-    C1RXF0SIDbits.EID = 0x0; // default EID value
-    C1RXF0EIDbits.EID = 0x0; // default EID value
-    C1FMSKSEL1bits.F0MSK = 0b00; // use mask 0
-    C1BUFPNT1bits.F0BP = 0b1111; // filter hits are stored in RX FIFO
-
-    // we configure filter 1 to receive all EID messages from the logging node
-
-
-
-    C1CTRL1bits.WIN = 0;
-
-    // interrupt configuration
-    // C1INTEbits.IVRIE = 0; // invalid message interrupt disabled
-    // C1INTEbits.WAKIE = 0; // bus wake-up activity interrupt disabled
-    // C1INTEbits.ERRIE = 1; // error interrupt enable bit enabled TODO: interrupt service!
-    // C1INTEbits.FIFOIE = 0; // FIFO almost full interrupt enable off
-    // C1INTEbits.RBOVIE = 0; // buffer overflow interrupt disabled
-    // C1INTEbits.RBIE = 1; // RX buffer interrupt enabled
-    // C1INTEbits.TBIE = 1; // TX buffer interrupt disabled
-
-    // switch ECAN module to normal operation mode
-    C1CTRL1bits.REQOP = CAN_MODULE_ENABLE;
-    while (C1CTRL1bits.OPMODE != CAN_MODULE_ENABLE)
-        ; // wait for mode switch
-
-    C1CTRL1bits.REQOP = CAN_MODULE_LOOPBACK;
-    while (C1CTRL1bits.OPMODE != CAN_MODULE_LOOPBACK);
-
-    // enable ECAN interrupts
     _C1IE = 1;
     C1INTEbits.TBIE = 1;
     C1INTEbits.RBIE = 1;
@@ -321,21 +274,33 @@ void can_init_message(can_message_t *m,
     m->data = data;
 }
 
-void parse_from_can_buffer(can_message_t *m, uint16_t *raw_data) {
-    uint16_t i;
-
-    m->identifier = raw_data[0] >> 2;
-    if ((raw_data[0] & 0x03) == 0b11) {
+void parse_from_can_buffer(can_message_t *m, uint16_t buffer_index) {
+    m->identifier = ecan_message_buffer[buffer_index][0] >> 2;
+    if((ecan_message_buffer[buffer_index][0] & 0b1) == 0b1){
+        m->extended_frame = 1;
+    }else {
+        m->extended_frame = 0;
+    }
+    if(m->extended_frame)
+    {
+        m->remote_frame = (ecan_message_buffer[buffer_index][0] & 0x200U) == 0x200U;
+        m->extended_identifier = (((uint32_t) ecan_message_buffer[buffer_index][1]) << 6) | (ecan_message_buffer[buffer_index][2] >> 10);
+    } else {
+        m->remote_frame = (ecan_message_buffer[buffer_index][0] & 0b10) == 0b10;
+        m->extended_identifier = 0;
+    }
+    
+    /*if ((raw_data[0] & 0x03) == 0b11) {
         m->extended_frame = 1;
         m->extended_identifier = (((uint32_t) raw_data[1]) << 6) | (raw_data[2] >> 10);
     } else {
         m->extended_frame = 0;
         m->extended_identifier = 0;
-    }
+    }*/
 
-    m->data_length = raw_data[2] & 0xF;
+    m->data_length = ecan_message_buffer[buffer_index][2] & 0xF;
 
-    if (m->extended_frame) {
+    /*if (m->extended_frame) {
         if (((raw_data[2] & 0x200U) == 0x200U)) {
             m->remote_frame = 1;
         } else {
@@ -347,15 +312,23 @@ void parse_from_can_buffer(can_message_t *m, uint16_t *raw_data) {
         } else {
             m->remote_frame = 0;
         }
-    }
+    }*/
     if (m->remote_frame == 0) {
-        for (i = 0; i < m->data_length; i++) {
+        m->data[0] = (uint8_t) ecan_message_buffer[buffer_index][0 + 3];
+        m->data[1] = (uint8_t) (ecan_message_buffer[buffer_index][0 + 3] >> 8);
+        m->data[2] = (uint8_t) ecan_message_buffer[buffer_index][1 + 3];
+        m->data[3] = (uint8_t) (ecan_message_buffer[buffer_index][1 + 3] >> 8);
+        m->data[4] = (uint8_t) ecan_message_buffer[buffer_index][2 + 3];
+        m->data[5] = (uint8_t) (ecan_message_buffer[buffer_index][2 + 3] >> 8);
+        m->data[6] = (uint8_t) ecan_message_buffer[buffer_index][3 + 3];
+        m->data[7] = (uint8_t) (ecan_message_buffer[buffer_index][3 + 3] >> 8);
+        /*for (i = 0; i < CAN_MAX_N_BYTES; i++) {
             if (i % 2 == 0) {
                 m->data[i] = (uint8_t) raw_data[i / 2 + 3];
             } else {
                 m->data[i] = (uint8_t) (raw_data[(i - 1) / 2 + 3] >> 8);
             }
-        }
+        }*/
     }
 }
 
@@ -557,7 +530,9 @@ void can_detect_devices(void) {
         UART_DEBUG_PRINT("At least one device found.");
     }
 }
-/*
+
+// DMA interrupts are not used, only for data transfer. CAN interrupt is more 
+// informative and provides better handling of RX/TX messages
 void __attribute__((interrupt, no_auto_psv)) _DMA1Interrupt(void)
 {
     _DMA1IF = 0; // Clear the DMA1 Interrupt Flag;
@@ -573,7 +548,7 @@ void __attribute__((interrupt, no_auto_psv)) _C1RxRdyInterrupt(void)
 {
     _C1RXIF = 0;
 }
-void __attribute__((interrupt, no_auto_psv)) _C1Interrupt(void)
+void __attribute__((interrupt, auto_psv)) _C1Interrupt(void)
 {
     _C1IF = 0; 
     // toggle_led();
@@ -588,25 +563,29 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt(void)
         can_message_t cm;
         message_t m;
         
-        UART_DEBUG_PRINT("DMA RX FINALLY CALLED");
-        
-        while (C1FIFObits.FBP != C1FIFObits.FNRB)
-        {
+        //if (C1FIFObits.FBP != C1FIFObits.FNRB)
+        //{
             // handle message
-            parse_from_can_buffer(&cm, ecan_message_buffer[C1FIFObits.FNRB]);
+            int i = C1FIFObits.FNRB;
+            
+            parse_from_can_buffer(&cm, i);
             parse_from_can_message(&m, &cm);
-
-            if ((m.identifier == controller_address) || (m.identifier == ADDRESS_GATEWAY))
+            
+            if(controller_address == ADDRESS_SEARCH_START)
             {
-                message_process(&m);
-            }
-            else
-            {
-                // if the UART connection is active, we forward the message
+                send_message_uart(&m);
+                
+                if((m.identifier == controller_address) || (m.identifier == ADDRESS_GATEWAY))
+                {
+                    message_process(&m);
+                }
+            } else {
                 if (uart_connection_active)
                 {
                     send_message_uart(&m);
                 }
+                
+                message_process(&m);
             }
 
             // clear buffer full interrupt bit
@@ -618,9 +597,21 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt(void)
             {
                 CLEAR_BIT(&C1RXFUL1, C1FIFObits.FNRB);
             }
-        }
+        //}
         
         C1INTFbits.RBIF = 0;
     }
+    
+    if(C1INTFbits.RBOVIF)
+    {
+        C1INTFbits.RBOVIF = 0;
+    }
+    if(C1INTFbits.FIFOIF)
+    {
+        C1INTFbits.FIFOIF = 0;
+    }
+    if(C1INTFbits.IVRIF)
+    {
+        C1INTFbits.IVRIF = 0;
+    }
 }
- */

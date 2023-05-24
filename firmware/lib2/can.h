@@ -11,7 +11,9 @@
 #define CAN_MAX_N_BYTES 8U
 
 /// @brief Number of ECAN buffers available for RX and TX.
-#define NUM_OF_ECAN_BUFFERS 32
+#define NUM_OF_ECAN_BUFFERS 16
+
+#define ECAN_BUFFER_SIZE (8U)
 
 /// @brief Formats the header in the 18-bit ECAN extended identifier field.
 #define CAN_HEADER(cmd, id) (((((uint16_t)(cmd)) & 0xFFU) << 8) | (((uint16_t)(id)) & 0xFFU))
@@ -139,7 +141,7 @@ extern "C"
      * in a specific format. To convert from this format to the more usable format
      * of can_message_t, this function is used.
      */
-    void parse_from_can_buffer(can_message_t *m, uint16_t *raw_data);
+    void parse_from_can_buffer(can_message_t *m, uint16_t buffer_index);
 
     /// @brief Converts from can_message_t to generic message_t.
     void parse_from_can_message(message_t *m, can_message_t *cm);
