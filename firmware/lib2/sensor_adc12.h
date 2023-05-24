@@ -9,7 +9,7 @@
 
 #define ADC12_CHANNEL_SAMPLE_RATE         8000UL
 #define ADC12_N_CHANNELS                      8U
-#define ADC12_DMA_BUFFER_SIZE               100U
+#define ADC12_DMA_BUFFER_SIZE               64U
 #define ADC12_FULL_SAMPLE_CONVERSION_T_AD    20U
 
 /// @brief ADC12 sensor sample data length

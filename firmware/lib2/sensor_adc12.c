@@ -6,8 +6,8 @@
 #include <utilities.h>
 #include <fir_common.h>
 
-fractional adc12_buffer_a[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (eds, aligned(256), space(xmemory)) );
-fractional adc12_buffer_b[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (eds, aligned(256), space(xmemory)) );
+fractional adc12_buffer_a[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (space(dma), eds, aligned(512)) );
+fractional adc12_buffer_b[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (space(dma), eds, aligned(512)) );
 
 volatile uint8_t sensor_adc12_adc_buffer_selector = 0;
 static bool sensor_adc12_init_done = false;
