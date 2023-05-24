@@ -205,6 +205,11 @@ void GCSensor::setMaxPlotSize(unsigned int value)
     maxPlotSize = value;
 }
 
+int GCSensor::getFullID(short interface, short sensor)
+{
+    return ((interface & 0xf) << 4) | (sensor & 0xf);
+}
+
 GCSensorI2C::GCSensorI2C(GCNode* node, quint8 id, quint8 i2cAddress) : GCSensor(node, id), i2cAddress(i2cAddress)
 {
 }
@@ -731,4 +736,64 @@ void GCSensorAPDS9306::saveData(std::vector<quint8>& data)
 
     if((file != nullptr) && file->isOpen())
         file->write(formattedData.toUtf8());
+}
+
+
+GCSensorADC12::GCSensorADC12(GCNode* node, quint8 id) : GCSensor(node, id)
+{
+    if(node == nullptr){
+        filePath = "node-0-" + QString::number(id) + "-ADC12.csv";
+    } else {
+        filePath = "node-" + QString::number(node->getID()) + "-" + QString::number(id) + "-ADC12.csv";
+    }
+    filePath = QDir::cleanPath(filePath);
+
+    QString prefix;
+    if(!label.isEmpty())
+        prefix += label + " ";
+    else
+        prefix += "ADC12 ";
+    if(node != nullptr)
+        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "] ";
+    else
+        prefix += "[0-" + QString::number(interfaceID) + "] ";
+
+
+    plotSeries.append(new QLineSeries());
+    plotSeries[0]->setName(prefix + "analogue");
+    measurementVariableTypes.append(VariableType::Analogue);
+}
+
+GCSensorADC12::~GCSensorADC12() {}
+
+void GCSensorADC12::setEnabled(bool enable)
+{
+    this->enabled = enable;
+}
+bool GCSensorADC12::getEnabled(void)
+{
+    return enabled;
+}
+
+QString GCSensorADC12::toString(void) const
+{
+    QString dLabel;
+    if (!label.isEmpty())
+    {
+        dLabel = label;
+    }
+    else
+    {
+        dLabel = "ADC12";
+    }
+    return "[" + QString::number(interfaceID) + "] " + dLabel + " - " + statusToString(status);
+}
+QString GCSensorADC12::toConfigString(void) const
+{
+    return QString(); // TODO
+}
+bool GCSensorADC12::fromConfigString(const QStringList &config)
+{
+    // TODO
+    return false;
 }

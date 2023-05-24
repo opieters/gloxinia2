@@ -121,27 +121,35 @@ void GloxiniaConfigurator::processNodeInfoMessage(const GMessage &m)
             delete node;
             return;
         }
-        QModelIndex child = this->treeModel->index(treeModel->rowCount() - 1, 0, index);
+        QModelIndex nodeIndex = this->treeModel->index(treeModel->rowCount() - 1, 0, index);
 
-        this->treeModel->setData(child, modelData, Qt::EditRole);
+        this->treeModel->setData(nodeIndex, modelData, Qt::EditRole);
 
-        // add sensors
+        // add sensors to interfaces
         for (int i = 0; i < node->getNInterfaces(); i++)
         {
-            bool success = this->treeModel->insertRow(i, child);
+            bool success = this->treeModel->insertRow(i, nodeIndex);
+            if (!success)
+            {
+                return;
+            }
+            QModelIndex interfaceIndex = this->treeModel->index(i, 0, nodeIndex);
+            for (int j = 0; j < GCNode::nSensorsPerInterface; j++)
+            {
+                bool success = this->treeModel->insertRow(j, interfaceIndex);
             if (!success)
             {
                 return;
             }
 
-            GCSensor *interfaceData = nullptr;
+                GCSensor *sensorData = nullptr;
 
             // send a message to detect existing sensors
-            GMessage sensor_request(GMessage::Code::SENSOR_CONFIG, m.getMessageID(), i, true, std::vector<quint8>());
+                GMessage sensor_request(GMessage::Code::SENSOR_CONFIG, m.getMessageID(), GCSensor::getFullID(i, j), true, std::vector<quint8>());
             sendSerialMessage(sensor_request);
 
-            QModelIndex interface = this->treeModel->index(treeModel->rowCount(child) - 1, 0, child);
-            this->treeModel->setData(interface, QVariant::fromValue(interfaceData), Qt::EditRole);
+                this->treeModel->setData(interfaceIndex, QVariant::fromValue(sensorData), Qt::EditRole);
+            }
         }
     }
 }

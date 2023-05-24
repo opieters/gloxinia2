@@ -879,7 +879,7 @@ void GloxiniaConfigurator::editSensor()
     QList<GMessage> configMs;
 
     // sensor is selected -> run menu
-    if (index.isValid() && index.parent().isValid())
+    if (index.isValid() && index.parent().isValid() && index.parent().parent().isValid())
     {
         QVariant data = model->data(index, Qt::EditRole);
         sensorSHT35 = data.value<GCSensorSHT35 *>();
@@ -1154,7 +1154,7 @@ void GloxiniaConfigurator::showContextMenu(const QPoint &pos)
     }
 
     // sensor is selected
-    if (index.isValid() && index.parent().isValid())
+    if (index.isValid() && index.parent().isValid() && index.parent().parent().isValid())
     {
         sensorCurrent = true;
     }

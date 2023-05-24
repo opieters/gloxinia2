@@ -55,7 +55,10 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
             {
                 return s->toString();
             }
-            return "Empty interface";
+            return "No sensor";
+            break;
+        case TreeItem::NodeType::Interface:
+            return "Sensor interface " + QString::number(index.row() + 1);
             break;
         case TreeItem::NodeType::Root:
             return "Root Node";

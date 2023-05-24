@@ -12,6 +12,7 @@ public:
     enum NodeType {
         Root,
         Node,
+        Interface,
         Sensor,
     };
 

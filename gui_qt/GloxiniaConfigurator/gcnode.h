@@ -49,6 +49,8 @@ public:
     virtual const unsigned int getNInterfaces(void) const = 0;
     virtual const BootLoaderNodeID getBootLloaderID(void) const = 0;
 
+    static constexpr int nSensorsPerInterface = 4;
+
 protected:
     int id;
     QString label;

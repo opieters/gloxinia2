@@ -30,6 +30,7 @@ public:
         SENSOR_CONFIG = 0x13,
         SENSOR_START = 0x14,
         SENSOR_STOP = 0x15,
+        SENSOR_CONFIG_END = 0x16,
         ACTUATOR_STATUS = 0x20,
         TX_ERROR = 0x30,
         DATA_CLEAR = 0x40,

@@ -209,5 +209,6 @@ QString GMessage::toLogString() const
         }
         }
     }
+
     return "[" + cTime + "] (" + QString::number(messageID) + ", " + QString::number(sensorID) + ") " + GMessage::codeToString(code) + " " + formattedData;
 }

@@ -77,6 +77,9 @@ bool TreeItem::insertChildren(int position, int count, int columns)
         QList<QVariant> data(columns);
         TreeItem *item;
         switch(nType){
+        case TreeItem::Interface:
+            item = new TreeItem(data, TreeItem::Sensor, this);
+            break;
         case TreeItem::Sensor:
             return false;
             break;
@@ -84,7 +87,7 @@ bool TreeItem::insertChildren(int position, int count, int columns)
             item = new TreeItem(data, TreeItem::Node, this);
             break;
         case TreeItem::Node:
-            item = new TreeItem(data, TreeItem::Sensor, this);
+            item = new TreeItem(data, TreeItem::Interface, this);
             break;
         }
         childItems.insert(position, item);
@@ -126,10 +129,12 @@ bool TreeItem::setData(const QVariant &value)
 QIcon TreeItem::getIcon() const
 {
     switch(nType){
-        case TreeItem::Root:
+    case TreeItem::Root:
         return QIcon(":/images/node.png");
     case TreeItem::Node:
         return QIcon(":/images/cube-solid.png");
+    case TreeItem::Interface:
+        return QIcon(":/images/unknowm-sensor.png");
     case TreeItem::Sensor:
         return QIcon(":/images/unknown-sensor.png");
     }

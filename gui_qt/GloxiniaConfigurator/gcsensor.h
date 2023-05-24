@@ -88,6 +88,8 @@ public:
     unsigned int getMaxPlotSize(void);
     void setMaxPlotSize(unsigned int value);
 
+    static int getFullID(short interface, short sensor);
+
 protected:
     GCNode* const node;
     const quint8 interfaceID;
@@ -239,5 +241,24 @@ private:
 };
 
 Q_DECLARE_METATYPE(GCSensorAPDS9306 *)
+
+class GCSensorADC12 : public GCSensor
+{
+public:
+    GCSensorADC12(GCNode* const node = nullptr, quint8 id = 0);
+    virtual ~GCSensorADC12() = 0;
+
+    void setEnabled(bool enable);
+    bool getEnabled(void);
+
+    QString toString(void) const override;
+    QString toConfigString(void) const override;
+    bool fromConfigString(const QStringList &config) override;
+
+protected:
+    bool enabled;
+};
+
+Q_DECLARE_METATYPE(GCSensorADC12 *)
 
 #endif // GCSENSOR_H
