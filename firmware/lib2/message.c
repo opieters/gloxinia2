@@ -133,34 +133,44 @@ void message_process(const message_t *m) {
             cmd_discovery(m);
             break;
         case M_MSG_TEXT:
+            UART_DEBUG_PRINT("MSG_TEXT");
             send_message_uart(m);
             break;
         case M_NODE_INFO:
+            UART_DEBUG_PRINT("NODE_INFO");
             cmd_node_info(m);
             break;
         case M_SENSOR_STATUS:
+            UART_DEBUG_PRINT("SENSOR_STATUS");
             cmd_sensor_status(m);
             break;
         case M_SENSOR_ERROR:
+            UART_DEBUG_PRINT("SENSOR_ERROR");
             cmd_sensor_error(m);
             break;
         case M_SENSOR_DATA:
+            UART_DEBUG_PRINT("SENSOR_DATA");
             cmd_sensor_data(m);
             break;
         case M_SENSOR_START:
+            UART_DEBUG_PRINT("SENSOR_START");
             cmd_sensor_start(m);
             break;
         case M_SENSOR_STOP:
+            UART_DEBUG_PRINT("SENSOR_STOP");
             cmd_sensor_stop(m);
             break;
         case M_SENSOR_CONFIG:
+            UART_DEBUG_PRINT("SENSOR_CONFIG");
             cmd_sensor_config(m);
             break;
         case M_SENSOR_CONFIG_END:
+            UART_DEBUG_PRINT("SENSOR_CONFIG_END");
             cmd_sensor_config_end(m);
             break;
         case M_NODE_RESET:
         {
+            UART_DEBUG_PRINT("NODE_RESET");
             can_disable();
             i2c1_disable();
             i2c2_disable();
@@ -169,18 +179,27 @@ void message_process(const message_t *m) {
             break;
         }
         case M_DATA_CLEAR:
+            UART_DEBUG_PRINT("DATA_CLEAR");
             cmd_data_clear(m);
             break;
         case M_DATA_READ:
+            UART_DEBUG_PRINT("DATA_READ");
             cmd_data_read(m);
             break;
         case M_DATA_WRITE:
+            UART_DEBUG_PRINT("DATA_WRITE");
             cmd_data_write(m);
             break;
         // these messages do not trigger an action
         case M_DATA_BURST_START:
+            UART_DEBUG_PRINT("DATA_BURST_STOP");
+            break;
         case M_DATA_BURST:
+            UART_DEBUG_PRINT("DATA_BURST");
+            break;
         case M_DATA_BURST_STOP:
+            UART_DEBUG_PRINT("DATA_BURST_STOP");
+            break;
         case M_HELLO:
             UART_DEBUG_PRINT("CAN_HELLO");
             break;
@@ -256,7 +275,7 @@ static void cmd_update_address(const message_t *m) {
 }
 
 static void cmd_discovery(const message_t *m) {
-    can_reset();
+    //can_reset();
 
     if (m->request_message_bit && (m->identifier == ADDRESS_GATEWAY)) {
         if (controller_address == ADDRESS_UNSET) {

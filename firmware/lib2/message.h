@@ -10,6 +10,7 @@
 
 typedef enum
 {
+    M_NOP = 0x00,
     M_REQUEST_ADDRESS_AVAILABLE = 0x01, // check if CAN identifier is already taken. If not, use this identifier as identifier
     M_ADDRESS_TAKEN = 0x02,             // response message when identifier is already taken
     M_UPDATE_ADDRESS = 0x03,            // change the CAN identifier to a new value. Requester must guarantee that the value is not yet taken
@@ -23,9 +24,9 @@ typedef enum
     M_SENSOR_ERROR = 0x11,
     M_SENSOR_DATA = 0x12,
     M_SENSOR_CONFIG = 0x13, // configure sensors or read configuration
-    M_SENSOR_CONFIG_END = 0x16, // ends burst of configuration data
     M_SENSOR_START = 0x14,
     M_SENSOR_STOP = 0x15,
+    M_SENSOR_CONFIG_END = 0x16, // ends burst of configuration data
     M_ACTUATOR_STATUS = 0x20,
     M_TX_ERROR = 0x30,
     M_DATA_CLEAR = 0x40,
@@ -36,10 +37,10 @@ typedef enum
     M_DATA_BURST_STOP = 0x45,
     M_BOOT_READ_VERSION = 0x80,
     M_BOOT_READ_FLASH = 0x81,
-    M_BOOT_WRITE_FLASH_INIT = 0x84,
     M_BOOT_WRITE_FLASH = 0x82,
-    M_BOOT_WRITE_FLASH_DONE = 0x85,
     M_BOOT_ERASE_FLASH = 0x83,
+    M_BOOT_WRITE_FLASH_INIT = 0x84,
+    M_BOOT_WRITE_FLASH_DONE = 0x85,
     M_BOOT_RESET_DEVICE = 0x89,
     M_BOOT_SELF_VERIFY = 0x8A,
     M_BOOT_GET_MEMORY_ADDRESS_RANGE_COMMAND = 0x8B,
