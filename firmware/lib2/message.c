@@ -275,8 +275,6 @@ static void cmd_update_address(const message_t *m) {
 }
 
 static void cmd_discovery(const message_t *m) {
-    //can_reset();
-
     if (m->request_message_bit && (m->identifier == ADDRESS_GATEWAY)) {
         if (controller_address == ADDRESS_UNSET) {
             address_find_non_reserved();
