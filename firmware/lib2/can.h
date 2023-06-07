@@ -64,7 +64,7 @@ extern "C"
         uint8_t extended_frame;
         uint32_t extended_identifier;
         uint8_t data_length;
-        uint8_t *data;
+        uint8_t data[CAN_MAX_N_BYTES];
     } can_message_t;
 
     /// @brief Symbolic representation of CAN message status
@@ -126,12 +126,12 @@ extern "C"
      * @param data_length: number of bytes to transmit (max. 8)
      */
     void can_init_message(can_message_t *m,
-                          uint16_t identifier,
-                          uint8_t remote_frame,
-                          uint8_t extended_frame,
-                          uint32_t extended_identifier,
-                          uint8_t *data,
-                          uint8_t data_length);
+                          const uint16_t identifier,
+                          const uint8_t remote_frame,
+                          const uint8_t extended_frame,
+                          const uint32_t extended_identifier,
+                          const uint8_t* data,
+                          const uint8_t data_length);
 
     /**
      * @brief Parses an ECAN message from the internal memory structure to a formatted

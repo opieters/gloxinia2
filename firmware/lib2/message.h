@@ -7,6 +7,7 @@
 #define NO_SENSOR_ID (0xff)
 #define MESSAGE_REQUEST 1
 #define MESSAGE_NO_REQUEST 0
+#define MESSAGE_DATA_LGENTH 8
 
 typedef enum
 {
@@ -83,13 +84,13 @@ typedef enum
 typedef struct
 {
     uint16_t identifier;
-    bool request_message_bit;
     message_cmd_t command;
-    uint16_t sensor_identifier;
-    uint8_t *data;
+    uint8_t sensor_identifier;
+    bool request_message_bit;
     uint8_t length;
+    uint8_t data[MESSAGE_DATA_LGENTH];
     message_status_t status;
-} message_t;
+} __attribute__((packed)) message_t;
 
 #ifdef __cplusplus
 extern "C"
@@ -100,7 +101,7 @@ extern "C"
                       uint16_t identifier,
                       bool request_message_bit,
                       message_cmd_t command,
-                      uint16_t sensor_identifier,
+                      uint8_t sensor_identifier,
                       uint8_t *data,
                       uint8_t length);
     void message_reset(message_t *m);

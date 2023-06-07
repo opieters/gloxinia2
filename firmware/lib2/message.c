@@ -39,14 +39,17 @@ void message_init(message_t *m,
         uint16_t identifier,
         bool request_message_bit,
         message_cmd_t command,
-        uint16_t sensor_identifier,
+        uint8_t sensor_identifier,
         uint8_t *data,
         uint8_t length) {
     m->command = command;
     m->identifier = identifier;
     m->sensor_identifier = sensor_identifier;
+    length = MIN(MESSAGE_DATA_LGENTH, length);
     m->length = length;
-    m->data = data;
+    for(int i = 0; i < length; i++){
+        m->data[i] = data[i];
+    }
     m->status = M_TX_INIT_DONE;
     m->request_message_bit = request_message_bit;
 }
@@ -341,9 +344,10 @@ static void cmd_node_info(const message_t *m) {
 static void cmd_sensor_config(const message_t *m) {
     if (m->request_message_bit) {
         // send config
-        uint8_t reg = 0, length;
+        uint8_t reg = 0, length = 0;
         uint8_t buffer[8];
         message_t m_sensor;
+        
         do {
             sensor_get_config(m->sensor_identifier, reg, buffer, &length);
             reg++;
@@ -358,7 +362,7 @@ static void cmd_sensor_config(const message_t *m) {
             }
         } while (length > 0);
     } else {
-        sensor_set_config_from_buffer((uint8_t) m->sensor_identifier, m->data, m->length);
+        sensor_set_config_from_buffer((uint8_t) m->sensor_identifier, &m->data[0], m->length);
     }
     
 #ifdef __DICIO__
