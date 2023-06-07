@@ -21,9 +21,9 @@ fractional* adc12_output_block0_buffer[ADC12_N_CHANNELS];
 fractional* adc12_input_block1_buffer[ADC12_N_CHANNELS];
 uint8_t adc12_output_buffer0_select = 0;
 fractional adc12_output_block0_buffers_a[ADC12_N_CHANNELS][SENSOR_ADC12_BLOCK1_INPUT_SIZE];
+fractional adc12_output_block0_buffers_b[ADC12_N_CHANNELS][SENSOR_ADC12_BLOCK1_INPUT_SIZE];
 fractional adc12_output_block1_buffers[ADC12_N_CHANNELS][SENSOR_ADC12_BLOCK2_INPUT_SIZE];
 fractional adc12_output_block2_buffers[ADC12_N_CHANNELS][SENSOR_ADC12_BLOCK3_INPUT_SIZE];
-fractional adc12_output_block0_buffers_b[ADC12_N_CHANNELS][SENSOR_ADC12_BLOCK1_INPUT_SIZE];
 
 extern sensor_interface_t* sensor_interfaces[];
 extern const uint8_t n_sensor_interfaces;
@@ -272,7 +272,78 @@ void sensor_adc12_process_block3(void* data)
                 SENSOR_ADC12_DEC_FACT_F3);
         
         // the interface/sensor alloc guarantees that it's always on this location
-        sensor_interfaces[i]->gsensor_config[0].sensor_config.adc12.result = result;
+        // since the interface order does not match the channel order, we need to
+        // remap the data to the correct interface
+        switch(i)
+        {
+            case 0:
+                if(sensor_interfaces[3]->gsensor_config[1].sensor_type == SENSOR_TYPE_ADC12)
+                {
+                    sensor_interfaces[3]->gsensor_config[1].sensor_config.adc12.sum += result;
+                    sensor_interfaces[3]->gsensor_config[1].sensor_config.adc12.count++;
+                    sensor_interfaces[3]->gsensor_config[1].sensor_config.adc12.result = result;
+                }
+                break;
+            case 1:
+                if(sensor_interfaces[3]->gsensor_config[2].sensor_type == SENSOR_TYPE_ADC12)
+                {
+                    sensor_interfaces[3]->gsensor_config[2].sensor_config.adc12.sum += result;
+                    sensor_interfaces[3]->gsensor_config[2].sensor_config.adc12.count++;
+                    sensor_interfaces[3]->gsensor_config[2].sensor_config.adc12.result = result;
+                }
+                break;
+            case 2:
+                if(sensor_interfaces[1]->gsensor_config[1].sensor_type == SENSOR_TYPE_ADC12)
+                {
+                    sensor_interfaces[1]->gsensor_config[1].sensor_config.adc12.sum += result;
+                    sensor_interfaces[1]->gsensor_config[1].sensor_config.adc12.count++;
+                    sensor_interfaces[1]->gsensor_config[1].sensor_config.adc12.result = result;
+                }
+                break;
+            case 3:
+                if(sensor_interfaces[1]->gsensor_config[2].sensor_type == SENSOR_TYPE_ADC12)
+                {
+                    sensor_interfaces[1]->gsensor_config[2].sensor_config.adc12.sum += result;
+                    sensor_interfaces[1]->gsensor_config[2].sensor_config.adc12.count++;
+                    sensor_interfaces[1]->gsensor_config[2].sensor_config.adc12.result = result;
+                }
+                break;
+            case 4:
+                if(sensor_interfaces[2]->gsensor_config[1].sensor_type == SENSOR_TYPE_ADC12)
+                {
+                    sensor_interfaces[2]->gsensor_config[1].sensor_config.adc12.sum += result;
+                    sensor_interfaces[2]->gsensor_config[1].sensor_config.adc12.count++;
+                    sensor_interfaces[2]->gsensor_config[1].sensor_config.adc12.result = result;
+                }
+                break;
+            case 5:
+                if(sensor_interfaces[0]->gsensor_config[1].sensor_type == SENSOR_TYPE_ADC12)
+                {
+                    sensor_interfaces[0]->gsensor_config[1].sensor_config.adc12.sum += result;
+                    sensor_interfaces[0]->gsensor_config[1].sensor_config.adc12.count++;
+                    sensor_interfaces[0]->gsensor_config[1].sensor_config.adc12.result = result;
+                }
+                break;
+            case 6:
+                if(sensor_interfaces[0]->gsensor_config[2].sensor_type == SENSOR_TYPE_ADC12)
+                {
+                    sensor_interfaces[0]->gsensor_config[2].sensor_config.adc12.sum += result;
+                    sensor_interfaces[0]->gsensor_config[2].sensor_config.adc12.count++;
+                    sensor_interfaces[0]->gsensor_config[2].sensor_config.adc12.result = result;
+                }
+                break;
+            case 7:
+                if(sensor_interfaces[2]->gsensor_config[2].sensor_type == SENSOR_TYPE_ADC12)
+                {
+                    sensor_interfaces[2]->gsensor_config[2].sensor_config.adc12.sum += result;
+                    sensor_interfaces[2]->gsensor_config[2].sensor_config.adc12.count++;
+                    sensor_interfaces[2]->gsensor_config[2].sensor_config.adc12.result = result;
+                }
+                break;
+            default:
+                break;
+        }
+        
     }
 }
 
