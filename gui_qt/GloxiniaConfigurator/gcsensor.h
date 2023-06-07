@@ -22,7 +22,9 @@ public:
         NOT_SET = 0x00,
         SHT35 = 0x01,
         APDS9306_065 = 0x02,
-        ANALOGUE = 0x03,
+        ADC12 = 0x03,
+        ADC16 = 0x04,
+        LIA = 0x5,
     };
 
     enum GCSensorStatus
@@ -75,7 +77,6 @@ public:
     virtual QString toConfigString(void) const = 0;
     virtual bool fromConfigString(const QStringList &config) = 0;
     virtual QList<GMessage> getConfigurationMessages() = 0;
-    virtual QList<GMessage> getConfigurationRequests() = 0;
 
     friend QDataStream &operator<<(QDataStream &out, const GCSensor &myObj);
     friend QDataStream &operator>>(QDataStream &in, GCSensor &myObj);
@@ -92,7 +93,7 @@ public:
 
 protected:
     GCNode* const node;
-    const quint8 interfaceID;
+    const quint8 sensorID;
 
     GCSensorStatus status = INACTIVE;
     quint16 measurementPeriod = 9;
@@ -176,7 +177,6 @@ public:
     QString toConfigString(void) const override;
     bool fromConfigString(const QStringList &config) override;
     QList<GMessage> getConfigurationMessages() override;
-    QList<GMessage> getConfigurationRequests() override;
     void saveData(std::vector<quint8>& data) override;
     void printHeader(void) override;
 
@@ -226,7 +226,6 @@ public:
     QString toConfigString(void) const override;
     bool fromConfigString(const QStringList &config) override;
     QList<GMessage> getConfigurationMessages() override;
-    QList<GMessage> getConfigurationRequests() override;
     void saveData(std::vector<quint8>& data) override;
     void printHeader(void) override;
 
@@ -245,18 +244,28 @@ Q_DECLARE_METATYPE(GCSensorAPDS9306 *)
 class GCSensorADC12 : public GCSensor
 {
 public:
-    GCSensorADC12(GCNode* const node = nullptr, quint8 id = 0);
-    virtual ~GCSensorADC12() = 0;
+    enum Register
+    {
+        MEASUREMENT = 0x00,
+        CONFIG = 0x01,
+    };
 
-    void setEnabled(bool enable);
-    bool getEnabled(void);
+    GCSensorADC12(GCNode* const node = nullptr, quint8 id = 0);
+    GCSensorADC12(const GCSensorADC12 &s) = default;
+    ~GCSensorADC12() override;
+
+    void setAverage(bool average);
+    bool getAverage(void);
 
     QString toString(void) const override;
     QString toConfigString(void) const override;
     bool fromConfigString(const QStringList &config) override;
+    QList<GMessage> getConfigurationMessages() override;
+    void saveData(std::vector<quint8>& data) override;
+    void printHeader(void) override;
 
 protected:
-    bool enabled;
+    bool average;
 };
 
 Q_DECLARE_METATYPE(GCSensorADC12 *)

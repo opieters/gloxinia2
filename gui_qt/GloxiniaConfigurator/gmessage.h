@@ -53,20 +53,20 @@ public:
 
     static constexpr uint8_t GMessageStartByte = 0x5B;
     static constexpr uint8_t GMessageStopByte = 0x5D;
-    static constexpr uint8_t headerSize = 9;
+    static constexpr uint8_t headerSize = 8;
 
     static constexpr uint8_t ComputerAddress = 0x00;
     static constexpr uint8_t SearchStartAddress = 0x01;
     static constexpr uint8_t UnsetAddress = 0xff;
-    static constexpr uint16_t NoSensorID = 0x0000;
+    static constexpr uint16_t NoSensorID = 0xff;
     static constexpr uint16_t UnlockSequence = 0x55AA;
 
-    GMessage(GMessage::Code code = NOP, quint8 messegaID = ComputerAddress, quint16 sensorID = NoSensorID, bool request = false, std::vector<quint8> data = std::vector<quint8>());
+    GMessage(GMessage::Code code = NOP, quint8 messageAddress = ComputerAddress, quint16 sensorID = NoSensorID, bool request = false, std::vector<quint8> data = std::vector<quint8>());
 
     int toBytes(quint8 *data, unsigned int maxLength) const;
 
     GMessage::Code getCode(void) const;
-    quint8 getMessageID(void) const;
+    quint8 getMessageAddress(void) const;
     quint16 getSensorID(void) const;
     std::vector<quint8> getData(void) const;
     bool getRequest(void) const;
@@ -84,7 +84,7 @@ private:
     std::vector<quint8> data;
 
     bool request;
-    quint8 messageID;
+    quint16 messageAddress;
     quint16 sensorID;
 };
 

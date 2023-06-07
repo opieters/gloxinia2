@@ -16,6 +16,7 @@
 #include <sensoranaloguedialog.h>
 #include <sensorapds9306_065dialog.h>
 #include <sensorsht35dialog.h>
+#include <sensoradc12dialog.h>
 #include <gcsystem.h>
 #include <treemodel.h>
 #include <nodedialog.h>
@@ -232,6 +233,7 @@ private:
     SensorAnalogueDialog *sensorAnalogueDialog;
     SensorAPDS9306_065Dialog *sensorAPDS9306_065Dialog;
     SensorSHT35Dialog *sensorSHT35Dialog;
+    SensorADC12Dialog *sensorADC12Dialog;
 
     /*
      * The file stores the sensor data

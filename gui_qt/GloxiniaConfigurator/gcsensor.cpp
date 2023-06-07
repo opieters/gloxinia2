@@ -6,7 +6,7 @@
 
 QString GCSensor::sensorFileDir = "";
 
-GCSensor::GCSensor(GCNode* node, quint8 id) : node(node), interfaceID(id)
+GCSensor::GCSensor(GCNode* node, quint8 id) : node(node), sensorID(id)
 {
 }
 
@@ -21,7 +21,7 @@ GCSensor::~GCSensor() {
 
 quint8 GCSensor::getInterfaceID(void)
 {
-    return interfaceID;
+    return sensorID;
 }
 
 QString GCSensor::getLabel(void) const
@@ -252,9 +252,9 @@ GCSensorSHT35::GCSensorSHT35(GCNode* node, quint8 id, quint8 i2cAddress) : GCSen
     else
         prefix += "SHT35 ";
     if(node != nullptr)
-        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "] ";
+        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(sensorID) + "] ";
     else
-        prefix += "[0-" + QString::number(interfaceID) + "] ";
+        prefix += "[0-" + QString::number(sensorID) + "] ";
 
     plotSeries.append(new QLineSeries());
     plotSeries[0]->setName(prefix + "temperature");
@@ -345,14 +345,14 @@ QString GCSensorSHT35::toString(void) const
     {
         dLabel = "SHT35";
     }
-    return "[" + QString::number(interfaceID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ") - " + statusToString(status);
+    return "[" + QString::number(sensorID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ") - " + statusToString(status);
 }
 
 QString GCSensorSHT35::toConfigString(void) const
 {
     QString nLabel = label;
     nLabel.replace(' ', "\\ ");
-    return "S SHT35 " + QString::number(interfaceID) + " " + nLabel + " " + QString::number(i2cAddress) + " " + QString::number(config.repeatability) + " " + QString::number(config.clockStretching) + " " + QString::number(config.rate) + " " + QString::number(config.periodicity) + " ;";
+    return "S SHT35 " + QString::number(sensorID) + " " + nLabel + " " + QString::number(i2cAddress) + " " + QString::number(config.repeatability) + " " + QString::number(config.clockStretching) + " " + QString::number(config.rate) + " " + QString::number(config.periodicity) + " ;";
 }
 
 bool GCSensorSHT35::fromConfigString(const QStringList &config)
@@ -395,7 +395,7 @@ QList<GMessage> GCSensorSHT35::getConfigurationMessages()
     mData[1] = GCSensorSHT35::Register::MEASUREMENT;
     mData[2] = (quint8) (measurementPeriod >> 8);
     mData[3] = (quint8) (measurementPeriod & 0xff);
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
 
     mData = std::vector<quint8>(7);
     mData[0] = (quint8)GCSensor::sensor_class::SHT35;
@@ -405,16 +405,7 @@ QList<GMessage> GCSensorSHT35::getConfigurationMessages()
     mData[4] = config.clockStretching;
     mData[5] = config.rate;
     mData[6] = config.periodicity;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, false, mData));
-
-    return mList;
-}
-
-QList<GMessage> GCSensorSHT35::getConfigurationRequests()
-{
-    QList<GMessage> mList;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, true, std::vector<quint8>()));
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, true, std::vector<quint8>()));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
 
     return mList;
 }
@@ -514,9 +505,9 @@ GCSensorAPDS9306::GCSensorAPDS9306(GCNode* node, quint8 id, quint8 i2cAddress) :
     else
         prefix += "APDS9306 065 ";
     if(node != nullptr)
-        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "] ";
+        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(sensorID) + "] ";
     else
-        prefix += "[0-" + QString::number(interfaceID) + "] ";
+        prefix += "[0-" + QString::number(sensorID) + "] ";
 
 
     plotSeries.append(new QLineSeries());
@@ -604,14 +595,14 @@ QString GCSensorAPDS9306::toString(void) const
     {
         dLabel = "APDS9306 065";
     }
-    return "[" + QString::number(interfaceID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ") - " + statusToString(status);
+    return "[" + QString::number(sensorID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ") - " + statusToString(status);
 }
 
 QString GCSensorAPDS9306::toConfigString(void) const
 {
     QString nLabel = label;
     nLabel.replace(' ', "\\ ");
-    return "S APDS9306 " + QString::number(interfaceID) + " " + nLabel + " " + QString::number(i2cAddress) + " " + QString::number(alsMeasurementRate) + " " + QString::number(alsResolution) + " " + QString::number(alsGain) + " " + QString::number(alsIVCount) + " " + QString::number(alsTHHigh) + " " + QString::number(alsTHLow) + " " + ";";
+    return "S APDS9306 " + QString::number(sensorID) + " " + nLabel + " " + QString::number(i2cAddress) + " " + QString::number(alsMeasurementRate) + " " + QString::number(alsResolution) + " " + QString::number(alsGain) + " " + QString::number(alsIVCount) + " " + QString::number(alsTHHigh) + " " + QString::number(alsTHLow) + " " + ";";
 }
 
 bool GCSensorAPDS9306::fromConfigString(const QStringList &config)
@@ -660,7 +651,7 @@ QList<GMessage> GCSensorAPDS9306::getConfigurationMessages()
     mData[1] = GCSensorAPDS9306::Register::MEASUREMENT;
     mData[2] = (quint8) measurementPeriod >> 8;
     mData[3] = (quint8) measurementPeriod & 0xff;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
 
     mData = std::vector<quint8>(7);
     mData[0] = (quint8)GCSensor::sensor_class::APDS9306_065;
@@ -670,7 +661,7 @@ QList<GMessage> GCSensorAPDS9306::getConfigurationMessages()
     mData[4] = alsMeasurementRate;
     mData[5] = alsResolution;
     mData[6] = alsGain;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
 
     mData = std::vector<quint8>(6);
     mData[0] = (quint8)GCSensor::sensor_class::APDS9306_065;
@@ -679,7 +670,7 @@ QList<GMessage> GCSensorAPDS9306::getConfigurationMessages()
     mData[3] = (quint8) (alsTHHigh >> 16) & 0xff;
     mData[4] = (quint8) (alsTHHigh >> 8) & 0xff;
     mData[5] = (quint8) (alsTHHigh) & 0xff;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
 
     mData = std::vector<quint8>(6);
     mData[0] = (quint8)GCSensor::sensor_class::APDS9306_065;
@@ -688,23 +679,10 @@ QList<GMessage> GCSensorAPDS9306::getConfigurationMessages()
     mData[3] = (quint8) (alsTHLow >> 16) & 0xff;
     mData[4] = (quint8) (alsTHLow >> 8) & 0xff;
     mData[5] = (quint8) (alsTHLow) & 0xff;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
 
     return mList;
 }
-
-QList<GMessage> GCSensorAPDS9306::getConfigurationRequests()
-{
-    QList<GMessage> mList;
-
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, true, std::vector<quint8>(0)));
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, true, std::vector<quint8>(0)));
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, true, std::vector<quint8>(0)));
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, true, std::vector<quint8>(0)));
-
-    return mList;
-}
-
 
 void GCSensorAPDS9306::printHeader(void)
 {
@@ -712,6 +690,7 @@ void GCSensorAPDS9306::printHeader(void)
     file->write("# APDS9306 065 is a visible light sensor that produces data in lux. The data is stored in the `pd` column. Each value is timestamped.\n");
     file->write("time; pd\n");
 }
+
 void GCSensorAPDS9306::saveData(std::vector<quint8>& data)
 {
     QString formattedData;
@@ -754,9 +733,9 @@ GCSensorADC12::GCSensorADC12(GCNode* node, quint8 id) : GCSensor(node, id)
     else
         prefix += "ADC12 ";
     if(node != nullptr)
-        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "] ";
+        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(sensorID) + "] ";
     else
-        prefix += "[0-" + QString::number(interfaceID) + "] ";
+        prefix += "[0-" + QString::number(sensorID) + "] ";
 
 
     plotSeries.append(new QLineSeries());
@@ -766,13 +745,14 @@ GCSensorADC12::GCSensorADC12(GCNode* node, quint8 id) : GCSensor(node, id)
 
 GCSensorADC12::~GCSensorADC12() {}
 
-void GCSensorADC12::setEnabled(bool enable)
+void GCSensorADC12::setAverage(bool average)
 {
-    this->enabled = enable;
+    this->average = average;
 }
-bool GCSensorADC12::getEnabled(void)
+
+bool GCSensorADC12::getAverage(void)
 {
-    return enabled;
+    return average;
 }
 
 QString GCSensorADC12::toString(void) const
@@ -786,14 +766,69 @@ QString GCSensorADC12::toString(void) const
     {
         dLabel = "ADC12";
     }
-    return "[" + QString::number(interfaceID) + "] " + dLabel + " - " + statusToString(status);
+    return "[" + QString::number(sensorID) + "] " + dLabel + " - " + statusToString(status);
 }
+
 QString GCSensorADC12::toConfigString(void) const
 {
     return QString(); // TODO
 }
+
 bool GCSensorADC12::fromConfigString(const QStringList &config)
 {
     // TODO
     return false;
+}
+
+QList<GMessage> GCSensorADC12::getConfigurationMessages()
+{
+    QList<GMessage> mList;
+
+    auto mData = std::vector<quint8>(4);
+    mData[0] = (quint8)GCSensor::sensor_class::ADC12;
+    mData[1] = GCSensorADC12::Register::MEASUREMENT;
+    mData[2] = (quint8) (measurementPeriod >> 8);
+    mData[3] = (quint8) (measurementPeriod & 0xff);
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
+
+    mData = std::vector<quint8>(3);
+    mData[0] = (quint8)GCSensor::sensor_class::ADC12;
+    mData[1] = GCSensorADC12::Register::CONFIG;
+    mData[2] = average ? 1 : 0;
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
+
+    return mList;
+}
+
+void GCSensorADC12::saveData(std::vector<quint8>& data)
+{
+    QString formattedData;
+    uint32_t value;
+
+
+    QDateTime date = QDateTime::currentDateTime();
+    formattedData.append(date.toString("dd.MM.yyyy hh:mm:ss"));
+    formattedData.append("; ");
+    if(data.size() == 2){
+        value = data[0] | (data[1] << 8);
+        formattedData.append(QString::number(value)); // print in scientific format with precision of 6
+
+        plotSeries[0]->append(date.toMSecsSinceEpoch(), value);
+
+    } else {
+        formattedData.append("NaN");
+
+        plotSeries[0]->append(date.toMSecsSinceEpoch(), nan(""));
+    }
+    formattedData.append("\n");
+
+    if((file != nullptr) && file->isOpen())
+        file->write(formattedData.toUtf8());
+}
+
+void GCSensorADC12::printHeader(void)
+{
+    file->write("# Intermediate storage file for ADC12\n");
+    file->write("# ADC12 is a 16-bit filtered analogue readout. The data is stored in the `channel` column. Each value is timestamped.\n");
+    file->write("time; channel\n");
 }

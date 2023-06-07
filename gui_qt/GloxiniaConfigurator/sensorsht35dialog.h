@@ -7,7 +7,7 @@
 
 namespace Ui
 {
-    class SensorSHT35Dialog;
+class SensorSHT35Dialog;
 }
 
 class SensorSHT35Dialog : public QDialog

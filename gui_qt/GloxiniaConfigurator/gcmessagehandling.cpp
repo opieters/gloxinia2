@@ -1,4 +1,5 @@
 #include "gloxiniaconfigurator.h"
+#include <QThread>
 
 void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
 {
@@ -75,10 +76,10 @@ void GloxiniaConfigurator::processCANDiscoveryMessage(const GMessage &m)
     qInfo() << "Received discovery message";
 
     // if ID is not yet in the system, request info to create node
-    if (treeModel->checkUniqueNodeID(m.getMessageID()))
+    if (treeModel->checkUniqueNodeID(m.getMessageAddress()))
     {
         // request node info
-        GMessage reply(GMessage::Code::NODE_INFO, m.getMessageID(), GMessage::NoSensorID, true, std::vector<quint8>());
+        GMessage reply(GMessage::Code::NODE_INFO, m.getMessageAddress(), GMessage::NoSensorID, true, std::vector<quint8>());
         sendSerialMessage(reply);
     }
 }
@@ -89,21 +90,21 @@ void GloxiniaConfigurator::processNodeInfoMessage(const GMessage &m)
     QVariant modelData;
     GCNode *node;
 
-    if (treeModel->checkUniqueNodeID(m.getMessageID()))
+    if (treeModel->checkUniqueNodeID(m.getMessageAddress()))
     {
         // create type of node
         switch ((GCNode::NodeType)data[0])
         {
         case GCNode::NodeType::GCDicio:
-            modelData = QVariant::fromValue(new GCNodeDicio(m.getMessageID()));
+            modelData = QVariant::fromValue(new GCNodeDicio(m.getMessageAddress()));
             node = modelData.value<GCNodeDicio *>();
             break;
         case GCNode::NodeType::GCPlanalta:
-            modelData = QVariant::fromValue(new GCNodePlanalta(m.getMessageID()));
+            modelData = QVariant::fromValue(new GCNodePlanalta(m.getMessageAddress()));
             node = modelData.value<GCNodePlanalta *>();
             break;
         case GCNode::NodeType::GCSylvatica:
-            modelData = QVariant::fromValue(new GCNodeSylvatica(m.getMessageID()));
+            modelData = QVariant::fromValue(new GCNodeSylvatica(m.getMessageAddress()));
             node = modelData.value<GCNodeSylvatica *>();
             break;
         default:
@@ -137,16 +138,16 @@ void GloxiniaConfigurator::processNodeInfoMessage(const GMessage &m)
             for (int j = 0; j < GCNode::nSensorsPerInterface; j++)
             {
                 bool success = this->treeModel->insertRow(j, interfaceIndex);
-            if (!success)
-            {
-                return;
-            }
+                if (!success)
+                {
+                    return;
+                }
 
                 GCSensor *sensorData = nullptr;
 
-            // send a message to detect existing sensors
-                GMessage sensor_request(GMessage::Code::SENSOR_CONFIG, m.getMessageID(), GCSensor::getFullID(i, j), true, std::vector<quint8>());
-            sendSerialMessage(sensor_request);
+                // send a message to detect existing sensors
+                GMessage sensor_request(GMessage::Code::SENSOR_CONFIG, m.getMessageAddress(), GCSensor::getFullID(i, j), true, std::vector<quint8>());
+                sendSerialMessage(sensor_request);
 
                 this->treeModel->setData(interfaceIndex, QVariant::fromValue(sensorData), Qt::EditRole);
             }
@@ -160,7 +161,7 @@ void GloxiniaConfigurator::processTextMessage(const GMessage &m)
 
 void GloxiniaConfigurator::processSensorData(const GMessage& m)
 {
-    GCSensor* sensor = treeModel->getSensor(m.getMessageID(), m.getSensorID());
+    GCSensor* sensor = treeModel->getSensor(m.getMessageAddress(), m.getSensorID());
     if(sensor == nullptr)
         return;
     auto data = m.getData();
@@ -178,11 +179,11 @@ void GloxiniaConfigurator::processSensorStatus(const GMessage& m)
     }
 
     // find sensor in the model
-    GCSensor* sensor = treeModel->getSensor(m.getMessageID(), m.getSensorID());
+    GCSensor* sensor = treeModel->getSensor(m.getMessageAddress(), m.getSensorID());
 
     if(sensor == nullptr)
     {
-        qDebug() << "Unable to find sensor at (" << m.getMessageID() << "," << m.getSensorID() << ")";
+        qDebug() << "Unable to find sensor at (" << m.getMessageAddress() << "," << m.getSensorID() << ")";
         return; // TODO: report error here
     }
 
@@ -190,44 +191,39 @@ void GloxiniaConfigurator::processSensorStatus(const GMessage& m)
     GCSensor::GCSensorStatus status = (GCSensor::GCSensorStatus) m.getData().at(0);
     sensor->setStatus(status);
 
-    qDebug() << "Updated sensor status at (" << m.getMessageID() << "," << m.getSensorID() << ")";
+    qDebug() << "Updated sensor status at (" << m.getMessageAddress() << "," << m.getSensorID() << ")";
 }
 
 void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
 {
-    GCSensor* sensor = treeModel->getSensor(m.getMessageID(), m.getSensorID());
-    GCNode* node = treeModel->getNode(m.getMessageID());
+    GCSensor* sensor = treeModel->getSensor(m.getMessageAddress(), m.getSensorID());
+    GCNode* node = treeModel->getNode(m.getMessageAddress());
 
     if(node == nullptr)
         return;
 
     if(sensor == nullptr)
     {
-        QModelIndex index = treeModel->getIndex(m.getMessageID(), m.getSensorID());
+        QModelIndex index = treeModel->getIndex(m.getMessageAddress(), m.getSensorID());
         // create sensor
         switch(m.getData().at(0)){
         case GCSensor::sensor_class::SHT35:
         {
             GCSensorSHT35* sensor_sht35 = new GCSensorSHT35(node, m.getSensorID());
             treeModel->setData(index, QVariant::fromValue(sensor_sht35));
-            auto list = sensor_sht35->getConfigurationRequests();
-            for(int i = 1; i < list.count(); i++){
-                sendSerialMessage(list.at(i));
-            }
 
             break;
         }
-        case GCSensor::sensor_class::ANALOGUE:
-            // TODO
+        case GCSensor::sensor_class::ADC12:
+        {
+            GCSensorADC12* sensor_adc12 = new GCSensorADC12(node, m.getSensorID());
+            treeModel->setData(index, QVariant::fromValue(sensor_adc12));
             break;
+        }
         case GCSensor::sensor_class::APDS9306_065:
         {
             GCSensorAPDS9306* sensor_apds9306_065 =new GCSensorAPDS9306(node, m.getSensorID());
             treeModel->setData(index, QVariant::fromValue(sensor_apds9306_065));
-            auto list = sensor_apds9306_065->getConfigurationRequests();
-            for(int i = 1; i < list.count(); i++){
-                sendSerialMessage(list.at(i));
-            }
             break;
         }
         case GCSensor::sensor_class::NOT_SET:
@@ -236,7 +232,7 @@ void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
         }
 
         // new sensor, request status too
-        GMessage status_request(GMessage::Code::SENSOR_STATUS, m.getMessageID(), m.getSensorID(), true, std::vector<quint8>());
+        GMessage status_request(GMessage::Code::SENSOR_STATUS, m.getMessageAddress(), m.getSensorID(), true, std::vector<quint8>());
         sendSerialMessage(status_request);
     } else {
         // update todos
@@ -370,7 +366,7 @@ void GloxiniaConfigurator::sendSerialMessage(const GMessage &m)
     quint8 rawData[32];
 
     length = m.toBytes(rawData, 32);
-    serial->write((char *)rawData, length);
+    serial->write(QByteArray((char *)rawData, length));
     qInfo() << "Sending" << m.toString();
-    serial->flush();
+    //serial->waitForBytesWritten(100);
 }

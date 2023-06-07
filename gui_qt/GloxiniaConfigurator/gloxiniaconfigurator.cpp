@@ -31,6 +31,7 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
       sensorAnalogueDialog(new SensorAnalogueDialog),
       sensorAPDS9306_065Dialog(new SensorAPDS9306_065Dialog),
       sensorSHT35Dialog(new SensorSHT35Dialog),
+    sensorADC12Dialog(new SensorADC12Dialog),
       nodeDicioDialog(new NodeDicioDialog),
       chart(new QChart),
       messageModel(new QStringListModel),
@@ -126,6 +127,7 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     // connect sample period settings dialogs
     sensorSHT35Dialog->setPeriodDialog(globalMeasurementPolicyDialog);
     sensorAPDS9306_065Dialog->setPeriodDialog(globalMeasurementPolicyDialog);
+    sensorADC12Dialog->setPeriodDialog(globalMeasurementPolicyDialog);
 
     // add plot window to UI
     dummySeries = new QLineSeries();
@@ -540,7 +542,7 @@ void GloxiniaConfigurator::runDiscovery()
     } else {*/
     qInfo() << "Running discovery broadcast";
 
-    GMessage m(GMessage::Code::DISCOVERY, 0, 0, true, std::vector<quint8>());
+    GMessage m(GMessage::Code::DISCOVERY, GMessage::ComputerAddress, GMessage::NoSensorID, true, std::vector<quint8>());
     sendSerialMessage(m);
 }
 
@@ -794,7 +796,7 @@ void GloxiniaConfigurator::addSensor()
     }
 
     // sensor is selected -> add sensor as new row
-    if (index.isValid() && index.parent().isValid())
+    if (index.isValid() && index.parent().isValid() && index.parent().parent().isValid())
     {
         if (!model->insertRow(index.row() + 1, index.parent()))
             return;
@@ -824,7 +826,7 @@ bool GloxiniaConfigurator::removeSensor(const QModelIndex &index)
 {
     QAbstractItemModel *model = systemOverview->model();
 
-    if (index.isValid() && index.parent().isValid())
+    if (index.isValid() && index.parent().isValid() &&  index.parent().parent().isValid())
     {
 
         QVariant data = model->data(index, Qt::EditRole);
@@ -872,8 +874,9 @@ void GloxiniaConfigurator::editSensor()
 {
     const QModelIndex index = systemOverview->selectionModel()->currentIndex();
     QAbstractItemModel *model = systemOverview->model();
-    GCSensorSHT35 *sensorSHT35;
-    GCSensorAPDS9306 *sensorAPDS9306;
+    GCSensorSHT35 *sensorSHT35 = nullptr;
+    GCSensorAPDS9306 *sensorAPDS9306 = nullptr;
+    GCSensorADC12 *sensorADC12 = nullptr;
     int result;
 
     QList<GMessage> configMs;
@@ -884,6 +887,7 @@ void GloxiniaConfigurator::editSensor()
         QVariant data = model->data(index, Qt::EditRole);
         sensorSHT35 = data.value<GCSensorSHT35 *>();
         sensorAPDS9306 = data.value<GCSensorAPDS9306 *>();
+        sensorADC12 = data.value<GCSensorADC12*>();
 
         // selected sensor is SHT35 -> edit parameters of this sensor
         if (sensorSHT35 != nullptr)
@@ -935,16 +939,35 @@ void GloxiniaConfigurator::editSensor()
             return;
         }
 
-        // there is no sensor in the system (nullptr) -> we need to select a sensor
-        QStringList items;
-        items << "-- select sensor--";
-        items << "SHT35";
-        items << "APDS9306 065";
+        if(sensorADC12 != nullptr)
+        {
+            sensorADC12Dialog->updateUISettings(sensorADC12);
+            sensorADC12Dialog->setWindowModality(Qt::ApplicationModal);
+            result = sensorAPDS9306_065Dialog->exec();
+            if(result == QDialog::Rejected){
+                return;
+            }
+            sensorADC12Dialog->apply(sensorADC12);
+            model->setData(index, QVariant::fromValue(sensorADC12), Qt::EditRole);
 
+            configMs = sensorADC12->getConfigurationMessages();
+
+            for(const GMessage &m : configMs){
+                sendSerialMessage(m);
+                qInfo() << "Send ADC12 config" << m.toString();
+
+            }
+
+            sensorADC12->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorADC12->getMeasurementPeriod() + 1));
+
+            return;
+        }
+
+        bool analogue12 = false;
         bool ok;
         GCSensor *sensor = nullptr;
         GCNode *node = nullptr;
-        QVariant nodeData = model->data(index.parent(), Qt::EditRole);
+        QVariant nodeData = model->data(index.parent().parent(), Qt::EditRole);
         GCNodeDicio *nodeD = nodeData.value<GCNodeDicio*>();
         GCNodeSylvatica *nodeS = nodeData.value<GCNodeSylvatica*>();
         GCNodePlanalta *nodeP = nodeData.value<GCNodePlanalta*>();
@@ -964,16 +987,30 @@ void GloxiniaConfigurator::editSensor()
             // TODO: something went wrong, display error message to the user
         }
 
+        // check if this interface supports ADC12 or ADC16 sensors
+        if(nodeD != nullptr)
+        {
+            if((index.row() == 1) || (index.row() == 2))
+                analogue12 = true;
+        }
+        if((nodeS != nullptr) && (index.row() == 1))
+            analogue12 = true;
+
+        // there is no sensor in the system (nullptr) -> we need to select a sensor
+        QStringList items;
+        items << "-- select sensor--";
+        items << "SHT35";
+        items << "APDS9306 065";
+        if(analogue12)
+            items << "ADC12";
+
         // request sensor type from user
         QString item = QInputDialog::getItem(this, tr("Select sensor type"), tr("Sensor:"), items, 0, false, &ok);
-        int sensorIndex = items.indexOf(item);
 
         // using the index, we pop-up the sensor configuration dialog and add it at the relevant location
         if (ok && !item.isEmpty())
         {
-            switch (sensorIndex)
-            {
-            case 1:
+            if(item == "SHT35") {
                 sensorSHT35Dialog->setWindowModality(Qt::ApplicationModal);
                 result = sensorSHT35Dialog->exec();
                 if (result == QDialog::Rejected)
@@ -993,8 +1030,7 @@ void GloxiniaConfigurator::editSensor()
                 }
                 sensorSHT35->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorSHT35->getMeasurementPeriod() + 1));
 
-                break;
-            case 2:
+            } else if(item == "APDS9306 065") {
                 sensorAPDS9306_065Dialog->setWindowModality(Qt::ApplicationModal);
                 result = sensorAPDS9306_065Dialog->exec();
                 if (result == QDialog::Rejected)
@@ -1014,10 +1050,27 @@ void GloxiniaConfigurator::editSensor()
                 }
                 sensorAPDS9306->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorAPDS9306->getMeasurementPeriod() + 1));
 
-                break;
-            default:
+            } else if(item == "ADC12"){
+                sensorADC12Dialog->setWindowModality(Qt::ApplicationModal);
+                result = sensorADC12Dialog->exec();
+                if (result == QDialog::Rejected)
+                {
+                    return;
+                }
+                sensorADC12 = new GCSensorADC12(node, (quint8)index.row());
+                sensorADC12Dialog->apply(sensorADC12);
+                model->setData(index, QVariant::fromValue(sensorADC12), Qt::EditRole);
+
+                configMs = sensorADC12->getConfigurationMessages();
+
+                for(const GMessage &m : configMs){
+                    sendSerialMessage(m);
+                    qInfo() << "Send APDS9306 065 config" << m.toString();
+
+                }
+                sensorADC12->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorADC12->getMeasurementPeriod() + 1));
+            } else {
                 sensor = nullptr;
-                break;
             }
         }
     }
@@ -1033,7 +1086,7 @@ void GloxiniaConfigurator::addToPlot(void)
     GCSensor::VariableType seriesType;
 
     // sensor is selected -> run menu
-    if (index.isValid() && index.parent().isValid())
+    if (index.isValid() && index.parent().isValid() && index.parent().parent().isValid())
     {
         QVariant data = model->data(index, Qt::EditRole);
         sensor = GCSensor::fromQVariant(data);
