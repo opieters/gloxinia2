@@ -15,11 +15,13 @@
 
 /// @brief UART FIFO TX queue size
 #define UART_FIFO_TX_BUFFER_SIZE 16U
+#define UART_FIFO_TX_PRINT_BUFFER_SIZE 4U
+#define UART_FIFO_TX_PRINT_BUFFER_DATA_SIZE 32U
 /// @brief UART FIFO TX message data size (preallocated)
 #define UART_FIFO_TX_DATA_BUFFER_SIZE 16U
 
 /// @brief UART FIFO RX queue size
-#define UART_FIFO_RX_BUFFER_SIZE 16U
+#define UART_FIFO_RX_BUFFER_SIZE 64U
 #define UART_FIFO_RX_DATA_BUFFER_SIZE CAN_MAX_N_BYTES
 
 /// @brief UART header size (includes start and stop bytes)
@@ -55,6 +57,11 @@ typedef enum
     UART_TX_STATE_SEND_STOP,       ///< Send stop byte
     UART_TX_STATE_DONE,
 } uart_tx_state_t;
+
+typedef struct {
+    uint8_t* data;
+    uint8_t length;
+} uart_message_t;
 
 #ifdef __cplusplus
 extern "C"

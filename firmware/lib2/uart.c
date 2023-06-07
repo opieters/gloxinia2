@@ -13,23 +13,25 @@ volatile uint8_t uart_tx_queue_idx = 0;
 volatile uint8_t uart_tx_queue_valid = 0;
 volatile uint8_t uart_tx_ongoing = 0;
 message_t uart_tx_queue[UART_FIFO_TX_BUFFER_SIZE];
-uint8_t uart_tx_data[UART_FIFO_TX_BUFFER_SIZE][UART_FIFO_TX_DATA_BUFFER_SIZE];
+volatile uint8_t n_uart_tx_messages2 = 0;
+volatile uint8_t uart_tx_queue_idx2 = 0;
+volatile uint8_t uart_tx_queue_valid2 = 0;
+uart_message_t uart_tx_queue2[UART_FIFO_TX_PRINT_BUFFER_SIZE];
+uint8_t uart_tx_data2[UART_FIFO_TX_PRINT_BUFFER_SIZE][UART_FIFO_TX_PRINT_BUFFER_DATA_SIZE];
+bool uart_tx_text = false;
 
 // DMA buffer
-uint8_t uart_dma_message_data[128];
+uint8_t uart_dma_tx_message_data[128];
+uint8_t uart_dma_rx_message_data[16];
 
 extern bool uart_connection_active;
 
 message_t uart_rx_queue[UART_FIFO_RX_BUFFER_SIZE];
-uint8_t uart_rx_data[UART_FIFO_RX_BUFFER_SIZE][UART_FIFO_RX_DATA_BUFFER_SIZE];
 task_t uart_rx_tasks[UART_FIFO_RX_BUFFER_SIZE];
-volatile uart_rx_state_t uart_rx_state = 0;
-volatile uint8_t uart_rx_data_idx = 0;
+//volatile uart_rx_state_t uart_rx_state = 0;
+//volatile uint8_t uart_rx_data_idx = 0;
 volatile uint8_t uart_rx_idx = 0;
-message_t *uart_rx_m;
-
-// debug message and data
-message_t *uart_print_message = NULL;
+//message_t *uart_rx_m;
 
 void uart_init(uint32_t baudrate)
 {
@@ -58,15 +60,14 @@ void uart_init(uint32_t baudrate)
     //  Enable UART Rx and Tx
     U2MODEbits.UARTEN = 1; // Enable UART
     U2STAbits.UTXEN = 1;   // Enable UART Tx
-
-    // clear error bit, do not enable error interrupt
-    _U2EIF = 0;
-    _U2EIE = 0;
-
+    
     // only enable RX interrupt
-    _U2RXIE = 1;
+    _U2RXIE = 0;
     _U2TXIE = 0;
+    
+    // clear error bit, enable error interrupt
     _U2EIE = 1;
+    _U2EIF = 0;
 
     // enable UART RX and TX
     U2MODEbits.UARTEN = 1; // Enable UART
@@ -84,11 +85,26 @@ void uart_init(uint32_t baudrate)
     _DMA12IF = 0; // Clear DMA Interrupt Flag
     _DMA12IE = 1; // Enable DMA interrupt
 
-    DMA12STAL = __builtin_dmaoffset(uart_dma_message_data);
-    DMA12STAH = __builtin_dmapage(uart_dma_message_data);
+    DMA12STAL = __builtin_dmaoffset(uart_dma_tx_message_data);
+    DMA12STAH = __builtin_dmapage(uart_dma_tx_message_data);
 
     // update interrupt priority
     _DMA12IP = 7;
+    
+    DMA13CONbits.DIR = 0;     // RAM-to-Peripheral
+    DMA13CONbits.SIZE = 1;    // byte transfer mode
+    DMA13CONbits.MODE = 0b01; // One-Shot, Ping-Pong modes disabled
+    DMA13CNT = ARRAY_LENGTH(uart_dma_rx_message_data) - 1;             // number of  DMA requests
+    DMA13REQ = 0b00011110;        // Select UART2 transmitter
+    DMA13PAD = (volatile unsigned int)&U2RXREG;
+    DMA13STAL = __builtin_dmaoffset(uart_dma_rx_message_data);
+    DMA13STAH = __builtin_dmapage(uart_dma_rx_message_data);
+    DMA13CONbits.CHEN = 1;
+    _DMA13IF = 0; // Clear DMA Interrupt Flag
+    _DMA13IE = 1; // Enable DMA interrupt
+    
+    // update interrupt priority
+    _DMA13IP = 7;
 
     // RX buffer
     for (i = 0; i < UART_FIFO_RX_BUFFER_SIZE; i++)
@@ -97,16 +113,26 @@ void uart_init(uint32_t baudrate)
     }
 
     // TX buffer
-    for (i = 0; i < UART_FIFO_TX_BUFFER_SIZE; i++)
+    for (i = 0; i < ARRAY_LENGTH(uart_tx_queue); i++)
     {
-        uart_tx_queue[i].data = uart_tx_data[i];
-        uart_tx_queue[i].length = UART_FIFO_TX_BUFFER_SIZE;
+        uart_tx_queue[i].length = UART_FIFO_TX_DATA_BUFFER_SIZE;
         uart_tx_queue[i].status = M_TX_SENT;
     }
     
     n_uart_tx_messages = 0;
     uart_tx_queue_idx = 0;
     uart_tx_queue_valid = 0;
+    
+    for(i = 0; i < ARRAY_LENGTH(uart_tx_queue2); i++)
+    {
+        uart_tx_queue2[i].data = NULL;
+        uart_tx_queue2[i].length = 0;
+    }
+    
+    n_uart_tx_messages2 = 0;
+    uart_tx_queue_idx2 = 0;
+    uart_tx_queue_valid2 = 0;
+    
     uart_tx_ongoing = 0;
 }
 
@@ -117,33 +143,31 @@ void uart_print(const char *message, size_t length)
     {
         return;
     }
+    
+    // wait for space in the queue
+    while (n_uart_tx_messages2 == ARRAY_LENGTH(uart_tx_queue2))
+        ;
 
-    // if ((uart_print_message != NULL) && (uart_print_message->status != M_TX_INIT_DONE)) {
-    //     while (uart_print_message->status != M_TX_SENT);
-    // }
+    uart_message_t* m = &uart_tx_queue2[uart_tx_queue_idx2];
 
-    uart_print_message = &uart_tx_queue[uart_tx_queue_idx];
+    m->data = uart_tx_data2[uart_tx_queue_idx2];
+    m->length = MIN(length, ARRAY_LENGTH(uart_tx_data2[uart_tx_queue_idx2]));
+    for(int i = 0; i < m->length; i++)
+    {
+        m->data[i] = message[i];
+    }
 
-    message_init(
-        uart_print_message,
-        controller_address,
-        0,
-        M_MSG_TEXT,
-        NO_SENSOR_ID,
-        (uint8_t *)message,
-        length);
+    uart_tx_queue_idx2 = (uart_tx_queue_idx2 + 1) % ARRAY_LENGTH(uart_tx_queue2);
+    n_uart_tx_messages2++;
 
-    message_reset(uart_print_message);
-    uart_queue_message(uart_print_message);
-
-    // while(uart_print_message.status != UART_MSG_SENT);
+    process_uart_tx_queue();
 #endif
 }
 
 void uart_queue_message(message_t *m)
 {
     // wait for space in the queue
-    while (n_uart_tx_messages == UART_FIFO_TX_BUFFER_SIZE)
+    while (n_uart_tx_messages == ARRAY_LENGTH(uart_tx_queue))
         ;
 
     if (m->status != M_TX_INIT_DONE)
@@ -156,19 +180,15 @@ void uart_queue_message(message_t *m)
     uart_tx_queue[uart_tx_queue_idx] = *m;
     message_t *mtx = &uart_tx_queue[uart_tx_queue_idx];
 
-    // we only need to check this for messages other than the special print message
-    if (m != uart_print_message)
-    {
-        mtx->length = MIN(UART_FIFO_TX_DATA_BUFFER_SIZE, m->length);
-        mtx->data = uart_tx_data[uart_tx_queue_idx];
 
-        for (unsigned int i = 0; i < mtx->length; i++)
-        {
-            mtx->data[i] = m->data[i];
-        }
+    mtx->length = MIN(UART_FIFO_TX_DATA_BUFFER_SIZE, m->length);
+
+    for (unsigned int i = 0; i < mtx->length; i++)
+    {
+        mtx->data[i] = m->data[i];
     }
 
-    uart_tx_queue_idx = (uart_tx_queue_idx + 1) % UART_FIFO_TX_BUFFER_SIZE;
+    uart_tx_queue_idx = (uart_tx_queue_idx + 1) % ARRAY_LENGTH(uart_tx_queue);
     n_uart_tx_messages++;
 
     process_uart_tx_queue();
@@ -176,26 +196,61 @@ void uart_queue_message(message_t *m)
 
 void process_uart_tx_queue(void)
 {
-    message_t *m;
-
-    if ((uart_tx_ongoing == 0) && (uart_tx_queue_idx != uart_tx_queue_valid) && (n_uart_tx_messages > 0))
+    if ((uart_tx_ongoing == 0) && (n_uart_tx_messages > 0))
     {
         // copy to actual message to transmit
 
         uart_tx_ongoing = 1;
+        uart_tx_text = false;
 
         // start transmission of message
-        m = &uart_tx_queue[uart_tx_queue_valid];
+        message_t* m = &uart_tx_queue[uart_tx_queue_valid];
 
-        uart_parse_to_raw_buffer(uart_dma_message_data, m,
-                                 ARRAY_LENGTH(uart_dma_message_data));
+        uart_parse_to_raw_buffer(uart_dma_tx_message_data, m,
+                                 ARRAY_LENGTH(uart_dma_tx_message_data));
 
         while (U2STAbits.TRMT == 0)
             ;
 
         m->status = M_TX_SENT;
-        DMA12STAL = __builtin_dmaoffset(uart_dma_message_data);
-        DMA12STAH = __builtin_dmapage(uart_dma_message_data);
+        DMA12STAL = __builtin_dmaoffset(uart_dma_tx_message_data);
+        DMA12STAH = __builtin_dmapage(uart_dma_tx_message_data);
+        DMA12CNT = UART_HEADER_SIZE + (m->length) - 1;
+
+        // start transfer
+        DMA12CONbits.CHEN = 1;
+        DMA12REQbits.FORCE = 1;
+    }
+    else if ((uart_tx_ongoing == 0) && (n_uart_tx_messages2 > 0))
+    {
+        uart_tx_ongoing = 1;
+        uart_tx_text = true;
+
+        // start transmission of message
+        uart_message_t* m = &uart_tx_queue2[uart_tx_queue_valid2];
+        
+        uart_dma_tx_message_data[0] = UART_CMD_START;
+        uart_dma_tx_message_data[1] = (uint8_t)(controller_address >> 8);
+        uart_dma_tx_message_data[2] = (uint8_t) controller_address;
+        uart_dma_tx_message_data[3] = M_MSG_TEXT;
+        uart_dma_tx_message_data[4] = CAN_NO_REMOTE_FRAME;
+        uart_dma_tx_message_data[5] = (uint8_t)(NO_SENSOR_ID >> 8);
+        uart_dma_tx_message_data[6] = (uint8_t)NO_SENSOR_ID;
+        uart_dma_tx_message_data[7] = (uint8_t)m->length;
+
+        uart_dma_tx_message_data[8 + m->length] = UART_CMD_STOP;
+                
+        // copy to actual message to transmit
+        for (int i = 0; i < m->length; i++)
+        {
+            uart_dma_tx_message_data[8 + i] = m->data[i];
+        }
+
+        while (U2STAbits.TRMT == 0)
+            ;
+
+        DMA12STAL = __builtin_dmaoffset(uart_dma_tx_message_data);
+        DMA12STAH = __builtin_dmapage(uart_dma_tx_message_data);
         DMA12CNT = UART_HEADER_SIZE + (m->length) - 1;
 
         // start transfer
@@ -229,145 +284,105 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA12Interrupt ( void )
 {
     // finish the current transfer
     // uart_tx_queue[uart_tx_queue_valid].status = M_TX_SENT;
-    uart_tx_queue_valid = (uart_tx_queue_valid + 1) % UART_FIFO_TX_BUFFER_SIZE;
-    n_uart_tx_messages--;
-
-    // check if another message is available
     uart_tx_ongoing = 0;
+    if(!uart_tx_text)
+    {
+        uart_tx_queue_valid = (uart_tx_queue_valid + 1) % ARRAY_LENGTH(uart_tx_queue);
+        n_uart_tx_messages--;
+        
+    }
+    else
+    {
+        uart_tx_queue_valid2 = (uart_tx_queue_valid2 + 1) % ARRAY_LENGTH(uart_tx_queue2);
+        n_uart_tx_messages2--;
+    } 
+
+    // check if another message is available 
     process_uart_tx_queue();
 
     _DMA12IF = 0; // Clear the DMA12 Interrupt Flag
 }
 
+void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA13Interrupt ( void )
+{   
+    uart_connection_active = true;
+    
+    if((uart_dma_rx_message_data[0] == UART_CMD_START) && (uart_dma_rx_message_data[ARRAY_LENGTH(uart_dma_rx_message_data)-1] == UART_CMD_STOP)){
+        // process message
+        
+        message_t* m = &uart_rx_queue[uart_rx_idx];
+        message_init(m, 
+                (uart_dma_rx_message_data[1] << 8) | uart_dma_rx_message_data[2],
+                uart_dma_rx_message_data[5],
+                uart_dma_rx_message_data[3],
+                uart_dma_rx_message_data[4],
+                &uart_dma_rx_message_data[7],
+                uart_dma_rx_message_data[6]
+                );
+        m->status = M_RX_FROM_UART;
+        
+        if ((m->identifier == controller_address) || (m->identifier == ADDRESS_GATEWAY))
+        {
+            // schedule processing task
+            task_t task = uart_rx_tasks[uart_rx_idx];
+            task.cb =(void*) message_process;
+            task.data = (void*) m;
+            push_queued_task(task);
+            
+            send_message_uart(m);
+        }
+        else
+        {
+            // forward this message over CAN (this needs to be done in main loop
+            // since EDS space is written during send_message_can call)
+            task_t task = uart_rx_tasks[uart_rx_idx];
+            task.cb =(void*) send_message_can;
+            task.data = (void*) &uart_rx_queue[uart_rx_idx];
+            push_queued_task(task);
+        }
+        
+        
+
+        uart_rx_idx = (uart_rx_idx+1) % UART_FIFO_RX_BUFFER_SIZE;
+        
+        // restore defaults
+        DMA13CNT = ARRAY_LENGTH(uart_dma_rx_message_data)-1;
+        DMA13STAL = (unsigned int) &uart_dma_rx_message_data[0];
+    } else {
+                // search for start condition
+        for(int i = 1; i < ARRAY_LENGTH(uart_dma_rx_message_data); i++){
+            if(uart_dma_rx_message_data[i] == UART_CMD_START){
+                DMA13CNT = i - 1;
+                
+                // move data to correct position
+                for(int j = i; j < ARRAY_LENGTH(uart_dma_rx_message_data); j++){
+                    uart_dma_rx_message_data[j-i] = uart_dma_rx_message_data[j];
+                }
+                
+                // append data
+                DMA13STAL = (unsigned int) &uart_dma_rx_message_data[ARRAY_LENGTH(uart_dma_rx_message_data)-i];
+                break;
+            }
+        }
+    }
+    
+    // start next transfer
+    DMA13CONbits.CHEN = 1;
+    
+    _DMA13IF = 0;
+}
+
 void __attribute__ ( ( interrupt, no_auto_psv ) ) _U2ErrInterrupt ( void )
 {
-    uart_rx_m->status = M_ERROR_HW_OVERFLOW;
+    UART_DEBUG_PRINT("UART2 ERR IN IFS");
+    
+    //uart_rx_m->status = M_ERROR_HW_OVERFLOW;
     U2STAbits.OERR = 0;
     _U2EIF = 0; // Clear the UART2 Error Interrupt Flag
 }
 
 void __attribute__ ( ( interrupt, no_auto_psv ) ) _U2RXInterrupt ( void )
 {
-
-    register uint8_t rx_value = U2RXREG;
-    //register message_t *m = &(uart_rx_queue[(n_uart_rx_messages + uart_rx_read_idx) % UART_RX_BUFFER_SIZE]);
-    
-    //if (n_uart_rx_messages == UART_RX_BUFFER_SIZE)
-    //{
-    //    _U2RXIF = 0;
-    //}
-
-    switch (uart_rx_state)
-    {
-    case UART_RX_STATE_FIND_START_BYTE:
-        if (rx_value == UART_CMD_START)
-        {
-            uart_rx_state = UART_RX_STATE_READ_IDH;
-            uart_rx_m = &uart_rx_queue[uart_rx_idx];
-            uart_rx_m->data = uart_rx_data[uart_rx_idx];
-            uart_rx_m->status = M_EMPTY;
-        }
-        break;
-    case UART_RX_STATE_READ_IDH:
-        uart_rx_m->identifier = rx_value;
-        uart_rx_state = UART_RX_STATE_READ_IDL;
-        break;
-    case UART_RX_STATE_READ_IDL:
-        uart_rx_m->identifier = (uart_rx_m->identifier << 8) | rx_value;
-        uart_rx_state = UART_RX_STATE_READ_CMD;
-        break;
-    case UART_RX_STATE_READ_CMD:
-        uart_rx_m->command = rx_value;
-        uart_rx_state = UART_RX_STATE_READ_REQUEST;
-        break;
-    case UART_RX_STATE_READ_REQUEST:
-        uart_rx_m->request_message_bit = rx_value;
-        // uart_rx_m->status = UART_MSG_TRANSFERRED;
-        uart_rx_state = UART_RX_STATE_READ_SIDH;
-        break;
-    case UART_RX_STATE_READ_SIDH:
-        uart_rx_m->sensor_identifier = rx_value;
-        uart_rx_state = UART_RX_STATE_READ_SIDL;
-
-        break;
-    case UART_RX_STATE_READ_SIDL:
-        uart_rx_m->sensor_identifier = (uart_rx_m->sensor_identifier << 8) | rx_value;
-        uart_rx_state = UART_RX_STATE_READ_LENGTH;
-        break;
-    case UART_RX_STATE_READ_LENGTH:
-        uart_rx_m->length = rx_value;
-        if (rx_value > 0)
-        {
-            uart_rx_state = UART_RX_STATE_READ_DATA;
-            uart_rx_data_idx = 0;
-        }
-        else
-        {
-            uart_rx_state = UART_RX_STATE_DETECT_STOP;
-        }
-
-        break;
-    case UART_RX_STATE_READ_DATA:
-        // only write data until buffer is full
-        if (uart_rx_data_idx < UART_FIFO_RX_DATA_BUFFER_SIZE)
-        {
-            uart_rx_m->data[uart_rx_data_idx] = rx_value;
-        }
-        else
-        {
-            // continue reading data, but indicate error occurred
-            uart_rx_m->status = M_ERROR_OVERFLOW;
-        }
-
-        uart_rx_data_idx++;
-
-        if (uart_rx_data_idx == uart_rx_m->length)
-        {
-            uart_rx_state = UART_RX_STATE_DETECT_STOP;
-        }
-
-        break;
-    case UART_RX_STATE_DETECT_STOP:
-        if (rx_value == UART_CMD_STOP)
-        {
-            if (uart_rx_m->status < M_ERROR)
-            {
-                uart_rx_m->status = M_RX_FROM_UART;
-            }
-        }
-        else
-        {
-            uart_rx_m->status = M_ERROR_STOP_DETECT;
-        }
-
-        //n_uart_rx_messages++;
-        uart_rx_state = UART_RX_STATE_FIND_START_BYTE;
-
-        uart_connection_active = true;
-
-        if ((uart_rx_m->identifier == controller_address) || (uart_rx_m->identifier == ADDRESS_GATEWAY))
-        {
-            send_message_uart(uart_rx_m);
-            
-            // schedule processing task
-            task_t task = uart_rx_tasks[uart_rx_idx];
-            task.cb =(void*) message_process;
-            task.data = (void*) &uart_rx_queue[uart_rx_idx];
-            push_queued_task(task);
-        }
-        else
-        {
-            // forward this message over CAN
-            send_message_can(uart_rx_m);
-        }
-        
-        uart_rx_idx = (uart_rx_idx+1) % UART_FIFO_RX_BUFFER_SIZE;
-
-        break;
-    default:
-        uart_rx_state = UART_RX_STATE_FIND_START_BYTE;
-        break;
-    }
     _U2RXIF = 0;
 }
 
