@@ -6,7 +6,11 @@
 
 /// reserved addresses
 #define ADDRESS_GATEWAY 0x00U      ///< gateway address of the readout PC
+#ifdef __DICIO__
 #define ADDRESS_SEARCH_START 0x01U ///< start address for searching for a free address
+#else
+#define ADDRESS_SEARCH_START 0x02U ///< start address for searching for a free address
+#endif
 #define ADDRESS_UNSET 0xffU        ///< unset address, initial value after reset
 
 #ifdef __cplusplus
