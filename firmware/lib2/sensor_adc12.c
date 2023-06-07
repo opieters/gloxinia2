@@ -6,8 +6,8 @@
 #include <utilities.h>
 #include <fir_common.h>
 
-fractional adc12_buffer_a[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (space(dma), eds, aligned(512)) );
-fractional adc12_buffer_b[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (space(dma), eds, aligned(512)) );
+__eds__ fractional adc12_buffer_a[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (space(dma), eds, aligned(512)) );
+__eds__ fractional adc12_buffer_b[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (space(dma), eds, aligned(512)) );
 
 volatile uint8_t sensor_adc12_adc_buffer_selector = 0;
 static bool sensor_adc12_init_done = false;
@@ -143,7 +143,7 @@ void sensor_adc12_get_config(struct sensor_gconfig_s* intf, uint8_t reg, uint8_t
             *length = 4;
             break;
         case sensor_adc12_gloxinia_register_config:
-            buffer[2] = config->enable;
+            buffer[2] = config->average;
             *length = 3;
             break;
         default:
@@ -151,7 +151,7 @@ void sensor_adc12_get_config(struct sensor_gconfig_s* intf, uint8_t reg, uint8_t
     }
 }
 
-sensor_status_t sensor_adc12_config(struct sensor_gconfig_s *intf, uint8_t *buffer, uint8_t length)
+sensor_status_t sensor_adc12_config(struct sensor_gconfig_s *intf, const uint8_t *buffer, const uint8_t length)
 {
     if (length < 1)
     {
@@ -180,7 +180,7 @@ sensor_status_t sensor_adc12_config(struct sensor_gconfig_s *intf, uint8_t *buff
             if(length != 2) { return SENSOR_STATUS_ERROR; }
             
             // load configuration from buffer into data structure
-            config->enable = buffer[1];
+            config->average = buffer[1];
             
             // the channel configuration changed, so we need to update the module
             sensor_adc12_init2_done = false;
@@ -373,6 +373,14 @@ void sensor_adc12_measure(void *data)
 {
     sensor_gconfig_t* gsc = (sensor_gconfig_t *) data;
     sensor_adc12_config_t* config = &gsc->sensor_config.adc12;
+    
+    if(config->average)
+    {
+        config->result = (fractional) config->count / config->count;
+        config->count = 0;
+        config->sum = 0;
+    }
+    
     uint8_t m_data[2] = {(uint8_t) (config->result >> 8), (uint8_t) (config->result & 0xff)};
     
     message_init(

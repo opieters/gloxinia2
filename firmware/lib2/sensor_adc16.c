@@ -11,9 +11,9 @@
 #include <sensor.h>
 #include <sensor_adc16.h>
 
-unsigned int adc16_tx_buffer[ADC16_TX_BUFFER_LENGTH] __attribute__((space(dma), eds, aligned(4)));
-unsigned int adc16_rx_buffer_a[ADC16_MAX_BUFFER_LENGTH] __attribute__((space(dma), eds, aligned(512)));
-unsigned int adc16_rx_buffer_b[ADC16_MAX_BUFFER_LENGTH] __attribute__((space(dma), eds, aligned(512)));
+__eds__ unsigned int adc16_tx_buffer[ADC16_TX_BUFFER_LENGTH] __attribute__((space(dma), eds, aligned(4)));
+__eds__ unsigned int adc16_rx_buffer_a[ADC16_MAX_BUFFER_LENGTH] __attribute__((space(dma), eds, aligned(512)));
+__eds__ unsigned int adc16_rx_buffer_b[ADC16_MAX_BUFFER_LENGTH] __attribute__((space(dma), eds, aligned(512)));
 //unsigned int adc16_rx_buffer_a[ADC16_MAX_BUFFER_LENGTH] __attribute__((space(dma), eds, address(0xD9C0)));
 //unsigned int adc16_rx_buffer_b[ADC16_MAX_BUFFER_LENGTH] __attribute__((space(dma), eds, address(0xD830)));
 
@@ -51,7 +51,7 @@ void sensor_adc16_get_config(struct sensor_gconfig_s* gsc, uint8_t reg, uint8_t*
     }
 }
 
-sensor_status_t sensor_adc16_config(struct sensor_gconfig_s *gsc, uint8_t *buffer, uint8_t length)
+sensor_status_t sensor_adc16_config(struct sensor_gconfig_s *gsc, const uint8_t *buffer, uint8_t length)
 {
     if (length < 1)
     {

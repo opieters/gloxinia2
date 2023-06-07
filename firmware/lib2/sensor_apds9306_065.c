@@ -58,7 +58,7 @@ void sensor_apds9306_065_get_config(struct sensor_gconfig_s* gsc, uint8_t reg, u
     }
 }
 
-sensor_status_t sensor_apds9306_065_config(struct sensor_gconfig_s* gsc, uint8_t* buffer, uint8_t length) {
+sensor_status_t sensor_apds9306_065_config(struct sensor_gconfig_s* gsc, const uint8_t* buffer, const uint8_t length) {
     sensor_apds9306_065_config_t* config = &gsc->sensor_config.apds9306_065;
     int i;
 

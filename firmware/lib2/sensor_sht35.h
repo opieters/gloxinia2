@@ -137,7 +137,7 @@ extern "C"
      *
      * @return sensor_status_t: Status of operation
      */
-    sensor_status_t sensor_sht35_config(struct sensor_gconfig_s *config, uint8_t *buffer, uint8_t length);
+    sensor_status_t sensor_sht35_config(struct sensor_gconfig_s *config, const uint8_t *buffer, const uint8_t length);
 
     /**
      * @brief Write SHT35 sensor configuration to buffer.

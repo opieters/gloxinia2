@@ -31,7 +31,7 @@ void sensor_sht35_get_config(struct sensor_gconfig_s* gsc, uint8_t reg, uint8_t*
     }
 }
 
-sensor_status_t sensor_sht35_config(struct sensor_gconfig_s *gsc, uint8_t *buffer, uint8_t length)
+sensor_status_t sensor_sht35_config(struct sensor_gconfig_s *gsc, const uint8_t *buffer, const uint8_t length)
 {
     if (length < 1)
     {

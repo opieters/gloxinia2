@@ -102,7 +102,7 @@ extern "C"
      * @param buffer Buffer containing configuration data
      * @param length Length of buffer
      */
-    void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t *buffer, uint8_t length);
+    void sensor_set_config_from_buffer(uint8_t interface_id, const uint8_t *buffer, uint8_t length);
 
     /**
      * @brief Write sensor configuration to buffer.

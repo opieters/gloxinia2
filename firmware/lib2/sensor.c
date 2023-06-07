@@ -19,6 +19,7 @@ void sensors_init(void) {
             sensor_gconfig_t* sgc = &sensor_interfaces[i]->gsensor_config[j];
             schedule_init(&sgc->measure, task, 0);
 
+            sgc->sensor_id = j;
             sgc->sensor_type = SENSOR_NOT_SET;
             sgc->status = SENSOR_STATUS_INACTIVE;
             sgc->interface = sensor_interfaces[i];
@@ -43,7 +44,8 @@ void sensor_get_config(uint8_t sensor_id, uint8_t reg, uint8_t* buffer, uint8_t*
     sensor_gconfig_t* sgc = &intf->gsensor_config[local_sensor_id];
     sensor_type_t sensor_type = sgc->sensor_type;
 
-    switch (sensor_type) {
+    switch (sensor_type) 
+    {
         case SENSOR_TYPE_SHT35:
             sensor_sht35_get_config(sgc, reg, buffer, length);
             break;
@@ -66,13 +68,15 @@ void sensor_get_config(uint8_t sensor_id, uint8_t reg, uint8_t* buffer, uint8_t*
             break;
 #endif
         case SENSOR_NOT_SET:
+            *length = 0;
+            break;
         default:
             *length = 0;
             break;
     }
 }
 
-void sensor_set_config_from_buffer(uint8_t sensor_id, uint8_t *buffer, uint8_t length) {
+void sensor_set_config_from_buffer(uint8_t sensor_id, const uint8_t *buffer, uint8_t length) {
     sensor_interface_t *intf;
     sensor_type_t stype;
     message_t m;

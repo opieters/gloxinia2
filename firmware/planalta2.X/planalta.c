@@ -291,7 +291,7 @@ void planalta_send_ready_message(void *data)
 {
     message_t m;
 
-    message_init(&m, controller_address, 0, M_READY, 0, NULL, 0);
+    message_init(&m, controller_address, 0, M_READY, NO_SENSOR_ID, NULL, 0);
     message_send(&m);
 }
 

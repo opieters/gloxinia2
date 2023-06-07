@@ -50,7 +50,9 @@ typedef enum {
  * @param result_ch_b register for intermediate storage of data from channel B
  */
 typedef struct sensor_adc12_config_s {
-    bool enable;
+    bool average;
+    int32_t count;
+    int32_t sum;
     
     fractional result;
 } sensor_adc12_config_t;
@@ -68,8 +70,8 @@ extern fractional adc12_output_buffer[ADC12_N_CHANNELS];
 extern int32_t adc12_output_sum_buffer[ADC12_N_CHANNELS];
 extern uint16_t adc12_output_sum_counter[ADC12_N_CHANNELS];
 extern volatile uint8_t sensor_adc12_adc_buffer_selector;
-extern fractional adc12_buffer_a[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (eds, aligned(256), space(xmemory)) );
-extern fractional adc12_buffer_b[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (eds, aligned(256), space(xmemory)) );
+extern __eds__ fractional adc12_buffer_a[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (eds, aligned(256), space(xmemory)) );
+extern __eds__ fractional adc12_buffer_b[ADC12_DMA_BUFFER_SIZE*ADC12_N_CHANNELS]  __attribute__( (eds, aligned(256), space(xmemory)) );
 
 #ifdef	__cplusplus
 extern "C" {
@@ -85,7 +87,7 @@ extern "C" {
      *
      * @return  indicating status of the I2C transfer.
      */
-    sensor_status_t sensor_adc12_config(struct sensor_gconfig_s *intf, uint8_t *buffer, uint8_t length);
+    sensor_status_t sensor_adc12_config(struct sensor_gconfig_s *intf, const uint8_t *buffer, const uint8_t length);
     void sensor_adc12_get_config(struct sensor_gconfig_s *intf, uint8_t reg, uint8_t *buffer, uint8_t *length);
 
     

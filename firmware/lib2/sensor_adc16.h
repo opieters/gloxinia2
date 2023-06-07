@@ -238,15 +238,15 @@ extern "C"
 #endif /* __cplusplus */
 
     /// @brief ADC16 transmit buffer.
-    extern unsigned int adc16_tx_buffer[ADC16_TX_BUFFER_LENGTH] __attribute__((space(dma), eds));
+    extern __eds__ unsigned int adc16_tx_buffer[ADC16_TX_BUFFER_LENGTH] __attribute__((space(dma), eds));
 
     /// @brief ADC16 receive buffers.
-    extern unsigned int adc16_rx_buffer_a[ADC16_MAX_BUFFER_LENGTH] __attribute__((space(dma), eds));
-    extern unsigned int adc16_rx_buffer_b[ADC16_MAX_BUFFER_LENGTH] __attribute__((space(dma), eds));
+    extern __eds__ unsigned int adc16_rx_buffer_a[ADC16_MAX_BUFFER_LENGTH] __attribute__((space(dma), eds));
+    extern __eds__ unsigned int adc16_rx_buffer_b[ADC16_MAX_BUFFER_LENGTH] __attribute__((space(dma), eds));
     
     struct sensor_gconfig_s;
     void sensor_adc16_get_config(struct sensor_gconfig_s* intf, uint8_t reg, uint8_t* buffer, uint8_t* length);
-    sensor_status_t sensor_adc16_config(struct sensor_gconfig_s *intf, uint8_t *buffer, uint8_t length);
+    sensor_status_t sensor_adc16_config(struct sensor_gconfig_s *intf, const uint8_t *buffer, uint8_t length);
     bool validate_adc16_config(sensor_adc16_config_t *config);
     
     void sensor_adc16_activate(struct sensor_gconfig_s* intf);

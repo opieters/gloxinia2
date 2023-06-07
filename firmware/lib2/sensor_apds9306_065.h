@@ -167,7 +167,7 @@ extern "C"
      *
      * @return i2c_status_t indicating status of the I2C transfer.
      */
-    sensor_status_t sensor_apds9306_065_config(struct sensor_gconfig_s *intf, uint8_t *buffer, uint8_t length);
+    sensor_status_t sensor_apds9306_065_config(struct sensor_gconfig_s *intf, const uint8_t *buffer, const uint8_t length);
     void sensor_apds9306_065_get_config(struct sensor_gconfig_s *intf, uint8_t reg, uint8_t *buffer, uint8_t *length);
 
     void sensor_apds9306_065_init_sensor(struct sensor_gconfig_s *intf);
