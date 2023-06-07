@@ -7,7 +7,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-        void vector_copy_jump(int num_elements, fractional* dst, fractional* src, int kump);
+        void vector_copy_jump(int num_elements, fractional* dst, __eds__ fractional* src, int kump);
 
 #ifdef	__cplusplus
 }

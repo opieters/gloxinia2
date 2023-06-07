@@ -343,12 +343,13 @@ _covert_uint_to_fract:
 .global _copy_adc_data
     ; w0 = total number of coefficients to copy
     ; w1 = pointer to dst
-    ; w2 = pointer to src
+    ; w2 = pointer to src (low word)
+    ; w3 = pointer to src (high word)
 _copy_adc_data:
     ;lsr w0, #3, w0  
     dec w0, w0
     push DSRPAG
-    mov #0x0001, w3
+    ;mov #0x0001, w3
     mov w3, DSRPAG
     mov #16, w3
     do w0, _final_copy
