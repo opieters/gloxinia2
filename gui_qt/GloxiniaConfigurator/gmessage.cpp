@@ -152,9 +152,13 @@ quint8 GMessage::getMessageAddress(void) const
 {
     return messageAddress;
 }
-quint16 GMessage::getSensorID(void) const
+quint8 GMessage::getSensorID(void) const
 {
-    return sensorID;
+    return sensorID & 0xf;
+}
+quint8 GMessage::getInterfaceID(void) const
+{
+    return (sensorID >> 4) & 0xf;
 }
 std::vector<quint8> GMessage::getData(void) const
 {

@@ -40,8 +40,8 @@ public:
     bool checkUniqueNodeID(int id);
 
     GCNode* getNode(int nodeID);
-    GCSensor* getSensor(int nodeID, int sensorID);
-    QModelIndex getIndex(int nodeID, int sensorID = -1);
+    GCSensor* getSensor(int nodeID, int interfaceID, int sensorID);
+    QModelIndex getIndex(int nodeID, int interfaceID = -1, int sensorID = -1);
 
 private:
     void setupModelData(const QStringList &lines, TreeItem *parent);

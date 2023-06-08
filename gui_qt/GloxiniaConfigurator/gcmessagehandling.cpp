@@ -161,7 +161,7 @@ void GloxiniaConfigurator::processTextMessage(const GMessage &m)
 
 void GloxiniaConfigurator::processSensorData(const GMessage& m)
 {
-    GCSensor* sensor = treeModel->getSensor(m.getMessageAddress(), m.getSensorID());
+    GCSensor* sensor = treeModel->getSensor(m.getMessageAddress(), m.getInterfaceID(), m.getSensorID());
     if(sensor == nullptr)
         return;
     auto data = m.getData();
@@ -179,11 +179,11 @@ void GloxiniaConfigurator::processSensorStatus(const GMessage& m)
     }
 
     // find sensor in the model
-    GCSensor* sensor = treeModel->getSensor(m.getMessageAddress(), m.getSensorID());
+    GCSensor* sensor = treeModel->getSensor(m.getMessageAddress(), m.getInterfaceID(), m.getSensorID());
 
     if(sensor == nullptr)
     {
-        qDebug() << "Unable to find sensor at (" << m.getMessageAddress() << "," << m.getSensorID() << ")";
+        qDebug() << "Unable to find sensor at (" << m.getMessageAddress() << ", " << m.getInterfaceID() << ", " << m.getSensorID() << ")";
         return; // TODO: report error here
     }
 
@@ -191,39 +191,40 @@ void GloxiniaConfigurator::processSensorStatus(const GMessage& m)
     GCSensor::GCSensorStatus status = (GCSensor::GCSensorStatus) m.getData().at(0);
     sensor->setStatus(status);
 
-    qDebug() << "Updated sensor status at (" << m.getMessageAddress() << "," << m.getSensorID() << ")";
+    qDebug() << "Updated sensor status at (" << m.getMessageAddress() << ", " << m.getInterfaceID() << ", " << m.getSensorID() << ")";
 }
 
 void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
 {
-    GCSensor* sensor = treeModel->getSensor(m.getMessageAddress(), m.getSensorID());
+    GCSensor* sensor = treeModel->getSensor(m.getMessageAddress(), m.getInterfaceID(), m.getSensorID());
     GCNode* node = treeModel->getNode(m.getMessageAddress());
+    bool status = false;
 
     if(node == nullptr)
         return;
 
     if(sensor == nullptr)
     {
-        QModelIndex index = treeModel->getIndex(m.getMessageAddress(), m.getSensorID());
+        QModelIndex index = treeModel->getIndex(m.getMessageAddress(), m.getInterfaceID(), m.getSensorID());
         // create sensor
         switch(m.getData().at(0)){
         case GCSensor::sensor_class::SHT35:
         {
-            GCSensorSHT35* sensor_sht35 = new GCSensorSHT35(node, m.getSensorID());
-            treeModel->setData(index, QVariant::fromValue(sensor_sht35));
+            GCSensorSHT35* sensor_sht35 = new GCSensorSHT35(node, m.getInterfaceID(), m.getSensorID());
+            status = treeModel->setData(index, QVariant::fromValue(sensor_sht35));
 
             break;
         }
         case GCSensor::sensor_class::ADC12:
         {
             GCSensorADC12* sensor_adc12 = new GCSensorADC12(node, m.getSensorID());
-            treeModel->setData(index, QVariant::fromValue(sensor_adc12));
+            status = treeModel->setData(index, QVariant::fromValue(sensor_adc12));
             break;
         }
         case GCSensor::sensor_class::APDS9306_065:
         {
-            GCSensorAPDS9306* sensor_apds9306_065 =new GCSensorAPDS9306(node, m.getSensorID());
-            treeModel->setData(index, QVariant::fromValue(sensor_apds9306_065));
+            GCSensorAPDS9306* sensor_apds9306_065 = new GCSensorAPDS9306(node, m.getSensorID());
+            status = treeModel->setData(index, QVariant::fromValue(sensor_apds9306_065));
             break;
         }
         case GCSensor::sensor_class::NOT_SET:
