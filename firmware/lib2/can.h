@@ -16,7 +16,7 @@
 #define ECAN_BUFFER_SIZE (8U)
 
 /// @brief Formats the header in the 18-bit ECAN extended identifier field.
-#define CAN_HEADER(cmd, id) (((((uint16_t)(cmd)) & 0xFFU) << 8) | (((uint16_t)(id)) & 0xFFU))
+#define CAN_HEADER(cmd, intf, id) (((((uint16_t)(cmd)) & 0xFFU) << 8) | (((uint16_t)(((intf & 0xf) << 4) | (id & 0xf))) & 0xFFU))
 
 /// @brief Extracts the command from the 18-bit ECAN extended identifier field.
 #define CAN_EXTRACT_HEADER_CMD(x) ((uint8_t)(((x) >> 8) & 0xFFU))

@@ -407,9 +407,10 @@ static void sht35_config_phase2_cb(i2c_message_t *m)
         gsc->status = SENSOR_STATUS_IDLE;
     }
 
-    message_init(&m_status, controller_address, MESSAGE_NO_REQUEST, M_SENSOR_STATUS,
-                 gsc->sensor_id | (gsc->interface->interface_id << 4), data, ARRAY_LENGTH(data));
     data[0] = gsc->status;
+    message_init(&m_status, controller_address, MESSAGE_NO_REQUEST, M_SENSOR_STATUS,
+                 gsc->interface->interface_id, gsc->sensor_id, data, ARRAY_LENGTH(data));
+    
 
     message_send(&m_status);
 }
@@ -466,7 +467,8 @@ void sht35_i2c_cb_periodic_m_read(i2c_message_t *m)
                          controller_address,
                          MESSAGE_NO_REQUEST,
                          M_SENSOR_DATA,
-                         gsc->sensor_id | (gsc->interface->interface_id << 4),
+                         gsc->interface->interface_id,
+                         gsc->sensor_id,
                          m->read_data,
                          SENSOR_SHT35_CAN_DATA_LENGTH);
             message_send(&gsc->log);
@@ -541,7 +543,8 @@ void sht35_i2c_cb_single_shot_m_read(i2c_message_t *m)
                          controller_address,
                          MESSAGE_NO_REQUEST,
                          M_SENSOR_DATA,
-                         gsc->sensor_id | (gsc->interface->interface_id),
+                         gsc->interface->interface_id,
+                         gsc->sensor_id,
                          m->read_data,
                          SENSOR_SHT35_CAN_DATA_LENGTH);
             message_send(&gsc->log);

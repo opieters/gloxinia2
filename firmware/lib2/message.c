@@ -39,12 +39,14 @@ void message_init(message_t *m,
         uint16_t identifier,
         bool request_message_bit,
         message_cmd_t command,
-        uint8_t sensor_identifier,
+        uint8_t interface_id,
+        uint8_t sensor_id,
         uint8_t *data,
         uint8_t length) {
     m->command = command;
     m->identifier = identifier;
-    m->sensor_identifier = sensor_identifier;
+    m->interface_id = interface_id;
+    m->sensor_id = sensor_id;
     length = MIN(MESSAGE_DATA_LGENTH, length);
     m->length = length;
     for(int i = 0; i < length; i++){
@@ -77,7 +79,7 @@ void send_message_can(const message_t *m) {
 
     // cap length
     mc.data_length = MIN(8, m->length);
-    can_init_message(&mc, m->identifier, m->request_message_bit, CAN_EXTENDED_FRAME, CAN_HEADER(m->command, m->sensor_identifier), m->data, mc.data_length);
+    can_init_message(&mc, m->identifier, m->request_message_bit, CAN_EXTENDED_FRAME, CAN_HEADER(m->command, m->interface_id, m->sensor_id), m->data, mc.data_length);
     can_send_message_any_ch(&mc);
 }
 
@@ -110,6 +112,7 @@ void message_process(const message_t *m) {
         message_init(&m_error, controller_address,
                 MESSAGE_NO_REQUEST,
                 M_TX_ERROR,
+                NO_INTERFACE_ID,
                 NO_SENSOR_ID,
                 m_error_data,
                 ARRAY_LENGTH(m_error_data));
@@ -218,6 +221,7 @@ static void cmd_request_address_available(const message_t *m) {
                 m->identifier,
                 0,
                 M_ADDRESS_TAKEN,
+                NO_INTERFACE_ID,
                 NO_SENSOR_ID,
                 NULL,
                 0);
@@ -243,6 +247,7 @@ static void cmd_address_taken(const message_t *m) {
                     m->identifier,
                     0,
                     M_ADDRESS_TAKEN,
+                    NO_INTERFACE_ID,
                     NO_SENSOR_ID,
                     NULL,
                     0);
@@ -271,6 +276,7 @@ static void cmd_update_address(const message_t *m) {
     message_init(&m_address, controller_address,
             MESSAGE_NO_REQUEST,
             M_DISCOVERY,
+            NO_INTERFACE_ID,
             NO_SENSOR_ID,
             NULL,
             0);
@@ -298,6 +304,7 @@ static void cmd_discovery(const message_t *m) {
                 controller_address,
                 MESSAGE_NO_REQUEST,
                 M_DISCOVERY,
+                NO_INTERFACE_ID,
                 NO_SENSOR_ID,
                 NULL,
                 0);
@@ -335,6 +342,7 @@ static void cmd_node_info(const message_t *m) {
     message_init(&i, controller_address,
             MESSAGE_NO_REQUEST,
             m->command,
+            NO_INTERFACE_ID,
             NO_SENSOR_ID,
             data,
             ARRAY_LENGTH(data));
@@ -349,20 +357,21 @@ static void cmd_sensor_config(const message_t *m) {
         message_t m_sensor;
         
         do {
-            sensor_get_config(m->sensor_identifier, reg, buffer, &length);
+            sensor_get_config(m->interface_id, m->sensor_id, reg, buffer, &length);
             reg++;
             if (length > 0) {
                 message_init(&m_sensor, controller_address,
                         MESSAGE_NO_REQUEST,
                         m->command,
-                        m->sensor_identifier,
+                        m->interface_id,
+                        m->sensor_id,
                         buffer,
                         length);
                 message_send(&m_sensor);
             }
         } while (length > 0);
     } else {
-        sensor_set_config_from_buffer((uint8_t) m->sensor_identifier, &m->data[0], m->length);
+        sensor_set_config_from_buffer(m->interface_id, m->sensor_id, &m->data[0], m->length);
     }
     
 #ifdef __DICIO__
@@ -384,9 +393,9 @@ static void cmd_sensor_config_end(const message_t* m)
 
 static void cmd_sensor_status(const message_t *m) {
     if (m->request_message_bit) {
-        sensor_send_status(m->sensor_identifier);
+        sensor_send_status(m->interface_id, m->sensor_id);
     } else {
-        sensor_set_status(m->sensor_identifier, m->data[0]);
+        sensor_set_status(m->interface_id, m->sensor_id, m->data[0]);
     }
 }
 

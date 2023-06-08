@@ -442,7 +442,8 @@ void sensor_apds9306_065_i2c_cb(i2c_message_t* m) {
                 controller_address,
                 MESSAGE_NO_REQUEST,
                 M_SENSOR_DATA,
-                sgc->sensor_id | (sgc->interface->interface_id << 4),
+                sgc->interface->interface_id,
+                sgc->sensor_id,
                 m->read_data,
                 SENSOR_APDS3906_065_CAN_DATA_LENGTH);
         message_send(&sgc->log);

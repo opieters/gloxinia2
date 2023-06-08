@@ -10,6 +10,7 @@
 #include "sdcard.h"
 #include <rtcc.h>
 #include "mcc_generated_files/interrupt_manager.h"
+#include "dicio_adc12_filters.h"
 
 // TODO REMOVE DEBUG INCLUDES
 #include <sensor_apds9306_065.h>
@@ -52,6 +53,9 @@ sensor_interface_t* sensor_interfaces[N_SENSOR_INTERFACES] =
 
 const uint8_t n_sensor_interfaces = N_SENSOR_INTERFACES;
 
+// internal functions
+void dicio_uart_rx_overflow(void* data);
+
 
 void dicio_init_clock(void)
 {
@@ -91,12 +95,18 @@ void dicio_init_clock(void)
 
 void dicio_init(void)
 {
+    CORCONbits.VAR = 0;
+    
     dicio_init_clock();
     
     dicio_init_pins();
+    
+    sensors_init();
+    dicio_init_node_configurations();
 
     __builtin_enable_interrupts();
 
+    can_init();
     uart_init(50000);
 
     UART_DEBUG_PRINT("Configured UART.");
@@ -107,13 +117,8 @@ void dicio_init(void)
     i2c2_init(&dicio_i2c2_config);
     UART_DEBUG_PRINT("Initialised I2C2.");
 
-    sensors_init();
-    UART_DEBUG_PRINT("Initialised sensor interface.");
-
     event_controller_init();
     UART_DEBUG_PRINT("Initialised event controller.");
-
-    dicio_init_node_configurations();
 
     if (SD_SPI_MediaInitialize() == true)
     {
@@ -124,13 +129,10 @@ void dicio_init(void)
     {
         UART_DEBUG_PRINT("Unable to initialise SD card");
     }
-
-    can_init();
-    UART_DEBUG_PRINT("Initialised ECAN.");
     
-    // TODO:REMOVE???
-    uart_connection_active = true;
-
+    sensor_adc12_init_filters();
+    sensor_adc12_set_callback(sensor_adc12_process_block0);
+    UART_DEBUG_PRINT("Initialised ADC12.");
 
     // task_schedule_t dicio_read_log = {{dicio_send_ready_message, NULL}, 1, 0};
     // schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);
@@ -156,7 +158,33 @@ void dicio_init(void)
     task_schedule_t dicio_read_log;
     task_t dicio_read_log_task = {dicio_send_ready_message, NULL};
     schedule_init(&dicio_read_log, dicio_read_log_task, 10);
-    // schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);
+    //schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);
+    
+    task_schedule_t dicio_uart_recovery;
+    task_t dicio_uart_rx_overflow_check = {dicio_uart_rx_overflow, NULL};
+    schedule_init(&dicio_uart_recovery, dicio_uart_rx_overflow_check, 10);
+    schedule_specific_event(&dicio_uart_recovery, ID_UART_OVERFLOW_SCHEDULE);
+    
+    // try to run ADC12
+    uint8_t buffer1[4] = {SENSOR_TYPE_ADC12, sensor_adc12_gloxinia_register_general, 0, 9};
+    sensor_set_config_from_buffer(2, 2, buffer1, 4);
+    
+    uint8_t buffer2[4] = {SENSOR_TYPE_ADC12, sensor_adc12_gloxinia_register_config, true};
+    sensor_set_config_from_buffer(2, 2, buffer2, 3);
+    
+    //sensor_set_status( (0<<4) | 1, SENSOR_STATUS_ACTIVE);
+    //sensor_adc12_activate(sensor_config);
+}
+
+void dicio_uart_rx_overflow(void* data)
+{
+    if(U2STAbits.OERR)
+    {
+        UART_DEBUG_PRINT("UART2 ERROR 2");
+        
+        U2STAbits.OERR = 0;
+        _U2EIF = 0;
+    }
 }
 
 void dicio_init_node_configurations(void)
@@ -247,7 +275,8 @@ void dicio_write_node_configs_sd(void)
             message_init(&m, config->node_id,
                          MESSAGE_REQUEST,
                          M_SENSOR_CONFIG,
-                         0,
+                         NO_INTERFACE_ID,
+                         NO_SENSOR_ID,
                          NULL,
                          0);
 
@@ -338,19 +367,20 @@ void dicio_process_node_config(const message_t *m)
             return;
 
         // construct address
-        address = node_configs[i].sector_address + 1 + m->sensor_identifier;
+        address = node_configs[i].sector_address + 1 + ((m->interface_id << 4) | m->sensor_id);
 
         // write data to SD card
         SD_SPI_SectorWrite(address, sector_buffer, 1);
         clear_buffer(sector_buffer, ARRAY_LENGTH(sector_buffer));
 
         // request next interface if it exists
-        if ((m->sensor_identifier + 1) < (node_configs[i].n_interfaces))
+        if ((m->interface_id + 1) < (node_configs[i].n_interfaces))
         {
             message_init(&m_rqst, node_configs[i].node_id,
                          MESSAGE_REQUEST,
                          M_SENSOR_CONFIG,
-                         m->sensor_identifier + 1,
+                         m->interface_id,
+                         m->sensor_id + 1,
                          NULL,
                          0);
 
@@ -367,7 +397,8 @@ void dicio_process_node_config(const message_t *m)
                 message_init(&m_rqst, node_configs[i].node_id,
                              MESSAGE_REQUEST,
                              M_SENSOR_CONFIG,
-                             0,
+                             NO_INTERFACE_ID,
+                             NO_SENSOR_ID,
                              NULL,
                              0);
 
@@ -381,8 +412,8 @@ void dicio_process_node_config(const message_t *m)
     // write message meta data
     sector_buffer[write_counter++] = SDCARD_START_BYTE;
     sector_buffer[write_counter++] = m->command;
-    sector_buffer[write_counter++] = (uint8_t)((m->sensor_identifier >> 8) & 0xff);
-    sector_buffer[write_counter++] = (uint8_t)(m->sensor_identifier & 0xff);
+    sector_buffer[write_counter++] = m->interface_id;
+    sector_buffer[write_counter++] = m->sensor_id;
     sector_buffer[write_counter++] = m->length;
 
     // write message data
@@ -431,6 +462,7 @@ void dicio_dump_sdcard_data(uint32_t sector_start, uint32_t sector_stop)
                  controller_address,
                  MESSAGE_NO_REQUEST,
                  M_DATA_BURST_START,
+            NO_INTERFACE_ID,
                  NO_SENSOR_ID,
                  m_data,
                  4);
@@ -440,6 +472,7 @@ void dicio_dump_sdcard_data(uint32_t sector_start, uint32_t sector_stop)
                  controller_address,
                  MESSAGE_NO_REQUEST,
                  M_DATA_BURST,
+            NO_INTERFACE_ID,
                  NO_SENSOR_ID,
                  m_data,
                  8);
@@ -472,6 +505,7 @@ void dicio_dump_sdcard_data(uint32_t sector_start, uint32_t sector_stop)
                          controller_address,
                          MESSAGE_NO_REQUEST,
                          M_DATA_BURST_STOP,
+                    NO_INTERFACE_ID,
                          NO_SENSOR_ID,
                          m_data,
                          4);
@@ -492,6 +526,7 @@ void dicio_dump_sdcard_data(uint32_t sector_start, uint32_t sector_stop)
                  controller_address,
                  MESSAGE_NO_REQUEST,
                  M_DATA_BURST_STOP,
+            NO_INTERFACE_ID,
                  NO_SENSOR_ID,
                  m_data,
                  4);
@@ -500,7 +535,7 @@ void dicio_dump_sdcard_data(uint32_t sector_start, uint32_t sector_stop)
 
 void dicio_init_pins(void)
 {
-    __builtin_write_OSCCONL(OSCCON & 0xbf); // unlock PPS
+   __builtin_write_OSCCONL(OSCCON & 0xbf); // unlock PPS
 #ifdef __dsPIC33EP256MU806__
 
     /*****************************
@@ -893,19 +928,7 @@ void dicio_send_ready_message(void *data)
 {
     message_t m;
 
-    message_init(&m, controller_address, 0, M_READY, 0, NULL, 0);
+    message_init(&m, controller_address, false, M_READY, NO_INTERFACE_ID, NO_SENSOR_ID, NULL, 0);
     message_send(&m);
 }
 
-// TODO: remove
-
-void dicio_can_debug_tx(void)
-{
-    message_t m;
-
-    message_init(&m, ADDRESS_GATEWAY, 0, M_HELLO, 0, NULL, 0);
-    send_message_can(&m);
-    
-    UART_DEBUG_PRINT("Sending HELLO debug message!");
-    UART_DEBUG_PRINT("CAN ERRORS: %04x", C1EC);
-}

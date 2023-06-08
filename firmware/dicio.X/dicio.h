@@ -11,6 +11,8 @@
 #define DICIO_DATA_START_ADDRESS 0x00000000U
 #define DICIO_MAX_N_NODES 50U
 
+#define ID_UART_OVERFLOW_SCHEDULE 2
+
 /**
  * @brief Node configuration structure.
  *

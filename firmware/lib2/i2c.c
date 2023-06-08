@@ -253,7 +253,8 @@ void i2c_process_queue(void) {
                     m->status = I2C_MESSAGE_CANCELED;
             }
         } else {
-            if (i2c_queue_idx != i2c_queue_valid) {
+            if (i2c_queue_idx != i2c_queue_valid) 
+            {
                 m = i2c_message_queue[i2c_queue_idx];
 
                 //UART_DEBUG_PRINT("Fetched message from queue: %x on bus %x.", m->address, m->i2c_bus);

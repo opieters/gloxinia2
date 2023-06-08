@@ -38,10 +38,9 @@ i2c_bus_t sensor_get_i2c_bus(uint8_t interface_id) {
     }
 }
 
-void sensor_get_config(uint8_t sensor_id, uint8_t reg, uint8_t* buffer, uint8_t* length) {
-    sensor_interface_t* intf = sensor_interfaces[sensor_id >> 4];
-    uint8_t local_sensor_id = sensor_id & 0b1111;
-    sensor_gconfig_t* sgc = &intf->gsensor_config[local_sensor_id];
+void sensor_get_config(uint8_t interface_id, uint8_t sensor_id, uint8_t reg, uint8_t* buffer, uint8_t* length) {
+    sensor_interface_t* intf = sensor_interfaces[interface_id];
+    sensor_gconfig_t* sgc = &intf->gsensor_config[sensor_id];
     sensor_type_t sensor_type = sgc->sensor_type;
 
     switch (sensor_type) 
@@ -76,15 +75,11 @@ void sensor_get_config(uint8_t sensor_id, uint8_t reg, uint8_t* buffer, uint8_t*
     }
 }
 
-void sensor_set_config_from_buffer(uint8_t sensor_id, const uint8_t *buffer, uint8_t length) {
+void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t sensor_id, const uint8_t *buffer, uint8_t length) {
     sensor_interface_t *intf;
     sensor_type_t stype;
     message_t m;
-    uint8_t data[1], interface_id, local_sensor_id;
-    
-    
-    interface_id = sensor_id >> 4;
-    local_sensor_id = sensor_id & 0b1111;
+    uint8_t data[1];
 
     // input validation
     if (length < 2) {
@@ -97,7 +92,7 @@ void sensor_set_config_from_buffer(uint8_t sensor_id, const uint8_t *buffer, uin
     intf = sensor_interfaces[interface_id];
     stype = (sensor_type_t) buffer[0];
 
-    sensor_gconfig_t* gsc = &intf->gsensor_config[local_sensor_id];
+    sensor_gconfig_t* gsc = &intf->gsensor_config[sensor_id];
     gsc->sensor_type = stype;
 
     sensor_status_t status = SENSOR_STATUS_ERROR;
@@ -140,42 +135,42 @@ void sensor_set_config_from_buffer(uint8_t sensor_id, const uint8_t *buffer, uin
 
 
     // we report the status back to the central
-    message_init(&m, controller_address, MESSAGE_NO_REQUEST, M_SENSOR_STATUS,
-            interface_id, data, ARRAY_LENGTH(data));
     data[0] = gsc->status;
+    message_init(&m, controller_address, MESSAGE_NO_REQUEST, M_SENSOR_STATUS,
+            gsc->interface->interface_id, gsc->sensor_id, data, ARRAY_LENGTH(data));
 
     message_send(&m);
 }
 
-void sensor_send_status(uint8_t sensor_id) {
+void sensor_send_status(uint8_t interface_id, uint8_t sensor_id) {
     message_t m;
-    uint8_t data[1], interface_id = sensor_id >> 4, local_sensor_id = sensor_id & 0b1111;
+    uint8_t data[1];
 
     if (interface_id >= N_SENSOR_INTERFACES)
         return;
-    if(local_sensor_id >= SENSOR_INTERFACE_MAX_SENSORS)
+    if(sensor_id >= SENSOR_INTERFACE_MAX_SENSORS)
         return;
 
-    data[0] = sensor_interfaces[interface_id]->gsensor_config[local_sensor_id].status;
+    sensor_gconfig_t* gsc = &sensor_interfaces[interface_id]->gsensor_config[sensor_id];
+    data[0] = gsc->status;
 
     message_init(&m, controller_address,
             MESSAGE_NO_REQUEST,
             M_SENSOR_STATUS,
-            interface_id,
+            gsc->interface->interface_id,
+            gsc->sensor_id,
             data,
             ARRAY_LENGTH(data));
     message_send(&m);
 }
 
-void sensor_set_status(uint8_t sensor_id, sensor_status_t status) {
-    uint8_t local_sensor_id = sensor_id & 0b1111;
-    uint8_t interface_id = sensor_id >> 4;
+void sensor_set_status(uint8_t interface_id, uint8_t sensor_id, sensor_status_t status) {
     sensor_interface_t* intf = sensor_interfaces[interface_id];
 
     message_t m_status;
     uint8_t data[1];
     
-    sensor_gconfig_t* gsc = &intf->gsensor_config[local_sensor_id];
+    sensor_gconfig_t* gsc = &intf->gsensor_config[sensor_id];
 
     switch (status) {
         case SENSOR_STATUS_ACTIVE:
@@ -231,9 +226,9 @@ void sensor_set_status(uint8_t sensor_id, sensor_status_t status) {
             break;
     }
 
-    message_init(&m_status, controller_address, MESSAGE_NO_REQUEST,
-            M_SENSOR_STATUS, intf->interface_id, data, ARRAY_LENGTH(data));
     data[0] = gsc->status;
+    message_init(&m_status, controller_address, MESSAGE_NO_REQUEST,
+            M_SENSOR_STATUS, gsc->interface->interface_id, gsc->sensor_id, data, ARRAY_LENGTH(data));
     message_send(&m_status);
 }
 
@@ -242,6 +237,7 @@ void sensor_error_log(sensor_gconfig_t* sensor_config, uint8_t* data, uint8_t le
             controller_address,
             MESSAGE_NO_REQUEST,
             M_SENSOR_ERROR,
+            sensor_config->interface->interface_id, 
             sensor_config->sensor_id,
             data,
             length);
@@ -252,9 +248,9 @@ void sensor_error_handle(sensor_gconfig_t *gsc) {
     message_t m_status;
     uint8_t data[1];
 
-    message_init(&m_status, controller_address, MESSAGE_NO_REQUEST,
-            M_SENSOR_STATUS, gsc->sensor_id | (gsc->interface->interface_id << 4), data, ARRAY_LENGTH(data));
     data[0] = gsc->status;
+    message_init(&m_status, controller_address, MESSAGE_NO_REQUEST,
+            M_SENSOR_STATUS, gsc->interface->interface_id, gsc->sensor_id, data, ARRAY_LENGTH(data));
     message_send(&m_status);
 
     schedule_remove_event(gsc->measure.id);
@@ -269,7 +265,7 @@ void sensor_i2c_error_handle(sensor_gconfig_t *gsc, i2c_message_t *m, uint8_t lo
             controller_address,
             MESSAGE_NO_REQUEST,
             M_SENSOR_STATUS,
-            gsc->sensor_id | (gsc->interface->interface_id << 4),
+            gsc->interface->interface_id, gsc->sensor_id,
             gsc->log_data,
             3);
     message_send(&gsc->log);
@@ -280,7 +276,9 @@ void sensor_i2c_error_handle(sensor_gconfig_t *gsc, i2c_message_t *m, uint8_t lo
 void sensor_start(void) {
     for (int i = 0; i < N_SENSOR_INTERFACES; i++) {
         // check if init was done correctly
-        sensor_set_status(i, SENSOR_STATUS_ACTIVE);
+        for(int j = 0; j < SENSOR_INTERFACE_MAX_SENSORS; j++){
+            sensor_set_status(i, j, SENSOR_STATUS_ACTIVE);
+        }
     }
 }
 
@@ -292,7 +290,7 @@ void sensor_stop(void) {
                 //schedule_remove_event(sensor_interfaces[i].measure.id);
 
                 // update sensor status
-                sensor_set_status((i << 4) | j, SENSOR_STATUS_STOPPED);
+                sensor_set_status(i, j, SENSOR_STATUS_STOPPED);
             }
         }
     }

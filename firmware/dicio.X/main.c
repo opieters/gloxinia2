@@ -48,32 +48,15 @@ int main(void)
 {
     
     dicio_init();
-    
-    controller_address = 0x01;
 
-    while (1) {
+    while (1) 
+    {
         i2c_process_queue();
 
-        if (n_queued_tasks > 0) {
+        if (n_queued_tasks > 0)
+        {
             task = pop_queued_task();
             task.cb(task.data);
-        }
-        
-        if(_RD8 == 0)
-        {
-            UART_DEBUG_PRINT("Sent message.");
-            
-            message_t m;
-            message_init(&m,0,false,
-                    0,
-                    10,
-                    NULL,
-                    0);
-            can_send_fmessage_any_ch(&m);
-            
-            while(_RD8 == 1);
-            __delay_ms(100);
-            
         }
     }
 

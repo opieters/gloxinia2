@@ -167,7 +167,7 @@ void uart_print(const char *message, size_t length)
 void uart_queue_message(message_t *m)
 {
     // wait for space in the queue
-    while (n_uart_tx_messages == ARRAY_LENGTH(uart_tx_queue))
+    while (n_uart_tx_messages == (ARRAY_LENGTH(uart_tx_queue) - 1))
         ;
 
     if (m->status != M_TX_INIT_DONE)
@@ -178,7 +178,7 @@ void uart_queue_message(message_t *m)
     // queue message
     m->status = M_TX_QUEUED;
     uart_tx_queue[uart_tx_queue_idx] = *m;
-    message_t *mtx = &uart_tx_queue[uart_tx_queue_idx];
+    /*message_t *mtx = &uart_tx_queue[uart_tx_queue_idx];
 
 
     mtx->length = MIN(UART_FIFO_TX_DATA_BUFFER_SIZE, m->length);
@@ -186,7 +186,7 @@ void uart_queue_message(message_t *m)
     for (unsigned int i = 0; i < mtx->length; i++)
     {
         mtx->data[i] = m->data[i];
-    }
+    }*/
 
     uart_tx_queue_idx = (uart_tx_queue_idx + 1) % ARRAY_LENGTH(uart_tx_queue);
     n_uart_tx_messages++;
@@ -234,8 +234,8 @@ void process_uart_tx_queue(void)
         uart_dma_tx_message_data[2] = (uint8_t) controller_address;
         uart_dma_tx_message_data[3] = M_MSG_TEXT;
         uart_dma_tx_message_data[4] = CAN_NO_REMOTE_FRAME;
-        uart_dma_tx_message_data[5] = (uint8_t)(NO_SENSOR_ID >> 8);
-        uart_dma_tx_message_data[6] = (uint8_t)NO_SENSOR_ID;
+        uart_dma_tx_message_data[5] = 0;
+        uart_dma_tx_message_data[6] = (uint8_t) (NO_INTERFACE_ID << 4) | NO_SENSOR_ID;
         uart_dma_tx_message_data[7] = (uint8_t)m->length;
 
         uart_dma_tx_message_data[8 + m->length] = UART_CMD_STOP;
@@ -270,8 +270,8 @@ void uart_parse_to_raw_buffer(uint8_t *data, message_t *m, const size_t max_leng
     data[2] = (uint8_t)m->identifier;
     data[3] = m->command;
     data[4] = m->request_message_bit;
-    data[5] = (uint8_t)(m->sensor_identifier >> 8);
-    data[6] = (uint8_t)m->sensor_identifier;
+    data[5] = (uint8_t) 0;
+    data[6] = (uint8_t) (m->interface_id << 4) | m->sensor_id;
     data[7] = (uint8_t)m->length;
     for (i = 0; i < m->length; i++)
     {
@@ -315,7 +315,8 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA13Interrupt ( void )
                 (uart_dma_rx_message_data[1] << 8) | uart_dma_rx_message_data[2],
                 uart_dma_rx_message_data[5],
                 uart_dma_rx_message_data[3],
-                uart_dma_rx_message_data[4],
+                (uart_dma_rx_message_data[4] >> 4) & 0xf,
+                uart_dma_rx_message_data[4] & 0xf,
                 &uart_dma_rx_message_data[7],
                 uart_dma_rx_message_data[6]
                 );

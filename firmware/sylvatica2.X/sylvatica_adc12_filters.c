@@ -273,7 +273,38 @@ void sensor_adc12_process_block3(void* data)
                 SENSOR_ADC12_DEC_FACT_F3);
         
         // the interface/sensor alloc guarantees that it's always on this location
-        sensor_interfaces[i]->gsensor_config[0].sensor_config.adc12.result = result;
+#ifdef __DICIO__
+        if(i % 2 == 0){
+            if(sensor_interfaces[i / 2]->gsensor_config[1].sensor_type == SENSOR_TYPE_ADC12){
+                if(sensor_interfaces[i / 2]->gsensor_config[1].sensor_config.adc12.average)
+                {
+                    sensor_interfaces[i / 2]->gsensor_config[1].sensor_config.adc12.sum += result;
+                    sensor_interfaces[i / 2]->gsensor_config[1].sensor_config.adc12.count++;
+                    result = (fractional) (sensor_interfaces[i / 2]->gsensor_config[1].sensor_config.adc12.sum / sensor_interfaces[i / 2]->gsensor_config[1].sensor_config.adc12.count);
+                }
+                sensor_interfaces[i / 2]->gsensor_config[1].sensor_config.adc12.result = result;
+            }
+        } else { 
+                if(sensor_interfaces[i / 2]->gsensor_config[2].sensor_config.adc12.average)
+                {
+                    sensor_interfaces[i / 2]->gsensor_config[2].sensor_config.adc12.sum += result;
+                    sensor_interfaces[i / 2]->gsensor_config[2].sensor_config.adc12.count++;
+                    result = (fractional) (sensor_interfaces[i / 2]->gsensor_config[2].sensor_config.adc12.sum / sensor_interfaces[i / 2]->gsensor_config[2].sensor_config.adc12.count);
+                }
+            sensor_interfaces[i / 2]->gsensor_config[2].sensor_config.adc12.result = result;
+        }
+#else
+        if(sensor_interfaces[i]->gsensor_config[1].sensor_type == SENSOR_TYPE_ADC12){
+            if(sensor_interfaces[i]->gsensor_config[1].sensor_config.adc12.average)
+            {
+                sensor_interfaces[i]->gsensor_config[1].sensor_config.adc12.sum += result;
+                sensor_interfaces[i]->gsensor_config[1].sensor_config.adc12.count++;
+                result = (fractional) (sensor_interfaces[i]->gsensor_config[1].sensor_config.adc12.sum / sensor_interfaces[i]->gsensor_config[1].sensor_config.adc12.count);
+            }
+            
+            sensor_interfaces[i]->gsensor_config[i].sensor_config.adc12.result = result;
+        }
+#endif
     }
 }
 

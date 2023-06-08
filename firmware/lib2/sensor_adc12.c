@@ -207,16 +207,28 @@ void sensor_adc12_init(struct sensor_gconfig_s *intf)
     sensor_adc12_shared_config();
     
 #ifdef __DICIO__
+    // enable all scanning channels since SW cannot handle selective processing
+    AD1CSSHbits.CSS28 = 1; // AS1
+    AD1CSSHbits.CSS30 = 1; // OW1
+    AD1CSSLbits.CSS2 = 1;  // AS2
+    AD1CSSLbits.CSS3 = 1;  // OW2
+    AD1CSSHbits.CSS27 = 1; // AS3
+    AD1CSSHbits.CSS31 = 1; // OW3
+    AD1CSSLbits.CSS0 = 1;  // AS4
+    AD1CSSLbits.CSS1 = 1;  // OW4
+    
     switch(intf->interface->interface_id)
     {
         case 0:
             switch(intf->sensor_id) 
             {
                 case 1:
-                    AD1CSSHbits.CSS28 = 1; // AS1
+                    _ANSE4 = 1; // AS1
+                    _TRISE4 = 1;
                     break;
                 case 2:
-                    AD1CSSHbits.CSS30 = 1; // OW1;
+                    _ANSE6 = 1; // OW1
+                    _TRISE6 = 1;
                     break;
                 default:
                     UART_DEBUG_PRINT("Cannot configure ADC12 on %d.%d", intf->interface->interface_id, intf->sensor_id);
@@ -227,10 +239,12 @@ void sensor_adc12_init(struct sensor_gconfig_s *intf)
             switch(intf->sensor_id) 
             {
                 case 1:
-                    AD1CSSLbits.CSS2 = 1; // AS2
+                    _ANSB2 = 1; // AS2
+                    _TRISB2 = 1;
                     break;
                 case 2:
-                    AD1CSSLbits.CSS3 = 1; // OW2
+                    _ANSB3 = 1; // OW2
+                    _TRISB3 = 1;
                     break;
                 default:
                     UART_DEBUG_PRINT("Cannot configure ADC12 on %d.%d", intf->interface->interface_id, intf->sensor_id);
@@ -241,10 +255,12 @@ void sensor_adc12_init(struct sensor_gconfig_s *intf)
             switch(intf->sensor_id) 
             {
                 case 1:
-                    AD1CSSHbits.CSS27 = 1; // AS3
+                    _ANSE3 = 1; // AS3
+                    _TRISE3 = 1;
                     break;
                 case 2:
-                    AD1CSSHbits.CSS31 = 1; // OW3
+                    _ANSE7 = 1; // OW3
+                    _TRISE7 = 1;
                     break;
                 default:
                     UART_DEBUG_PRINT("Cannot configure ADC12 on %d.%d", intf->interface->interface_id, intf->sensor_id);
@@ -255,10 +271,12 @@ void sensor_adc12_init(struct sensor_gconfig_s *intf)
             switch(intf->sensor_id) 
             {
                 case 1:
-                    AD1CSSLbits.CSS0 = 1; // AS4
+                    _ANSB0 = 1; // AS4
+                    _TRISB0 = 1;
                     break;
                 case 2:
-                    AD1CSSLbits.CSS1 = 1; // OW4
+                    _ANSB1 = 1; // OW4
+                    _TRISB1 = 1;
                     break;
                 default:
                     UART_DEBUG_PRINT("Cannot configure ADC12 on %d.%d", intf->interface->interface_id, intf->sensor_id);
@@ -364,7 +382,7 @@ void sensor_adc12_activate(sensor_gconfig_t* intf)
 
 bool validate_adc12_config(sensor_adc12_config_t *config)
 {
-    sensor_adc12_config_t original = *config;
+    //sensor_adc12_config_t original = *config;
     
     return true;
 }
@@ -388,7 +406,8 @@ void sensor_adc12_measure(void *data)
             controller_address,
             MESSAGE_NO_REQUEST,
             M_SENSOR_DATA,
-            GET_FULL_SENSOR_ID(gsc),
+            gsc->interface->interface_id,
+            gsc->sensor_id,
             m_data,
             SENSOR_ADC12_CAN_DATA_LENGTH);
     message_send(&gsc->log);

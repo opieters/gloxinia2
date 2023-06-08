@@ -101,10 +101,10 @@ void can_init(void) {
 
     // address request and allocation
     // setup filter for address requests
-    can_configure_filter(3, 0x0, CAN_HEADER(M_REQUEST_ADDRESS_AVAILABLE, NO_SENSOR_ID), true, 2, CAN_FIFO_BUFFER);
+    can_configure_filter(3, 0x0, CAN_HEADER(M_REQUEST_ADDRESS_AVAILABLE, NO_INTERFACE_ID, NO_SENSOR_ID), true, 2, CAN_FIFO_BUFFER);
 
     // setup filter for address taken
-    can_configure_filter(4, 0x0, CAN_HEADER(M_ADDRESS_TAKEN, NO_SENSOR_ID), true, 2, CAN_FIFO_BUFFER);
+    can_configure_filter(4, 0x0, CAN_HEADER(M_ADDRESS_TAKEN, NO_INTERFACE_ID, NO_SENSOR_ID), true, 2, CAN_FIFO_BUFFER);
 
     // mask for command filtering
     can_configure_mask(2, 0x0000, 0x3FF00, true);
@@ -260,18 +260,20 @@ void can_reset(void) {
 }
 
 void can_init_message(can_message_t *m,
-        uint16_t identifier,
-        uint8_t remote_frame,
-        uint8_t extended_frame,
-        uint32_t extended_identifier,
-        uint8_t *data,
-        uint8_t data_length) {
+        const uint16_t identifier,
+        const uint8_t remote_frame,
+        const uint8_t extended_frame,
+        const uint32_t extended_identifier,
+        const uint8_t* data,
+        const uint8_t data_length) {
     m->identifier = identifier;
     m->remote_frame = remote_frame;
     m->extended_frame = extended_frame;
     m->extended_identifier = extended_identifier;
-    m->data_length = data_length;
-    m->data = data;
+    m->data_length = MIN(data_length, CAN_MAX_N_BYTES);
+    for(int i = 0; i <  m->data_length; i++){
+        m->data[i] = data[i];
+    }
 }
 
 void parse_from_can_buffer(can_message_t *m, uint16_t buffer_index) {
@@ -283,7 +285,7 @@ void parse_from_can_buffer(can_message_t *m, uint16_t buffer_index) {
     }
     if(m->extended_frame)
     {
-        m->remote_frame = (ecan_message_buffer[buffer_index][0] & 0x200U) == 0x200U;
+        m->remote_frame = (ecan_message_buffer[buffer_index][2] & 0x200U) == 0x200U;
         m->extended_identifier = (((uint32_t) ecan_message_buffer[buffer_index][1]) << 6) | (ecan_message_buffer[buffer_index][2] >> 10);
     } else {
         m->remote_frame = (ecan_message_buffer[buffer_index][0] & 0b10) == 0b10;
@@ -336,7 +338,8 @@ void parse_from_can_message(message_t *m, can_message_t *cm) {
     message_init(m, cm->identifier,
             cm->remote_frame,
             (message_cmd_t) cm->extended_identifier >> 8,
-            cm->extended_identifier & 0xff,
+            (cm->extended_identifier >> 4) & 0xf,
+            cm->extended_identifier & 0xf,
             cm->data,
             cm->data_length);
     m->status = M_RX_FROM_CAN;
@@ -456,9 +459,10 @@ void can_message_from_fmessage(can_message_t *cm, const message_t *m) {
     cm->identifier = m->identifier;
     cm->remote_frame = m->request_message_bit;
     cm->extended_frame = CAN_EXTENDED_FRAME;
-    cm->extended_identifier = CAN_HEADER(m->command, m->sensor_identifier);
+    cm->extended_identifier = CAN_HEADER(m->command, m->interface_id, m->sensor_id);
     cm->data_length = m->length;
-    cm->data = m->data;
+    for(int i = 0; i < m->length; i++)
+        cm->data[i] = m->data[i];
 }
 
 can_status_t can_send_fmessage_any_ch(const message_t *m) {
@@ -484,7 +488,8 @@ void can_detect_devices(void) {
             controller_address,
             CAN_NO_REMOTE_FRAME,
             M_HELLO,
-            0,
+            NO_INTERFACE_ID,
+            NO_SENSOR_ID,
             NULL, 0);
 
     message_send(&m);
@@ -580,12 +585,22 @@ void __attribute__((interrupt, auto_psv)) _C1Interrupt(void)
                     message_process(&m);
                 }
             } else {
-                if (uart_connection_active)
-                {
-                    send_message_uart(&m);
+                if(m.request_message_bit){
+                    if(m.identifier == controller_address)
+                    {
+                        message_process(&m);
+                    } 
+                } else {
+                    if (uart_connection_active)
+                    {
+                        send_message_uart(&m);
+                    }
+
+                    if(controller_address == ADDRESS_SEARCH_START)
+                    {
+                        message_process(&m);
+                    }
                 }
-                
-                message_process(&m);
             }
 
             // clear buffer full interrupt bit

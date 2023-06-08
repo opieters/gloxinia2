@@ -297,7 +297,6 @@ void sylvatica_init(void)
     
     // UART serial communication (debug + print interface)
     uart_init(50000);
-    
     UART_DEBUG_PRINT("Configured UART.");
    
     can_init();
@@ -373,7 +372,7 @@ void sylvatica_send_ready_message(void *data)
 {
     message_t m;
     
-    message_init(&m, controller_address, 0, M_HELLO, 0, NULL, 0);
+    message_init(&m, controller_address, 0, M_HELLO, NO_INTERFACE_ID, NO_SENSOR_ID, NULL, 0);
     message_send(&m);
     
     _RE3 ^= 1;

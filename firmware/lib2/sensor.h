@@ -35,8 +35,6 @@
 #define N_SENSOR_INTERFACES DICIO_N_SENSOR_IFS
 #endif
 
-#define GET_FULL_SENSOR_ID(X) ((X)->sensor_id | ((X)->interface->interface_id << 4))
-
 /// @brief Sensor configuration structure union
 typedef union sensor_config_s
 {
@@ -102,7 +100,7 @@ extern "C"
      * @param buffer Buffer containing configuration data
      * @param length Length of buffer
      */
-    void sensor_set_config_from_buffer(uint8_t interface_id, const uint8_t *buffer, uint8_t length);
+    void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t sensor_id, const uint8_t *buffer, uint8_t length);
 
     /**
      * @brief Write sensor configuration to buffer.
@@ -114,7 +112,7 @@ extern "C"
      * @param buffer: Buffer to write configuration data to, should have sufficient length (min. 7 bytes)
      * @param length: Length of buffer
      */
-    void sensor_get_config(uint8_t interface_id, uint8_t reg, uint8_t *buffer, uint8_t *length);
+    void sensor_get_config(uint8_t interface_id, uint8_t sensor_id, uint8_t reg, uint8_t *buffer, uint8_t *length);
 
     /**
      * @brief Get I2C bus of this sensor interface
@@ -172,7 +170,7 @@ extern "C"
      *
      * @param interface_id Sensor interface ID
      */
-    void sensor_send_status(uint8_t interface_id);
+    void sensor_send_status(uint8_t interface_id, uint8_t sensor_id);
 
     /**
      * @brief Set sensor status
@@ -186,7 +184,7 @@ extern "C"
      * @param interface_id Sensor interface ID
      * @param s Sensor status
      */
-    void sensor_set_status(uint8_t interface_id, sensor_status_t s);
+    void sensor_set_status(uint8_t interface_id, uint8_t sensor_id, sensor_status_t s);
 
 #ifdef __DICIO__
     /**

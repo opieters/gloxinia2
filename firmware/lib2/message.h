@@ -4,7 +4,8 @@
 #include <xc.h>
 #include <stdbool.h>
 
-#define NO_SENSOR_ID (0xff)
+#define NO_INTERFACE_ID (0xf)
+#define NO_SENSOR_ID (0xf)
 #define MESSAGE_REQUEST 1
 #define MESSAGE_NO_REQUEST 0
 #define MESSAGE_DATA_LGENTH 8
@@ -85,7 +86,8 @@ typedef struct
 {
     uint16_t identifier;
     message_cmd_t command;
-    uint8_t sensor_identifier;
+    uint8_t interface_id;
+    uint8_t sensor_id;
     bool request_message_bit;
     uint8_t length;
     uint8_t data[MESSAGE_DATA_LGENTH];
@@ -101,7 +103,8 @@ extern "C"
                       uint16_t identifier,
                       bool request_message_bit,
                       message_cmd_t command,
-                      uint8_t sensor_identifier,
+                      uint8_t interface_id,
+                      uint8_t sensor_id,
                       uint8_t *data,
                       uint8_t length);
     void message_reset(message_t *m);
