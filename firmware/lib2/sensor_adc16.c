@@ -136,6 +136,7 @@ void sensor_adc16_measure(void *data)
                      controller_address,
                      MESSAGE_NO_REQUEST,
                      M_SENSOR_DATA,
+                    gsc->interface->interface_id,
                      gsc->sensor_id,
                      m_data,
                      config->normalise_ch?7:5);
