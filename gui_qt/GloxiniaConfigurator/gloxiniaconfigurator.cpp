@@ -542,7 +542,7 @@ void GloxiniaConfigurator::runDiscovery()
     } else {*/
     qInfo() << "Running discovery broadcast";
 
-    GMessage m(GMessage::Code::DISCOVERY, GMessage::ComputerAddress, GMessage::NoSensorID, true, std::vector<quint8>());
+    GMessage m(GMessage::Code::DISCOVERY, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true, std::vector<quint8>());
     sendSerialMessage(m);
 }
 
@@ -630,14 +630,14 @@ void GloxiniaConfigurator::startMeasuring(void)
         }
     }
 
-    GMessage mStart = GMessage(GMessage::Code::SENSOR_START, GMessage::ComputerAddress, GMessage::NoSensorID, true);
+    GMessage mStart = GMessage(GMessage::Code::SENSOR_START, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
     sendSerialMessage(mStart);
 
     qInfo() << "Started measuring";
 }
 void GloxiniaConfigurator::stopMeasuring(void)
 {
-    GMessage mStop = GMessage(GMessage::Code::SENSOR_STOP, GMessage::ComputerAddress, GMessage::NoSensorID, true);
+    GMessage mStop = GMessage(GMessage::Code::SENSOR_STOP, GMessage::ComputerAddress,GMessage::NoInterfaceID, GMessage::NoSensorID, true);
     sendSerialMessage(mStop);
 
     // enable start option, disable stop option
@@ -1017,7 +1017,7 @@ void GloxiniaConfigurator::editSensor()
                 {
                     return;
                 }
-                sensorSHT35 = new GCSensorSHT35(node, (quint8)index.row());
+                sensorSHT35 = new GCSensorSHT35(node, (quint8) index.parent().row(), (quint8)index.row());
                 sensorSHT35Dialog->apply(sensorSHT35);
                 model->setData(index, QVariant::fromValue(sensorSHT35), Qt::EditRole);
 
@@ -1037,7 +1037,7 @@ void GloxiniaConfigurator::editSensor()
                 {
                     return;
                 }
-                sensorAPDS9306 = new GCSensorAPDS9306(node, (quint8)index.row());
+                sensorAPDS9306 = new GCSensorAPDS9306(node, (quint8) index.parent().row(), (quint8)index.row());
                 sensorAPDS9306_065Dialog->apply(sensorAPDS9306);
                 model->setData(index, QVariant::fromValue(sensorAPDS9306), Qt::EditRole);
 
@@ -1057,7 +1057,7 @@ void GloxiniaConfigurator::editSensor()
                 {
                     return;
                 }
-                sensorADC12 = new GCSensorADC12(node, (quint8)index.row());
+                sensorADC12 = new GCSensorADC12(node, (quint8) index.parent().row(), (quint8)index.row());
                 sensorADC12Dialog->apply(sensorADC12);
                 model->setData(index, QVariant::fromValue(sensorADC12), Qt::EditRole);
 

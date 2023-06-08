@@ -68,12 +68,11 @@ public:
     enum SerialReadoutState
     {
         FindStartByte,
-        ReadIdH,
-        ReadIdL,
+        ReadAddress,
         ReadCommand,
         ReadRequest,
-        ReadSensorIdH,
-        ReadSensorIdL,
+        ReadInterfaceID,
+        ReadSensorId,
         ReadLength,
         ReadData,
         DetectStopByte

@@ -25,7 +25,7 @@
 #define UART_FIFO_RX_DATA_BUFFER_SIZE CAN_MAX_N_BYTES
 
 /// @brief UART header size (includes start and stop bytes)
-#define UART_HEADER_SIZE 9U
+#define UART_HEADER_SIZE 8U
 
 /// @brief UART receive state enumeration
 typedef enum

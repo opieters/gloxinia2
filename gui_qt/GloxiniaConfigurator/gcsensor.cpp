@@ -6,7 +6,7 @@
 
 QString GCSensor::sensorFileDir = "";
 
-GCSensor::GCSensor(GCNode* node, quint8 id) : node(node), sensorID(id)
+GCSensor::GCSensor(GCNode* node, quint8 ifid, quint8 id) : node(node), sensorID(id), interfaceID(ifid)
 {
 }
 
@@ -20,6 +20,11 @@ GCSensor::~GCSensor() {
 
 
 quint8 GCSensor::getInterfaceID(void)
+{
+    return interfaceID;
+}
+
+quint8 GCSensor::getSensorID(void)
 {
     return sensorID;
 }
@@ -80,12 +85,12 @@ bool GCSensor::startMeasurement(void)
 GMessage GCSensor::getStartMessage(void)
 {
     std::vector<quint8> data = {GCSensor::GCSensorStatus::ACTIVE};
-    return GMessage(GMessage::Code::SENSOR_STATUS, this->node->getID(), this->getInterfaceID(), false, data);
+    return GMessage(GMessage::Code::SENSOR_STATUS, this->node->getID(), this->interfaceID, this->sensorID, false, data);
 }
 GMessage GCSensor::getStopMessage(void)
 {
     std::vector<quint8> data = {GCSensor::GCSensorStatus::STOPPED};
-    return GMessage(GMessage::Code::SENSOR_STATUS, this->node->getID(), this->getInterfaceID(), false, data);
+    return GMessage(GMessage::Code::SENSOR_STATUS, this->node->getID(), this->interfaceID, this->sensorID, false, data);
 }
 
 void GCSensor::stopMeasurement(void)
@@ -164,7 +169,7 @@ QDebug operator<<(QDebug dbg, const GCSensor &)
 
 /*QString GCSensor::toString(void) const
 {
-    return "Empty sensor slot [" + QString::number(interfaceID) + "]";
+    return "Empty sensor slot [" + QString::number(interfaceID) + "-" + QString::numnber(sensorID) + "]";
 }*/
 
 QDataStream &operator<<(QDataStream &out, const GCSensor &myObj)
@@ -209,12 +214,7 @@ void GCSensor::setMaxPlotSize(unsigned int value)
     maxPlotSize = value;
 }
 
-int GCSensor::getFullID(short interface, short sensor)
-{
-    return ((interface & 0xf) << 4) | (sensor & 0xf);
-}
-
-GCSensorI2C::GCSensorI2C(GCNode* node, quint8 id, quint8 i2cAddress) : GCSensor(node, id), i2cAddress(i2cAddress)
+GCSensorI2C::GCSensorI2C(GCNode* node, quint8 interface_id, quint8 id, quint8 i2cAddress) : GCSensor(node, interface_id, id), i2cAddress(i2cAddress)
 {
 }
 
@@ -236,7 +236,7 @@ const quint8 GCSensorI2C::getI2CAddress(void)
     return i2cAddress;
 }
 
-GCSensorSHT35::GCSensorSHT35(GCNode* node, quint8 id, quint8 i2cAddress) : GCSensorI2C(node, id, i2cAddress)
+GCSensorSHT35::GCSensorSHT35(GCNode* node, quint8 interface_id, quint8 id, quint8 i2cAddress) : GCSensorI2C(node, interface_id, id, i2cAddress)
 {
     config.repeatability = 0;
     config.clockStretching = 0;
@@ -244,9 +244,9 @@ GCSensorSHT35::GCSensorSHT35(GCNode* node, quint8 id, quint8 i2cAddress) : GCSen
     config.periodicity = 0;
 
     if(node == nullptr){
-        filePath = "node-0-" + QString::number(id) + "-SHT35.csv";
+        filePath = "node-0-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "-SHT35.csv";
     } else {
-        filePath = "node-" + QString::number(node->getID()) + "-" + QString::number(id) + "-SHT35.csv";
+        filePath = "node-" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "-SHT35.csv";
     }
     filePath = QDir::cleanPath(filePath);
 
@@ -256,9 +256,9 @@ GCSensorSHT35::GCSensorSHT35(GCNode* node, quint8 id, quint8 i2cAddress) : GCSen
     else
         prefix += "SHT35 ";
     if(node != nullptr)
-        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(sensorID) + "] ";
+        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "] ";
     else
-        prefix += "[0-" + QString::number(sensorID) + "] ";
+        prefix += "[0-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "] ";
 
     plotSeries.append(new QLineSeries());
     plotSeries[0]->setName(prefix + "temperature");
@@ -349,14 +349,14 @@ QString GCSensorSHT35::toString(void) const
     {
         dLabel = "SHT35";
     }
-    return "[" + QString::number(sensorID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ") - " + statusToString(status);
+    return "[" + QString::number(interfaceID) + ", " + QString::number(sensorID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ") - " + statusToString(status);
 }
 
 QString GCSensorSHT35::toConfigString(void) const
 {
     QString nLabel = label;
     nLabel.replace(' ', "\\ ");
-    return "S SHT35 " + QString::number(sensorID) + " " + nLabel + " " + QString::number(i2cAddress) + " " + QString::number(config.repeatability) + " " + QString::number(config.clockStretching) + " " + QString::number(config.rate) + " " + QString::number(config.periodicity) + " ;";
+    return "S SHT35 " + QString::number(interfaceID) + " " + QString::number(sensorID) + " " + nLabel + " " + QString::number(i2cAddress) + " " + QString::number(config.repeatability) + " " + QString::number(config.clockStretching) + " " + QString::number(config.rate) + " " + QString::number(config.periodicity) + " ;";
 }
 
 bool GCSensorSHT35::fromConfigString(const QStringList &config)
@@ -368,13 +368,13 @@ bool GCSensorSHT35::fromConfigString(const QStringList &config)
         return false;
 
     bool success = true;
-    GCSensorSHT35 s(nullptr, config[2].toInt());
-    s.setLabel(config[3]);
-    success = success && s.setI2CAddress(config[4].toInt());
-    success = success && s.setRepeatability(config[5].toInt());
-    success = success && s.setClockStretching(config[6].toInt());
-    success = success && s.setRate(config[7].toInt());
-    success = success && s.setPeriodicity(config[8].toInt());
+    GCSensorSHT35 s(nullptr, config[2].toInt(), config[3].toInt());
+    s.setLabel(config[4]);
+    success = success && s.setI2CAddress(config[5].toInt());
+    success = success && s.setRepeatability(config[6].toInt());
+    success = success && s.setClockStretching(config[7].toInt());
+    success = success && s.setRate(config[8].toInt());
+    success = success && s.setPeriodicity(config[9].toInt());
 
     if (success)
     {
@@ -399,7 +399,7 @@ QList<GMessage> GCSensorSHT35::getConfigurationMessages()
     mData[1] = GCSensorSHT35::Register::MEASUREMENT;
     mData[2] = (quint8) (measurementPeriod >> 8);
     mData[3] = (quint8) (measurementPeriod & 0xff);
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
 
     mData = std::vector<quint8>(7);
     mData[0] = (quint8)GCSensor::sensor_class::SHT35;
@@ -409,7 +409,7 @@ QList<GMessage> GCSensorSHT35::getConfigurationMessages()
     mData[4] = config.clockStretching;
     mData[5] = config.rate;
     mData[6] = config.periodicity;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
 
     return mList;
 }
@@ -494,12 +494,12 @@ for (i = 0; i < 8; i++)
 return crc;
 }
 
-GCSensorAPDS9306::GCSensorAPDS9306(GCNode* node, quint8 id, quint8 i2cAddress) : GCSensorI2C(node, id, i2cAddress)
+GCSensorAPDS9306::GCSensorAPDS9306(GCNode* node, quint8 interface_id, quint8 id, quint8 i2cAddress) : GCSensorI2C(node, interface_id, id, i2cAddress)
 {
     if(node == nullptr){
-        filePath = "node-0-" + QString::number(id) + "-APDS9306_065.csv";
+        filePath = "node-0-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "-APDS9306_065.csv";
     } else {
-        filePath = "node-" + QString::number(node->getID()) + "-" + QString::number(id) + "-APDS9306_065.csv";
+        filePath = "node-" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "-APDS9306_065.csv";
     }
     filePath = QDir::cleanPath(filePath);
 
@@ -509,9 +509,9 @@ GCSensorAPDS9306::GCSensorAPDS9306(GCNode* node, quint8 id, quint8 i2cAddress) :
     else
         prefix += "APDS9306 065 ";
     if(node != nullptr)
-        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(sensorID) + "] ";
+        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "] ";
     else
-        prefix += "[0-" + QString::number(sensorID) + "] ";
+        prefix += "[0-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "] ";
 
 
     plotSeries.append(new QLineSeries());
@@ -599,19 +599,19 @@ QString GCSensorAPDS9306::toString(void) const
     {
         dLabel = "APDS9306 065";
     }
-    return "[" + QString::number(sensorID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ") - " + statusToString(status);
+    return "[" + QString::number(interfaceID) + ", " + QString::number(sensorID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ") - " + statusToString(status);
 }
 
 QString GCSensorAPDS9306::toConfigString(void) const
 {
     QString nLabel = label;
     nLabel.replace(' ', "\\ ");
-    return "S APDS9306 " + QString::number(sensorID) + " " + nLabel + " " + QString::number(i2cAddress) + " " + QString::number(alsMeasurementRate) + " " + QString::number(alsResolution) + " " + QString::number(alsGain) + " " + QString::number(alsIVCount) + " " + QString::number(alsTHHigh) + " " + QString::number(alsTHLow) + " " + ";";
+    return "S APDS9306 " + QString::number(interfaceID) + " " + QString::number(sensorID) + " " + nLabel + " " + QString::number(i2cAddress) + " " + QString::number(alsMeasurementRate) + " " + QString::number(alsResolution) + " " + QString::number(alsGain) + " " + QString::number(alsIVCount) + " " + QString::number(alsTHHigh) + " " + QString::number(alsTHLow) + " " + ";";
 }
 
 bool GCSensorAPDS9306::fromConfigString(const QStringList &config)
 {
-    GCSensorAPDS9306 s(nullptr, 0);
+    GCSensorAPDS9306 s(nullptr, config[2].toInt(), config[3].toInt());
 
     if (config.count() != 11)
         return false;
@@ -620,15 +620,14 @@ bool GCSensorAPDS9306::fromConfigString(const QStringList &config)
         return false;
 
     bool success = true;
-    //s.setInterfaceID(config[2].toInt());
-    s.setLabel(config[3]);
-    success = success && s.setI2CAddress(config[4].toInt());
-    success = success && s.setAlsMeasurementRate(config[5].toInt());
-    success = success && s.setAlsResolution(config[6].toInt());
-    success = success && s.setAlsGain(config[7].toInt());
-    success = success && s.setAlsIVCount(config[8].toInt());
-    success = success && s.setAlsTHHigh(config[9].toInt());
-    success = success && s.setAlsTHLow(config[10].toInt());
+    s.setLabel(config[4]);
+    success = success && s.setI2CAddress(config[5].toInt());
+    success = success && s.setAlsMeasurementRate(config[6].toInt());
+    success = success && s.setAlsResolution(config[7].toInt());
+    success = success && s.setAlsGain(config[8].toInt());
+    success = success && s.setAlsIVCount(config[9].toInt());
+    success = success && s.setAlsTHHigh(config[10].toInt());
+    success = success && s.setAlsTHLow(config[11].toInt());
 
     if (success)
     {
@@ -655,7 +654,7 @@ QList<GMessage> GCSensorAPDS9306::getConfigurationMessages()
     mData[1] = GCSensorAPDS9306::Register::MEASUREMENT;
     mData[2] = (quint8) measurementPeriod >> 8;
     mData[3] = (quint8) measurementPeriod & 0xff;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
 
     mData = std::vector<quint8>(7);
     mData[0] = (quint8)GCSensor::sensor_class::APDS9306_065;
@@ -665,7 +664,7 @@ QList<GMessage> GCSensorAPDS9306::getConfigurationMessages()
     mData[4] = alsMeasurementRate;
     mData[5] = alsResolution;
     mData[6] = alsGain;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
 
     mData = std::vector<quint8>(6);
     mData[0] = (quint8)GCSensor::sensor_class::APDS9306_065;
@@ -674,7 +673,7 @@ QList<GMessage> GCSensorAPDS9306::getConfigurationMessages()
     mData[3] = (quint8) (alsTHHigh >> 16) & 0xff;
     mData[4] = (quint8) (alsTHHigh >> 8) & 0xff;
     mData[5] = (quint8) (alsTHHigh) & 0xff;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
 
     mData = std::vector<quint8>(6);
     mData[0] = (quint8)GCSensor::sensor_class::APDS9306_065;
@@ -683,7 +682,7 @@ QList<GMessage> GCSensorAPDS9306::getConfigurationMessages()
     mData[3] = (quint8) (alsTHLow >> 16) & 0xff;
     mData[4] = (quint8) (alsTHLow >> 8) & 0xff;
     mData[5] = (quint8) (alsTHLow) & 0xff;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
 
     return mList;
 }
@@ -722,12 +721,12 @@ void GCSensorAPDS9306::saveData(std::vector<quint8>& data)
 }
 
 
-GCSensorADC12::GCSensorADC12(GCNode* node, quint8 id) : GCSensor(node, id)
+GCSensorADC12::GCSensorADC12(GCNode* node, quint8 interface_id, quint8 id) : GCSensor(node, interface_id, id)
 {
     if(node == nullptr){
-        filePath = "node-0-" + QString::number(id) + "-ADC12.csv";
+        filePath = "node-0-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "-ADC12.csv";
     } else {
-        filePath = "node-" + QString::number(node->getID()) + "-" + QString::number(id) + "-ADC12.csv";
+        filePath = "node-" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "-ADC12.csv";
     }
     filePath = QDir::cleanPath(filePath);
 
@@ -737,9 +736,9 @@ GCSensorADC12::GCSensorADC12(GCNode* node, quint8 id) : GCSensor(node, id)
     else
         prefix += "ADC12 ";
     if(node != nullptr)
-        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(sensorID) + "] ";
+        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "] ";
     else
-        prefix += "[0-" + QString::number(sensorID) + "] ";
+        prefix += "[0-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "] ";
 
 
     plotSeries.append(new QLineSeries());
@@ -770,7 +769,7 @@ QString GCSensorADC12::toString(void) const
     {
         dLabel = "ADC12";
     }
-    return "[" + QString::number(sensorID) + "] " + dLabel + " - " + statusToString(status);
+    return "[" + QString::number(interfaceID) + QString::number(sensorID) + "] " + dLabel + " - " + statusToString(status);
 }
 
 QString GCSensorADC12::toConfigString(void) const
@@ -793,13 +792,13 @@ QList<GMessage> GCSensorADC12::getConfigurationMessages()
     mData[1] = GCSensorADC12::Register::MEASUREMENT;
     mData[2] = (quint8) (measurementPeriod >> 8);
     mData[3] = (quint8) (measurementPeriod & 0xff);
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
 
     mData = std::vector<quint8>(3);
     mData[0] = (quint8)GCSensor::sensor_class::ADC12;
     mData[1] = GCSensorADC12::Register::CONFIG;
     mData[2] = average ? 1 : 0;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
 
     return mList;
 }

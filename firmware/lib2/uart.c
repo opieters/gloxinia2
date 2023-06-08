@@ -21,8 +21,8 @@ uint8_t uart_tx_data2[UART_FIFO_TX_PRINT_BUFFER_SIZE][UART_FIFO_TX_PRINT_BUFFER_
 bool uart_tx_text = false;
 
 // DMA buffer
-uint8_t uart_dma_tx_message_data[128];
-uint8_t uart_dma_rx_message_data[16];
+uint8_t uart_dma_tx_message_data[128] __attribute__( (aligned(128)) );
+uint8_t uart_dma_rx_message_data[16] __attribute__( (aligned(16)) );;
 
 extern bool uart_connection_active;
 
@@ -230,20 +230,19 @@ void process_uart_tx_queue(void)
         uart_message_t* m = &uart_tx_queue2[uart_tx_queue_valid2];
         
         uart_dma_tx_message_data[0] = UART_CMD_START;
-        uart_dma_tx_message_data[1] = (uint8_t)(controller_address >> 8);
-        uart_dma_tx_message_data[2] = (uint8_t) controller_address;
-        uart_dma_tx_message_data[3] = M_MSG_TEXT;
-        uart_dma_tx_message_data[4] = CAN_NO_REMOTE_FRAME;
-        uart_dma_tx_message_data[5] = 0;
-        uart_dma_tx_message_data[6] = (uint8_t) (NO_INTERFACE_ID << 4) | NO_SENSOR_ID;
-        uart_dma_tx_message_data[7] = (uint8_t)m->length;
+        uart_dma_tx_message_data[1] = (uint8_t) controller_address;
+        uart_dma_tx_message_data[2] = M_MSG_TEXT;
+        uart_dma_tx_message_data[3] = CAN_NO_REMOTE_FRAME;
+        uart_dma_tx_message_data[4] = NO_INTERFACE_ID;
+        uart_dma_tx_message_data[5] = NO_SENSOR_ID;
+        uart_dma_tx_message_data[6] = (uint8_t)m->length;
 
-        uart_dma_tx_message_data[8 + m->length] = UART_CMD_STOP;
+        uart_dma_tx_message_data[7 + m->length] = UART_CMD_STOP;
                 
         // copy to actual message to transmit
         for (int i = 0; i < m->length; i++)
         {
-            uart_dma_tx_message_data[8 + i] = m->data[i];
+            uart_dma_tx_message_data[7 + i] = m->data[i];
         }
 
         while (U2STAbits.TRMT == 0)
@@ -266,18 +265,17 @@ void uart_parse_to_raw_buffer(uint8_t *data, message_t *m, const size_t max_leng
     m->length = MIN(m->length, max_length - 9);
 
     data[0] = UART_CMD_START;
-    data[1] = (uint8_t)(m->identifier >> 8);
-    data[2] = (uint8_t)m->identifier;
-    data[3] = m->command;
-    data[4] = m->request_message_bit;
-    data[5] = (uint8_t) 0;
-    data[6] = (uint8_t) (m->interface_id << 4) | m->sensor_id;
-    data[7] = (uint8_t)m->length;
+    data[1] = (uint8_t)m->identifier;
+    data[2] = m->command;
+    data[3] = m->request_message_bit;
+    data[4] = (uint8_t) m->interface_id;
+    data[5] = (uint8_t) m->sensor_id;
+    data[6] = (uint8_t) m->length;
     for (i = 0; i < m->length; i++)
     {
-        data[8 + i] = m->data[i];
+        data[7 + i] = m->data[i];
     }
-    data[8 + m->length] = UART_CMD_STOP;
+    data[7 + m->length] = UART_CMD_STOP;
 }
 
 void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA12Interrupt ( void )
@@ -312,11 +310,11 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA13Interrupt ( void )
         
         message_t* m = &uart_rx_queue[uart_rx_idx];
         message_init(m, 
-                (uart_dma_rx_message_data[1] << 8) | uart_dma_rx_message_data[2],
-                uart_dma_rx_message_data[5],
+                uart_dma_rx_message_data[1],
                 uart_dma_rx_message_data[3],
-                (uart_dma_rx_message_data[4] >> 4) & 0xf,
-                uart_dma_rx_message_data[4] & 0xf,
+                uart_dma_rx_message_data[2],
+                uart_dma_rx_message_data[4],
+                uart_dma_rx_message_data[5],
                 &uart_dma_rx_message_data[7],
                 uart_dma_rx_message_data[6]
                 );

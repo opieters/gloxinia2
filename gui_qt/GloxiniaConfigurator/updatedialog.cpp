@@ -624,6 +624,7 @@ void UpdateDialog::getVersion(void)
 
     GMessage m(GMessage::Code::BOOT_READ_VERSION,
              GMessage::ComputerAddress,
+               GMessage::NoInterfaceID,
              GMessage::NoSensorID,
              false,
              std::vector<quint8>()
@@ -671,7 +672,8 @@ void UpdateDialog::writeFlash(uint32_t address, uint8_t* data, uint8_t len)
 
     GMessage m(GMessage::Code::BOOT_WRITE_FLASH,
              GMessage::ComputerAddress,
-             GMessage::UnlockSequence,
+             GMessage::UnlockSequenceH,
+               GMessage::UnlockSequenceL,
              false,
              mdata
             );

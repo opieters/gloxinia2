@@ -14,7 +14,7 @@ class GCSensor
 {
 
 public:
-    GCSensor(GCNode* const node = nullptr, quint8 id = 0x0);
+    GCSensor(GCNode* const node = nullptr, quint8 ifid = 0x0, quint8 id = 0x0);
     virtual ~GCSensor();
 
     enum sensor_class
@@ -46,7 +46,7 @@ public:
 
     // static QString sensorTypeToString(SensorType t);
 
-    // SensorType getSensorType(void);
+    quint8 getSensorID(void);
     quint8 getInterfaceID(void);
 
     QString getLabel(void) const;
@@ -94,6 +94,7 @@ public:
 protected:
     GCNode* const node;
     const quint8 sensorID;
+    const quint8 interfaceID;
 
     GCSensorStatus status = INACTIVE;
     quint16 measurementPeriod = 9;
@@ -115,7 +116,7 @@ Q_DECLARE_METATYPE(GCSensor *)
 class GCSensorI2C : public GCSensor
 {
 public:
-    GCSensorI2C(GCNode* const node = nullptr, quint8 id = 0, quint8 i2cAddress = 0x0);
+    GCSensorI2C(GCNode* const node = nullptr, quint8 interface_id=0, quint8 id = 0, quint8 i2cAddress = 0x0);
     virtual ~GCSensorI2C() = 0;
 
     virtual bool setI2CAddress(const quint8 a);
@@ -152,7 +153,7 @@ public:
 
     static constexpr uint8_t crcPolynomial = 0x31U;
 
-    GCSensorSHT35(GCNode* const node = nullptr, quint8 id = 0, quint8 i2cAddress = I2CAddressA);
+    GCSensorSHT35(GCNode* const node = nullptr, quint8 interface_id=0, quint8 id = 0, quint8 i2cAddress = I2CAddressA);
     GCSensorSHT35(const GCSensorSHT35 &s) = default;
     ~GCSensorSHT35() override;
 
@@ -201,7 +202,7 @@ public:
         TH_LOW = 0x3,
     };
 
-    GCSensorAPDS9306(GCNode* const node = nullptr, quint8 id = 0, quint8 i2cAddress = 0x52);
+    GCSensorAPDS9306(GCNode* const node = nullptr, quint8 interface_id=0, quint8 id = 0, quint8 i2cAddress = 0x52);
     GCSensorAPDS9306(const GCSensorAPDS9306 &s) = default;
     ~GCSensorAPDS9306() override;
 
@@ -250,7 +251,7 @@ public:
         CONFIG = 0x01,
     };
 
-    GCSensorADC12(GCNode* const node = nullptr, quint8 id = 0);
+    GCSensorADC12(GCNode* const node = nullptr, quint8 interface_id =0, quint8 id = 0);
     GCSensorADC12(const GCSensorADC12 &s) = default;
     ~GCSensorADC12() override;
 

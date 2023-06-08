@@ -11,8 +11,9 @@ GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, bo
 {
     this->data = std::vector<quint8>(data, data+size);
 }*/
-GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, bool request, std::vector<quint8> data) : code(code),
+GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint8_t interfaceID, uint8_t sensorID, bool request, std::vector<quint8> data) : code(code),
     messageAddress(messageID),
+    interfaceID(interfaceID),
     sensorID(sensorID),
     request(request),
     data(data)
@@ -28,13 +29,12 @@ int GMessage::toBytes(quint8 *data, unsigned int maxLength) const
     quint8 cmd = (quint8)code;
 
     data[0] = GMessage::GMessageStartByte;
-    data[headerSize + 8 - 1] = GMessage::GMessageStopByte;
-    data[1] = (quint8)(messageAddress >> 8);
-    data[2] = (quint8)messageAddress;
-    data[3] = cmd;
-    data[4] = (quint8)(sensorID & 0xff);
-    data[5] = request ? 1 : 0;
-    //data[5] = (quint8)(sensorID >> 8);
+    data[headerSize - 1 + 8] = GMessage::GMessageStopByte;
+    data[1] = (quint8)messageAddress;
+    data[2] = cmd;
+    data[3] = request ? 1 : 0;
+    data[4] = interfaceID;
+    data[5] = sensorID;
     data[6] = this->data.size();
     for (int i = 0; i < 8; i++)
     {
@@ -54,7 +54,7 @@ QString GMessage::toString() const
     {
         formattedData.append(QStringLiteral("%1").arg(i, 2, 16, QLatin1Char('0')) + " ");
     }
-    return "[" + GMessage::codeToString(code) + "] (" + QString::number(messageAddress) + ", " + QString::number(sensorID) + ", " + (request ? "RQS" : "STD") + ", " + QString::number(data.size()) + ")" + formattedData;
+    return "[" + GMessage::codeToString(code) + "] (" + QString::number(messageAddress) + ", " + QString::number(interfaceID) + ", " + QString::number(sensorID) + ", " + (request ? "RQS" : "STD") + ", " + QString::number(data.size()) + ")" + formattedData;
 }
 
 std::ostream &operator<<(std::ostream &outs, const GMessage &m)
@@ -154,11 +154,11 @@ quint8 GMessage::getMessageAddress(void) const
 }
 quint8 GMessage::getSensorID(void) const
 {
-    return sensorID & 0xf;
+    return sensorID;
 }
 quint8 GMessage::getInterfaceID(void) const
 {
-    return (sensorID >> 4) & 0xf;
+    return interfaceID;
 }
 std::vector<quint8> GMessage::getData(void) const
 {
@@ -217,5 +217,5 @@ QString GMessage::toLogString() const
         }
     }
 
-    return "[" + cTime + "] (" + QString::number(messageAddress) + ", " + QString::number(sensorID) + ") " + GMessage::codeToString(code) + " " + formattedData;
+    return "[" + cTime + "] (" + QString::number(messageAddress) + ", " + QString::number(interfaceID) + ", " + QString::number(sensorID) + ") " + GMessage::codeToString(code) + " " + formattedData;
 }

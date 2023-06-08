@@ -58,10 +58,12 @@ public:
     static constexpr uint8_t ComputerAddress = 0x00;
     static constexpr uint8_t SearchStartAddress = 0x01;
     static constexpr uint8_t UnsetAddress = 0xff;
-    static constexpr uint16_t NoSensorID = 0xff;
-    static constexpr uint16_t UnlockSequence = 0x55AA;
+    static constexpr uint8_t NoSensorID = 0xf;
+    static constexpr uint8_t NoInterfaceID = 0xf;
+    static constexpr uint8_t UnlockSequenceH = 0x55;
+    static constexpr uint8_t UnlockSequenceL = 0xAA;
 
-    GMessage(GMessage::Code code = NOP, quint8 messageAddress = ComputerAddress, quint16 sensorID = NoSensorID, bool request = false, std::vector<quint8> data = std::vector<quint8>());
+    GMessage(GMessage::Code code = NOP, quint8 messageAddress = ComputerAddress, quint8 interfaceID = NoInterfaceID, quint8 sensorID = NoSensorID, bool request = false, std::vector<quint8> data = std::vector<quint8>());
 
     int toBytes(quint8 *data, unsigned int maxLength) const;
 
@@ -86,7 +88,8 @@ private:
 
     bool request;
     quint16 messageAddress;
-    quint16 sensorID;
+    quint8 sensorID;
+    quint8 interfaceID;
 };
 
 std::ostream &operator<<(std::ostream &outs, const GMessage::Code &code);

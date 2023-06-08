@@ -79,7 +79,7 @@ void GloxiniaConfigurator::processCANDiscoveryMessage(const GMessage &m)
     if (treeModel->checkUniqueNodeID(m.getMessageAddress()))
     {
         // request node info
-        GMessage reply(GMessage::Code::NODE_INFO, m.getMessageAddress(), GMessage::NoSensorID, true, std::vector<quint8>());
+        GMessage reply(GMessage::Code::NODE_INFO, m.getMessageAddress(), GMessage::NoInterfaceID, GMessage::NoSensorID, true, std::vector<quint8>());
         sendSerialMessage(reply);
     }
 }
@@ -146,7 +146,7 @@ void GloxiniaConfigurator::processNodeInfoMessage(const GMessage &m)
                 GCSensor *sensorData = nullptr;
 
                 // send a message to detect existing sensors
-                GMessage sensor_request(GMessage::Code::SENSOR_CONFIG, m.getMessageAddress(), GCSensor::getFullID(i, j), true, std::vector<quint8>());
+                GMessage sensor_request(GMessage::Code::SENSOR_CONFIG, m.getMessageAddress(), i, j, true, std::vector<quint8>());
                 sendSerialMessage(sensor_request);
 
                 this->treeModel->setData(interfaceIndex, QVariant::fromValue(sensorData), Qt::EditRole);
@@ -217,13 +217,13 @@ void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
         }
         case GCSensor::sensor_class::ADC12:
         {
-            GCSensorADC12* sensor_adc12 = new GCSensorADC12(node, m.getSensorID());
+            GCSensorADC12* sensor_adc12 = new GCSensorADC12(node, m.getInterfaceID(), m.getSensorID());
             status = treeModel->setData(index, QVariant::fromValue(sensor_adc12));
             break;
         }
         case GCSensor::sensor_class::APDS9306_065:
         {
-            GCSensorAPDS9306* sensor_apds9306_065 = new GCSensorAPDS9306(node, m.getSensorID());
+            GCSensorAPDS9306* sensor_apds9306_065 = new GCSensorAPDS9306(node,m.getInterfaceID(), m.getSensorID());
             status = treeModel->setData(index, QVariant::fromValue(sensor_apds9306_065));
             break;
         }
@@ -233,7 +233,7 @@ void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
         }
 
         // new sensor, request status too
-        GMessage status_request(GMessage::Code::SENSOR_STATUS, m.getMessageAddress(), m.getSensorID(), true, std::vector<quint8>());
+        GMessage status_request(GMessage::Code::SENSOR_STATUS, m.getMessageAddress(), m.getInterfaceID(), m.getSensorID(), true, std::vector<quint8>());
         sendSerialMessage(status_request);
     } else {
         // update todos
