@@ -943,7 +943,7 @@ void GloxiniaConfigurator::editSensor()
         {
             sensorADC12Dialog->updateUISettings(sensorADC12);
             sensorADC12Dialog->setWindowModality(Qt::ApplicationModal);
-            result = sensorAPDS9306_065Dialog->exec();
+            result = sensorADC12Dialog->exec();
             if(result == QDialog::Rejected){
                 return;
             }
