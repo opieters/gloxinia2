@@ -123,11 +123,15 @@ GCSensor* GCSensor::fromQVariant(const QVariant data)
 {
     GCSensorSHT35 *sensorSHT35 = data.value<GCSensorSHT35 *>();
     GCSensorAPDS9306 *sensorAPDS9306 = data.value<GCSensorAPDS9306 *>();
+    GCSensorADC12 *sensorADC12 = data.value<GCSensorADC12 *>();
+    // TODO: ADC16
 
     if(sensorSHT35 != nullptr)
         return sensorSHT35;
     if(sensorAPDS9306 != nullptr)
         return sensorAPDS9306;
+    if(sensorADC12 != nullptr)
+        return sensorADC12;
     return nullptr;
 }
 

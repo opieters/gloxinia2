@@ -55,6 +55,11 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
             {
                 return s->toString();
             }
+            s = data.value<GCSensorADC12 *>();
+            if (s != nullptr)
+            {
+                return s->toString();
+            }
             return "No sensor";
             break;
         case TreeItem::NodeType::Interface:
@@ -408,7 +413,7 @@ GCNode *TreeModel::getNode(int nodeID)
     return nullptr;
 }
 
-GCSensor *TreeModel::getSensor(int nodeID, int sensorID)
+GCSensor *TreeModel::getSensor(int nodeID, int interfaceID, int sensorID)
 {
     TreeItem *nodeItem = nullptr, *sensorItem = nullptr;
     GCNode *node = nullptr;
@@ -429,26 +434,24 @@ GCSensor *TreeModel::getSensor(int nodeID, int sensorID)
     if (node == nullptr)
         return nullptr;
 
-    for (int i = 0; i < nodeItem->childCount(); i++)
-    {
-        sensorItem = nodeItem->child(i);
-        sensor = GCSensor::fromQVariant(sensorItem->data());
-        if (sensor == nullptr)
-            continue;
-        if (sensor->getInterfaceID() == sensorID)
-            return sensor;
-    }
+    TreeItem* interfaceItem = nodeItem->child(interfaceID);
 
-    return nullptr; // TODO: implement or remove function
+    if(interfaceItem == nullptr)
+        return nullptr;
+
+    sensorItem = interfaceItem->child(sensorID);
+    sensor = GCSensor::fromQVariant(sensorItem->data());
+
+    return sensor;
 }
 
-QModelIndex TreeModel::getIndex(int nodeID, int sensorID)
+QModelIndex TreeModel::getIndex(int nodeID, int interfaceID, int sensorID)
 {
     TreeItem *nodeItem = nullptr, *sensorItem = nullptr;
     GCNode *node = nullptr;
     GCSensor *sensor = nullptr;
     int i;
-    QModelIndex nodeIndex;
+    QModelIndex nodeIndex, interfaceIndex;
 
     for (i = 0; i < rootItem->childCount(); i++)
     {
@@ -467,11 +470,17 @@ QModelIndex TreeModel::getIndex(int nodeID, int sensorID)
 
     nodeIndex = index(i, 0);
 
-    if(sensorID == -1){
+    if(interfaceID == -1){
         return nodeIndex;
     }
 
-    return index(sensorID, 0, nodeIndex);
+    interfaceIndex = index(interfaceID, 0, nodeIndex);
+
+    if(sensorID == -1){
+        return interfaceIndex;
+    }
+
+    return index(sensorID, 0, interfaceIndex);
 }
 
 bool TreeModel::checkUniqueNodeID(int id)
