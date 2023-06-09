@@ -140,6 +140,7 @@ void can_init(void) {
     _C1IE = 1;
     C1INTEbits.TBIE = 1;
     C1INTEbits.RBIE = 1;
+    C1INTEbits.RBOVIE = 1;
 }
 
 void can_configure_filter(uint8_t n, uint16_t sid, uint32_t eid, bool exide, uint8_t mask, uint8_t target) {
@@ -568,40 +569,26 @@ void __attribute__((interrupt, auto_psv)) _C1Interrupt(void)
         can_message_t cm;
         message_t m;
         
-        //if (C1FIFObits.FBP != C1FIFObits.FNRB)
-        //{
+        while (C1FIFObits.FBP != C1FIFObits.FNRB)
+        {
             // handle message
             int i = C1FIFObits.FNRB;
             
             parse_from_can_buffer(&cm, i);
             parse_from_can_message(&m, &cm);
             
-            if(controller_address == ADDRESS_SEARCH_START)
+            // log every message that we received
+            send_message_uart(&m);
+            
+            // if we received a message for this node, we need to process it
+            if((m.identifier == controller_address) || (m.identifier == ADDRESS_GATEWAY))
             {
-                send_message_uart(&m);
-                
-                if((m.identifier == controller_address) || (m.identifier == ADDRESS_GATEWAY))
-                {
-                    message_process(&m);
-                }
-            } else {
-                if(m.request_message_bit){
-                    if(m.identifier == controller_address)
-                    {
-                        message_process(&m);
-                    } 
-                } else {
-                    if (uart_connection_active)
-                    {
-                        send_message_uart(&m);
-                    }
-
-                    if(controller_address == ADDRESS_SEARCH_START)
-                    {
-                        message_process(&m);
-                    }
-                }
-            }
+                 message_process(&m);
+            } 
+            //else // special case: the node with address ADDRESS_SEARCH_START needs to process all messages
+            //{
+            //    message_process(&m);
+            //}
 
             // clear buffer full interrupt bit
             if (C1FIFObits.FNRB > 15)
@@ -612,13 +599,15 @@ void __attribute__((interrupt, auto_psv)) _C1Interrupt(void)
             {
                 CLEAR_BIT(&C1RXFUL1, C1FIFObits.FNRB);
             }
-        //}
+        }
         
         C1INTFbits.RBIF = 0;
     }
     
     if(C1INTFbits.RBOVIF)
     {
+        C1RXOVF1 = 0;
+        C1RXOVF2 = 0;
         C1INTFbits.RBOVIF = 0;
     }
     if(C1INTFbits.FIFOIF)

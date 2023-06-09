@@ -320,6 +320,9 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA13Interrupt ( void )
                 );
         m->status = M_RX_FROM_UART;
         
+        // log message to central
+        send_message_uart(m);
+        
         if ((m->identifier == controller_address) || (m->identifier == ADDRESS_GATEWAY))
         {
             // schedule processing task
@@ -327,8 +330,6 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA13Interrupt ( void )
             task.cb =(void*) message_process;
             task.data = (void*) m;
             push_queued_task(task);
-            
-            send_message_uart(m);
         }
         else
         {

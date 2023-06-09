@@ -10,6 +10,7 @@
 #include "../dicio.X/dicio.h"
 #include "../dicio.X/sdcard.h"
 #endif
+#include <libpic30.h>
 
 // internal functions
 static void cmd_request_address_available(const message_t *m);
@@ -80,7 +81,23 @@ void send_message_can(const message_t *m) {
     // cap length
     mc.data_length = MIN(8, m->length);
     can_init_message(&mc, m->identifier, m->request_message_bit, CAN_EXTENDED_FRAME, CAN_HEADER(m->command, m->interface_id, m->sensor_id), m->data, mc.data_length);
-    can_send_message_any_ch(&mc);
+    
+    uint16_t n_attempts = 0;
+    can_status_t sent_status = CAN_NO_ERROR;
+    do {
+        sent_status = can_send_message(&mc, m->identifier % 8);
+        n_attempts++;
+    } while ((sent_status != CAN_NO_ERROR) && (n_attempts < 8U));
+    
+    __delay_ms(100);
+    
+    if(sent_status == CAN_NO_ERROR)
+    {
+        // log message when sent
+        send_message_uart(m);
+    }
+    
+    //can_send_message_any_ch(&mc);
 }
 
 void message_send(message_t *m) {

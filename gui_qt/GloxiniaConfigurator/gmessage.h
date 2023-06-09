@@ -55,9 +55,9 @@ public:
     static constexpr uint8_t GMessageStopByte = 0x5D;
     static constexpr uint8_t headerSize = 8;
 
-    static constexpr uint8_t ComputerAddress = 0x00;
-    static constexpr uint8_t SearchStartAddress = 0x01;
-    static constexpr uint8_t UnsetAddress = 0xff;
+    static constexpr uint8_t ComputerAddress = 0xff;
+    static constexpr uint8_t SearchStartAddress = 0xfe;
+    static constexpr uint8_t UnsetAddress = 0x00;
     static constexpr uint8_t NoSensorID = 0xf;
     static constexpr uint8_t NoInterfaceID = 0xf;
     static constexpr uint8_t UnlockSequenceH = 0x55;

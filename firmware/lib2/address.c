@@ -33,7 +33,7 @@ void address_find_non_reserved(void) {
     // send message to check for address availability
     message_send(&m);
     
-    temp_can_address++;
+    temp_can_address--;
 }
 
 void address_set_and_check_available(uint16_t address) {
