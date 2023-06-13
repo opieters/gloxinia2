@@ -258,8 +258,12 @@ void process_filter_block3(void* data)
                 &filters_3[i], 
                 SYLVATICA_DEC_FACT_F3);
        
-        // the interface/sensor alloc guarantees that it's always on this location
-        sensor_interfaces[i]->gsensor_config[0].sensor_config.adc16.result_ch += output_buffer_a[i];
-        sensor_interfaces[i]->gsensor_config[0].sensor_config.adc16.count++;
+        sensor_gconfig_t* gsc = &sensor_interfaces[i]->gsensor_config[0];
+        if(gsc->sensor_type == SENSOR_TYPE_ADC16){
+            // the interface/sensor alloc guarantees that it's always on this location
+            gsc->sensor_config.adc16.sum += output_buffer_a[i];
+            gsc->sensor_config.adc16.count++;
+            gsc->sensor_config.adc16.result = output_buffer_a[i];
+        }
     }
 }

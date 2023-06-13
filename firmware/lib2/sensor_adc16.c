@@ -35,9 +35,8 @@ void sensor_adc16_get_config(struct sensor_gconfig_s* gsc, uint8_t reg, uint8_t*
             *length = 4;
             break;
         case sensor_adc16_gloxinia_register_config:
-            buffer[2] = config->enable_ch;
-            buffer[3] = config->normalise_ch;
-            *length = 4;
+            buffer[2] = config->average;
+            *length = 3;
             break;
         case sensor_adc16_gloxinia_register_pga:
             if(config->pga != NULL){
@@ -75,12 +74,10 @@ sensor_status_t sensor_adc16_config(struct sensor_gconfig_s *gsc, const uint8_t 
             
             break;
         case sensor_adc16_gloxinia_register_config:
-            if(length != 3) { return SENSOR_STATUS_ERROR; }
+            if(length != 2) { return SENSOR_STATUS_ERROR; }
             
             // load configuration from buffer into data structure
-            config->enable_ch = buffer[1];
-            config->normalise_ch = buffer[2];
-
+            config->average = buffer[1];
             // validate configuration
             if(!validate_adc16_config(config)){
                 UART_DEBUG_PRINT("Configuring ADC16 INVALID CONFIG");
@@ -90,9 +87,9 @@ sensor_status_t sensor_adc16_config(struct sensor_gconfig_s *gsc, const uint8_t 
             }
             break;
         case sensor_adc16_gloxinia_register_pga:
-            if((config->pga == NULL) || (length != 3)){ return SENSOR_STATUS_ERROR; }
+            if((config->pga == NULL) || (length != 2)){ return SENSOR_STATUS_ERROR; }
             
-            config->pga->gain = buffer[2];
+            config->pga->gain = buffer[1];
             
             if(!validate_adc16_config(config)){
                 return SENSOR_STATUS_ERROR;
@@ -112,37 +109,26 @@ void sensor_adc16_measure(void *data)
     uint8_t m_data[SENSOR_ADC16_CAN_DATA_LENGTH];
 
     // send measurement data to data sink
-    if(config->enable_ch)
+    m_data[0] = 0;
+
+    if(config->average && (config->count > 0))
     {
-        m_data[0] = 0;
-        
-        if(config->normalise_ch)
-        {
-            if(config->count > 0)
-                config->result_ch = config->result_ch / config->count;
-            else 
-                config->result_ch = 0;
-            
-            m_data[5] = (uint8_t) (config->count);
-            m_data[6] = (uint8_t) (config->count >> 8);
-        }
-        
-        for(int i = 0; i < sizeof(uint32_t); i++)
-        {
-            m_data[1+i] = (uint8_t) ((config->result_ch>> (8*i)) & 0xff);
-        }
-        
-        message_init(&gsc->log,
-                     controller_address,
-                     MESSAGE_NO_REQUEST,
-                     M_SENSOR_DATA,
-                    gsc->interface->interface_id,
-                     gsc->sensor_id,
-                     m_data,
-                     config->normalise_ch?7:5);
-        message_send(&gsc->log);
+        config->result = config->result / config->count;
+        config->count = 0;
     }
-  
+
+    m_data[0] = (uint8_t) (config->result >> 8);
+    m_data[1] = (uint8_t) (config->result);
+
+    message_init(&gsc->log,
+                 controller_address,
+                 MESSAGE_NO_REQUEST,
+                 M_SENSOR_DATA,
+                 gsc->interface->interface_id,
+                 gsc->sensor_id,
+                 m_data,
+                 SENSOR_ADC16_CAN_DATA_LENGTH);
+    message_send(&gsc->log);
 }
 
 bool validate_adc16_config(sensor_adc16_config_t *config)

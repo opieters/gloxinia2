@@ -21,7 +21,7 @@
 /// @brief ADC16 number of channels.
 #define ADC16_N_CHANNELS 8
 
-#define SENSOR_ADC16_CAN_DATA_LENGTH (2+sizeof(uint32_t))
+#define SENSOR_ADC16_CAN_DATA_LENGTH (sizeof(fractional))
 
 /// @brief ADC16 command codes.
 typedef enum
@@ -212,13 +212,12 @@ typedef struct
  * @param result_ch_a: 16-bit register result (unnormalised)
  * @param result_ch_b: 12-bit register result (unnormalised)
  */
-typedef struct {
-    bool enable_ch;
+typedef struct {    
+    bool average;
     
-    bool normalise_ch;
-    
-    uint32_t result_ch;
+    fractional result;
     uint16_t count;
+    uint32_t sum;
     
     pga_config_t* pga;
 } sensor_adc16_config_t;
@@ -229,7 +228,7 @@ typedef struct {
 typedef enum {
     sensor_adc16_gloxinia_register_general = 0x00, ///< General register with sample rate info
     sensor_adc16_gloxinia_register_config = 0x01,  ///< Channel and normalisation enable/disable register
-            sensor_adc16_gloxinia_register_pga = 0x02,
+    sensor_adc16_gloxinia_register_pga = 0x02,
 } sensor_adc16_gloxinia_register_t;
 
 #ifdef __cplusplus
