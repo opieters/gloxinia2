@@ -357,10 +357,10 @@ void sylvatica_init(void)
     //sensor_adc12_activate(sensor_config);
     
     // manually configure sensors and interfaces
-    uint8_t buffer1[4] = {SENSOR_TYPE_ADC16, sensor_adc12_gloxinia_register_general, 0, 9};
+    uint8_t buffer1[4] = {SENSOR_TYPE_ADC16, sensor_adc16_gloxinia_register_general, 0, 9};
     sensor_set_config_from_buffer(0, 1, buffer1, 4);
     
-    uint8_t buffer2[4] = {SENSOR_TYPE_ADC16, sensor_adc12_gloxinia_register_config, true, false};
+    uint8_t buffer2[4] = {SENSOR_TYPE_ADC16, sensor_adc16_gloxinia_register_config, true, false};
     sensor_set_config_from_buffer(0, 1, buffer2, 4);
     
     //sensor_set_status( (0<<4) | 1, SENSOR_STATUS_ACTIVE);
