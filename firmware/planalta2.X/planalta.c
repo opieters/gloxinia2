@@ -389,21 +389,21 @@ void planalta_adc16_callback(void){
     if (adc16_buffer_selector == 0) {
         if(copy_buffer_selector == 0){
             for(i = 0; i < PLANALTA_N_CHANNELS; i++){
-                copy_adc_data(PLANALTA_ADC16_BUFFER_LENGTH / PLANALTA_N_CHANNELS, (fractional*) &copy_buffers_a[i][copy_counter], (fractional*) &adc16_rx_buffer_a[i]);
+                copy_adc_data(PLANALTA_ADC16_BUFFER_LENGTH / PLANALTA_N_CHANNELS, (fractional*) &copy_buffers_a[i][copy_counter], (__eds__ fractional*) &adc16_rx_buffer_a[i]);
             }
         } else {
             for(i = 0; i < PLANALTA_N_CHANNELS; i++){
-                copy_adc_data(PLANALTA_ADC16_BUFFER_LENGTH / PLANALTA_N_CHANNELS, (fractional*) &copy_buffers_b[i][copy_counter], (fractional*) &adc16_rx_buffer_a[i]);
+                copy_adc_data(PLANALTA_ADC16_BUFFER_LENGTH / PLANALTA_N_CHANNELS, (fractional*) &copy_buffers_b[i][copy_counter], (__eds__ fractional*) &adc16_rx_buffer_a[i]);
             }
         }
     } else {
         if(copy_buffer_selector == 0){
             for(i = 0; i < PLANALTA_N_CHANNELS; i++){
-                copy_adc_data(PLANALTA_ADC16_BUFFER_LENGTH / PLANALTA_N_CHANNELS, (fractional*) &copy_buffers_a[i][copy_counter], (fractional*) &adc16_rx_buffer_b[i]);
+                copy_adc_data(PLANALTA_ADC16_BUFFER_LENGTH / PLANALTA_N_CHANNELS, (fractional*) &copy_buffers_a[i][copy_counter], (__eds__ fractional*) &adc16_rx_buffer_b[i]);
             }
         } else {
             for(i = 0; i < PLANALTA_N_CHANNELS; i++){
-                copy_adc_data(PLANALTA_ADC16_BUFFER_LENGTH / PLANALTA_N_CHANNELS, (fractional*) &copy_buffers_b[i][copy_counter], (fractional*) &adc16_rx_buffer_b[i]);
+                copy_adc_data(PLANALTA_ADC16_BUFFER_LENGTH / PLANALTA_N_CHANNELS, (fractional*) &copy_buffers_b[i][copy_counter], (__eds__ fractional*) &adc16_rx_buffer_b[i]);
             }
         }
     }

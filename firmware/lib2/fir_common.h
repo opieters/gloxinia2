@@ -42,7 +42,7 @@ void covert_uint_to_fract(unsigned int num, uint16_t* src, fractional* dst);
 
 void copy_adc_data(unsigned int num, fractional* dst, __eds__ fractional* src);
 
-void copy_uint_to_fract(unsigned int num, fractional* src, fractional* dst, unsigned int step);
+void copy_uint_to_fract(unsigned int num, __eds__ fractional* src, fractional* dst, unsigned int step);
 int32_t add_vector_long(unsigned int num, fractional* vector);
 
 #ifdef __cplusplus

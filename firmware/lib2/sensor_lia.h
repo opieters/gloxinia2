@@ -2,6 +2,7 @@
 #define	__SENSOR_LIA_H__
 
 #include <xc.h>
+#include <dsp.h>
 #include <sensor_common.h>
 #include <sensor_adc16.h>
 #include <pga.h>
@@ -57,7 +58,7 @@ extern "C" {
     struct sensor_gconfig_s;
     
     void sensor_lia_get_config(struct sensor_gconfig_s* intf, uint8_t reg, uint8_t* buffer, uint8_t* length);
-    sensor_status_t sensor_lia_config(struct sensor_gconfig_s *intf, uint8_t *buffer, uint8_t length);
+    sensor_status_t sensor_lia_config(struct sensor_gconfig_s *intf, const uint8_t *buffer, const uint8_t length);
     void sensor_lia_measure(void *data);
     void lia_init_sensor(struct sensor_gconfig_s *intf);
     void sensor_lia_activate(struct sensor_gconfig_s* intf);

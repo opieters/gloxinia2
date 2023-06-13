@@ -25,7 +25,7 @@ void sensor_lia_get_config(sensor_gconfig_t* intf, uint8_t reg, uint8_t* buffer,
     }
 }
 
-sensor_status_t sensor_lia_config(sensor_gconfig_t *intf, uint8_t *buffer, uint8_t length)
+sensor_status_t sensor_lia_config(sensor_gconfig_t *intf, const uint8_t *buffer, const uint8_t length)
 {
     if (length < 1)
     {

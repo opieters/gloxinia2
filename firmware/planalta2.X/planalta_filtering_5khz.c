@@ -152,12 +152,12 @@ void adc_rx_callback_5khz(void){
         
         if (adc_buffer_selector == 0) {
             copy_uint_to_fract(PLANALTA_5KHZ_F0_OUTPUT_SIZE,
-                    (fractional*) &adc16_rx_buffer_a[i],
+                    (__eds__ fractional*) &adc16_rx_buffer_a[i],
                     conversion_buffer,
                     PLANALTA_5KHZ_N_ADC_CHANNELS);
         } else {
             copy_uint_to_fract(PLANALTA_5KHZ_F0_OUTPUT_SIZE,
-                    (fractional*) &adc16_rx_buffer_b[i],
+                    (__eds__ fractional*) &adc16_rx_buffer_b[i],
                     conversion_buffer,
                     PLANALTA_5KHZ_N_ADC_CHANNELS);
         }

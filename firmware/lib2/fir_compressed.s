@@ -365,19 +365,19 @@ _final_copy:
 _copy_uint_to_fract:
     ; w0 = number of coefficients in source array
     ; w1 = source array
-    ; w2 = destination array
-    ; w3 = step size
+    ; w2 = source array (EDS)
+    ; w3 = destination array
+    ; w4 = step size
     dec w0, w0
-    add w3, w3, w3
+    add w4, w4, w4
     ; setup read page to EDS memory
     push DSRPAG
-    mov #0x0001, w4
-    mov w4, DSRPAG
-    mov #0x8000, w4
+    mov w2, DSRPAG
+    mov #0x8000, w2
     do w0, _final_copy_conv
-    subr w4, [w1], [w2++] ; [w2] = [w1] - w4
+    subr w2, [w1], [w3++] ; [w3] = [w1] - w2
 _final_copy_conv:
-    add w1, w3, w1
+    add w1, w4, w1
     pop DSRPAG
     return
     
