@@ -80,7 +80,7 @@ void GloxiniaConfigurator::processCANDiscoveryMessage(const GMessage &m)
     {
         // request node info
         GMessage reply(GMessage::Code::NODE_INFO, m.getMessageAddress(), GMessage::NoInterfaceID, GMessage::NoSensorID, true, std::vector<quint8>());
-        sendSerialMessage(reply);
+        devCom->queueMessage(reply);
     }
 }
 
@@ -147,7 +147,7 @@ void GloxiniaConfigurator::processNodeInfoMessage(const GMessage &m)
 
                 // send a message to detect existing sensors
                 GMessage sensor_request(GMessage::Code::SENSOR_CONFIG, m.getMessageAddress(), i, j, true, std::vector<quint8>());
-                sendSerialMessage(sensor_request);
+                emit devCom->queueMessage(sensor_request);
 
                 this->treeModel->setData(interfaceIndex, QVariant::fromValue(sensorData), Qt::EditRole);
             }
@@ -221,6 +221,12 @@ void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
             status = treeModel->setData(index, QVariant::fromValue(sensor_adc12));
             break;
         }
+        case GCSensor::sensor_class::ADC16:
+        {
+            GCSensorADC16* sensor_adc16 = new GCSensorADC16(node, m.getInterfaceID(), m.getSensorID());
+            status = treeModel->setData(index, QVariant::fromValue(sensor_adc16));
+            break;
+        }
         case GCSensor::sensor_class::APDS9306_065:
         {
             GCSensorAPDS9306* sensor_apds9306_065 = new GCSensorAPDS9306(node,m.getInterfaceID(), m.getSensorID());
@@ -234,7 +240,7 @@ void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
 
         // new sensor, request status too
         GMessage status_request(GMessage::Code::SENSOR_STATUS, m.getMessageAddress(), m.getInterfaceID(), m.getSensorID(), true, std::vector<quint8>());
-        sendSerialMessage(status_request);
+        emit devCom->queueMessage(status_request);
     } else {
         // update todos
     }
@@ -359,15 +365,4 @@ bool GloxiniaConfigurator::handleBootMessageStatus(const GMessage &m){
             break;
     }
     return false;
-}
-
-void GloxiniaConfigurator::sendSerialMessage(const GMessage &m)
-{
-    unsigned int length;
-    quint8 rawData[32];
-
-    length = m.toBytes(rawData, 32);
-    serial->write(QByteArray((char *)rawData, length));
-    qInfo() << "Sending" << m.toString();
-    //serial->waitForBytesWritten(100);
 }

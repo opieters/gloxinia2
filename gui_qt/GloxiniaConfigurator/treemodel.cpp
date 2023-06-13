@@ -60,6 +60,11 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
             {
                 return s->toString();
             }
+            s = data.value<GCSensorADC16 *>();
+            if (s != nullptr)
+            {
+                return s->toString();
+            }
             return "No sensor";
             break;
         case TreeItem::NodeType::Interface:

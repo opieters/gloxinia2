@@ -129,6 +129,7 @@ GCSensor* GCSensor::fromQVariant(const QVariant data)
     GCSensorSHT35 *sensorSHT35 = data.value<GCSensorSHT35 *>();
     GCSensorAPDS9306 *sensorAPDS9306 = data.value<GCSensorAPDS9306 *>();
     GCSensorADC12 *sensorADC12 = data.value<GCSensorADC12 *>();
+    GCSensorADC16 *sensorADC16 = data.value<GCSensorADC16 *>();
     // TODO: ADC16
 
     if(sensorSHT35 != nullptr)
@@ -137,6 +138,8 @@ GCSensor* GCSensor::fromQVariant(const QVariant data)
         return sensorAPDS9306;
     if(sensorADC12 != nullptr)
         return sensorADC12;
+    if(sensorADC16 != nullptr)
+        return sensorADC16;
     return nullptr;
 }
 
@@ -830,6 +833,138 @@ void GCSensorADC12::saveData(std::vector<quint8>& data)
 }
 
 void GCSensorADC12::printHeader(void)
+{
+    file->write("# Intermediate storage file for ADC12\n");
+    file->write("# ADC12 is a 16-bit filtered analogue readout. The data is stored in the `channel` column. Each value is timestamped.\n");
+    file->write("time; channel\n");
+}
+
+
+GCSensorADC16::GCSensorADC16(GCNode* node, quint8 interface_id, quint8 id) : GCSensor(node, interface_id, id)
+{
+    if(node == nullptr){
+        filePath = "node-0-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "-ADC16.csv";
+    } else {
+        filePath = "node-" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "-ADC16.csv";
+    }
+    filePath = QDir::cleanPath(filePath);
+
+    QString prefix;
+    if(!label.isEmpty())
+        prefix += label + " ";
+    else
+        prefix += "ADC16 ";
+    if(node != nullptr)
+        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "] ";
+    else
+        prefix += "[0-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "] ";
+
+
+    plotSeries.append(new QLineSeries());
+    plotSeries[0]->setName(prefix + "analogue");
+    measurementVariableTypes.append(VariableType::Analogue);
+}
+
+GCSensorADC16::~GCSensorADC16() {}
+
+void GCSensorADC16::setAverage(bool average)
+{
+    this->average = average;
+}
+
+bool GCSensorADC16::getAverage(void)
+{
+    return average;
+}
+
+void GCSensorADC16::setGain(PGAGain gain)
+{
+    this->gain = gain;
+}
+
+GCSensorADC16::PGAGain GCSensorADC16::getGain(void)
+{
+    return gain;
+}
+
+QString GCSensorADC16::toString(void) const
+{
+    QString dLabel;
+    if (!label.isEmpty())
+    {
+        dLabel = label;
+    }
+    else
+    {
+        dLabel = "ADC12";
+    }
+    return "[" + QString::number(interfaceID) + QString::number(sensorID) + "] " + dLabel + " - " + statusToString(status);
+}
+
+QString GCSensorADC16::toConfigString(void) const
+{
+    return QString(); // TODO
+}
+
+bool GCSensorADC16::fromConfigString(const QStringList &config)
+{
+    // TODO
+    return false;
+}
+
+QList<GMessage> GCSensorADC16::getConfigurationMessages()
+{
+    QList<GMessage> mList;
+
+    auto mData = std::vector<quint8>(4);
+    mData[0] = (quint8)GCSensor::sensor_class::ADC16;
+    mData[1] = GCSensorADC16::Register::MEASUREMENT;
+    mData[2] = (quint8) (measurementPeriod >> 8);
+    mData[3] = (quint8) (measurementPeriod & 0xff);
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+
+    mData = std::vector<quint8>(3);
+    mData[0] = (quint8)GCSensor::sensor_class::ADC16;
+    mData[1] = GCSensorADC16::Register::CONFIG;
+    mData[2] = average ? 1 : 0;
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+
+    mData = std::vector<quint8>(3);
+    mData[0] = (quint8)GCSensor::sensor_class::ADC16;
+    mData[1] = GCSensorADC16::Register::PGA;
+    mData[2] = average ? 1 : 0;
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+
+    return mList;
+}
+
+void GCSensorADC16::saveData(std::vector<quint8>& data)
+{
+    QString formattedData;
+    uint32_t value;
+
+
+    QDateTime date = QDateTime::currentDateTime();
+    formattedData.append(date.toString("dd.MM.yyyy hh:mm:ss"));
+    formattedData.append("; ");
+    if(data.size() == 2){
+        value = data[0] | (data[1] << 8);
+        formattedData.append(QString::number(value)); // print in scientific format with precision of 6
+
+        plotSeries[0]->append(date.toMSecsSinceEpoch(), value);
+
+    } else {
+        formattedData.append("NaN");
+
+        plotSeries[0]->append(date.toMSecsSinceEpoch(), nan(""));
+    }
+    formattedData.append("\n");
+
+    if((file != nullptr) && file->isOpen())
+        file->write(formattedData.toUtf8());
+}
+
+void GCSensorADC16::printHeader(void)
 {
     file->write("# Intermediate storage file for ADC12\n");
     file->write("# ADC12 is a 16-bit filtered analogue readout. The data is stored in the `channel` column. Each value is timestamped.\n");

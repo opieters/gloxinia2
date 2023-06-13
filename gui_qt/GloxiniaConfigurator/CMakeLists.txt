@@ -31,10 +31,12 @@ set(PROJECT_SOURCES
         sensorapds9306_065dialog.h sensorapds9306_065dialog.cpp sensorapds9306_065dialog.ui
         sensorsht35dialog.h sensorsht35dialog.cpp sensorsht35dialog.ui
         sensoradc12dialog.h sensoradc12dialog.cpp sensoradc12dialog.ui
+        sensoradc16dialog.h sensoradc16dialog.cpp sensoradc16dialog.ui
         globalmeasurementpolicydialog.h globalmeasurementpolicydialog.cpp globalmeasurementpolicydialog.ui
         serialsettingsdialog.h serialsettingsdialog.cpp serialsettingsdialog.ui
         newprojectdialog.h newprojectdialog.cpp newprojectdialog.ui
         updatedialog.h updatedialog.cpp updatedialog.ui
+        gdevicecommunication.h gdevicecommunication.cpp
         gcmessagehandling.cpp
         gcfileoperations.cpp
         gcserialcommunication.cpp

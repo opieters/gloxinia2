@@ -53,7 +53,7 @@ void SensorADC12Dialog::editGlobalPeriodSettings(void)
 
 void SensorADC12Dialog::apply(GCSensorADC12* sensor)
 {
-    sensor->setAverage(ui->enableBox->isChecked());
+    sensor->setAverage(ui->averageBox->isChecked());
 
     quint16 period = round(ui->periodBox->value()*10) - 1;
     sensor->setMeasurementPeriod(period);
@@ -64,7 +64,7 @@ void SensorADC12Dialog::apply(GCSensorADC12* sensor)
 
 void SensorADC12Dialog::updateUISettings(GCSensorADC12* sensor)
 {
-    ui->enableBox->setChecked(sensor->getAverage());
+    ui->averageBox->setChecked(sensor->getAverage());
     ui->periodBox->setValue((sensor->getMeasurementPeriod()+1.0)/10);
     if(sensor->getUseGlobalPeriodFlag())
         ui->gperiodBox->setCheckState(Qt::Checked);

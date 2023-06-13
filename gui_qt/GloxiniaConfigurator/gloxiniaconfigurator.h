@@ -17,6 +17,7 @@
 #include <sensorapds9306_065dialog.h>
 #include <sensorsht35dialog.h>
 #include <sensoradc12dialog.h>
+#include <sensoradc16dialog.h>
 #include <gcsystem.h>
 #include <treemodel.h>
 #include <nodedialog.h>
@@ -31,6 +32,7 @@
 #include <QListView>
 #include <QTreeView>
 #include <QHBoxLayout>
+#include <gdevicecommunication.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -61,8 +63,6 @@ public:
     void clearAll(void);
     void selectDataFile(void);
     void exit(void);
-
-    void sendSerialMessage(const GMessage &m);
     bool handleBootMessageStatus(const GMessage &m);
 
     enum SerialReadoutState
@@ -77,6 +77,8 @@ public:
         ReadData,
         DetectStopByte
     };
+
+    friend class UpdateDialog;
 
 private slots:
     void openSerialPort();
@@ -233,6 +235,7 @@ private:
     SensorAPDS9306_065Dialog *sensorAPDS9306_065Dialog;
     SensorSHT35Dialog *sensorSHT35Dialog;
     SensorADC12Dialog *sensorADC12Dialog;
+    SensorADC16Dialog *sensorADC16Dialog;
 
     /*
      * The file stores the sensor data
@@ -247,8 +250,12 @@ private:
 
     void addSHT35Sensor(void);
 
+
+
 protected:
     void closeEvent(QCloseEvent *event) override;
+
+    GDeviceCommunication* devCom = nullptr;
 };
 
 #endif // GLOXINIACONFIGURATOR_H

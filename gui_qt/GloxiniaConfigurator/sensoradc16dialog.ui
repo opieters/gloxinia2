@@ -1,34 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SensorADC12Dialog</class>
- <widget class="QDialog" name="SensorADC12Dialog">
+ <class>SensorADC16Dialog</class>
+ <widget class="QDialog" name="SensorADC16Dialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>164</height>
+    <height>180</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
   <layout class="QFormLayout" name="formLayout">
-   <item row="1" column="1">
+   <item row="0" column="1">
     <widget class="QCheckBox" name="averageBox">
      <property name="text">
       <string>Average samples</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item row="2" column="0">
     <widget class="QLabel" name="periodLabel">
      <property name="text">
-      <string>Measurement Period</string>
+      <string>Measurement period</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
+   <item row="2" column="1">
     <widget class="QDoubleSpinBox" name="periodBox">
      <property name="suffix">
       <string notr="true">s</string>
@@ -47,21 +47,21 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="1">
-    <widget class="QCheckBox" name="gperiodBox">
+   <item row="3" column="1">
+    <widget class="QCheckBox" name="gPeriodBox">
      <property name="text">
       <string>Use global measurement policy</string>
      </property>
     </widget>
    </item>
-   <item row="5" column="1">
-    <widget class="QPushButton" name="gperiodButton">
+   <item row="4" column="1">
+    <widget class="QPushButton" name="gPeriodButton">
      <property name="text">
-      <string>Edit global measurement policy</string>
+      <string>Edit measurement policy</string>
      </property>
     </widget>
    </item>
-   <item row="6" column="0" colspan="2">
+   <item row="5" column="0" colspan="2">
     <widget class="QDialogButtonBox" name="confirmBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -71,6 +71,62 @@
      </property>
     </widget>
    </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="gainLabel">
+     <property name="text">
+      <string>PGA gain</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QComboBox" name="gainBox">
+     <item>
+      <property name="text">
+       <string>Auto (defaults to 1)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string notr="true">1</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string notr="true">2</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string notr="true">5</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string notr="true">10</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string notr="true">20</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string notr="true">50</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string notr="true">100</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string notr="true">200</string>
+      </property>
+     </item>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>
@@ -78,7 +134,7 @@
   <connection>
    <sender>confirmBox</sender>
    <signal>accepted()</signal>
-   <receiver>SensorADC12Dialog</receiver>
+   <receiver>SensorADC16Dialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -94,7 +150,7 @@
   <connection>
    <sender>confirmBox</sender>
    <signal>rejected()</signal>
-   <receiver>SensorADC12Dialog</receiver>
+   <receiver>SensorADC16Dialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SensorSHT35Dialog</class>
+ <widget class="QDialog" name="SensorSHT35Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>276</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QFormLayout" name="formLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="addressLabel">
+     <property name="text">
+      <string>I2C address</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QComboBox" name="addressBox">
+     <item>
+      <property name="text">
+       <string>0x44</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>0x45</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="periodicityLabel">
+     <property name="text">
+      <string>Periodicity</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QComboBox" name="periodicityBox">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <property name="insertPolicy">
+      <enum>QComboBox::NoInsert</enum>
+     </property>
+     <item>
+      <property name="text">
+       <string>Single shot mode</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Periodic mode</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="repeatabilityLabel">
+     <property name="text">
+      <string>Repeatability</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QComboBox" name="repeatabilityBox">
+     <item>
+      <property name="text">
+       <string>High</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Medium</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Low</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="rateLabel">
+     <property name="text">
+      <string>Measurement Frequency</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QComboBox" name="rateBox">
+     <item>
+      <property name="text">
+       <string>0.5Hz</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>1Hz</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>2Hz</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>4Hz</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>10Hz</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QCheckBox" name="clockStretchingBox">
+     <property name="text">
+      <string>Enable clock stretching</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="periodLabel">
+     <property name="text">
+      <string>Measurement Period</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1">
+    <widget class="QDoubleSpinBox" name="periodBox">
+     <property name="suffix">
+      <string notr="true">s</string>
+     </property>
+     <property name="decimals">
+      <number>1</number>
+     </property>
+     <property name="minimum">
+      <double>0.100000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>6553.500000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.100000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="0" colspan="2">
+    <widget class="QDialogButtonBox" name="confirmBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="1">
+    <widget class="QCheckBox" name="gperiodBox">
+     <property name="text">
+      <string>Use global measurement policy</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="1">
+    <widget class="QPushButton" name="gperiodButton">
+     <property name="text">
+      <string>Edit global measurement policy</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>confirmBox</sender>
+   <signal>accepted()</signal>
+   <receiver>SensorSHT35Dialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>confirmBox</sender>
+   <signal>rejected()</signal>
+   <receiver>SensorSHT35Dialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
