@@ -319,4 +319,51 @@ protected:
 
 Q_DECLARE_METATYPE(GCSensorADC16 *)
 
+class GCSensorLIA : public GCSensor
+{
+public:
+    enum Register
+    {
+        MEASUREMENT = 0x00,
+        CONFIG = 0x01,
+        PGA = 0x02,
+    };
+
+    enum PGAGain
+    {
+        PGA_GAIN_1 = 0b0000,   ///< Gain = 1
+        PGA_GAIN_2 = 0b0001,   ///< Gain = 2
+        PGA_GAIN_5 = 0b0010,   ///< Gain = 5
+        PGA_GAIN_10 = 0b0011,  ///< Gain = 10
+        PGA_GAIN_20 = 0b0100,  ///< Gain = 20
+        PGA_GAIN_50 = 0b0101,  ///< Gain = 50
+        PGA_GAIN_100 = 0b0110, ///< Gain = 100
+        PGA_GAIN_200 = 0b0111, ///< Gain = 200
+    };
+
+    GCSensorLIA(GCNode* const node = nullptr, quint8 interface_id =0, quint8 id = 0);
+    GCSensorLIA(const GCSensorLIA &s) = default;
+    ~GCSensorLIA() override;
+
+    void setAverage(bool average);
+    bool getAverage(void);
+
+    void setGain(PGAGain gain);
+    PGAGain getGain(void);
+
+    QString toString(void) const override;
+    QString toConfigString(void) const override;
+    bool fromConfigString(const QStringList &config) override;
+    QList<GMessage> getConfigurationMessages() override;
+    void saveData(std::vector<quint8>& data) override;
+    void printHeader(void) override;
+
+protected:
+    bool average;
+
+    PGAGain gain;
+};
+
+Q_DECLARE_METATYPE(GCSensorLIA *)
+
 #endif // GCSENSOR_H
