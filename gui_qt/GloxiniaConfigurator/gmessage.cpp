@@ -217,5 +217,5 @@ QString GMessage::toLogString() const
         }
     }
 
-    return "[" + cTime + "] (" + QString::number(messageAddress) + ", " + QString::number(interfaceID) + ", " + QString::number(sensorID) + ") " + GMessage::codeToString(code) + " " + formattedData;
+    return "[" + cTime + "] (" + QString::number(messageAddress) + ", " + QString::number(interfaceID) + ", " + QString::number(sensorID) + (request ? ", RQST" : ", STD") + ") " + GMessage::codeToString(code) + " " + formattedData;
 }
