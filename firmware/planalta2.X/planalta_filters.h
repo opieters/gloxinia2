@@ -380,11 +380,8 @@ extern fractional f4_to_f5_buffer_q_a[PLANALTA_N_ADC_CHANNELS][PLANALTA_F5_INPUT
 extern fractional f4_to_f5_buffer_i_b[PLANALTA_N_ADC_CHANNELS][PLANALTA_F5_INPUT_SIZE];
 extern fractional f4_to_f5_buffer_q_b[PLANALTA_N_ADC_CHANNELS][PLANALTA_F5_INPUT_SIZE];
 
-extern bool planalta_lia_obuffer_selector;
-extern fractional planalta_lia_obuffer_a_i[PLANALTA_N_ADC_CHANNELS];
-extern fractional planalta_lia_obuffer_a_q[PLANALTA_N_ADC_CHANNELS];
-extern fractional planalta_lia_obuffer_b_i[PLANALTA_N_ADC_CHANNELS];
-extern fractional planalta_lia_obuffer_b_q[PLANALTA_N_ADC_CHANNELS];
+extern fractional planalta_lia_obuffer_i[PLANALTA_N_ADC_CHANNELS];
+extern fractional planalta_lia_obuffer_q[PLANALTA_N_ADC_CHANNELS];
 
 extern uint8_t select_f0_to_f1, select_f1_to_f2, select_f2_to_f3, select_f3_to_f4, select_f4_to_f5;
 extern uint8_t adc_buffer_selector;

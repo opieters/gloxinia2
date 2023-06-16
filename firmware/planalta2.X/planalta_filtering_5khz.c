@@ -372,46 +372,28 @@ void run_filter4_5khz(void *data){
 
 void run_filter5_5khz(void *data){
     uint16_t i;
-    
-    if(planalta_lia_obuffer_selector) {
-        for(i = 0; i < PLANALTA_5KHZ_N_ADC_CHANNELS; i++){
-            FIRDecimate(PLANALTA_5KHZ_F5_OUTPUT_SIZE,
-                    &planalta_lia_obuffer_a_i[i],
-                    fo5_buffer_i_read[i],
-                    &planalta_lia_filters_5_i[i],
-                    PLANALTA_5KHZ_DEC_FACT_F5);
 
-            FIRDecimate(PLANALTA_5KHZ_F5_OUTPUT_SIZE,
-                    &planalta_lia_obuffer_a_q[i],
-                    fo5_buffer_q_read[i],
-                    &planalta_lia_filters_5_q[i],
-                    PLANALTA_5KHZ_DEC_FACT_F5);
-            
-            sensor_interfaces[i]->gsensor_config->sensor_config.lia.sample_i = planalta_lia_obuffer_a_i[i];
-            sensor_interfaces[i]->gsensor_config->sensor_config.lia.sample_q = planalta_lia_obuffer_a_q[i];
+    for(i = 0; i < PLANALTA_5KHZ_N_ADC_CHANNELS; i++)
+    {
+        FIRDecimate(PLANALTA_5KHZ_F5_OUTPUT_SIZE,
+                &planalta_lia_obuffer_i[i],
+                fo5_buffer_i_read[i],
+                &planalta_lia_filters_5_i[i],
+                PLANALTA_5KHZ_DEC_FACT_F5);
+
+        FIRDecimate(PLANALTA_5KHZ_F5_OUTPUT_SIZE,
+                &planalta_lia_obuffer_q[i],
+                fo5_buffer_q_read[i],
+                &planalta_lia_filters_5_q[i],
+                PLANALTA_5KHZ_DEC_FACT_F5);
+        
+        sensor_gconfig_t* gsc = &sensor_interfaces[i]->gsensor_config[0];
+        if(gsc->sensor_type == SENSOR_TYPE_LIA){
+            // the interface/sensor alloc guarantees that it's always on this location
+            gsc->sensor_config.lia.sample_i = planalta_lia_obuffer_i[i];
+            gsc->sensor_config.lia.sample_q = planalta_lia_obuffer_q[i];
         }
-    } else {
-        for(i = 0; i < PLANALTA_5KHZ_N_ADC_CHANNELS; i++){
-            FIRDecimate(PLANALTA_5KHZ_F5_OUTPUT_SIZE,
-                    &planalta_lia_obuffer_b_i[i],
-                    fo5_buffer_i_read[i],
-                    &planalta_lia_filters_5_i[i],
-                    PLANALTA_5KHZ_DEC_FACT_F5);
-
-            FIRDecimate(PLANALTA_5KHZ_F5_OUTPUT_SIZE,
-                    &planalta_lia_obuffer_b_q[i],
-                    fo5_buffer_q_read[i],
-                    &planalta_lia_filters_5_q[i],
-                    PLANALTA_5KHZ_DEC_FACT_F5);
-        };
     }
-    
-    // TODO: tx data over CAN
-    
-    
-    ///_SI2C1IE = 0;
-    planalta_lia_obuffer_selector ^= 1;
-    //_SI2C1IE = 1;
     
 
 }

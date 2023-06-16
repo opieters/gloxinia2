@@ -239,12 +239,8 @@ fractional f3_to_f4_buffer_q_b[PLANALTA_N_ADC_CHANNELS][PLANALTA_F4_INPUT_SIZE];
 fractional f4_to_f5_buffer_i_b[PLANALTA_N_ADC_CHANNELS][PLANALTA_F5_INPUT_SIZE];
 fractional f4_to_f5_buffer_q_b[PLANALTA_N_ADC_CHANNELS][PLANALTA_F5_INPUT_SIZE];
 
-
-bool planalta_lia_obuffer_selector = 0;
-fractional planalta_lia_obuffer_a_i[PLANALTA_N_ADC_CHANNELS];
-fractional planalta_lia_obuffer_a_q[PLANALTA_N_ADC_CHANNELS];
-fractional planalta_lia_obuffer_b_i[PLANALTA_N_ADC_CHANNELS];
-fractional planalta_lia_obuffer_b_q[PLANALTA_N_ADC_CHANNELS];
+fractional planalta_lia_obuffer_i[PLANALTA_N_ADC_CHANNELS];
+fractional planalta_lia_obuffer_q[PLANALTA_N_ADC_CHANNELS];
 
 
 fractional fs_output_buffer_i;
