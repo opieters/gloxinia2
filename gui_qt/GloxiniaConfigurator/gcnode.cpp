@@ -124,7 +124,7 @@ GCNode* GCNode::fromQVariant(const QVariant data)
     if(nPlanalta != nullptr)
         return nPlanalta;
     if(nSylvatica != nullptr)
-        return nullptr;
+        return nSylvatica;
 
     return nullptr;
 }
