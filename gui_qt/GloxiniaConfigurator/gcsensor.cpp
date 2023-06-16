@@ -352,7 +352,7 @@ QString GCSensorSHT35::toString(void) const
     {
         dLabel = "SHT35";
     }
-    return "[" + QString::number(interfaceID) + ", " + QString::number(sensorID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ") - " + statusToString(status);
+    return "[" + QString::number(interfaceID) + "." + QString::number(sensorID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ") - " + statusToString(status);
 }
 
 QString GCSensorSHT35::toConfigString(void) const
@@ -602,7 +602,7 @@ QString GCSensorAPDS9306::toString(void) const
     {
         dLabel = "APDS9306 065";
     }
-    return "[" + QString::number(interfaceID) + ", " + QString::number(sensorID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ") - " + statusToString(status);
+    return "[" + QString::number(interfaceID) + "." + QString::number(sensorID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ") - " + statusToString(status);
 }
 
 QString GCSensorAPDS9306::toConfigString(void) const
@@ -772,7 +772,7 @@ QString GCSensorADC12::toString(void) const
     {
         dLabel = "ADC12";
     }
-    return "[" + QString::number(interfaceID) + QString::number(sensorID) + "] " + dLabel + " - " + statusToString(status);
+    return "[" + QString::number(interfaceID) + "." + QString::number(sensorID) + "] " + dLabel + " - " + statusToString(status);
 }
 
 QString GCSensorADC12::toConfigString(void) const
@@ -908,7 +908,7 @@ QString GCSensorADC16::toString(void) const
     {
         dLabel = "ADC16";
     }
-    return "[" + QString::number(interfaceID) + QString::number(sensorID) + "] " + dLabel + " - " + statusToString(status);
+    return "[" + QString::number(interfaceID) + "." + QString::number(sensorID) + "] " + dLabel + " - " + statusToString(status);
 }
 
 QString GCSensorADC16::toConfigString(void) const
