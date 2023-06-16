@@ -887,6 +887,16 @@ GCSensorADC16::PGAGain GCSensorADC16::getGain(void)
     return gain;
 }
 
+void GCSensorADC16::setAutoGain(bool autoGain)
+{
+    this->autoGainConfig = autoGain;
+}
+
+bool GCSensorADC16::getAutoGain(void)
+{
+    return autoGainConfig;
+}
+
 QString GCSensorADC16::toString(void) const
 {
     QString dLabel;
@@ -896,7 +906,7 @@ QString GCSensorADC16::toString(void) const
     }
     else
     {
-        dLabel = "ADC12";
+        dLabel = "ADC16";
     }
     return "[" + QString::number(interfaceID) + QString::number(sensorID) + "] " + dLabel + " - " + statusToString(status);
 }
@@ -929,10 +939,11 @@ QList<GMessage> GCSensorADC16::getConfigurationMessages()
     mData[2] = average ? 1 : 0;
     mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
 
-    mData = std::vector<quint8>(3);
+    mData = std::vector<quint8>(4);
     mData[0] = (quint8)GCSensor::sensor_class::ADC16;
     mData[1] = GCSensorADC16::Register::PGA;
-    mData[2] = average ? 1 : 0;
+    mData[2] = gain;
+    mData[3] = autoGainConfig ? 1 : 0;
     mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
 
     return mList;

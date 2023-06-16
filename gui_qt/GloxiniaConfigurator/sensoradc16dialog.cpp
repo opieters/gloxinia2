@@ -58,11 +58,15 @@ void SensorADC16Dialog::apply(GCSensorADC16* sensor)
     sensor->setMeasurementPeriod(period);
     sensor->setUseGlobalPeriodFlag(ui->gPeriodBox->isChecked());
 
+    // this is the default setting
+    sensor->setAutoGain(false);
+
     switch(ui->gainBox->currentIndex())
     {
     case 0:
         // for now, auto defaults to 1. This might change in the future
         sensor->setGain(GCSensorADC16::PGA_GAIN_1);
+        sensor->setAutoGain(true);
         break;
     case 1:
         sensor->setGain(GCSensorADC16::PGA_GAIN_1);
@@ -90,6 +94,7 @@ void SensorADC16Dialog::apply(GCSensorADC16* sensor)
         break;
     default:
         sensor->setGain(GCSensorADC16::PGA_GAIN_1);
+        break;
     }
 
     hide();
@@ -114,6 +119,9 @@ void SensorADC16Dialog::updateUISettings(GCSensorADC16* sensor)
     }
 
     ui->gainBox->setCurrentIndex(sensor->getGain()+1); // +1 to skip "auto"
+
+    if(sensor->getAutoGain())
+        ui->gainBox->setCurrentIndex(0);
 
     useGlobalPeriodToggle();
 }

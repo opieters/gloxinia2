@@ -304,6 +304,9 @@ public:
     void setGain(PGAGain gain);
     PGAGain getGain(void);
 
+    void setAutoGain(bool autoGain);
+    bool getAutoGain(void);
+
     QString toString(void) const override;
     QString toConfigString(void) const override;
     bool fromConfigString(const QStringList &config) override;
@@ -313,7 +316,7 @@ public:
 
 protected:
     bool average;
-
+    bool autoGainConfig;
     PGAGain gain;
 };
 
