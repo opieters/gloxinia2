@@ -53,9 +53,9 @@ sensor_adc16_hw_config_t adc16_config = {
     .adc16_buffer_size = PLANALTA_ADC16_BUFFER_LENGTH,
     .rx_callback = adc_rx_callback_5khz,
     .spi_module = SPI_MODULE_SELECTOR_2,
-    .rst_pin = PIN_INIT(B, 15),
+    .rst_pin = PIN_INIT(B, 3),
     .cs_pin = PIN_INIT(E, 5),
-    .conv_pin = PIN_INIT(F, 3)}
+    .conv_pin = PIN_INIT(E, 7)}
 ;
 
 sensor_interface_t sensor_interface1;
@@ -83,18 +83,18 @@ const uint8_t n_sensor_interfaces = N_SENSOR_INTERFACES;
 
 void planalta_clock_init(void)
 {
-    // FRCDIV FRC/1; PLLPRE 2; DOZE 1:8; PLLPOST 1:4; DOZEN disabled; ROI disabled; 
-    CLKDIV = 0x3040;
+    // FRCDIV FRC/1; PLLPRE 2; DOZE 1:8; PLLPOST 1:2; DOZEN disabled; ROI disabled; 
+    CLKDIV = 0x3000;
     // TUN Center frequency; 
     OSCTUN = 0x00;
     // ROON disabled; ROSEL FOSC; RODIV 0; ROSSLP disabled; 
     REFOCON = 0x00;
-    // PLLDIV 50; 
-    PLLFBD = 0x32;
-    // ENAPLL disabled; APLLPOST 1:256; FRCSEL FRC; SELACLK Auxiliary Oscillators; ASRCSEL Auxiliary Oscillator; AOSCMD AUX; APLLPRE 1:1; 
-    ACLKCON3 = 0x2200;
-    // APLLDIV 15; 
-    ACLKDIV3 = 0x00;
+    // PLLDIV 62; 
+    PLLFBD = 0x3E;
+    // ENAPLL disabled; APLLPOST 1:256; FRCSEL FRC; SELACLK Auxiliary Oscillators; ASRCSEL Auxiliary Oscillator; AOSCMD AUX; APLLPRE 1:2; 
+    ACLKCON3 = 0x2201;
+    // APLLDIV 24; 
+    ACLKDIV3 = 0x07;
     // AD1MD enabled; PWMMD enabled; T3MD enabled; T4MD enabled; T1MD enabled; U2MD enabled; T2MD enabled; U1MD enabled; QEI1MD enabled; SPI2MD enabled; SPI1MD enabled; C2MD enabled; C1MD enabled; DCIMD enabled; T5MD enabled; I2C1MD enabled; 
     PMD1 = 0x00;
     // OC5MD enabled; OC6MD enabled; OC7MD enabled; OC8MD enabled; OC1MD enabled; IC2MD enabled; OC2MD enabled; IC1MD enabled; OC3MD enabled; OC4MD enabled; IC6MD enabled; IC7MD enabled; IC5MD enabled; IC8MD enabled; IC4MD enabled; IC3MD enabled; 
@@ -109,42 +109,61 @@ void planalta_clock_init(void)
     PMD6 = 0x00;
     // DMA8MD enabled; DMA4MD enabled; DMA12MD enabled; DMA0MD enabled; 
     PMD7 = 0x00;
-    // CF no clock failure; NOSC FRCDIV; LPOSCEN disabled; CLKLOCK unlocked; OSWEN Switch is Complete; IOLOCK not-active; 
-    __builtin_write_OSCCONH((uint8_t) (0x07));
-    __builtin_write_OSCCONL((uint8_t) (0x00));
+    // CF no clock failure; NOSC PRIPLL; LPOSCEN disabled; CLKLOCK unlocked; OSWEN Switch is Complete; IOLOCK not-active; 
+    __builtin_write_OSCCONH((uint8_t) (0x03));
+    __builtin_write_OSCCONL((uint8_t) (0x01));
+    // Wait for Clock switch to occur
+    while( OSCCONbits.COSC != 0b011 );
+    while (OSCCONbits.LOCK != 1);
 }
 
 
 void planalta_init_pins(void){
-   // I2C configuration
+    // I2C1
     _ODCG2 = 1; // configure I2C pins as open drain output
     _ODCG3 = 1; // configure I2C pins as open drain output
     _TRISG2 = 0;
     _TRISG3 = 0;
-    _ODCD0 = 1; // nINT
-    _TRISD0 = 0;
-    _RD0 = 1;
+    _ODCF6 = 1; // nINT
+    _TRISF6 = 0;
+    _RF6 = 1;
     _CNPUG2 = 1;
     _CNPUG3 = 1;
-    _CNPUD0 = 1;
+    _CNPUF6 = 1;
+    
+    // I2C2
+    _ODCF4 = 1; // configure I2C pins as open drain output
+    _ODCF5 = 1; // configure I2C pins as open drain output
+    _TRISF4 = 0;
+    _TRISF5 = 0;
+    //_ODCE6 = 1; // nINT
+    _ANSE6 = 0;
+    _TRISE6 = 0;
+    _RE6 = 1;
+    _CNPUF4 = 1;
+    _CNPUF5 = 1;
+    _CNPUE6 = 1;*/
     
     // UART
-    _TRISD3 = 1; // U2RX
-    _U2RXR = 67;            
-    _TRISD2 = 0; // RTS
-    _RP66R = _RPOUT_U2RTS;
-    _TRISD1 = 0; // U2TX
-    _RP65R = _RPOUT_U2TX;
-    _TRISD4 = 1; // CTS
-    _U2CTSR = 68;
+    _TRISD4 = 1; // U2RX
+    _U2RXR = 68;            
+    _TRISD1 = 0; // RTS
+    _RP65R = _RPOUT_U2RTS;
+    _TRISD3 = 0; // U2TX
+    _RP67R = _RPOUT_U2TX;
+    _TRISD2 = 1; // CTS
+    _U2CTSR = 66;
     
-    // SPI for ADC
-    _TRISG6 = 0; // SCK2 is output
+    // SPI3 for ADC
+    /*_TRISG6 = 0; // SCK3 is output
     _ANSG6 = 0;
+    _RP118R = _RPOUT_SCK3;
     _TRISG7 = 1; // SDI2 is input
     _ANSG7 = 0;
+    _SDI3R = 119;
     _TRISG8 = 0; // SDO2 is output
     _ANSG8 = 0;
+    _RP120R = _RPOUT_SDO3;
     _TRISE5 = 0;     // CS pin
     _ANSE5 = 0;
     _RP85R = _RPOUT_OC4;
@@ -158,22 +177,34 @@ void planalta_init_pins(void){
     _ANSB3 = 0;     // nRESET pin
     _TRISB3 = 0;
     
-    // SPI to PGA
-    _ANSD6 = 0;
+    // SPI1 to PGA
+    _ANSD6 = 0;           // SCK
     _TRISD6 = 0;
-    _RP69R = _RPOUT_SDO1;
-    _TRISD5 = 0;
     _RP70R = _RPOUT_SCK1;
+    _TRISD5 = 0;          // SDO
+    _RP69R = _RPOUT_SDO1;
+    _ANSB14 = 0;          // nCS1
+    _TRISB14 = 0;
+    _RB14 = 1;
+    _ANSB2 = 0;           // nCS2
+    _TRISB2 = 0;
+    _RB2 = 1;
+    _ANSB0 = 0;           // nCS3
+    _TRISB0 = 0;
+    _RB0 = 1;
+    _ANSB1 = 0;           // nCS4
+    _TRISB1 = 0;
+    _RB1 = 1;
     
     // drive signals
     _TRISF2 = 0;
     _RP98R = _RPOUT_OC2;   // DRV1 signal
     _TRISF3 = 0;
     _RP99R = _RPOUT_OC2;   // DRV2 signal
-    _TRISF4 = 0;
-    _RP101R = _RPOUT_OC2;  // DRV3 signal
-    _TRISF5 = 0;
-    _RP100R = _RPOUT_OC2;  // DRV4 signal
+    _TRISE2 = 0;
+    _RP82R = _RPOUT_OC2;  // DRV3 signal
+    _TRISE4 = 0;
+    _RP84R = _RPOUT_OC2;  // DRV4 signal
     
     // filter selection
     _ANSB6 = 0;
@@ -183,55 +214,60 @@ void planalta_init_pins(void){
     _TRISB7 = 0;
     _LATB7 = 0;
     
+    // buffer enable/disable
+    _TRISF1 = 0;        // SD1
+    _ODCF1 = 1;
+    _RF1 = 0;           // disable by default
+    _ANSG9 = 0;         // nSD2
+    _TRISG9 = 0;       
+    _RG9 = 0;          // disable by default
+    
+    // 3.3V ref to PGA
+    _ANSB5 = 0;
+    _TRISB5 = 0;
+    _RB5 = 1;
+    
+    // CAN configuration
+    _ANSE0 = 0; // CAN1 TX
+    _TRISE0 = 0;
+    _RP80R = _RPOUT_C1TX;
+    _TRISF0 = 1; // CAN1 RX
+    _C1RXR = 96;
+    _ANSB8 = 0; // CAN_C1
+    _TRISB8 = 1;
+    _ANSB9 = 0; // CAN_C2
+    _TRISB9 = 1;
+    _ANSD7 = 0; // TERM
+    _TRISD7 = 0;
+    _RD7 = 1;
+    
+    // VDDA LDO
+    _ANSB13 = 0;
+    _TRISB13 = 0;
+    _RB13 = 1;
+    
+    // RTCC
+    _TRISD8 = 1;
+    
+    // Blinky
+    _TRISD10 = 0;
+    _RD10 = 1;
+    
+    // power supply selection
+    _TRISD11 = 0; // digital supply
+    _RD11 = 0;
+    _TRISD0 = 0; // analog supply
+    _RD0 = 0;
+    
     // 4V LDO
     _ANSE1 = 0;
     _TRISE1 = 0;
     _RE1 = 1;
     
-    // blinky
-    _TRISF0 = 0;
-    _LATF0 = 0;
-    
     // 3.3V reference
-    _ANSE2 = 0;
-    _TRISE2 = 0;
-    _RE2 = 1;
-    
-    // 3.3V ref to PGA
-    _ANSE4 = 0;
-    _TRISE4 = 0;
-    _RE4 = 1;
-    
-    // address selection
-    _ANSB15 = 0;    // A0
-    _TRISB15 = 1;
-    _CNPUB15 = 1;
-    _ANSB10 = 0;    // A1
-    _TRISB10 = 1;
-    _CNPUB10 = 1;
-    _ANSB9 = 0;     // A2
-    _TRISB9 = 1;
-    _CNPUB9 = 1;
-    _ANSB12 = 0;    // A3
-    _TRISB12 = 1;
-    _CNPUB12 = 1;
-    _TRISF6 = 1;    // A4
-    _CNPUF6 = 1;
-    _TRISD8 = 1;    // A5
-    _CNPUD8 = 1;
-    _TRISD9 = 1;    // A6
-    _CNPUD9 = 1;
-    _TRISD10 = 1;   // A7
-    _CNPUD10 = 1;
-    
-    // PGA enable/disable
-    /*_TRISF1 = 0;        // SD1
-    _ODCF1 = 1;
-    _RF1 = 0;           // disable by default
-    
-    _TRISD11 = 0;       // SD2
-    _ODCD11 = 1;
-    _RD11 = 0;          // disable by default*/
+    _ANSE3 = 0;
+    _TRISE3 = 0;
+    _RE3 = 1;
 }
 
 
