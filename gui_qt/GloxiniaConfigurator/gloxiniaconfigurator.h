@@ -13,7 +13,6 @@
 #include <sensordialog.h>
 #include <sensormeasurementdialog.h>
 #include <globalmeasurementpolicydialog.h>
-#include <sensoranaloguedialog.h>
 #include <sensorapds9306_065dialog.h>
 #include <sensorsht35dialog.h>
 #include <sensoradc12dialog.h>
@@ -33,6 +32,7 @@
 #include <QTreeView>
 #include <QHBoxLayout>
 #include <gdevicecommunication.h>
+#include <sensorliadialog.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -231,11 +231,11 @@ private:
      * Configuration screens for sensors
      */
     GlobalMeasurementPolicyDialog* globalMeasurementPolicyDialog;
-    SensorAnalogueDialog *sensorAnalogueDialog;
     SensorAPDS9306_065Dialog *sensorAPDS9306_065Dialog;
     SensorSHT35Dialog *sensorSHT35Dialog;
     SensorADC12Dialog *sensorADC12Dialog;
     SensorADC16Dialog *sensorADC16Dialog;
+    SensorLIADialog *sensorLIADialog;
 
     /*
      * The file stores the sensor data
