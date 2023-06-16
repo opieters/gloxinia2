@@ -320,10 +320,28 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA13Interrupt ( void )
                 );
         m->status = M_RX_FROM_UART;
         
-        // log message to central
-        //send_message_uart(m);
-        
-        if ((m->identifier == controller_address) || (m->identifier == ADDRESS_GATEWAY))
+        // case 1: broadcast request
+        if((m->identifier == ADDRESS_GATEWAY) && (m->request_message_bit))
+        {
+            send_message_uart(m);
+            
+            // schedule processing task
+            task_t task = uart_rx_tasks[uart_rx_idx];
+            task.cb =(void*) message_process;
+            task.data = (void*) m;
+            push_queued_task(task);
+            
+            uart_rx_idx = (uart_rx_idx+1) % UART_FIFO_RX_BUFFER_SIZE;
+            
+            // forward this message over CAN (this needs to be done in main loop
+            // since EDS space is written during send_message_can call)
+            task = uart_rx_tasks[uart_rx_idx];
+            task.cb =(void*) send_message_can;
+            task.data = (void*) m;
+            push_queued_task(task);
+        }
+        // case 2: message for this node
+        else if (m->identifier == controller_address)
         {
             send_message_uart(m);
             
@@ -333,18 +351,17 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA13Interrupt ( void )
             task.data = (void*) m;
             push_queued_task(task);
         }
+        // case 3: message for other node
         else
         {
             // forward this message over CAN (this needs to be done in main loop
             // since EDS space is written during send_message_can call)
             task_t task = uart_rx_tasks[uart_rx_idx];
             task.cb =(void*) send_message_can;
-            task.data = (void*) &uart_rx_queue[uart_rx_idx];
+            task.data = (void*) m;
             push_queued_task(task);
         }
         
-        
-
         uart_rx_idx = (uart_rx_idx+1) % UART_FIFO_RX_BUFFER_SIZE;
         
         // restore defaults

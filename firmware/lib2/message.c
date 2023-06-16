@@ -301,36 +301,24 @@ static void cmd_update_address(const message_t *m) {
 }
 
 static void cmd_discovery(const message_t *m) {
-    if (m->request_message_bit && (m->identifier == ADDRESS_GATEWAY)) {
+    if (m->request_message_bit) {
         if (controller_address == ADDRESS_UNSET) {
             address_find_non_reserved();
             return;
         } else {
-            // forward the message to the other nodes
-            if (m->status == M_RX_FROM_UART) {
-                can_send_fmessage_any_ch(m);
-            }
+            // send message back to gateway
+            message_t m_discovery;
+            message_init(&m_discovery,
+                    controller_address,
+                    MESSAGE_NO_REQUEST,
+                    M_DISCOVERY,
+                    NO_INTERFACE_ID,
+                    NO_SENSOR_ID,
+                    NULL,
+                    0);
+
+            message_send(&m_discovery);
         }
-    }
-    
-    //TODO: check this if!!
-    if (m->request_message_bit && (m->identifier == ADDRESS_GATEWAY) && (controller_address != ADDRESS_UNSET)) {
-        // send message back to gateway
-        message_t m_discovery;
-        message_init(&m_discovery,
-                controller_address,
-                MESSAGE_NO_REQUEST,
-                M_DISCOVERY,
-                NO_INTERFACE_ID,
-                NO_SENSOR_ID,
-                NULL,
-                0);
-
-        message_send(&m_discovery);
-    }
-
-    if (!m->request_message_bit) {
-        send_message_uart(m);
     }
 }
 
@@ -389,14 +377,11 @@ static void cmd_sensor_config(const message_t *m) {
         } while (length > 0);
     } else {
         sensor_set_config_from_buffer(m->interface_id, m->sensor_id, &m->data[0], m->length);
-    }
-    
+        
 #ifdef __DICIO__
-    if (!m->request_message_bit) {
         dicio_process_node_config(m);
-    }
 #endif
-    
+    }
 }
 
 static void cmd_sensor_config_end(const message_t* m)
