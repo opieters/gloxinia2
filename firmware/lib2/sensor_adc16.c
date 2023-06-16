@@ -87,9 +87,10 @@ sensor_status_t sensor_adc16_config(struct sensor_gconfig_s *gsc, const uint8_t 
             }
             break;
         case sensor_adc16_gloxinia_register_pga:
-            if((config->pga == NULL) || (length != 2)){ return SENSOR_STATUS_ERROR; }
+            if((config->pga == NULL) || (length != 3)){ return SENSOR_STATUS_ERROR; }
             
             config->pga->gain = buffer[1];
+            config->auto_gain_setting = buffer[2];
             
             if(!validate_adc16_config(config)){
                 return SENSOR_STATUS_ERROR;

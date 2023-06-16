@@ -214,6 +214,7 @@ typedef struct
  */
 typedef struct {    
     bool average;
+    bool auto_gain_setting;
     
     fractional result;
     uint16_t count;
