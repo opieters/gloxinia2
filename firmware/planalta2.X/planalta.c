@@ -270,10 +270,30 @@ void planalta_init_pins(void){
     _RE3 = 1;
 }
 
+void planalta_interface_init(void)
+{
+    for(int i = 0; i < N_SENSOR_INTERFACES; i++)
+    {
+        sensor_interfaces[i]->interface_id = i;
+        for(int j = 0; j < SENSOR_INTERFACE_MAX_SENSORS; j++)
+        {
+            sensor_interfaces[i]->gsensor_config[j].sensor_id = j;
+            sensor_interfaces[i]->gsensor_config[j].interface = sensor_interfaces[i];
+            //sensor_interfaces[i]->gsensor_config[j].measure = NULL;
+            sensor_interfaces[i]->gsensor_config[j].sensor_type = SENSOR_NOT_SET;
+            sensor_interfaces[i]->gsensor_config[j].status = SENSOR_STATUS_INACTIVE;
+        }
+    }
+}
 
 
 void planalta_init(void){
+    
+    planalta_interface_init();
+    
     planalta_init_pins();
+    
+    planalta_clock_init();
     
     __builtin_enable_interrupts();
     
@@ -286,6 +306,8 @@ void planalta_init(void){
 
     i2c1_init(&planalta_i2c1_config);
     UART_DEBUG_PRINT("Initialised I2C1.");
+    
+    while(1);
 
     i2c2_init(&planalta_i2c2_config);
     UART_DEBUG_PRINT("Initialised I2C2.");
