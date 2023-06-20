@@ -26,6 +26,8 @@ typedef enum
     M_SENSOR_ERROR = 0x11,
     M_SENSOR_DATA = 0x12,
     M_SENSOR_CONFIG = 0x13, // configure sensors or read configuration
+    M_CONFIG_DONE_START_READOUT = 0x17,
+    M_CONFIG_DONE_FINISHED_READOUT = 0x18,
     M_SENSOR_START = 0x14,
     M_SENSOR_STOP = 0x15,
     M_SENSOR_CONFIG_END = 0x16, // ends burst of configuration data
@@ -114,6 +116,23 @@ extern "C"
 
     void send_message_uart(const message_t *m);
     void send_message_can(const message_t *m);
+    
+    // internal functions
+    void cmd_request_address_available(const message_t *m);
+    void cmd_address_taken(const message_t *m);
+    void cmd_update_address(const message_t *m);
+    void cmd_discovery(const message_t *m);
+    void cmd_node_info(const message_t *m);
+    void cmd_sensor_config(const message_t *m);
+    void cmd_sensor_status(const message_t *m);
+    void cmd_sensor_error(const message_t *m);
+    void cmd_sensor_data(const message_t *m);
+    void cmd_sensor_start(const message_t* m);
+    void cmd_sensor_stop(const message_t* m);
+    void cmd_sensor_config_end(const message_t *m);
+    void cmd_data_clear(const message_t* m);
+    void cmd_data_read(const message_t* m);
+    void cmd_data_write(const message_t* m);
 
 #ifdef __cplusplus
 }
