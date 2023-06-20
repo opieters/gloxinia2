@@ -9,6 +9,7 @@
 #include <fir_common.h>
 #include "planalta_definitions.h"
 #include "planalta_filters.h"
+#include <libpic30.h>
 
 i2c_config_t planalta_i2c1_config =  {
     .i2c_address = 0x0,
@@ -142,7 +143,7 @@ void planalta_init_pins(void){
     _RE6 = 1;
     _CNPUF4 = 1;
     _CNPUF5 = 1;
-    _CNPUE6 = 1;*/
+    _CNPUE6 = 1;
     
     // UART
     _TRISD4 = 1; // U2RX
@@ -155,7 +156,7 @@ void planalta_init_pins(void){
     _U2CTSR = 66;
     
     // SPI3 for ADC
-    /*_TRISG6 = 0; // SCK3 is output
+    _TRISG6 = 0; // SCK3 is output
     _ANSG6 = 0;
     _RP118R = _RPOUT_SCK3;
     _TRISG7 = 1; // SDI2 is input
@@ -289,11 +290,15 @@ void planalta_interface_init(void)
 
 void planalta_init(void){
     
+    CORCONbits.VAR = 0;
+    
+    planalta_clock_init();
+    
     planalta_interface_init();
     
     planalta_init_pins();
     
-    planalta_clock_init();
+   
     
     __builtin_enable_interrupts();
     
@@ -306,8 +311,6 @@ void planalta_init(void){
 
     i2c1_init(&planalta_i2c1_config);
     UART_DEBUG_PRINT("Initialised I2C1.");
-    
-    while(1);
 
     i2c2_init(&planalta_i2c2_config);
     UART_DEBUG_PRINT("Initialised I2C2.");
