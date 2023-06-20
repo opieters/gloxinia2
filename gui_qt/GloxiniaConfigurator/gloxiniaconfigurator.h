@@ -202,6 +202,8 @@ private:
     void processBootSelfVerify(const GMessage&m);
     void processBootGetMemoryAddressRangeCommand(const GMessage&m);
     void processBootReady(const GMessage&m);
+    void processConfigDoneStartReadout(const GMessage&m);
+    void processConfigDoneFinishedReadout(const GMessage&m);
 
     /*
      * Dialog screen to edit the system settings

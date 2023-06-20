@@ -57,6 +57,12 @@ void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
         case GMessage::Code::BOOT_READY:
             processBootReady(m);
             break;
+        case GMessage::Code::CONFIG_DONE_START_READOUT:
+            processConfigDoneStartReadout(m);
+            break;
+        case GMessage::Code::CONFIG_DONE_FINISHED_READOUT:
+            processConfigDoneFinishedReadout(m);
+            break;
         default:
             break;
         }
@@ -365,4 +371,15 @@ bool GloxiniaConfigurator::handleBootMessageStatus(const GMessage &m){
             break;
     }
     return false;
+}
+
+void GloxiniaConfigurator::processConfigDoneStartReadout(const GMessage&m)
+{
+    // we don't need to do anything for this message
+}
+
+void GloxiniaConfigurator::processConfigDoneFinishedReadout(const GMessage&m)
+{
+    GMessage start_measurements(GMessage::Code::SENSOR_START, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
+    emit devCom->queueMessage(start_measurements);
 }
