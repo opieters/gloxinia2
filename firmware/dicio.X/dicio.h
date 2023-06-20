@@ -8,8 +8,9 @@
 
 #define DICIO_CONFIG_ADDRESS 0x00000000U
 #define DICIO_NODE_CONFIG_START_ADDRESS 0x00000020U
-#define DICIO_DATA_START_ADDRESS 0x00000000U
 #define DICIO_MAX_N_NODES 50U
+#define DICIO_MAX_N_INTERFACES 8U
+#define DICIO_DATA_START_ADDRESS ( DICIO_NODE_CONFIG_START_ADDRESS + DICIO_MAX_N_NODES * ( 1 + DICIO_MAX_N_INTERFACES ) )
 
 #define ID_UART_OVERFLOW_SCHEDULE 2
 
@@ -40,6 +41,33 @@ typedef struct
   uint8_t v_sw_u;
   uint8_t v_sw_l;
 } node_config_t;
+
+/** Data storage format 
+ * 
+ * The memory layout is specified here. SD cards use sector sizes of 512 bytes,
+ * so each configuration part is also stored on a separate page for convenience.
+ *               
+ * DICIO_CONFIG_ADDRESS
+ *     used to store configuration data about this specific dicio node
+ *     and information about connected nodes and sensor data.
+ * 
+ *     ! Important ! There is no specific record on the total number of pages
+ *     written. Each page is formatted such that empty pages are not possible.
+ *     Consequently, the system will need to fetch each page to know the data
+ *     length. 
+ * 
+ * DICIO_NODE_CONFIG_START_ADDRESS
+ *     used to store node configuration data. Each node has a fixed number of
+ *     pages allocated to it. The number of pages is determined by the number
+ *     of interfaces the node has. The first page contains the node ID and
+ *     the number of interfaces. The following pages contain the interface
+ *     configuration data. At most DICIO_MAX_N_INTERFACES interfaces are
+ *     supported.
+ * 
+ * DICIO_DATA_START_ADDRESS
+ *     used to store data from the nodes.
+ * 
+*/
 
 #ifdef __cplusplus
 extern "C"
@@ -141,6 +169,11 @@ extern "C"
    * it for later use.
    */
   void dicio_process_node_config(const message_t *m);
+  
+  void dicio_config_node_config_readout(void *data);
+  void cmd_config_done_start_readout(const message_t* m);
+  
+  void dicio_storage_message_process(const message_t* m);
 
 #ifdef __cplusplus
 }

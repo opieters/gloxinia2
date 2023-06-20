@@ -2,6 +2,9 @@
 #include <address.h>
 #include <libpic30.h>
 #include "message.h"
+#ifdef __DICIO__
+#include "../dicio.X/dicio.h"
+#endif
 
 __eds__ uint16_t ecan_message_buffer[NUM_OF_ECAN_BUFFERS][ECAN_BUFFER_SIZE] __attribute__((space(dma), eds, aligned(NUM_OF_ECAN_BUFFERS * ECAN_BUFFER_SIZE * sizeof(uint16_t))));
 
@@ -585,10 +588,14 @@ void __attribute__((interrupt, auto_psv)) _C1Interrupt(void)
             {
                  message_process(&m);
             } 
-            //else // special case: the node with address ADDRESS_SEARCH_START needs to process all messages
-            //{
-            //    message_process(&m);
-            //}
+            
+#ifdef __DICIO__
+            // dicio also needs to process all other messages for data storage and config saving
+            else // special case: the node with address ADDRESS_SEARCH_START needs to process all messages
+            {
+                dicio_storage_message_process(&m);
+            }
+#endif
 
             // clear buffer full interrupt bit
             if (C1FIFObits.FNRB > 15)

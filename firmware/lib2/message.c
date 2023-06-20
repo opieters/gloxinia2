@@ -12,24 +12,7 @@
 #endif
 #include <libpic30.h>
 
-// internal functions
-static void cmd_request_address_available(const message_t *m);
-static void cmd_address_taken(const message_t *m);
-static void cmd_update_address(const message_t *m);
-static void cmd_discovery(const message_t *m);
-static void cmd_node_info(const message_t *m);
-static void cmd_sensor_config(const message_t *m);
-static void cmd_sensor_status(const message_t *m);
-static void cmd_sensor_error(const message_t *m);
-static void cmd_sensor_data(const message_t *m);
-static void cmd_sensor_start(const message_t* m);
-static void cmd_sensor_stop(const message_t* m);
-static void cmd_sensor_config_end(const message_t *m);
-static void cmd_data_clear(const message_t* m);
-static void cmd_data_read(const message_t* m);
-static void cmd_data_write(const message_t* m);
-
-static void address_get_task(void *data);
+void address_get_task(void *data);
 
 static message_t m_error;
 static uint8_t m_error_data[2];
@@ -201,18 +184,6 @@ void message_process(const message_t *m) {
 
             break;
         }
-        case M_DATA_CLEAR:
-            UART_DEBUG_PRINT("DATA_CLEAR");
-            cmd_data_clear(m);
-            break;
-        case M_DATA_READ:
-            UART_DEBUG_PRINT("DATA_READ");
-            cmd_data_read(m);
-            break;
-        case M_DATA_WRITE:
-            UART_DEBUG_PRINT("DATA_WRITE");
-            cmd_data_write(m);
-            break;
         // these messages do not trigger an action
         case M_DATA_BURST_START:
             UART_DEBUG_PRINT("DATA_BURST_STOP");
@@ -226,12 +197,21 @@ void message_process(const message_t *m) {
         case M_HELLO:
             UART_DEBUG_PRINT("CAN_HELLO");
             break;
+        case M_CONFIG_DONE_START_READOUT:
+            UART_DEBUG_PRINT("M_CONFIG_DONE_START_READOUT");
+            #ifdef __DICIO__
+            cmd_config_done_start_readout(m);
+            #endif  
+            break;
+        case M_CONFIG_DONE_FINISHED_READOUT:
+            UART_DEBUG_PRINT("M_CONFIG_DONE_FINISHED_READOUT");
+            break;
         default:
             break;
     }
 }
 
-static void cmd_request_address_available(const message_t *m) {
+void cmd_request_address_available(const message_t *m) {
     if (m->identifier == controller_address) {
         message_t rm;
         message_init(&rm,
@@ -249,7 +229,7 @@ static void cmd_request_address_available(const message_t *m) {
     }
 }
 
-static void cmd_address_taken(const message_t *m) {
+void cmd_address_taken(const message_t *m) {
     if (controller_address == m->identifier) {
         controller_address = ADDRESS_UNSET;
 
@@ -279,11 +259,11 @@ static void cmd_address_taken(const message_t *m) {
     }
 }
 
-static void address_get_task(void *data) {
+void address_get_task(void *data) {
     address_find_non_reserved();
 }
 
-static void cmd_update_address(const message_t *m) {
+void cmd_update_address(const message_t *m) {
     if ((m->identifier == controller_address) && (m->length == 2)) {
         address_set_and_check_available((m->data[0] << 8) | m->data[1]);
     }
@@ -300,7 +280,7 @@ static void cmd_update_address(const message_t *m) {
     message_send(&m_address);
 }
 
-static void cmd_discovery(const message_t *m) {
+void cmd_discovery(const message_t *m) {
     if (m->request_message_bit) {
         if (controller_address == ADDRESS_UNSET) {
             address_find_non_reserved();
@@ -322,7 +302,7 @@ static void cmd_discovery(const message_t *m) {
     }
 }
 
-static void cmd_node_info(const message_t *m) {
+void cmd_node_info(const message_t *m) {
     if ((m->identifier != controller_address) && (!m->request_message_bit)) {
         return;
     }
@@ -354,7 +334,7 @@ static void cmd_node_info(const message_t *m) {
     message_send(&i);
 }
 
-static void cmd_sensor_config(const message_t *m) {
+void cmd_sensor_config(const message_t *m) {
     if (m->request_message_bit) {
         // send config
         uint8_t reg = 0, length = 0;
@@ -376,15 +356,21 @@ static void cmd_sensor_config(const message_t *m) {
             }
         } while (length > 0);
     } else {
-        sensor_set_config_from_buffer(m->interface_id, m->sensor_id, &m->data[0], m->length);
+        
         
 #ifdef __DICIO__
+        if(m->identifier == controller_address)
+        {
+            sensor_set_config_from_buffer(m->interface_id, m->sensor_id, &m->data[0], m->length);
+        }
         dicio_process_node_config(m);
+#else
+        sensor_set_config_from_buffer(m->interface_id, m->sensor_id, &m->data[0], m->length);
 #endif
     }
 }
 
-static void cmd_sensor_config_end(const message_t* m)
+void cmd_sensor_config_end(const message_t* m)
 {
     #ifdef __DICIO__
     if (!m->request_message_bit) {
@@ -393,7 +379,7 @@ static void cmd_sensor_config_end(const message_t* m)
     #endif
 }
 
-static void cmd_sensor_status(const message_t *m) {
+void cmd_sensor_status(const message_t *m) {
     if (m->request_message_bit) {
         sensor_send_status(m->interface_id, m->sensor_id);
     } else {
@@ -401,49 +387,18 @@ static void cmd_sensor_status(const message_t *m) {
     }
 }
 
-static void cmd_sensor_error(const message_t *m) {
+void cmd_sensor_error(const message_t *m) {
 }
 
-static void cmd_sensor_data(const message_t *m) {
+void cmd_sensor_data(const message_t *m) {
 }
 
-static void cmd_sensor_start(const message_t* m) {
+void cmd_sensor_start(const message_t* m) {
     sensor_start();
 }
 
-static void cmd_sensor_stop(const message_t* m) {
+void cmd_sensor_stop(const message_t* m) {
     sensor_stop();
 }
 
-static void cmd_data_clear(const message_t* m) {
-#ifdef __DICIO__
-    if (m->request_message_bit) {
-        dicio_clear_data();
-    }
-#endif
-}
 
-static void cmd_data_read(const message_t* m) {
-#ifdef __DICIO__
-    if (m->request_message_bit) {
-        dicio_dump_sdcard_data(DICIO_DATA_START_ADDRESS, SD_SPI_GetSectorCount());
-    } else {
-        if(m->length == 8)
-        {
-            uint32_t sector_start = 0, sector_stop = 0;
-            for(int i = 0; i < 4; i++)
-            {
-                sector_start = (sector_start << 8) | m->data[i];
-                sector_stop = (sector_stop << 8) | m->data[i+4];
-            }
-            dicio_dump_sdcard_data(sector_start, sector_stop);
-        }
-    }
-#endif
-}
-
-static void cmd_data_write(const message_t* m) {
-#ifdef __DICIO__
-    // TODO
-#endif
-}

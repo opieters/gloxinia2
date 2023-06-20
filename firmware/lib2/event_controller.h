@@ -20,6 +20,10 @@
 /// @brief Reserved ID for the schedule that gets the address.
 #define ID_GET_ADDRESS 2
 
+/// @brief Reserved ID for the schedule that stored the node config data to the
+/// SD card.
+#define ID_DICIO_NODE_CONFIG_READOUT 3
+
 /// @brief The frequency of the event controller in Hz.
 #define EVENT_CONTROLLER_FREQUENCY 10
 
