@@ -91,20 +91,20 @@ void uart_init(uint32_t baudrate)
     // update interrupt priority
     _DMA12IP = 7;
     
-    DMA13CONbits.DIR = 0;     // RAM-to-Peripheral
-    DMA13CONbits.SIZE = 1;    // byte transfer mode
-    DMA13CONbits.MODE = 0b01; // One-Shot, Ping-Pong modes disabled
-    DMA13CNT = ARRAY_LENGTH(uart_dma_rx_message_data) - 1;             // number of  DMA requests
-    DMA13REQ = 0b00011110;        // Select UART2 transmitter
-    DMA13PAD = (volatile unsigned int)&U2RXREG;
-    DMA13STAL = __builtin_dmaoffset(uart_dma_rx_message_data);
-    DMA13STAH = __builtin_dmapage(uart_dma_rx_message_data);
-    DMA13CONbits.CHEN = 1;
-    _DMA13IF = 0; // Clear DMA Interrupt Flag
-    _DMA13IE = 1; // Enable DMA interrupt
+    DMA11CONbits.DIR = 0;     // RAM-to-Peripheral
+    DMA11CONbits.SIZE = 1;    // byte transfer mode
+    DMA11CONbits.MODE = 0b01; // One-Shot, Ping-Pong modes disabled
+    DMA11CNT = ARRAY_LENGTH(uart_dma_rx_message_data) - 1;             // number of  DMA requests
+    DMA11REQ = 0b00011110;        // Select UART2 transmitter
+    DMA11PAD = (volatile unsigned int)&U2RXREG;
+    DMA11STAL = __builtin_dmaoffset(uart_dma_rx_message_data);
+    DMA11STAH = __builtin_dmapage(uart_dma_rx_message_data);
+    DMA11CONbits.CHEN = 1;
+    _DMA11IF = 0; // Clear DMA Interrupt Flag
+    _DMA11IE = 1; // Enable DMA interrupt
     
     // update interrupt priority
-    _DMA13IP = 7;
+    _DMA11IP = 7;
 
     // RX buffer
     for (i = 0; i < UART_FIFO_RX_BUFFER_SIZE; i++)
@@ -301,7 +301,7 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA12Interrupt ( void )
     _DMA12IF = 0; // Clear the DMA12 Interrupt Flag
 }
 
-void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA13Interrupt ( void )
+void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA11Interrupt ( void )
 {   
     uart_connection_active = true;
     
@@ -365,13 +365,13 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA13Interrupt ( void )
         uart_rx_idx = (uart_rx_idx+1) % UART_FIFO_RX_BUFFER_SIZE;
         
         // restore defaults
-        DMA13CNT = ARRAY_LENGTH(uart_dma_rx_message_data)-1;
-        DMA13STAL = (unsigned int) &uart_dma_rx_message_data[0];
+        DMA11CNT = ARRAY_LENGTH(uart_dma_rx_message_data)-1;
+        DMA11STAL = (unsigned int) &uart_dma_rx_message_data[0];
     } else {
                 // search for start condition
         for(int i = 1; i < ARRAY_LENGTH(uart_dma_rx_message_data); i++){
             if(uart_dma_rx_message_data[i] == UART_CMD_START){
-                DMA13CNT = i - 1;
+                DMA11CNT = i - 1;
                 
                 // move data to correct position
                 for(int j = i; j < ARRAY_LENGTH(uart_dma_rx_message_data); j++){
@@ -379,24 +379,29 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA13Interrupt ( void )
                 }
                 
                 // append data
-                DMA13STAL = (unsigned int) &uart_dma_rx_message_data[ARRAY_LENGTH(uart_dma_rx_message_data)-i];
+                DMA11STAL = (unsigned int) &uart_dma_rx_message_data[ARRAY_LENGTH(uart_dma_rx_message_data)-i];
                 break;
             }
         }
     }
     
     // start next transfer
-    DMA13CONbits.CHEN = 1;
+    DMA11CONbits.CHEN = 1;
     
-    _DMA13IF = 0;
+    _DMA11IF = 0;
 }
 
 void __attribute__ ( ( interrupt, no_auto_psv ) ) _U2ErrInterrupt ( void )
 {
     UART_DEBUG_PRINT("UART2 ERR IN IFS");
     
+    Nop();
+    Nop();
+    Nop();
+    
     //uart_rx_m->status = M_ERROR_HW_OVERFLOW;
     U2STAbits.OERR = 0;
+    U2STAbits.FERR = 0;
     _U2EIF = 0; // Clear the UART2 Error Interrupt Flag
 }
 
