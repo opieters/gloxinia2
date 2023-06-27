@@ -10,6 +10,7 @@
 #include "planalta_definitions.h"
 #include "planalta_filters.h"
 #include <libpic30.h>
+#include <adc16.h>
 
 i2c_config_t planalta_i2c1_config =  {
     .i2c_address = 0x0,
@@ -36,7 +37,7 @@ uint8_t adc16_buffer_selector = 0;
 volatile uint8_t copy_buffer_selector = 0;
 
 
-sensor_adc16_hw_config_t adc16_config = {
+adc16_config_t adc16_config = {
     .channel_select = ADC16_CHANNEL_SELECT_MODE_AUTO,
     .conversion_clock_source = ADC16_CONVERSION_CLOCK_SOURCE_INTERNAL,
     .trigger_select = ADC16_TRIGGER_SELECT_MANUAL,
@@ -330,7 +331,7 @@ void planalta_init(void){
         pga_config[i].spi_message_handler = spi1_send_message;
         pga_init(&pga_config[i]);
         
-        sensor_interfaces[i]->gsensor_config[0].sensor_config.adc16.pga = &pga_config[i];
+        sensor_interfaces[i]->gsensor_config[0].sensor_config.lia.pga_config = &pga_config[i];
     }
     UART_DEBUG_PRINT("Initialised PGAs.");
     
@@ -338,13 +339,24 @@ void planalta_init(void){
     planalta_clear_filter_buffers();
     UART_DEBUG_PRINT("Initialised filters.");
 
-    sensor_adc16_init(&adc16_config);
+    adc16_init(&adc16_config);
     UART_DEBUG_PRINT("Initialised ADC.");
 
     task_schedule_t planalta_read_log;
     task_t planalta_read_log_task = {planalta_send_ready_message, NULL};
     schedule_init(&planalta_read_log, planalta_read_log_task, 10);
     // schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);
+    
+    uint8_t buffer1[] = {SENSOR_TYPE_LIA, sensor_lia_gloxinia_register_general, 0, 9};
+    sensor_set_config_from_buffer(0, 0, buffer1, 4);
+    
+    uint8_t buffer2[] = {SENSOR_TYPE_LIA, sensor_lia_gloxinia_register_config, PLANALTA_LIA_F_5KHZ, 0, 0, true};
+    sensor_set_config_from_buffer(0, 0, buffer2, 6);
+    
+    uint8_t buffer3[] = {SENSOR_TYPE_LIA, sensor_lia_gloxinia_register_pga_config, PGA_GAIN_1, false};
+    sensor_set_config_from_buffer(0, 0, buffer3, 4);
+    
+    sensor_set_status( 0, 1, SENSOR_STATUS_ACTIVE);
     
 }
 

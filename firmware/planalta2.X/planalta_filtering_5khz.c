@@ -5,7 +5,7 @@
 #include "sensor.h"
 #include <utilities.h>
 #include <uart.h>
-#include <sensor_adc16.h>
+#include <adc16.h>
 #include <event_controller.h>
 
 void init_filters_5khz_lia(void){

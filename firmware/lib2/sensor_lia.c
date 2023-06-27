@@ -140,9 +140,11 @@ void lia_init_sensor(sensor_gconfig_t *intf)
 }
 
 
-void sensor_lia_activate(sensor_gconfig_t* intf){
+void sensor_lia_activate(sensor_gconfig_t* config){
     // TODO: init ADC
     // TODO: start ADC
+    
+    config->status = SENSOR_STATUS_RUNNING;
 }
 
 bool validate_lia_config(sensor_lia_config_t *config)
