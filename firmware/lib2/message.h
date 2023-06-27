@@ -27,7 +27,7 @@ typedef enum
     M_SENSOR_DATA = 0x12,
     M_SENSOR_CONFIG = 0x13, // configure sensors or read configuration
     M_CONFIG_DONE_START_READOUT = 0x17,
-    M_CONFIG_DONE_FINISHED_READOUT = 0x18,
+    M_CONFIG_SAVED = 0x18,
     M_SENSOR_START = 0x14,
     M_SENSOR_STOP = 0x15,
     M_SENSOR_CONFIG_END = 0x16, // ends burst of configuration data

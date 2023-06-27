@@ -7,6 +7,7 @@
 
 #include "sdcard.h"
 #include "utilities.h"
+#include "../dicio.X/dicio.h"
 
 /******************************************************************************/
 /* SD Configuration                                                           */
@@ -358,10 +359,22 @@ static const struct SD_COMMAND_TABLE_ENTRY sdmmc_cmdtable[] =
  * Custom definitions for improved performance
  *****************************************************************************/
 // TODO: might need additional memory attributes for alignment and memory type
-__eds__ uint8_t sdcard_sector_buffer_a[SDCARD_SECTOR_SIZE] __attribute__((space(dma), aligned(SDCARD_SECTOR_SIZE), eds));; // space(auto_psv)
-__eds__ uint8_t sdcard_sector_buffer_b[SDCARD_SECTOR_SIZE] __attribute__((space(dma), aligned(SDCARD_SECTOR_SIZE), eds));;
-bool sdcard_sector_write_buffer_a = true;
+uint8_t sdcard_sector_buffer_a[SDCARD_SECTOR_SIZE];//__attribute__((space(dma), aligned(SDCARD_SECTOR_SIZE), eds));; // space(auto_psv)
+uint8_t sdcard_sector_buffer_b[SDCARD_SECTOR_SIZE];// __attribute__((space(dma), aligned(SDCARD_SECTOR_SIZE), eds));;
+uint8_t sdcard_sector_cmd_buffer[6+16]; // TODO: check length!!!
+uint8_t* sdcard_sector_buffer = sdcard_sector_buffer_a;
+uint8_t sdcard_sector_buffer_selector = 0;
 uint16_t sdcard_n_bytes_buffered = 0;
+uint32_t sdcard_data_address = DICIO_NODE_CONFIG_START_ADDRESS;
+
+typedef enum {
+    SDCARD_DATA_SEND_CMD,
+    SDCARD_DATA_SEND_DATA,
+    SDCARD_DATA_WAITING,
+    SDCARD_DATA_ERROR,
+} sdcard_data_transfer_status_t;
+sdcard_data_transfer_status_t sdcard_data_transfer_status = SDCARD_DATA_WAITING;
+
 bool sdcard_found = false;
 
 /******************************************************************************
@@ -378,7 +391,7 @@ void sdcard_init_dma(void)
     DMA3CONbits.SIZE = 0b1; // byte Transfer Mode
     DMA3CONbits.DIR = 0x1; // Data Transfer Direction: device RAM to Peripheral
     DMA3CONbits.AMODE = 0x00; // register indirect addressing mode with post increment
-    DMA3CONbits.MODE = 0b11; // Operating Mode: one shot, Ping-Pong modes disabled
+    DMA3CONbits.MODE = 0b01; // Operating Mode: one shot, Ping-Pong modes disabled
     DMA3REQ = 0b00001010; // select SPI1 transfer done as IRQ
     DMA3CNT = ARRAY_LENGTH(sdcard_sector_buffer_a);
     DMA3PAD = (volatile unsigned int) &SPI1BUF; // SPI1 register
@@ -386,19 +399,22 @@ void sdcard_init_dma(void)
     // data sources
     DMA3STAL = __builtin_dmaoffset(sdcard_sector_buffer_a);
     DMA3STAH = __builtin_dmapage(sdcard_sector_buffer_a);
-    DMA3STBL = __builtin_dmaoffset(sdcard_sector_buffer_b);
-    DMA3STBH = __builtin_dmapage(sdcard_sector_buffer_b);
 
     _DMA3IE = 1; // enable DMA channel interrupt
     _DMA3IF = 0; // clear DMA interrupt flag
     DMA3CONbits.CHEN = 1; // enable DMA channel
+    
+    if(DMAPPSbits.PPST3 == 0)
+        sdcard_sector_buffer = sdcard_sector_buffer_a;
+    else 
+        sdcard_sector_buffer = sdcard_sector_buffer_b;
     
     // configure RX DMA channel
     DMA4CONbits.CHEN = 0;
     DMA4CONbits.SIZE = 0x1; // byte Transfer Mode
     DMA4CONbits.DIR = 0x0; // Data Transfer Direction: device Peripheral to RAM
     DMA4CONbits.AMODE = 0x0; // register indirect addressing mode with post increment
-    DMA4CONbits.MODE = 0b10; // Operating Mode: continuous, Ping-Pong modes disabled
+    DMA4CONbits.MODE = 0b00; // Operating Mode: continuous, Ping-Pong modes disabled
     DMA4REQ = 0b00001010; // select SPI1 transfer done as IRQ
     DMA4CNT = ARRAY_LENGTH(sdcard_sector_buffer_a);
     DMA4PAD = (volatile unsigned int) &SPI1BUF; // SPI1 register
@@ -406,79 +422,89 @@ void sdcard_init_dma(void)
     // data source to be transferred
     DMA4STAL = __builtin_dmaoffset(sdcard_sector_buffer_a);
     DMA4STAH = __builtin_dmapage(sdcard_sector_buffer_a);
-    DMA4STBL = __builtin_dmaoffset(sdcard_sector_buffer_b);
-    DMA4STBH = __builtin_dmapage(sdcard_sector_buffer_b);
 
     _DMA4IE = 1; // enable DMA channel interrupt
     _DMA4IF = 0; // clear DMA interrupt flag
     DMA4CONbits.CHEN = 1; // enable DMA channel
     
     sdcard_n_bytes_buffered = 0;
+    
+    sdcard_sector_cmd_buffer[0] = sdmmc_cmdtable[SD_WRITE_SINGLE_BLOCK].CmdCode | SD_COMMAND_TRANSMIT_BIT_MASK;
+    sdcard_sector_cmd_buffer[5] = sdmmc_cmdtable[SD_WRITE_SINGLE_BLOCK].CRC;  
+    for(int i = 6; i < ARRAY_LENGTH(sdcard_sector_cmd_buffer); i++)
+    {
+        sdcard_sector_cmd_buffer[i] = 0xff;
+    }
+    
+    // for the CRC readout and confirmation
+    for(int i = SDCARD_SECTOR_HEADER+SDCARD_SECTOR_DATA; i < SDCARD_SECTOR_SIZE; i++)
+    {
+        sdcard_sector_buffer_a[i] = 0xff;
+        sdcard_sector_buffer_b[i] = 0xff;
+    }
 }
 
 void sdcard_start_sector_write(void)
-{
-    // TODO!!!
+{    
+    SD_SPI_ChipSelect();
+
+    sdcard_sector_cmd_buffer[1] = (uint8_t) sdcard_data_address;
+    sdcard_sector_cmd_buffer[2] = (uint8_t) (sdcard_data_address >> 8);
+    sdcard_sector_cmd_buffer[3] = (uint8_t) (sdcard_data_address >> 16);
+    sdcard_sector_cmd_buffer[4] = (uint8_t) (sdcard_data_address >> 24);
+    
+    // set automate status
+    sdcard_data_transfer_status = SDCARD_DATA_SEND_CMD;
+     
+    // set DMA transfer and destination
+    DMA3STAL = __builtin_dmaoffset(sdcard_sector_cmd_buffer);
+    DMA3STAH = __builtin_dmapage(sdcard_sector_cmd_buffer);
+    DMA4STAL = __builtin_dmaoffset(sdcard_sector_cmd_buffer);
+    DMA4STAH = __builtin_dmapage(sdcard_sector_cmd_buffer);
+    
+    DMA3CNT = ARRAY_LENGTH(sdcard_sector_cmd_buffer);
+    DMA4CNT = ARRAY_LENGTH(sdcard_sector_cmd_buffer);
+
     DMA3REQbits.FORCE = 1;
-    while(DMA3REQbits.FORCE == 1); // wait until data is transferring
+    
+    // move address
+    if (mediaInformation.gSDMode == SD_MODE_NORMAL)  
+    {
+        sdcard_data_address += 1 << 9; 
+    } else {
+        sdcard_data_address += 1; 
+    }
 }
 
 bool sdcard_save_data(uint8_t *buffer, size_t length)
 {
-    if((DMA3REQbits.FORCE == 1) || (length > ARRAY_LENGTH(sdcard_sector_buffer_a))){
+    if((DMA3REQbits.FORCE == 1) || (length > SDCARD_SECTOR_DATA)){
         return false;
     }
     // check if we can fit everything into the current buffer
-    if((length + sdcard_n_bytes_buffered) < ARRAY_LENGTH(sdcard_sector_buffer_a))
+    if((length + sdcard_n_bytes_buffered) < SDCARD_SECTOR_DATA)
     {
         for(size_t i = 0; i < length; i++)
         {
-            if(DMAPPSbits.PPST3 == 0)
-            {
-                // A address selected -> write to B
-                sdcard_sector_buffer_b[sdcard_n_bytes_buffered] = buffer[i];
-            } else {
-                // B address selected -> write to A
-                sdcard_sector_buffer_a[sdcard_n_bytes_buffered] = buffer[i];
-            }
-            
-            sdcard_n_bytes_buffered++;
+            sdcard_sector_buffer[SDCARD_SECTOR_HEADER + sdcard_n_bytes_buffered++] = buffer[i];
         }
     } else {
         // fill remaining space in buffer
-        size_t remaining_space = ARRAY_LENGTH(sdcard_sector_buffer_a) - sdcard_n_bytes_buffered;
+        size_t remaining_space = SDCARD_SECTOR_DATA - sdcard_n_bytes_buffered;
         for(size_t i = 0; i < remaining_space; i++)
         {
-            if(DMAPPSbits.PPST3 == 0)
-            {
-                // A address selected -> write to B
-                sdcard_sector_buffer_b[sdcard_n_bytes_buffered] = buffer[i];
-            } else {
-                // B address selected -> write to A
-                sdcard_sector_buffer_a[sdcard_n_bytes_buffered] = buffer[i];
-            }
-            
-            sdcard_n_bytes_buffered++;
+            sdcard_sector_buffer[SDCARD_SECTOR_HEADER + sdcard_n_bytes_buffered++] = buffer[i];
         }
         
         // start DMA transfer
+        // this also flips the buffer sdcard_sector_buffer
         sdcard_start_sector_write();
         
-        // save remaining data into other buffer
-        sdcard_n_bytes_buffered = 0;
+        // save remaining data into buffer
         remaining_space = length - remaining_space;
         for(size_t i = remaining_space; i < length; i++)
         {
-            if(DMAPPSbits.PPST3 == 0)
-            {
-                // A address selected -> write to B
-                sdcard_sector_buffer_b[sdcard_n_bytes_buffered] = buffer[i];
-            } else {
-                // B address selected -> write to A
-                sdcard_sector_buffer_a[sdcard_n_bytes_buffered] = buffer[i];
-            }
-            
-            sdcard_n_bytes_buffered++;
+            sdcard_sector_buffer[SDCARD_SECTOR_HEADER + sdcard_n_bytes_buffered++] = buffer[i];
         }
     }
     return true;
@@ -486,11 +512,92 @@ bool sdcard_save_data(uint8_t *buffer, size_t length)
 
 void __attribute__((interrupt, no_auto_psv)) _DMA3Interrupt(void)
 {
+
+
+    if((SD_SPI_exchangeByte(0xFF) &  SD_WRITE_RESPONSE_TOKEN_MASK) != SD_TOKEN_DATA_ACCEPTED)
+    {
+        //Something went wrong.  Try and terminate as gracefully as 
+        //possible, so as allow possible recovery.
+        //info->bStateVariable = SD_ASYNC_WRITE_ABORT; 
+        //return SD_ASYNC_WRITE_BUSY;
+    }
+    SD_SPI_ChipDeselect();
+
+    (void)SD_SPI_exchangeByte(0xFF);
+
     _DMA3IF = 0;
 }
 
 void __attribute__((interrupt, no_auto_psv)) _DMA4Interrupt(void)
 {
+    uint8_t status;
+    
+    switch(sdcard_data_transfer_status)
+    {
+        case SDCARD_DATA_SEND_CMD:
+            // check if status is OK
+            if(sdcard_sector_buffer[ARRAY_LENGTH(sdcard_sector_buffer)-2] == SD_TOKEN_FLOATING_BUS)
+            {
+                // error occurred
+                sdcard_data_transfer_status = SDCARD_DATA_ERROR;
+                break;
+            }
+            
+            // start actual data transfer
+            // set DMA transfer and destination
+            if(sdcard_sector_buffer_selector == 0)
+            {
+                DMA3STAL = __builtin_dmaoffset(sdcard_sector_buffer_a);
+                DMA3STAH = __builtin_dmapage(sdcard_sector_buffer_a);
+                DMA4STAL = __builtin_dmaoffset(sdcard_sector_buffer_a);
+                DMA4STAH = __builtin_dmapage(sdcard_sector_buffer_a);
+                
+                DMA3CNT = ARRAY_LENGTH(sdcard_sector_buffer_a);
+                DMA4CNT = ARRAY_LENGTH(sdcard_sector_buffer_a);
+                
+                sdcard_sector_buffer = sdcard_sector_buffer_b;
+                sdcard_n_bytes_buffered = 0;
+                sdcard_sector_buffer_selector = 1;
+            } else {
+                DMA3STAL = __builtin_dmaoffset(sdcard_sector_buffer_b);
+                DMA3STAH = __builtin_dmapage(sdcard_sector_buffer_b);
+                DMA4STAL = __builtin_dmaoffset(sdcard_sector_buffer_b);
+                DMA4STAH = __builtin_dmapage(sdcard_sector_buffer_b);
+                
+                DMA3CNT = ARRAY_LENGTH(sdcard_sector_buffer_b);
+                DMA4CNT = ARRAY_LENGTH(sdcard_sector_buffer_b);
+                
+                sdcard_sector_buffer = sdcard_sector_buffer_a;
+                sdcard_n_bytes_buffered = 0;
+                sdcard_sector_buffer_selector = 0;
+            }
+            
+            sdcard_data_transfer_status = SDCARD_DATA_SEND_DATA;
+    
+            // start data transfer
+            DMA3REQbits.FORCE = 1;
+            break;
+        case SDCARD_DATA_SEND_DATA:
+            // optional: check CRC
+            if(sdcard_sector_buffer_selector == 1){
+                status = sdcard_sector_buffer_a[SDCARD_SECTOR_SIZE-1] &  SD_WRITE_RESPONSE_TOKEN_MASK;
+            } else {
+                status = sdcard_sector_buffer_b[SDCARD_SECTOR_SIZE-1] &  SD_WRITE_RESPONSE_TOKEN_MASK;
+            }
+            
+            if(status != SD_TOKEN_DATA_ACCEPTED)
+                sdcard_data_transfer_status = SDCARD_DATA_ERROR;
+            else
+                sdcard_data_transfer_status = SDCARD_DATA_WAITING;
+            break;
+        case SDCARD_DATA_WAITING:
+            break;
+        case SDCARD_DATA_ERROR:
+            break;
+        default:
+            break;
+    }
+    
     _DMA4IF = 0;
 }
 

@@ -5,6 +5,10 @@
 #include <../dicio.X/sdcard.h>
 #endif
 
+#if defined(__SYLVATICA__) || defined(__PLANALTA__)
+extern pga_config_t pga_config[N_SENSOR_INTERFACES];
+#endif
+
 extern sensor_interface_t* sensor_interfaces[];
 extern const uint8_t n_sensor_interfaces;
 
@@ -108,17 +112,37 @@ void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t sensor_id, cons
             break;
 #if defined(__DICIO__) || defined(__SYLVATICA__)
         case SENSOR_TYPE_ADC12:
-            status = sensor_adc12_config(gsc, &buffer[1], length - 1);
+#ifdef __DICIO__
+            if((sensor_id == 0) || (sensor_id == 1)) {
+#else
+            if((sensor_id == 1)) {
+#endif
+                status = sensor_adc12_config(gsc, &buffer[1], length - 1);
+            } else {
+                status = SENSOR_STATUS_ERROR;
+            }
             break;
 #endif
 #if defined(__SYLVATICA__) || defined(__PLANALTA__)
         case SENSOR_TYPE_ADC16:
-            status = sensor_adc16_config(gsc, &buffer[1], length - 1);
+            if(sensor_id == 0){
+                gsc->sensor_config.adc16.pga = &pga_config[interface_id];
+                status = sensor_adc16_config(gsc, &buffer[1], length - 1);
+            } else {
+                status = SENSOR_STATUS_ERROR;
+            }
             break;
 #endif
 #ifdef __PLANALTA__
         case SENSOR_TYPE_LIA:
-            status = sensor_lia_config(gsc, &buffer[1], length - 1);
+            // make sure the right PGA config is loaded, even when the interface
+            // is re-configured several times
+            if(sensor_id == 0){
+                gsc->sensor_config.lia.pga_config = &pga_config[interface_id];
+                status = sensor_lia_config(gsc, &buffer[1], length - 1);
+            } else {
+                status = SENSOR_STATUS_ERROR;
+            }
             break;
 #endif
         default:
@@ -321,9 +345,9 @@ i2c_bus_t sensor_i2c_get_bus(uint8_t sensor_interface_n) {
 }
 
 #ifdef __DICIO__
-void sdcard_save_sensor_data(sensor_type_t sensor_type, uint8_t* buffer, size_t length)
+void sensor_save_data(uint8_t address, uint8_t interface, uint8_t sensor_id, uint8_t* buffer, size_t length)
 {
-    uint8_t sd_buffer[CAN_MAX_N_BYTES+6]; // TODO
+    uint8_t sd_buffer[CAN_MAX_N_BYTES+9];
     uint16_t ctime[4];
     
     // get current time
@@ -334,14 +358,17 @@ void sdcard_save_sensor_data(sensor_type_t sensor_type, uint8_t* buffer, size_t 
     sd_buffer[1] = (uint8_t) (ctime[2] & 0xff);
     sd_buffer[2] = (uint8_t) ((ctime[3] >> 8) & 0xff);
     sd_buffer[3] = (uint8_t) (ctime[3] & 0xff);
-    sd_buffer[4] = sensor_type;
+    sd_buffer[4] = address;
+    sd_buffer[5] = interface;
+    sd_buffer[6] = sensor_id;
+    sd_buffer[7] = length;
     for(size_t i = 0; i < length; i++)
     {
-        sd_buffer[5+i] = buffer[i];
+        sd_buffer[8+i] = buffer[i];
     }
-    sd_buffer[5+length] = SDCARD_STOP_BYTE;
+    sd_buffer[8+length] = SDCARD_STOP_BYTE;
     
     // store data
-    sdcard_save_data(sd_buffer, 6+length);
+    sdcard_save_data(sd_buffer, 9+length);
 }
 #endif

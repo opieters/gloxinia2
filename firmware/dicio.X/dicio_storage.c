@@ -8,120 +8,11 @@
 
 extern uint8_t n_nodes;
 extern node_config_t node_configs[DICIO_MAX_N_NODES];
-task_schedule_t dicio_node_config_readout;
-uint8_t dicio_node_config_readout_counter = 0;
-
 static uint8_t dicio_sector_buffer[SDCARD_SECTOR_SIZE];
 
-
-void dicio_storage_message_process(const message_t* m)
-{
-    switch(m->command)
-    {
-        case M_NODE_INFO:
-            UART_DEBUG_PRINT("NODE_INFO");
-            cmd_node_info(m);
-            break;
-        case M_SENSOR_STATUS:
-            UART_DEBUG_PRINT("SENSOR_STATUS");
-            cmd_sensor_status(m);
-            break;
-        case M_SENSOR_ERROR:
-            UART_DEBUG_PRINT("SENSOR_ERROR");
-            cmd_sensor_error(m);
-            break;
-        case M_SENSOR_DATA:
-            UART_DEBUG_PRINT("SENSOR_DATA");
-            cmd_sensor_data(m);
-            break;
-        case M_SENSOR_CONFIG:
-            UART_DEBUG_PRINT("SENSOR_CONFIG");
-            cmd_sensor_config(m);
-            break;
-        case M_SENSOR_CONFIG_END:
-            UART_DEBUG_PRINT("SENSOR_CONFIG_END");
-            cmd_sensor_config_end(m);
-            break;
-        case M_DATA_CLEAR:
-            UART_DEBUG_PRINT("DATA_CLEAR");
-            cmd_data_clear(m);
-            break;
-        case M_DATA_READ:
-            UART_DEBUG_PRINT("DATA_READ");
-            cmd_data_read(m);
-            break;
-        case M_DATA_WRITE:
-            UART_DEBUG_PRINT("DATA_WRITE");
-            cmd_data_write(m);
-            break;
-        // these messages do not trigger an action
-        case M_DATA_BURST_START:
-            UART_DEBUG_PRINT("DATA_BURST_STOP");
-            break;
-        case M_DATA_BURST:
-            UART_DEBUG_PRINT("DATA_BURST");
-            break;
-        case M_DATA_BURST_STOP:
-            UART_DEBUG_PRINT("DATA_BURST_STOP");
-            break;
-        case M_CONFIG_DONE_FINISHED_READOUT:
-            UART_DEBUG_PRINT("M_CONFIG_DONE_FINISHED_READOUT");
-            break;
-        default:
-            break;
-    }
-}
-
-
-void cmd_config_done_start_readout(const message_t* m)
-{
-    // send a message to each of the connected nodes to request their configuration data
-    // to do this, we use a schedule since this allows for easy async operation and also to check if a node became unresponsive
-    
-    dicio_node_config_readout_counter = 0;
-    
-    task_t task = {dicio_config_node_config_readout, NULL};
-    schedule_init(&dicio_node_config_readout, task, 1);
-    schedule_specific_event(&dicio_node_config_readout, ID_DICIO_NODE_CONFIG_READOUT);
-}
-
-void dicio_config_node_config_readout(void *data)
-{
-    message_t m;
-    if(dicio_node_config_readout_counter == n_nodes)
-    {
-        // stop schedule, send message to GUI that readout is complete
-        message_init(&m,
-            controller_address,
-            false,
-            M_CONFIG_DONE_FINISHED_READOUT,
-            NO_INTERFACE_ID,
-            NO_SENSOR_ID,
-            NULL,
-            0);
-        message_send(&m);
-        
-        schedule_remove_event(ID_DICIO_NODE_CONFIG_READOUT);
-    } else {
-        // clear configuration
-        dicio_process_node_config(NULL);
-        
-        // readout each of the sensor interfaces
-        for(int i = 0; i < node_configs[dicio_node_config_readout_counter].n_interfaces; i++){
-            message_init(&m,
-                node_configs[dicio_node_config_readout_counter].node_id,
-                true,
-                M_SENSOR_CONFIG,
-                NO_INTERFACE_ID,
-                NO_SENSOR_ID,
-                NULL,
-                0);
-            message_send(&m);
-        }
-        
-        dicio_node_config_readout_counter++;
-    }
-}
+static uint8_t* dicio_data_buffer;
+static uint8_t dicio_data_buffer_a[SDCARD_SECTOR_SIZE];
+static uint8_t dicio_data_buffer_b[SDCARD_SECTOR_SIZE];
 
 void dicio_read_sdconfig_data(void)
 {
@@ -260,7 +151,7 @@ void dicio_register_node(message_t *m)
 void dicio_process_node_config(const message_t *m)
 {
     static uint16_t write_counter = 0;
-    message_t m_rqst;
+    //message_t m_rqst;
 
     UART_DEBUG_PRINT("STORING SENSOR CONFIG OF OTHER NODE");
     
@@ -299,36 +190,10 @@ void dicio_process_node_config(const message_t *m)
         clear_buffer(dicio_sector_buffer, ARRAY_LENGTH(dicio_sector_buffer));
 
         // request next interface if it exists
-        if ((m->interface_id + 1) < (node_configs[i].n_interfaces))
-        {
-            message_init(&m_rqst, node_configs[i].node_id,
-                         MESSAGE_REQUEST,
-                         M_SENSOR_CONFIG,
-                         m->interface_id,
-                         m->sensor_id + 1,
-                         NULL,
-                         0);
-
-            message_send(&m_rqst);
-        }
-        else
+        if ((m->interface_id + 1) == (node_configs[i].n_interfaces))
         {
             // config readout complete -> set bool
             node_configs[i].stored_config = true;
-
-            // if more nodes exist, request that data also
-            if ((++i) < n_nodes)
-            {
-                message_init(&m_rqst, node_configs[i].node_id,
-                             MESSAGE_REQUEST,
-                             M_SENSOR_CONFIG,
-                             NO_INTERFACE_ID,
-                             NO_SENSOR_ID,
-                             NULL,
-                             0);
-
-                message_send(&m_rqst);
-            }
         }
 
         return;
@@ -486,7 +351,31 @@ void cmd_data_read(const message_t* m) {
 }
 
 void cmd_data_write(const message_t* m) {
-#ifdef __DICIO__
-    // TODO
-#endif
+    static uint16_t write_counter = 0;
+    
+    // check if there is enough space
+    if((write_counter + 6 + m->length) > SDCARD_SECTOR_SIZE){
+        // TODO: write buffer
+        
+        
+        
+        dicio_data_buffer = (dicio_data_buffer == dicio_data_buffer_a) ? dicio_data_buffer_b : dicio_data_buffer_a;
+        write_counter = 0;
+    }
+    
+    
+    // write message meta data
+    dicio_data_buffer[write_counter++] = SDCARD_START_BYTE;
+    dicio_data_buffer[write_counter++] = m->command;
+    dicio_data_buffer[write_counter++] = m->interface_id;
+    dicio_data_buffer[write_counter++] = m->sensor_id;
+    dicio_data_buffer[write_counter++] = m->length;
+
+    // write message data
+    for (int i = 0; i < m->length; i++)
+    {
+        dicio_data_buffer[write_counter++] = m->data[i];
+    }
+    dicio_data_buffer[write_counter++] = SDCARD_STOP_BYTE;
+    
 }

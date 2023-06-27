@@ -1,9 +1,10 @@
 #include <sensor_lia.h>
 #include <sensor.h>
 #include <utilities.h>
+#include <address.h>
 
 void sensor_lia_get_config(sensor_gconfig_t* intf, uint8_t reg, uint8_t* buffer, uint8_t* length){
-    //sensor_lia_config_t *config = &intf->sensor_config.lia;
+    sensor_lia_config_t *config = &intf->sensor_config.lia;
     
     buffer[0] = SENSOR_TYPE_LIA;
     buffer[1] = reg;
@@ -17,8 +18,18 @@ void sensor_lia_get_config(sensor_gconfig_t* intf, uint8_t reg, uint8_t* buffer,
             buffer[3] = intf->measure.period & 0x0ff;
             *length = 4;
             break;
+        case sensor_lia_gloxinia_register_config:
+            buffer[2] = config->mode;
+            buffer[3] = config->fs_high;
+            buffer[4] = config->fs_low;
+            buffer[5] = config->ouput_enable;
+            *length = 6;
+            break;
         case sensor_lia_gloxinia_register_pga_config:
-            *length = 7;
+            buffer[2] = config->pga_config->gain;
+            buffer[3] = config->auto_gain;
+            
+            *length = 4;
             break;
         default:
             *length = 0;
@@ -38,6 +49,14 @@ sensor_status_t sensor_lia_config(sensor_gconfig_t *intf, const uint8_t *buffer,
     
     switch(buffer[0]){
         case sensor_lia_gloxinia_register_general:
+            if(length != 3) { return SENSOR_STATUS_ERROR; }
+            
+            intf->measure.task.cb = sensor_lia_measure;
+            intf->measure.task.data = (void*) config;
+                    
+            schedule_init(&intf->measure, intf->measure.task, (((uint16_t) buffer[1]) << 8) | buffer[2]);
+            break;
+        case sensor_lia_gloxinia_register_config:
             if (length != 5){ return SENSOR_STATUS_ERROR; }
 
             config->mode = buffer[1];
@@ -51,14 +70,11 @@ sensor_status_t sensor_lia_config(sensor_gconfig_t *intf, const uint8_t *buffer,
                 return SENSOR_STATUS_ERROR;
             }
             break;
-            
-            return SENSOR_STATUS_IDLE;
-            
-            break;
         case sensor_lia_gloxinia_register_pga_config:
-            if((length != 2) || (config->pga_config == NULL)) { return SENSOR_STATUS_ERROR; }
+            if((length != 3) || (config->pga_config == NULL)) { return SENSOR_STATUS_ERROR; }
             
             config->pga_config->gain = buffer[1];
+            config->auto_gain = buffer[2];
            
             // validate configuration
             if(!validate_lia_config(config)){
@@ -78,7 +94,38 @@ sensor_status_t sensor_lia_config(sensor_gconfig_t *intf, const uint8_t *buffer,
 
 void sensor_lia_measure(void *data)
 {
-    //struct sensor_gconfig_s *intf = (struct sensor_gconfig_s *)data;
+    sensor_gconfig_t* gsc = (sensor_gconfig_t*) data;
+    
+    sensor_lia_config_t *config = &gsc->sensor_config.lia;
+    uint8_t m_data[SENSOR_LIA_CAN_DATA_LENGTH];
+
+    // send measurement data to data sink
+    m_data[0] = (uint8_t) (config->sample_i >> 8);
+    m_data[1] = (uint8_t) (config->sample_i);
+    m_data[2] = (uint8_t) (config->sample_q >> 8);
+    m_data[3] = (uint8_t) (config->sample_q);
+    
+    if(config->ouput_enable){
+        m_data[4] = (uint8_t) (config->source_i >> 8);
+        m_data[5] = (uint8_t) (config->source_i);
+        m_data[6] = (uint8_t) (config->source_q >> 8);
+        m_data[7] = (uint8_t) (config->source_q);
+    } else {
+        m_data[4] = 0;
+        m_data[5] = 0;
+        m_data[6] = 0;
+        m_data[7] = 0;
+    }
+
+    message_init(&gsc->log,
+                 controller_address,
+                 MESSAGE_NO_REQUEST,
+                 M_SENSOR_DATA,
+                 gsc->interface->interface_id,
+                 gsc->sensor_id,
+                 m_data,
+                 SENSOR_LIA_CAN_DATA_LENGTH);
+    message_send(&gsc->log);
     
 }
 

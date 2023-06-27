@@ -173,7 +173,7 @@ extern "C"
   void dicio_config_node_config_readout(void *data);
   void cmd_config_done_start_readout(const message_t* m);
   
-  void dicio_storage_message_process(const message_t* m);
+  void dicio_message_process(const message_t* m);
 
 #ifdef __cplusplus
 }

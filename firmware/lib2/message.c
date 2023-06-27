@@ -154,10 +154,6 @@ void message_process(const message_t *m) {
             UART_DEBUG_PRINT("SENSOR_ERROR");
             cmd_sensor_error(m);
             break;
-        case M_SENSOR_DATA:
-            UART_DEBUG_PRINT("SENSOR_DATA");
-            cmd_sensor_data(m);
-            break;
         case M_SENSOR_START:
             UART_DEBUG_PRINT("SENSOR_START");
             cmd_sensor_start(m);
@@ -169,10 +165,6 @@ void message_process(const message_t *m) {
         case M_SENSOR_CONFIG:
             UART_DEBUG_PRINT("SENSOR_CONFIG");
             cmd_sensor_config(m);
-            break;
-        case M_SENSOR_CONFIG_END:
-            UART_DEBUG_PRINT("SENSOR_CONFIG_END");
-            cmd_sensor_config_end(m);
             break;
         case M_NODE_RESET:
         {
@@ -203,8 +195,8 @@ void message_process(const message_t *m) {
             cmd_config_done_start_readout(m);
             #endif  
             break;
-        case M_CONFIG_DONE_FINISHED_READOUT:
-            UART_DEBUG_PRINT("M_CONFIG_DONE_FINISHED_READOUT");
+        case M_CONFIG_SAVED:
+            UART_DEBUG_PRINT("M_CONFIG_SAVED");
             break;
         default:
             break;
@@ -355,6 +347,16 @@ void cmd_sensor_config(const message_t *m) {
                 message_send(&m_sensor);
             }
         } while (length > 0);
+        
+        message_init(&m_sensor, controller_address,
+                MESSAGE_NO_REQUEST,
+                M_SENSOR_CONFIG_END,
+                m->interface_id,
+                m->sensor_id,
+                buffer,
+                0);
+        message_send(&m_sensor);
+        
     } else {
         
         
@@ -370,14 +372,7 @@ void cmd_sensor_config(const message_t *m) {
     }
 }
 
-void cmd_sensor_config_end(const message_t* m)
-{
-    #ifdef __DICIO__
-    if (!m->request_message_bit) {
-        dicio_process_node_config(m);
-    }
-    #endif
-}
+
 
 void cmd_sensor_status(const message_t *m) {
     if (m->request_message_bit) {
@@ -390,8 +385,7 @@ void cmd_sensor_status(const message_t *m) {
 void cmd_sensor_error(const message_t *m) {
 }
 
-void cmd_sensor_data(const message_t *m) {
-}
+
 
 void cmd_sensor_start(const message_t* m) {
     sensor_start();

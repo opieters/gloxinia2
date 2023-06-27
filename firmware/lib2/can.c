@@ -593,7 +593,7 @@ void __attribute__((interrupt, auto_psv)) _C1Interrupt(void)
             // dicio also needs to process all other messages for data storage and config saving
             else // special case: the node with address ADDRESS_SEARCH_START needs to process all messages
             {
-                dicio_storage_message_process(&m);
+                dicio_message_process(&m);
             }
 #endif
 

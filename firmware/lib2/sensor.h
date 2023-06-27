@@ -194,7 +194,7 @@ extern "C"
      * @param buffer Buffer containing sensor data
      * @param length Length of buffer
      */
-    void sdcard_save_sensor_data(sensor_type_t sensor_type, uint8_t *buffer, size_t length);
+    void sensor_save_data(uint8_t address, uint8_t interface_id, uint8_t sensor_id, uint8_t* buffer, size_t length);
 #endif
 
 #ifdef __cplusplus

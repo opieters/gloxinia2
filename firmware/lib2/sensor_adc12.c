@@ -411,5 +411,9 @@ void sensor_adc12_measure(void *data)
             m_data,
             SENSOR_ADC12_CAN_DATA_LENGTH);
     message_send(&gsc->log);
+    
+#ifdef __DICIO__
+    sensor_save_data(controller_address, gsc->interface->interface_id, gsc->sensor_id, m_data, SENSOR_ADC12_CAN_DATA_LENGTH);
+#endif
 }
 

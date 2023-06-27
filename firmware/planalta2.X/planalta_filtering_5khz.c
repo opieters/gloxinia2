@@ -387,14 +387,20 @@ void run_filter5_5khz(void *data){
                 &planalta_lia_filters_5_q[i],
                 PLANALTA_5KHZ_DEC_FACT_F5);
         
-        sensor_gconfig_t* gsc = &sensor_interfaces[i]->gsensor_config[0];
+        // the interface/sensor alloc guarantees that it's always on this location
+        sensor_gconfig_t* gsc = &sensor_interfaces[i / 2]->gsensor_config[0];
         if(gsc->sensor_type == SENSOR_TYPE_LIA){
-            // the interface/sensor alloc guarantees that it's always on this location
-            gsc->sensor_config.lia.sample_i = planalta_lia_obuffer_i[i];
-            gsc->sensor_config.lia.sample_q = planalta_lia_obuffer_q[i];
+            if((i % 2) == 0) 
+            {
+                gsc->sensor_config.lia.sample_i = planalta_lia_obuffer_i[i];
+                gsc->sensor_config.lia.sample_q = planalta_lia_obuffer_q[i];
+            } else {
+                gsc->sensor_config.lia.source_i = planalta_lia_obuffer_i[i];
+                gsc->sensor_config.lia.source_q = planalta_lia_obuffer_q[i];
+            }
         }
     }
     
-
+    UART_DEBUG_PRINT("OUTPUT updated");
 }
 
