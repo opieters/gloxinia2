@@ -29,6 +29,12 @@ quint8 GCSensor::getSensorID(void)
     return sensorID;
 }
 
+
+GCNode* GCSensor::getNode(void) const
+{
+    return node;
+}
+
 QString GCSensor::getLabel(void) const
 {
     return label;
@@ -130,7 +136,7 @@ GCSensor* GCSensor::fromQVariant(const QVariant data)
     GCSensorAPDS9306 *sensorAPDS9306 = data.value<GCSensorAPDS9306 *>();
     GCSensorADC12 *sensorADC12 = data.value<GCSensorADC12 *>();
     GCSensorADC16 *sensorADC16 = data.value<GCSensorADC16 *>();
-    // TODO: ADC16
+    GCSensorLIA *sensorLIA = data.value<GCSensorLIA *>();
 
     if(sensorSHT35 != nullptr)
         return sensorSHT35;
@@ -140,6 +146,8 @@ GCSensor* GCSensor::fromQVariant(const QVariant data)
         return sensorADC12;
     if(sensorADC16 != nullptr)
         return sensorADC16;
+    if(sensorLIA != nullptr)
+        return sensorLIA;
     return nullptr;
 }
 
@@ -976,6 +984,142 @@ void GCSensorADC16::saveData(std::vector<quint8>& data)
 }
 
 void GCSensorADC16::printHeader(void)
+{
+    file->write("# Intermediate storage file for ADC12\n");
+    file->write("# ADC12 is a 16-bit filtered analogue readout. The data is stored in the `channel` column. Each value is timestamped.\n");
+    file->write("time; channel\n");
+}
+
+
+GCSensorLIA::GCSensorLIA(GCNode* node, quint8 interface_id, quint8 id) : GCSensor(node, interface_id, id)
+{
+    if(node == nullptr){
+        filePath = "node-0-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "-LIA.csv";
+    } else {
+        filePath = "node-" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "-LIA.csv";
+    }
+    filePath = QDir::cleanPath(filePath);
+
+    QString prefix;
+    if(!label.isEmpty())
+        prefix += label + " ";
+    else
+        prefix += "LIA ";
+    if(node != nullptr)
+        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "] ";
+    else
+        prefix += "[0-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "] ";
+
+
+    plotSeries.append(new QLineSeries());
+    plotSeries[0]->setName(prefix + "analogue");
+    measurementVariableTypes.append(VariableType::Analogue);
+}
+
+GCSensorLIA::~GCSensorLIA() {}
+
+void GCSensorLIA::setGain(GCSensor::PGAGain gain)
+{
+    this->gain = gain;
+}
+
+GCSensorLIA::PGAGain GCSensorLIA::getGain(void)
+{
+    return gain;
+}
+
+void GCSensorLIA::setAutoGain(bool autoGain)
+{
+    this->autoGainConfig = autoGain;
+}
+
+bool GCSensorLIA::getAutoGain(void)
+{
+    return autoGainConfig;
+}
+
+QString GCSensorLIA::toString(void) const
+{
+    QString dLabel;
+    if (!label.isEmpty())
+    {
+        dLabel = label;
+    }
+    else
+    {
+        dLabel = "LIA";
+    }
+    return "[" + QString::number(interfaceID) + "." + QString::number(sensorID) + "] " + dLabel + " - " + statusToString(status);
+}
+
+QString GCSensorLIA::toConfigString(void) const
+{
+    return QString(); // TODO
+}
+
+bool GCSensorLIA::fromConfigString(const QStringList &config)
+{
+    // TODO
+    return false;
+}
+
+QList<GMessage> GCSensorLIA::getConfigurationMessages()
+{
+    QList<GMessage> mList;
+
+    auto mData = std::vector<quint8>(4);
+    mData[0] = (quint8)GCSensor::sensor_class::LIA;
+    mData[1] = GCSensorLIA::Register::MEASUREMENT;
+    mData[2] = (quint8) (measurementPeriod >> 8);
+    mData[3] = (quint8) (measurementPeriod & 0xff);
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+
+    mData = std::vector<quint8>(6);
+    mData[0] = (quint8)GCSensor::sensor_class::LIA;
+    mData[1] = GCSensorLIA::Register::CONFIG;
+    mData[2] = mode;
+    mData[3] = fsHigh;
+    mData[4] = fsLow;
+    mData[5] = output ? 1 : 0;
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+
+    mData = std::vector<quint8>(4);
+    mData[0] = (quint8)GCSensor::sensor_class::LIA;
+    mData[1] = GCSensorLIA::Register::PGA;
+    mData[2] = gain;
+    mData[3] = autoGainConfig ? 1 : 0;
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+
+    return mList;
+}
+
+void GCSensorLIA::saveData(std::vector<quint8>& data)
+{
+    QString formattedData;
+    uint32_t value;
+
+
+    QDateTime date = QDateTime::currentDateTime();
+    formattedData.append(date.toString("dd.MM.yyyy hh:mm:ss"));
+    formattedData.append("; ");
+    if(data.size() == 2){
+        value = data[0] | (data[1] << 8);
+        formattedData.append(QString::number(value)); // print in scientific format with precision of 6
+
+        plotSeries[0]->append(date.toMSecsSinceEpoch(), value);
+
+    } else {
+        formattedData.append("NaN");
+
+        plotSeries[0]->append(date.toMSecsSinceEpoch(), nan(""));
+    }
+    formattedData.append("\n");
+
+    if((file != nullptr) && file->isOpen())
+        file->write(formattedData.toUtf8());
+}
+
+void GCSensorLIA::printHeader(void)
 {
     file->write("# Intermediate storage file for ADC12\n");
     file->write("# ADC12 is a 16-bit filtered analogue readout. The data is stored in the `channel` column. Each value is timestamped.\n");

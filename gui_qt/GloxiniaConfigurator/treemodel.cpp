@@ -45,7 +45,12 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
         switch (item->getNType())
         {
         case TreeItem::NodeType::Sensor:
-            s = data.value<GCSensorSHT35 *>();
+            s = data.value<GCSensorADC12 *>();
+            if (s != nullptr)
+            {
+                return s->toString();
+            }
+            s = data.value<GCSensorADC16 *>();
             if (s != nullptr)
             {
                 return s->toString();
@@ -55,12 +60,12 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
             {
                 return s->toString();
             }
-            s = data.value<GCSensorADC12 *>();
+            s = data.value<GCSensorLIA *>();
             if (s != nullptr)
             {
                 return s->toString();
             }
-            s = data.value<GCSensorADC16 *>();
+            s = data.value<GCSensorSHT35 *>();
             if (s != nullptr)
             {
                 return s->toString();

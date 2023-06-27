@@ -44,10 +44,24 @@ public:
         Analogue,
     };
 
+    enum PGAGain
+    {
+        PGA_GAIN_1 = 0b0000,   ///< Gain = 1
+        PGA_GAIN_2 = 0b0001,   ///< Gain = 2
+        PGA_GAIN_5 = 0b0010,   ///< Gain = 5
+        PGA_GAIN_10 = 0b0011,  ///< Gain = 10
+        PGA_GAIN_20 = 0b0100,  ///< Gain = 20
+        PGA_GAIN_50 = 0b0101,  ///< Gain = 50
+        PGA_GAIN_100 = 0b0110, ///< Gain = 100
+        PGA_GAIN_200 = 0b0111, ///< Gain = 200
+    };
+
     // static QString sensorTypeToString(SensorType t);
 
     quint8 getSensorID(void);
     quint8 getInterfaceID(void);
+
+    GCNode* getNode(void) const;
 
     QString getLabel(void) const;
     void setLabel(const QString label);
@@ -282,18 +296,6 @@ public:
         PGA = 0x02,
     };
 
-    enum PGAGain
-    {
-        PGA_GAIN_1 = 0b0000,   ///< Gain = 1
-        PGA_GAIN_2 = 0b0001,   ///< Gain = 2
-        PGA_GAIN_5 = 0b0010,   ///< Gain = 5
-        PGA_GAIN_10 = 0b0011,  ///< Gain = 10
-        PGA_GAIN_20 = 0b0100,  ///< Gain = 20
-        PGA_GAIN_50 = 0b0101,  ///< Gain = 50
-        PGA_GAIN_100 = 0b0110, ///< Gain = 100
-        PGA_GAIN_200 = 0b0111, ///< Gain = 200
-    };
-
     GCSensorADC16(GCNode* const node = nullptr, quint8 interface_id =0, quint8 id = 0);
     GCSensorADC16(const GCSensorADC16 &s) = default;
     ~GCSensorADC16() override;
@@ -332,24 +334,41 @@ public:
         PGA = 0x02,
     };
 
-    enum PGAGain
+    enum Mode
     {
-        PGA_GAIN_1 = 0b0000,   ///< Gain = 1
-        PGA_GAIN_2 = 0b0001,   ///< Gain = 2
-        PGA_GAIN_5 = 0b0010,   ///< Gain = 5
-        PGA_GAIN_10 = 0b0011,  ///< Gain = 10
-        PGA_GAIN_20 = 0b0100,  ///< Gain = 20
-        PGA_GAIN_50 = 0b0101,  ///< Gain = 50
-        PGA_GAIN_100 = 0b0110, ///< Gain = 100
-        PGA_GAIN_200 = 0b0111, ///< Gain = 200
+        F_50KHZ = 0x00,
+        F_25KHZ = 0x01,
+        F_10KHZ = 0x02,
+        F_5KHZ  = 0x03,
+        FS      = 0x04,
     };
+
+    enum FrequencySetting
+    {
+        FREQ_10HZ  = 0,
+        FREQ_20HZ  = 1,
+        FREQ_50HZ  = 2,
+        FREQ_100HZ = 3,
+        FREQ_200HZ = 4,
+        FREQ_500HZ = 5,
+        FREQ_1KHZ  = 6,
+        FREQ_2KHZ  = 7,
+        FREQ_5KHZ  = 8,
+        FREQ_10KHZ = 9,
+        FREQ_20KHZ = 10,
+        FREQ_50KHZ = 11,
+    };
+
 
     GCSensorLIA(GCNode* const node = nullptr, quint8 interface_id =0, quint8 id = 0);
     GCSensorLIA(const GCSensorLIA &s) = default;
     ~GCSensorLIA() override;
 
-    void setAverage(bool average);
-    bool getAverage(void);
+    void setAutoGain(bool autoGain);
+    bool getAutoGain(void);
+
+    void setEnableOutput(bool output);
+    bool getEnableOutput(void);
 
     void setGain(PGAGain gain);
     PGAGain getGain(void);
@@ -362,9 +381,14 @@ public:
     void printHeader(void) override;
 
 protected:
-    bool average;
+    bool autoGainConfig;
+    bool output;
 
     PGAGain gain;
+    Mode mode;
+    FrequencySetting fsHigh;
+    FrequencySetting fsLow;
+
 };
 
 Q_DECLARE_METATYPE(GCSensorLIA *)

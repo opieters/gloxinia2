@@ -151,12 +151,27 @@ GCNodePlanalta::GCNodePlanalta(const int nodeID, const QString label) : GCNode(n
 }
 GCNodePlanalta::GCNodePlanalta(GCNodePlanalta& c) : GCNode(c.id, c.label)
 {
+    liaEngine = c.liaEngine;
+}
+
+GCNodePlanalta::~GCNodePlanalta()
+{
 
 }
 
 const unsigned int GCNodePlanalta::getNInterfaces(void) const
 {
     return 4;
+}
+
+GLIAEngine GCNodePlanalta::getLIAEngine(void) const
+{
+    return GLIAEngine(liaEngine);
+}
+
+void GCNodePlanalta::setLIAEngine(const GLIAEngine& engine)
+{
+    liaEngine = engine;
 }
 
 const  GCNode::BootLoaderNodeID GCNodePlanalta::getBootLloaderID(void) const{

@@ -39,7 +39,8 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
       measurementSettings(new MeasurementSettingsDialog),
       newProjectDialog(new NewProjectDialog),
       updateDialog(new UpdateDialog),
-      devCom(new GDeviceCommunication())
+      devCom(new GDeviceCommunication()),
+      liaEngineDialog(new LIAEngineDialog())
 {
     // build UI
     ui->setupUi(this);
@@ -147,6 +148,8 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     sensorAPDS9306_065Dialog->setPeriodDialog(globalMeasurementPolicyDialog);
     sensorADC12Dialog->setPeriodDialog(globalMeasurementPolicyDialog);
     sensorADC16Dialog->setPeriodDialog(globalMeasurementPolicyDialog);
+    sensorLIADialog->setPeriodDialog(globalMeasurementPolicyDialog);
+    sensorLIADialog->setLIAEngineDialog(liaEngineDialog);
 
     // add plot window to UI
     dummySeries = new QLineSeries();
@@ -618,7 +621,7 @@ void GloxiniaConfigurator::startMeasuring(void)
     updateUI();
 
     // loop over all nodes and sensors and trigger measurement
-    for(int i = 0; i < treeModel->rowCount(); i++)
+    /*for(int i = 0; i < treeModel->rowCount(); i++)
     {
         QModelIndex index = treeModel->index(i, 0);
         QVariant data = treeModel->data(index, Qt::EditRole);
@@ -647,7 +650,7 @@ void GloxiniaConfigurator::startMeasuring(void)
             }
 
         }
-    }
+    }*/
 
     GMessage mStart = GMessage(GMessage::Code::CONFIG_DONE_START_READOUT, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
     emit devCom->queueMessage(mStart);
@@ -893,10 +896,11 @@ void GloxiniaConfigurator::editSensor()
 {
     const QModelIndex index = systemOverview->selectionModel()->currentIndex();
     QAbstractItemModel *model = systemOverview->model();
-    GCSensorSHT35 *sensorSHT35 = nullptr;
-    GCSensorAPDS9306 *sensorAPDS9306 = nullptr;
     GCSensorADC12 *sensorADC12 = nullptr;
     GCSensorADC16 *sensorADC16 = nullptr;
+    GCSensorLIA *sensorLIA = nullptr;
+    GCSensorAPDS9306 *sensorAPDS9306 = nullptr;
+    GCSensorSHT35 *sensorSHT35 = nullptr;
     int result;
 
     QList<GMessage> configMs;
@@ -905,60 +909,12 @@ void GloxiniaConfigurator::editSensor()
     if (index.isValid() && index.parent().isValid() && index.parent().parent().isValid())
     {
         QVariant data = model->data(index, Qt::EditRole);
-        sensorSHT35 = data.value<GCSensorSHT35 *>();
-        sensorAPDS9306 = data.value<GCSensorAPDS9306 *>();
+
         sensorADC12 = data.value<GCSensorADC12*>();
         sensorADC16 = data.value<GCSensorADC16*>();
-
-        // selected sensor is SHT35 -> edit parameters of this sensor
-        if (sensorSHT35 != nullptr)
-        {
-            sensorSHT35Dialog->updateUISettings(sensorSHT35);
-            sensorSHT35Dialog->setWindowModality(Qt::ApplicationModal);
-            result = sensorSHT35Dialog->exec();
-            if(result == QDialog::Rejected){
-                return;
-            }
-            sensorSHT35Dialog->apply(sensorSHT35);
-            model->setData(index, QVariant::fromValue(sensorSHT35), Qt::EditRole);
-
-            configMs = sensorSHT35->getConfigurationMessages();
-
-            for(const GMessage &m : configMs){
-                emit devCom->queueMessage(m);
-                qInfo() << "Send SHT35 config" << m.toString();
-
-            }
-
-            sensorSHT35->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorSHT35->getMeasurementPeriod() + 1));
-
-            return;
-        }
-
-        // selected sensor is APDS9306 065 -> edit parameters of this sensor
-        if (sensorAPDS9306 != nullptr)
-        {
-            sensorAPDS9306_065Dialog->updateUISettings(sensorAPDS9306);
-            sensorAPDS9306_065Dialog->setWindowModality(Qt::ApplicationModal);
-            result = sensorAPDS9306_065Dialog->exec();
-            if(result == QDialog::Rejected){
-                return;
-            }
-            sensorAPDS9306_065Dialog->apply(sensorAPDS9306);
-            model->setData(index, QVariant::fromValue(sensorAPDS9306), Qt::EditRole);
-
-            configMs = sensorAPDS9306->getConfigurationMessages();
-
-            for(const GMessage &m : configMs){
-                devCom->queueMessage(m);
-                qInfo() << "Send APDS9306 065 config" << m.toString();
-
-            }
-
-            sensorAPDS9306->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorAPDS9306->getMeasurementPeriod() + 1));
-
-            return;
-        }
+        sensorAPDS9306 = data.value<GCSensorAPDS9306 *>();
+        sensorLIA = data.value<GCSensorLIA*>();
+        sensorSHT35 = data.value<GCSensorSHT35 *>();
 
         if(sensorADC12 != nullptr)
         {
@@ -1007,10 +963,86 @@ void GloxiniaConfigurator::editSensor()
 
             return;
         }
+        // selected sensor is APDS9306 065 -> edit parameters of this sensor
+        if (sensorAPDS9306 != nullptr)
+        {
+            sensorAPDS9306_065Dialog->updateUISettings(sensorAPDS9306);
+            sensorAPDS9306_065Dialog->setWindowModality(Qt::ApplicationModal);
+            result = sensorAPDS9306_065Dialog->exec();
+            if(result == QDialog::Rejected){
+                return;
+            }
+            sensorAPDS9306_065Dialog->apply(sensorAPDS9306);
+            model->setData(index, QVariant::fromValue(sensorAPDS9306), Qt::EditRole);
+
+            configMs = sensorAPDS9306->getConfigurationMessages();
+
+            for(const GMessage &m : configMs){
+                devCom->queueMessage(m);
+                qInfo() << "Send APDS9306 065 config" << m.toString();
+
+            }
+
+            sensorAPDS9306->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorAPDS9306->getMeasurementPeriod() + 1));
+
+            return;
+        }
+
+        if(sensorLIA != nullptr)
+        {
+            sensorLIADialog->updateUISettings(sensorLIA);
+            sensorLIADialog->setWindowModality(Qt::ApplicationModal);
+            result = sensorLIADialog->exec();
+            if(result == QDialog::Rejected){
+                return;
+            }
+            sensorLIADialog->apply(sensorLIA);
+            model->setData(index, QVariant::fromValue(sensorLIA), Qt::EditRole);
+
+            configMs = sensorLIA->getConfigurationMessages();
+
+            for(const GMessage &m : configMs){
+                emit devCom->queueMessage(m);
+                qInfo() << "Send LIA config" << m.toString();
+
+            }
+
+            sensorLIA->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorLIA->getMeasurementPeriod() + 1));
+
+            return;
+        }
+
+        // selected sensor is SHT35 -> edit parameters of this sensor
+        if (sensorSHT35 != nullptr)
+        {
+            sensorSHT35Dialog->updateUISettings(sensorSHT35);
+            sensorSHT35Dialog->setWindowModality(Qt::ApplicationModal);
+            result = sensorSHT35Dialog->exec();
+            if(result == QDialog::Rejected){
+                return;
+            }
+            sensorSHT35Dialog->apply(sensorSHT35);
+            model->setData(index, QVariant::fromValue(sensorSHT35), Qt::EditRole);
+
+            configMs = sensorSHT35->getConfigurationMessages();
+
+            for(const GMessage &m : configMs){
+                emit devCom->queueMessage(m);
+                qInfo() << "Send SHT35 config" << m.toString();
+
+            }
+
+            sensorSHT35->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorSHT35->getMeasurementPeriod() + 1));
+
+            return;
+        }
+
+
 
 
         bool analogue12 = false;
         bool analogue16 = false;
+        bool lia = false;
         bool ok;
         GCSensor *sensor = nullptr;
         GCNode *node = nullptr;
@@ -1045,7 +1077,10 @@ void GloxiniaConfigurator::editSensor()
         if((nodeS != nullptr) && (index.row() == 0))
             analogue16 = true;
         if((nodeP != nullptr) && (index.row() == 0))
+        {
             analogue16 = true;
+            lia = true;
+        }
 
         // there is no sensor in the system (nullptr) -> we need to select a sensor
         QStringList items;
@@ -1056,6 +1091,8 @@ void GloxiniaConfigurator::editSensor()
             items << "ADC12";
         if(analogue16)
             items << "ADC16";
+        if(lia)
+            items << "LIA";
 
         // request sensor type from user
         QString item = QInputDialog::getItem(this, tr("Select sensor type"), tr("Sensor:"), items, 0, false, &ok);
@@ -1063,47 +1100,7 @@ void GloxiniaConfigurator::editSensor()
         // using the index, we pop-up the sensor configuration dialog and add it at the relevant location
         if (ok && !item.isEmpty())
         {
-            if(item == "SHT35") {
-                sensorSHT35Dialog->setWindowModality(Qt::ApplicationModal);
-                result = sensorSHT35Dialog->exec();
-                if (result == QDialog::Rejected)
-                {
-                    return;
-                }
-                sensorSHT35 = new GCSensorSHT35(node, (quint8) index.parent().row(), (quint8)index.row());
-                sensorSHT35Dialog->apply(sensorSHT35);
-                model->setData(index, QVariant::fromValue(sensorSHT35), Qt::EditRole);
-
-                // update hardware configuration
-                configMs = sensorSHT35->getConfigurationMessages();
-
-                for(const GMessage &m : configMs){
-                    emit devCom->queueMessage(m);
-                    qInfo() << "Send SHT35 config" << m.toString();
-                }
-                sensorSHT35->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorSHT35->getMeasurementPeriod() + 1));
-
-            } else if(item == "APDS9306 065") {
-                sensorAPDS9306_065Dialog->setWindowModality(Qt::ApplicationModal);
-                result = sensorAPDS9306_065Dialog->exec();
-                if (result == QDialog::Rejected)
-                {
-                    return;
-                }
-                sensorAPDS9306 = new GCSensorAPDS9306(node, (quint8) index.parent().row(), (quint8)index.row());
-                sensorAPDS9306_065Dialog->apply(sensorAPDS9306);
-                model->setData(index, QVariant::fromValue(sensorAPDS9306), Qt::EditRole);
-
-                configMs = sensorAPDS9306->getConfigurationMessages();
-
-                for(const GMessage &m : configMs){
-                    emit devCom->queueMessage(m);
-                    qInfo() << "Send APDS9306 065 config" << m.toString();
-
-                }
-                sensorAPDS9306->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorAPDS9306->getMeasurementPeriod() + 1));
-
-            } else if(item == "ADC12"){
+            if(item == "ADC12"){
                 sensorADC12Dialog->setWindowModality(Qt::ApplicationModal);
                 result = sensorADC12Dialog->exec();
                 if (result == QDialog::Rejected)
@@ -1141,6 +1138,65 @@ void GloxiniaConfigurator::editSensor()
 
                 }
                 sensorADC16->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorADC16->getMeasurementPeriod() + 1));
+            } else  if(item == "APDS9306 065") {
+                sensorAPDS9306_065Dialog->setWindowModality(Qt::ApplicationModal);
+                result = sensorAPDS9306_065Dialog->exec();
+                if (result == QDialog::Rejected)
+                {
+                    return;
+                }
+                sensorAPDS9306 = new GCSensorAPDS9306(node, (quint8) index.parent().row(), (quint8)index.row());
+                sensorAPDS9306_065Dialog->apply(sensorAPDS9306);
+                model->setData(index, QVariant::fromValue(sensorAPDS9306), Qt::EditRole);
+
+                configMs = sensorAPDS9306->getConfigurationMessages();
+
+                for(const GMessage &m : configMs){
+                    emit devCom->queueMessage(m);
+                    qInfo() << "Send APDS9306 065 config" << m.toString();
+
+                }
+                sensorAPDS9306->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorAPDS9306->getMeasurementPeriod() + 1));
+
+            } else if(item == "LIA") {
+                sensorLIADialog->setWindowModality(Qt::ApplicationModal);
+                result = sensorLIADialog->exec();
+                if (result == QDialog::Rejected)
+                {
+                    return;
+                }
+                sensorLIA = new GCSensorLIA(node, (quint8) index.parent().row(), (quint8)index.row());
+                sensorLIADialog->apply(sensorLIA);
+                model->setData(index, QVariant::fromValue(sensorLIA), Qt::EditRole);
+
+                // update hardware configuration
+                configMs = sensorLIA->getConfigurationMessages();
+
+                for(const GMessage &m : configMs){
+                    emit devCom->queueMessage(m);
+                    qInfo() << "Send LIA config" << m.toString();
+                }
+                sensorLIA->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorLIA->getMeasurementPeriod() + 1));
+            } else if(item == "SHT35") {
+                sensorSHT35Dialog->setWindowModality(Qt::ApplicationModal);
+                result = sensorSHT35Dialog->exec();
+                if (result == QDialog::Rejected)
+                {
+                    return;
+                }
+                sensorSHT35 = new GCSensorSHT35(node, (quint8) index.parent().row(), (quint8)index.row());
+                sensorSHT35Dialog->apply(sensorSHT35);
+                model->setData(index, QVariant::fromValue(sensorSHT35), Qt::EditRole);
+
+                // update hardware configuration
+                configMs = sensorSHT35->getConfigurationMessages();
+
+                for(const GMessage &m : configMs){
+                    emit devCom->queueMessage(m);
+                    qInfo() << "Send SHT35 config" << m.toString();
+                }
+                sensorSHT35->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorSHT35->getMeasurementPeriod() + 1));
+
             } else {
                 sensor = nullptr;
             }

@@ -3,6 +3,7 @@
 
 #include <QMetaType>
 #include <QStringList>
+#include "gliaengine.h"
 
 class GCNode
 {
@@ -84,11 +85,16 @@ class GCNodePlanalta : public GCNode
 public:
     GCNodePlanalta(const int nodeID, const QString label = "planalta node");
     GCNodePlanalta(GCNodePlanalta&);
+    ~GCNodePlanalta(void);
 
     const unsigned int getNInterfaces(void) const override;
     const BootLoaderNodeID getBootLloaderID(void) const override;
 
+    GLIAEngine getLIAEngine(void) const;
+    void setLIAEngine(const GLIAEngine& engine);
+
 protected:
+    GLIAEngine liaEngine;
 };
 
 Q_DECLARE_METATYPE(GCNodePlanalta *);

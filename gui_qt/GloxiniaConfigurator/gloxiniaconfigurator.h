@@ -33,6 +33,7 @@
 #include <QHBoxLayout>
 #include <gdevicecommunication.h>
 #include <sensorliadialog.h>
+#include <liaenginedialog.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -238,6 +239,7 @@ private:
     SensorADC12Dialog *sensorADC12Dialog;
     SensorADC16Dialog *sensorADC16Dialog;
     SensorLIADialog *sensorLIADialog;
+    LIAEngineDialog* liaEngineDialog;
 
     /*
      * The file stores the sensor data

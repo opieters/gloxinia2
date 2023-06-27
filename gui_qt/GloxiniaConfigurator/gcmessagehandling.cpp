@@ -60,7 +60,7 @@ void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
         case GMessage::Code::CONFIG_DONE_START_READOUT:
             processConfigDoneStartReadout(m);
             break;
-        case GMessage::Code::CONFIG_DONE_FINISHED_READOUT:
+        case GMessage::Code::CONFIG_SAVED:
             processConfigDoneFinishedReadout(m);
             break;
         default:
@@ -214,13 +214,6 @@ void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
         QModelIndex index = treeModel->getIndex(m.getMessageAddress(), m.getInterfaceID(), m.getSensorID());
         // create sensor
         switch(m.getData().at(0)){
-        case GCSensor::sensor_class::SHT35:
-        {
-            GCSensorSHT35* sensor_sht35 = new GCSensorSHT35(node, m.getInterfaceID(), m.getSensorID());
-            status = treeModel->setData(index, QVariant::fromValue(sensor_sht35));
-
-            break;
-        }
         case GCSensor::sensor_class::ADC12:
         {
             GCSensorADC12* sensor_adc12 = new GCSensorADC12(node, m.getInterfaceID(), m.getSensorID());
@@ -237,6 +230,19 @@ void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
         {
             GCSensorAPDS9306* sensor_apds9306_065 = new GCSensorAPDS9306(node,m.getInterfaceID(), m.getSensorID());
             status = treeModel->setData(index, QVariant::fromValue(sensor_apds9306_065));
+            break;
+        }
+        case GCSensor::sensor_class::LIA:
+        {
+            GCSensorLIA* sensor_lia = new GCSensorLIA(node, m.getInterfaceID(), m.getSensorID());
+            status = treeModel->setData(index, QVariant::fromValue(sensor_lia));
+            break;
+        }
+        case GCSensor::sensor_class::SHT35:
+        {
+            GCSensorSHT35* sensor_sht35 = new GCSensorSHT35(node, m.getInterfaceID(), m.getSensorID());
+            status = treeModel->setData(index, QVariant::fromValue(sensor_sht35));
+
             break;
         }
         case GCSensor::sensor_class::NOT_SET:

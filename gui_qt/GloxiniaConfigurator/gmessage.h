@@ -32,7 +32,7 @@ public:
         SENSOR_STOP = 0x15,
         SENSOR_CONFIG_END = 0x16,
         CONFIG_DONE_START_READOUT = 0x17,
-        CONFIG_DONE_FINISHED_READOUT = 0x18,
+        CONFIG_SAVED = 0x18,
         ACTUATOR_STATUS = 0x20,
         TX_ERROR = 0x30,
         DATA_CLEAR = 0x40,
