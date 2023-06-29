@@ -113,7 +113,7 @@ void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t sensor_id, cons
 #if defined(__DICIO__) || defined(__SYLVATICA__)
         case SENSOR_TYPE_ADC12:
 #ifdef __DICIO__
-            if((sensor_id == 0) || (sensor_id == 1)) {
+            if((sensor_id == 1) || (sensor_id == 2)) {
 #else
             if((sensor_id == 1)) {
 #endif
