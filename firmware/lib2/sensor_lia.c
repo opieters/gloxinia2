@@ -2,6 +2,9 @@
 #include <sensor.h>
 #include <utilities.h>
 #include <address.h>
+#include <adc16.h>
+
+extern adc16_config_t adc16_config;
 
 void sensor_lia_get_config(sensor_gconfig_t* intf, uint8_t reg, uint8_t* buffer, uint8_t* length){
     sensor_lia_config_t *config = &intf->sensor_config.lia;
@@ -140,9 +143,74 @@ void lia_init_sensor(sensor_gconfig_t *intf)
 }
 
 
-void sensor_lia_activate(sensor_gconfig_t* config){
-    // TODO: init ADC
-    // TODO: start ADC
+void lia_init_output_driver(sensor_gconfig_t* config)
+{    
+    // update actual hardware
+    pga_update_status(config->sensor_config.lia.pga_config, PGA_STATUS_ON);
+
+    if(config->sensor_config.lia.ouput_enable)
+    {
+        switch(config->interface->interface_id)
+        {
+            case 0:
+                _RP98R = _RPOUT_OC2;   // DRV1 signal
+                break;
+            case 1:
+                _RP99R = _RPOUT_OC2;   // DRV2 signal
+                break;
+            case 2:
+                _RP82R = _RPOUT_OC2;  // DRV3 signal
+                break;
+            case 3:
+                _RP84R = _RPOUT_OC2;  // DRV4 signal
+                break;
+            default:
+                break;
+        }
+    } else {
+        switch(config->interface->interface_id)
+        {
+            case 0:
+                _RP98R = 0;   // DRV1 signal
+                _RF2 = 0;
+                break;
+            case 1:
+                _RP99R = 0;   // DRV2 signal
+                _RF3 = 0;
+                break;
+            case 2:
+                _RP82R = 0;  // DRV3 signal
+                _RF4 = 0;
+                break;
+            case 3:
+                _RP84R = 0;  // DRV4 signal
+                _RF5 = 0;
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+
+void sensor_lia_activate(sensor_gconfig_t* config)
+{
+    // updates PGA and configures output pin
+    lia_init_output_driver(config);
+    
+    // configure DAC only once
+    planalta_init_dac_config(
+            dac_config_t* config, 
+            sensor_lia_op_mode_t operation_mode, 
+            sensor_lia_fs_freq_t sweep_frequency, 
+            bool calibration);
+    
+    // start ADC only once
+    if(adc16_config.status != ADC16_STATUS_ON)
+    {
+        adc16_init(&adc16_config);
+        adc16_start(&adc16_config);
+    }   
     
     config->status = SENSOR_STATUS_RUNNING;
 }
