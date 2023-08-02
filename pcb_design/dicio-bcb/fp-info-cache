@@ -1,4 +1,4 @@
-20954993244143941
+20998788227083597
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -87486,6 +87486,13 @@ custom_footprints
 9
 9
 custom_footprints
+AMPHENOL_124018612112A
+
+
+0
+30
+30
+custom_footprints
 APDS-9306-065
 
 
@@ -87730,6 +87737,13 @@ translated Allegro footprint
 0
 20
 20
+samtec
+SAMTEC_MMS-107-02-F-DV
+
+
+0
+14
+14
 samtec
 SAMTEC_TMMH-107-01-T-DV
 
