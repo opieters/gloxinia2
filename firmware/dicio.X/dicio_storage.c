@@ -100,7 +100,7 @@ void dicio_write_node_configs_sd(void)
     }
 }
 
-void dicio_register_node(message_t *m)
+void dicio_register_node(const message_t *m)
 {
     // check if we can still register a new node
     if (n_nodes >= ARRAY_LENGTH(node_configs))

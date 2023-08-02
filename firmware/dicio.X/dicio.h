@@ -6,13 +6,13 @@
 #include <uart.h>
 #include <message.h>
 
-#define DICIO_CONFIG_ADDRESS 0x00000000U
+#define DICIO_CONFIG_ADDRESS            0x00000000U
 #define DICIO_NODE_CONFIG_START_ADDRESS 0x00000020U
-#define DICIO_MAX_N_NODES 50U
-#define DICIO_MAX_N_INTERFACES 8U
-#define DICIO_DATA_START_ADDRESS ( DICIO_NODE_CONFIG_START_ADDRESS + DICIO_MAX_N_NODES * ( 1 + DICIO_MAX_N_INTERFACES ) )
+#define DICIO_MAX_N_NODES               50U
+#define DICIO_MAX_N_INTERFACES          8U
+#define DICIO_DATA_START_ADDRESS        ( DICIO_NODE_CONFIG_START_ADDRESS + DICIO_MAX_N_NODES * ( 1 + DICIO_MAX_N_INTERFACES ) )
 
-#define ID_UART_OVERFLOW_SCHEDULE 2
+#define ID_UART_OVERFLOW_SCHEDULE       5
 
 /**
  * @brief Node configuration structure.
@@ -174,6 +174,8 @@ extern "C"
   void cmd_config_done_start_readout(const message_t* m);
   
   void dicio_message_process(const message_t* m);
+  
+  void dicio_register_node(const message_t *m);
 
 #ifdef __cplusplus
 }
