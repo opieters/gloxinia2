@@ -237,6 +237,12 @@ void dicio_dump_sdcard_data(uint32_t sector_start, uint32_t sector_stop)
     message_t m;
     uint8_t m_data[CAN_MAX_N_BYTES];
     uint32_t i;
+    bool auto_stop = (sector_stop == 0);
+    
+    if(auto_stop)
+    {
+        sector_stop = SDCARD_SECTOR_UPPER_ADDRESS;
+    }
 
     if (sector_stop < sector_start)
     {
@@ -244,34 +250,41 @@ void dicio_dump_sdcard_data(uint32_t sector_start, uint32_t sector_stop)
     }
 
     // send start address of first sector
-    for (int i = 0; i < 4; i++)
-    {
-        m_data[3 - i] = (sector_start >> (8 * i));
-    }
+    m_data[0] = (uint8_t) (sector_start >> 8);
+    m_data[1] = (uint8_t) (sector_start);
+    
     message_init(&m,
                  controller_address,
                  MESSAGE_NO_REQUEST,
                  M_DATA_BURST_START,
-            NO_INTERFACE_ID,
+                 NO_INTERFACE_ID,
                  NO_SENSOR_ID,
                  m_data,
-                 4);
-    message_send(&m);
-
-    message_init(&m,
-                 controller_address,
-                 MESSAGE_NO_REQUEST,
-                 M_DATA_BURST,
-            NO_INTERFACE_ID,
-                 NO_SENSOR_ID,
-                 m_data,
-                 8);
+                 2);
+    send_message_uart(&m);
 
     // loop over all sectors
     for (i = sector_start; i < sector_stop; i++)
     {
         if (SD_SPI_SectorRead(i, dicio_sector_buffer, 1))
         {
+            // check if sector is empty, if so, stop sending data if auto_stop is on
+            if(auto_stop)
+            {
+                bool all_zero = true;
+                for(int j = 0; (j < SDCARD_SECTOR_SIZE) && all_zero; j++)
+                {
+                    if(dicio_sector_buffer[j] != 0)
+                        all_zero = false;
+                }
+                
+                if(all_zero)
+                {
+                    sector_stop = i;
+                    continue;
+                }
+            }
+            
             for (uint16_t j = 0; j < SDCARD_SECTOR_SIZE; j++)
             {
                 m_data[j % CAN_MAX_N_BYTES] = dicio_sector_buffer[j];
@@ -279,48 +292,52 @@ void dicio_dump_sdcard_data(uint32_t sector_start, uint32_t sector_stop)
                 // send 8 bytes at a time
                 if ((j % CAN_MAX_N_BYTES) == (CAN_MAX_N_BYTES - 1))
                 {
-                    message_send(&m);
+                    message_init(&m,
+                        controller_address,
+                        MESSAGE_NO_REQUEST,
+                        M_DATA_BURST,
+                        NO_INTERFACE_ID,
+                        NO_SENSOR_ID,
+                        m_data,
+                        8);
+                    
+                    send_message_uart(&m);
                 }
             }
         }
         else
         {
             // send address of the last sector (failed readout)
-            for (int j = 0; j < 4; i++)
-            {
-                m_data[3 - j] = (i >> (8 * j));
-            }
+            m_data[0] = (uint8_t) (i >> 8);
+            m_data[1] = (uint8_t) (i);
 
             message_init(&m,
                          controller_address,
                          MESSAGE_NO_REQUEST,
                          M_DATA_BURST_STOP,
-                    NO_INTERFACE_ID,
+                        NO_INTERFACE_ID,
                          NO_SENSOR_ID,
                          m_data,
-                         4);
-            message_send(&m);
+                         2);
+            send_message_uart(&m);
 
             return;
         }
     }
 
     // send address of the last sector (not incl.)
-    for (int i = 0; i < 4; i++)
-    {
-
-        m_data[3 - i] = (sector_stop >> (8 * i));
-    }
+    m_data[0] = (uint8_t) (sector_stop >> 8);
+    m_data[1] = (uint8_t) (sector_stop);
 
     message_init(&m,
                  controller_address,
                  MESSAGE_NO_REQUEST,
                  M_DATA_BURST_STOP,
-            NO_INTERFACE_ID,
+                 NO_INTERFACE_ID,
                  NO_SENSOR_ID,
                  m_data,
-                 4);
-    message_send(&m);
+                 2);
+    send_message_uart(&m);
 }
 
 void cmd_data_clear(const message_t* m) {
@@ -336,14 +353,11 @@ void cmd_data_read(const message_t* m) {
     if (m->request_message_bit) {
         dicio_dump_sdcard_data(DICIO_DATA_START_ADDRESS, SD_SPI_GetSectorCount());
     } else {
-        if(m->length == 8)
+        if(m->length == 4)
         {
-            uint32_t sector_start = 0, sector_stop = 0;
-            for(int i = 0; i < 4; i++)
-            {
-                sector_start = (sector_start << 8) | m->data[i];
-                sector_stop = (sector_stop << 8) | m->data[i+4];
-            }
+            uint32_t sector_start = (m->data[0] << 8) | (m->data[1]);
+            uint32_t sector_stop = (m->data[2] << 8) | (m->data[3]);
+            
             dicio_dump_sdcard_data(sector_start, sector_stop);
         }
     }
