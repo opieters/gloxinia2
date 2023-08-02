@@ -22,6 +22,7 @@
 #define SDCARD_SECTOR_SIZE (SDCARD_SECTOR_HEADER+SDCARD_SECTOR_DATA+SDCARD_SECTOR_FOOTER)
 #define SDCARD_START_BYTE (0x5A)
 #define SDCARD_STOP_BYTE (0xA5)
+#define SDCARD_SECTOR_UPPER_ADDRESS (0x8000)
 
 #ifdef __cplusplus
 extern "C"
@@ -156,6 +157,8 @@ extern "C"
       times (multiplying by 512).
     ***************************************************************************************/
   bool SD_SPI_SectorWrite(uint32_t sector_address, const uint8_t *buffer, uint16_t sector_count);
+  
+  void sdcard_init_dma(void);
 
 #ifdef __cplusplus
 }

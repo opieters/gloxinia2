@@ -2,12 +2,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "spi.h"
 #include "spi1.h"
 
 #include "sdcard.h"
-#include "utilities.h"
-#include "../dicio.X/dicio.h"
+#include <utilities.h>
+#include "dicio.h"
 
 /******************************************************************************/
 /* SD Configuration                                                           */
@@ -21,10 +20,10 @@
 
 #define SD_SPI_ChipSelect() SDCard_CS_SetLow()
 #define SD_SPI_ChipDeselect() SDCard_CS_SetHigh()
-#define SD_SPI_exchangeByte(data) spiMaster[SDFAST].exchangeByte(data)
-#define SD_SPI_exchangeBlock(data, length) spiMaster[SDFAST].exchangeBlock(data, length)
-#define SD_SPI_master_open(config) spiMaster[config].spiOpen()
-#define SD_SPI_close() spiMaster[SDFAST].spiClose()
+#define SD_SPI_exchangeByte(data) spi1_exchange_byte(data)
+#define SD_SPI_exchangeBlock(data, length) spi1_exchange_block(data, length)
+#define SD_SPI_master_open(config) spi1_open()
+#define SD_SPI_close() spi1_close()
 #define SD_SPI_GetCardDetect() 1
 #define SD_SPI_GetWriteProtect() 0
 
@@ -467,10 +466,28 @@ void sdcard_start_sector_write(void)
 
     DMA3REQbits.FORCE = 1;
     
+    UART_DEBUG_PRINT("STORING DATA TO %lu", sdcard_data_address);
+    
+    for(int i = SDCARD_SECTOR_HEADER; i < (SDCARD_SECTOR_HEADER+SDCARD_SECTOR_DATA); i++)
+    {
+        sdcard_sector_buffer[i] = (uint8_t) i;
+    }
+    
+    // flip data already
+    if(sdcard_sector_buffer_selector == 0)
+    {
+        sdcard_sector_buffer = sdcard_sector_buffer_b;
+        sdcard_n_bytes_buffered = 0;
+    } else {
+        sdcard_sector_buffer = sdcard_sector_buffer_a;
+        sdcard_n_bytes_buffered = 0;
+    }
+    
+    
     // move address
     if (mediaInformation.gSDMode == SD_MODE_NORMAL)  
     {
-        sdcard_data_address += 1 << 9; 
+        sdcard_data_address += (1 << 9); 
     } else {
         sdcard_data_address += 1; 
     }
@@ -496,6 +513,8 @@ bool sdcard_save_data(uint8_t *buffer, size_t length)
             sdcard_sector_buffer[SDCARD_SECTOR_HEADER + sdcard_n_bytes_buffered++] = buffer[i];
         }
         
+        UART_DEBUG_PRINT("STORING DATA TO SD");
+        
         // start DMA transfer
         // this also flips the buffer sdcard_sector_buffer
         sdcard_start_sector_write();
@@ -512,19 +531,6 @@ bool sdcard_save_data(uint8_t *buffer, size_t length)
 
 void __attribute__((interrupt, no_auto_psv)) _DMA3Interrupt(void)
 {
-
-
-    if((SD_SPI_exchangeByte(0xFF) &  SD_WRITE_RESPONSE_TOKEN_MASK) != SD_TOKEN_DATA_ACCEPTED)
-    {
-        //Something went wrong.  Try and terminate as gracefully as 
-        //possible, so as allow possible recovery.
-        //info->bStateVariable = SD_ASYNC_WRITE_ABORT; 
-        //return SD_ASYNC_WRITE_BUSY;
-    }
-    SD_SPI_ChipDeselect();
-
-    (void)SD_SPI_exchangeByte(0xFF);
-
     _DMA3IF = 0;
 }
 
@@ -555,8 +561,6 @@ void __attribute__((interrupt, no_auto_psv)) _DMA4Interrupt(void)
                 DMA3CNT = ARRAY_LENGTH(sdcard_sector_buffer_a);
                 DMA4CNT = ARRAY_LENGTH(sdcard_sector_buffer_a);
                 
-                sdcard_sector_buffer = sdcard_sector_buffer_b;
-                sdcard_n_bytes_buffered = 0;
                 sdcard_sector_buffer_selector = 1;
             } else {
                 DMA3STAL = __builtin_dmaoffset(sdcard_sector_buffer_b);
@@ -567,14 +571,13 @@ void __attribute__((interrupt, no_auto_psv)) _DMA4Interrupt(void)
                 DMA3CNT = ARRAY_LENGTH(sdcard_sector_buffer_b);
                 DMA4CNT = ARRAY_LENGTH(sdcard_sector_buffer_b);
                 
-                sdcard_sector_buffer = sdcard_sector_buffer_a;
-                sdcard_n_bytes_buffered = 0;
                 sdcard_sector_buffer_selector = 0;
             }
             
             sdcard_data_transfer_status = SDCARD_DATA_SEND_DATA;
     
             // start data transfer
+            DMA3CONbits.CHEN = 1;
             DMA3REQbits.FORCE = 1;
             break;
         case SDCARD_DATA_SEND_DATA:
@@ -589,6 +592,8 @@ void __attribute__((interrupt, no_auto_psv)) _DMA4Interrupt(void)
                 sdcard_data_transfer_status = SDCARD_DATA_ERROR;
             else
                 sdcard_data_transfer_status = SDCARD_DATA_WAITING;
+            
+            SD_SPI_ChipDeselect();
             break;
         case SDCARD_DATA_WAITING:
             break;
@@ -627,6 +632,20 @@ bool SD_SPI_SectorRead(uint32_t sector_address, uint8_t* buffer, uint16_t sector
     bool result = false;
     uint16_t i;
     
+    int dma3_ie_state = _DMA3IE;
+    _DMA3IF = 0;
+    int dma3_chen_state = DMA3CONbits.CHEN;
+
+    int dma4_ie_state = _DMA4IE;
+    _DMA4IF = 0;
+    int dma4_chen_state = DMA4CONbits.CHEN;
+    
+    _DMA3IE = 0;
+    DMA3CONbits.CHEN = 0;
+
+    _DMA4IE = 0;
+    DMA4CONbits.CHEN = 0;
+    
     for(i=0; i<sector_count; i++)
     {
         //Initialize info structure for using the SD_SPI_AsyncReadTasks() function.
@@ -636,10 +655,10 @@ bool SD_SPI_SectorRead(uint32_t sector_address, uint8_t* buffer, uint16_t sector
         info.dwAddress = sector_address + i;
         info.bStateVariable = SD_ASYNC_READ_QUEUED;
 
-        if( SD_SPI_master_open(SDFAST) == false )
+        /*if( SD_SPI_master_open(SDFAST) == false )
         {
             return false;
-        }
+        }*/
         SD_SPI_ChipSelect();
 
         while(1)
@@ -658,8 +677,14 @@ bool SD_SPI_SectorRead(uint32_t sector_address, uint8_t* buffer, uint16_t sector
         }       
 
         SD_SPI_ChipDeselect();
-        SD_SPI_close();
+        //SD_SPI_close();
     }
+    
+    _DMA3IE = dma3_ie_state;
+    DMA3CONbits.CHEN = dma3_chen_state;
+
+    _DMA4IE = dma4_ie_state;
+    DMA4CONbits.CHEN = dma4_chen_state;
     
     return result;
 }    
@@ -671,6 +696,20 @@ bool SD_SPI_SectorWrite(uint32_t sector_address, const uint8_t* buffer, uint16_t
     bool result = false;
     uint16_t i;
     
+    int dma3_ie_state = _DMA3IE;
+    _DMA3IF = 0;
+    int dma3_chen_state = DMA3CONbits.CHEN;
+
+    int dma4_ie_state = _DMA4IE;
+    _DMA4IF = 0;
+    int dma4_chen_state = DMA4CONbits.CHEN;
+    
+    _DMA3IE = 0;
+    DMA3CONbits.CHEN = 0;
+
+    _DMA4IE = 0;
+    DMA4CONbits.CHEN = 0;
+    
     for(i=0; i<sector_count; i++)
     {
         //Initialize structure so we write a single sector worth of data.
@@ -680,10 +719,10 @@ bool SD_SPI_SectorWrite(uint32_t sector_address, const uint8_t* buffer, uint16_t
         info.dwAddress = sector_address + i;
         info.bStateVariable = SD_ASYNC_WRITE_QUEUED;
 
-        if( SD_SPI_master_open(SDFAST) == false )
+        /*if( SD_SPI_master_open(SDFAST) == false )
         {
             return false;
-        }
+        }*/
         SD_SPI_ChipSelect();
 
         while(1)
@@ -702,8 +741,14 @@ bool SD_SPI_SectorWrite(uint32_t sector_address, const uint8_t* buffer, uint16_t
         }   
 
         SD_SPI_ChipDeselect();
-        SD_SPI_close();
+        //SD_SPI_close();
     }
+    
+    _DMA3IE = dma3_ie_state;
+    DMA3CONbits.CHEN = dma3_chen_state;
+
+    _DMA4IE = dma4_ie_state;
+    DMA4CONbits.CHEN = dma4_chen_state;
     
     return result;
 }    
@@ -751,10 +796,10 @@ bool SD_SPI_MediaInitialize (void)
 
     //MMC media powers up in the open-drain mode and cannot handle a clock faster
     //than 400kHz. Initialize SPI port to <= 400kHz
-    if( SD_SPI_master_open(SDSLOW) == false )
+    /*if( SD_SPI_master_open(SDSLOW) == false )
     {
         return false;
-    }
+    }*/
 
     //Media wants the longer of: Vdd ramp time, 1 ms fixed delay, or 74+ clock pulses.
     //According to spec, CS should be high during the 74+ clock pulses.
@@ -815,7 +860,7 @@ bool SD_SPI_MediaInitialize (void)
             mediaInformation.errorCode = MEDIA_CANNOT_INITIALIZE;
             
             SD_SPI_ChipDeselect();
-            SD_SPI_close();
+            //SD_SPI_close();
             return false;
         }            
         else
@@ -937,11 +982,11 @@ bool SD_SPI_MediaInitialize (void)
 
     //Temporarily deselect device
     SD_SPI_ChipDeselect();
-    SD_SPI_close();
-    if(SD_SPI_master_open(SDFAST) == false)
+    //SD_SPI_close();
+    /*if(SD_SPI_master_open(SDFAST) == false)
     {
         return false;
-    }
+    }*/
     
     SD_SPI_ChipSelect();
 
@@ -960,7 +1005,7 @@ bool SD_SPI_MediaInitialize (void)
         mediaInformation.errorCode = MEDIA_CANNOT_INITIALIZE;
         
         SD_SPI_ChipDeselect();
-        SD_SPI_close();
+        //SD_SPI_close();
         return false;
     }    
 
@@ -1055,12 +1100,12 @@ bool SD_SPI_MediaInitialize (void)
     if(mediaInformation.errorCode == MEDIA_NO_ERROR)
     {
         mediaInformation.state = SD_STATE_READY_FOR_COMMAND;
-        SD_SPI_close();
+        //SD_SPI_close();
         sdcard_found = true;
         return true;
     }
     
-    SD_SPI_close();
+    //SD_SPI_close();
     return false;
 }//end MediaInitialize
 
