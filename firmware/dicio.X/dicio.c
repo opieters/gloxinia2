@@ -10,6 +10,7 @@
 #include "sdcard.h"
 #include <rtcc.h>
 #include "dicio_adc12_filters.h"
+#include "spi1.h"
 
 // TODO REMOVE DEBUG INCLUDES
 #include <sensor_apds9306_065.h>
@@ -118,11 +119,21 @@ void dicio_init(void)
 
     event_controller_init();
     UART_DEBUG_PRINT("Initialised event controller.");
+    
+    if(spi1_open())
+    {
+        UART_DEBUG_PRINT("Initialised SPI");
+    } else 
+    {
+        UART_DEBUG_PRINT("SPI ERROR");
+    }
 
     if (SD_SPI_MediaInitialize() == true)
     {
         dicio_read_sdconfig_data();
         UART_DEBUG_PRINT("Initialised SD card");
+        
+        sdcard_init_dma();
     }
     else
     {
