@@ -345,7 +345,7 @@ i2c_bus_t sensor_i2c_get_bus(uint8_t sensor_interface_n) {
 }
 
 #ifdef __DICIO__
-void sensor_save_data(uint8_t address, uint8_t interface, uint8_t sensor_id, uint8_t* buffer, size_t length)
+void sensor_save_data(uint8_t address, uint8_t interface, uint8_t sensor_id, const uint8_t* buffer, size_t length)
 {
     uint8_t sd_buffer[CAN_MAX_N_BYTES+9];
     uint16_t ctime[4];
