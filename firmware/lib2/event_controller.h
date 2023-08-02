@@ -24,9 +24,7 @@
 /// SD card.
 #define ID_DICIO_NODE_CONFIG_READOUT 3
 
-/// @brief Reserved ID for the schedule that starts each of the nodes after
-/// reading their configuration.
-#define ID_DICIO_START_NODES 4
+#define ID_SEARCH_START (0x10)
 
 /// @brief The frequency of the event controller in Hz.
 #define EVENT_CONTROLLER_FREQUENCY 10

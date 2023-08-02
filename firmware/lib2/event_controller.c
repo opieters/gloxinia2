@@ -8,7 +8,7 @@
 volatile uint16_t n_queued_tasks = 0;
 task_t task_list[MAX_N_TASKS];
 volatile uint16_t task_index = 0;
-uint32_t id_counter = DEFAULT_ID;
+uint32_t id_counter = ID_SEARCH_START;
 volatile uint16_t n_scheduled_events = 0;
 task_schedule_t schedule_list[MAX_N_SCHEDULES];
 
@@ -87,8 +87,8 @@ uint32_t schedule_event(task_schedule_t* s) {
     _GIE = 0; // disable interrupts
 
     // get id
-    uint32_t id = id_counter + 1;
-    id_counter++;
+    uint32_t id = id_counter;
+    id_counter = MAX(id_counter+1, ID_SEARCH_START);
 
     while (i < n_scheduled_events) {
         if (id == schedule_list[i].id) {

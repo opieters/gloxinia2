@@ -195,6 +195,11 @@ void message_process(const message_t *m) {
             cmd_config_done_start_readout(m);
             #endif  
             break;
+        case M_DATA_READ:
+            #ifdef __DICIO__
+            cmd_data_read(m);
+            #endif
+            break;
         case M_CONFIG_SAVED:
             UART_DEBUG_PRINT("M_CONFIG_SAVED");
             break;
