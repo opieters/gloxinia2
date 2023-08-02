@@ -9,27 +9,15 @@
 extern uint8_t n_nodes;
 extern node_config_t node_configs[DICIO_MAX_N_NODES];
 task_schedule_t dicio_node_config_readout;
-task_schedule_t dicio_start_nodes;
 uint8_t dicio_node_config_readout_counter = 0;
-uint8_t dicio_start_nodes_counter = 0;
-
-void dicio_config_start_nodes(void *data);
 
 void dicio_message_process(const message_t* m)
 {
     switch(m->command)
     {
         case M_NODE_INFO:
-            UART_DEBUG_PRINT("NODE_INFO");
-            cmd_node_info(m);
-            break;
-        case M_SENSOR_STATUS:
-            UART_DEBUG_PRINT("SENSOR_STATUS");
-            cmd_sensor_status(m);
-            break;
-        case M_SENSOR_ERROR:
-            UART_DEBUG_PRINT("SENSOR_ERROR");
-            cmd_sensor_error(m);
+            UART_DEBUG_PRINT("NODE_INFO_DICIO");
+            dicio_register_node(m);
             break;
         case M_SENSOR_DATA:
             UART_DEBUG_PRINT("SENSOR_DATA");
@@ -85,25 +73,33 @@ void cmd_sensor_config_end(const message_t* m)
 void cmd_config_done_start_readout(const message_t* m)
 {
     // send a message to each of the connected nodes to request their configuration data
-    // to do this, we use a schedule since this allows for easy async operation and also to check if a node became unresponsive
+    // to do this, we use a schedule since this allows for easy async operation
     
     dicio_node_config_readout_counter = 0;
     
     task_t task = {dicio_config_node_config_readout, NULL};
     schedule_init(&dicio_node_config_readout, task, 1);
     schedule_specific_event(&dicio_node_config_readout, ID_DICIO_NODE_CONFIG_READOUT);
-    
-    dicio_start_nodes_counter = 0;
-    
-    task.cb = dicio_config_start_nodes;
-    task.data = NULL;
-    schedule_init(&dicio_start_nodes, task, 1);
-    schedule_specific_event(&dicio_start_nodes, ID_DICIO_START_NODES);
 }
 
 void dicio_config_node_config_readout(void *data)
 {
     message_t m;
+    
+    if(dicio_node_config_readout_counter != 0)
+    {
+        // start sampling data
+        message_init(&m,
+            node_configs[dicio_node_config_readout_counter - 1].node_id,
+            true,
+            M_SENSOR_START,
+            NO_INTERFACE_ID,
+            NO_SENSOR_ID,
+            NULL,
+            0);
+        message_send(&m);
+    }
+    
     if(dicio_node_config_readout_counter == n_nodes)
     {
         // stop schedule, send message to GUI that readout is complete
@@ -140,27 +136,6 @@ void dicio_config_node_config_readout(void *data)
     }
 }
 
-void dicio_config_start_nodes(void *data)
-{
-    message_t m;
-    if(dicio_start_nodes_counter == n_nodes)
-    {
-        schedule_remove_event(ID_DICIO_START_NODES);
-    } else {
-        message_init(&m,
-            node_configs[dicio_start_nodes_counter].node_id,
-            true,
-            M_SENSOR_START,
-            NO_INTERFACE_ID,
-            NO_SENSOR_ID,
-            NULL,
-            0);
-        message_send(&m);
-        
-        dicio_start_nodes_counter++;
-    }
-    
-}
 
 void cmd_sensor_data(const message_t *m) {
     sensor_save_data(m->identifier, m->interface_id, m->sensor_id, m->data, m->length);
