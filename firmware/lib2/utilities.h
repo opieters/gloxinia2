@@ -10,10 +10,13 @@
 #ifdef __DEBUG__
 #define DEBUG_BUFFER_DEPTH 8
 #define DEBUG_BUFFER_LENGTH 64
- #define UART_DEBUG_PRINT(X, ...)                                                           \
-    sprintf(print_buffer[print_buffer_idx], X, ##__VA_ARGS__);                               \
-    uart_print(print_buffer[print_buffer_idx], strlen(print_buffer[print_buffer_idx])); \
-    print_buffer_idx = (print_buffer_idx + 1) % DEBUG_BUFFER_DEPTH;
+ #define UART_DEBUG_PRINT(X, ...) {                                                         \
+    bool gie_status = _GIE;                                                                 \
+    _GIE = 0;                                                                               \
+    sprintf(print_buffer[print_buffer_idx], X, ##__VA_ARGS__);                              \
+    uart_print(print_buffer[print_buffer_idx], strlen(print_buffer[print_buffer_idx]));     \
+    print_buffer_idx = (print_buffer_idx + 1) % DEBUG_BUFFER_DEPTH;                         \
+    _GIE = gie_status; }
 #else
 
 #define UART_DEBUG_PRINT(...)
