@@ -7,6 +7,11 @@
 
 #include "i2c.h"
 
+// TODO: change to full import?
+#ifdef __DICIO__
+void dicio_message_process(const message_t* m);
+#endif
+
 // UART TX FIFO buffer variables
 volatile uint8_t n_uart_tx_messages = 0;
 volatile uint8_t uart_tx_queue_idx = 0;
@@ -144,9 +149,9 @@ void uart_print(const char *message, size_t length)
         return;
     }
     
-    // wait for space in the queue
-    while (n_uart_tx_messages2 == ARRAY_LENGTH(uart_tx_queue2))
-        ;
+    // if there is no space in the queue, message is lost
+    if (n_uart_tx_messages2 == ARRAY_LENGTH(uart_tx_queue2))
+        return;
 
     uart_message_t* m = &uart_tx_queue2[uart_tx_queue_idx2];
 
@@ -166,32 +171,36 @@ void uart_print(const char *message, size_t length)
 
 void uart_queue_message(message_t *m)
 {
-    // wait for space in the queue
-    while (n_uart_tx_messages == (ARRAY_LENGTH(uart_tx_queue) - 1))
+    // drop message if there is no space in the queue
+    while (n_uart_tx_messages == (ARRAY_LENGTH(uart_tx_queue)))
         ;
+    
+    bool gie_status = _GIE;
+    _GIE = 0;
 
-    if (m->status != M_TX_INIT_DONE)
+    if (m->status == M_TX_INIT_DONE)
     {
-        return;
+
+
+        // queue message
+        m->status = M_TX_QUEUED;
+        uart_tx_queue[uart_tx_queue_idx] = *m;
+        /*message_t *mtx = &uart_tx_queue[uart_tx_queue_idx];
+
+
+        mtx->length = MIN(UART_FIFO_TX_DATA_BUFFER_SIZE, m->length);
+
+        for (unsigned int i = 0; i < mtx->length; i++)
+        {
+            mtx->data[i] = m->data[i];
+        }*/
+
+        uart_tx_queue_idx = (uart_tx_queue_idx + 1) % ARRAY_LENGTH(uart_tx_queue);
+        n_uart_tx_messages++;
+
+        process_uart_tx_queue();
     }
-
-    // queue message
-    m->status = M_TX_QUEUED;
-    uart_tx_queue[uart_tx_queue_idx] = *m;
-    /*message_t *mtx = &uart_tx_queue[uart_tx_queue_idx];
-
-
-    mtx->length = MIN(UART_FIFO_TX_DATA_BUFFER_SIZE, m->length);
-
-    for (unsigned int i = 0; i < mtx->length; i++)
-    {
-        mtx->data[i] = m->data[i];
-    }*/
-
-    uart_tx_queue_idx = (uart_tx_queue_idx + 1) % ARRAY_LENGTH(uart_tx_queue);
-    n_uart_tx_messages++;
-
-    process_uart_tx_queue();
+    _GIE = gie_status;
 }
 
 void process_uart_tx_queue(void)
@@ -327,7 +336,11 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA11Interrupt ( void )
             
             // schedule processing task
             task_t task = uart_rx_tasks[uart_rx_idx];
+#ifdef __DICIO__
+            task.cb =(void*) dicio_message_process;
+#else
             task.cb =(void*) message_process;
+#endif
             task.data = (void*) m;
             push_queued_task(task);
             
@@ -347,7 +360,12 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA11Interrupt ( void )
             
             // schedule processing task
             task_t task = uart_rx_tasks[uart_rx_idx];
+#ifdef __DICIO__
+            task.cb =(void*) dicio_message_process;
+#else
             task.cb =(void*) message_process;
+#endif
+
             task.data = (void*) m;
             push_queued_task(task);
         }

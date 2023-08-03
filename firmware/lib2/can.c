@@ -583,18 +583,14 @@ void __attribute__((interrupt, auto_psv)) _C1Interrupt(void)
             // log every message that we received
             send_message_uart(&m);
             
+#ifdef __DICIO__
+            dicio_message_process(&m);
+#else
             // if we received a message for this node, we need to process it
             if((m.identifier == controller_address) || (m.identifier == ADDRESS_GATEWAY))
             {
                  message_process(&m);
             } 
-            
-#ifdef __DICIO__
-            // dicio also needs to process all other messages for data storage and config saving
-            else // special case: the node with address ADDRESS_SEARCH_START needs to process all messages
-            {
-                dicio_message_process(&m);
-            }
 #endif
 
             // clear buffer full interrupt bit
