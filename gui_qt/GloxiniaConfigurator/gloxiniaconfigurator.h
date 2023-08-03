@@ -34,6 +34,7 @@
 #include <gdevicecommunication.h>
 #include <sensorliadialog.h>
 #include <liaenginedialog.h>
+#include <gcreadoutdialog.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -90,6 +91,7 @@ private slots:
     void updatePreferences(void);
     void resetSystem(void);
     void updateDevice(void);
+    void readoutData(void);
 
     void runDiscovery(void);
     // void addNode(void);
@@ -228,6 +230,8 @@ private:
 
 
     NewProjectDialog* newProjectDialog;
+
+    GCReadoutDialog* readoutDialog;
 
 
     /*

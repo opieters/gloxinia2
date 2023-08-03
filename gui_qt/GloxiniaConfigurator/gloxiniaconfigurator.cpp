@@ -40,7 +40,8 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
       newProjectDialog(new NewProjectDialog),
       updateDialog(new UpdateDialog),
       devCom(new GDeviceCommunication()),
-      liaEngineDialog(new LIAEngineDialog())
+      liaEngineDialog(new LIAEngineDialog()),
+      readoutDialog(new GCReadoutDialog())
 {
     // build UI
     ui->setupUi(this);
@@ -127,6 +128,7 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     connect(ui->actionDisconnect, &QAction::triggered, this, &GloxiniaConfigurator::closeSerialPort);
     connect(ui->actionReset, &QAction::triggered, this, &GloxiniaConfigurator::resetSystem);
     connect(ui->actionUpdateDevice, &QAction::triggered, this, &GloxiniaConfigurator::updateDevice);
+    connect(ui->actionReadoutData, &QAction::triggered, this, &GloxiniaConfigurator::readoutData);
 
 
     // set data models
@@ -296,6 +298,24 @@ void GloxiniaConfigurator::updateDevice(void)
     if(node != nullptr)
         delete node;
 }
+
+void GloxiniaConfigurator::readoutData(void)
+{
+    readoutDialog->setWindowModality(Qt::ApplicationModal);
+    int result = readoutDialog->exec();
+    if(result == QDialog::Rejected)
+        return;
+
+    GCReadoutDialog::Settings settings = readoutDialog->settings();
+    if(settings.autoDetect)
+        settings.stopAddress = 0;
+
+    std::vector<uint8_t> data = { (uint8_t) (settings.startAddress >> 8), (uint8_t) (settings.startAddress), (uint8_t) (settings.stopAddress >> 8), (uint8_t) (settings.stopAddress) };
+    GMessage m(GMessage::Code::DATA_READ, GMessage::LogAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, false, data);
+
+    emit devCom->queueMessage(m);
+}
+
 
 void GloxiniaConfigurator::updatePreferences(void)
 {
@@ -652,14 +672,14 @@ void GloxiniaConfigurator::startMeasuring(void)
         }
     }*/
 
-    GMessage mStart = GMessage(GMessage::Code::CONFIG_DONE_START_READOUT, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
+    GMessage mStart = GMessage(GMessage::Code::CONFIG_DONE_START_READOUT, GMessage::LogAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
     emit devCom->queueMessage(mStart);
 
     qInfo() << "Started measuring";
 }
 void GloxiniaConfigurator::stopMeasuring(void)
 {
-    GMessage mStop = GMessage(GMessage::Code::SENSOR_STOP, GMessage::ComputerAddress,GMessage::NoInterfaceID, GMessage::NoSensorID, true);
+    GMessage mStop = GMessage(GMessage::Code::SENSOR_STOP, GMessage::LogAddress ,GMessage::NoInterfaceID, GMessage::NoSensorID, true);
     emit devCom->queueMessage(mStop);
 
     // enable start option, disable stop option

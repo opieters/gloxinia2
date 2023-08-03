@@ -34,6 +34,7 @@ void GDeviceCommunication::process()
 void GDeviceCommunication::handleMessage(const GMessage& m)
 {
     mList.append(m);
+    qInfo() << "Sending to device:" << m.toString();
 }
 
 void GDeviceCommunication::setSerialPort(QSerialPort* port)

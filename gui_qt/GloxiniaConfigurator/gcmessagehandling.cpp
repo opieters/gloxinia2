@@ -386,6 +386,6 @@ void GloxiniaConfigurator::processConfigDoneStartReadout(const GMessage&m)
 
 void GloxiniaConfigurator::processConfigDoneFinishedReadout(const GMessage&m)
 {
-    GMessage start_measurements(GMessage::Code::SENSOR_START, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
-    emit devCom->queueMessage(start_measurements);
+    //GMessage start_measurements(GMessage::Code::SENSOR_START, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
+    //emit devCom->queueMessage(start_measurements);
 }

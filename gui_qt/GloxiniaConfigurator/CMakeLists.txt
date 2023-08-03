@@ -32,7 +32,10 @@ set(PROJECT_SOURCES
         sensoradc12dialog.h sensoradc12dialog.cpp sensoradc12dialog.ui
         sensoradc16dialog.h sensoradc16dialog.cpp sensoradc16dialog.ui
         sensorliadialog.h sensorliadialog.cpp sensorliadialog.ui
+        liaenginedialog.h liaenginedialog.cpp liaenginedialog.ui
+        gliaengine.h gliaengine.cpp
         globalmeasurementpolicydialog.h globalmeasurementpolicydialog.cpp globalmeasurementpolicydialog.ui
+        gcreadoutdialog.h gcreadoutdialog.cpp gcreadoutdialog.ui
         serialsettingsdialog.h serialsettingsdialog.cpp serialsettingsdialog.ui
         newprojectdialog.h newprojectdialog.cpp newprojectdialog.ui
         updatedialog.h updatedialog.cpp updatedialog.ui

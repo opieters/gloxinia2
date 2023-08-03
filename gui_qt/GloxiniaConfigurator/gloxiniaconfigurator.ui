@@ -56,6 +56,8 @@
     <addaction name="actionRunDiscovery"/>
     <addaction name="actionReset"/>
     <addaction name="actionUpdateDevice"/>
+    <addaction name="actionReadoutData"/>
+    <addaction name="actionClearData"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -179,6 +181,16 @@
   <action name="actionUpdateDevice">
    <property name="text">
     <string>Update device</string>
+   </property>
+  </action>
+  <action name="actionReadoutData">
+   <property name="text">
+    <string>Readout data</string>
+   </property>
+  </action>
+  <action name="actionClearData">
+   <property name="text">
+    <string>Clear data</string>
    </property>
   </action>
  </widget>

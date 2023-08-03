@@ -100,6 +100,12 @@ QString GMessage::codeToString(GMessage::Code code)
         return "sensor start";
     case SENSOR_STOP:
         return "sensor stop";
+    case SENSOR_CONFIG_END:
+        return "sensor config end";
+    case CONFIG_DONE_START_READOUT:
+        return "config done start readout";	
+    case CONFIG_SAVED:
+        return "config saved";
     case ACTUATOR_STATUS:
         return "actuator config";
     case TX_ERROR:
