@@ -341,15 +341,12 @@ void dicio_dump_sdcard_data(uint32_t sector_start, uint32_t sector_stop)
 }
 
 void cmd_data_clear(const message_t* m) {
-#ifdef __DICIO__
     if (m->request_message_bit) {
         dicio_clear_data();
     }
-#endif
 }
 
 void cmd_data_read(const message_t* m) {
-#ifdef __DICIO__
     if (m->request_message_bit) {
         dicio_dump_sdcard_data(DICIO_DATA_START_ADDRESS, SD_SPI_GetSectorCount());
     } else {
@@ -361,7 +358,6 @@ void cmd_data_read(const message_t* m) {
             dicio_dump_sdcard_data(sector_start, sector_stop);
         }
     }
-#endif
 }
 
 void cmd_data_write(const message_t* m) {
