@@ -9,6 +9,7 @@
 #include <sensor_adc16.h>
 #include <fir_common.h>
 #include <libpic30.h>
+#include <adc16.h>
 //#include <event_controller.h>
 
 
@@ -43,7 +44,7 @@ bool uart_connection_active = true; // TODO: false???
 
 
 
-sensor_adc16_hw_config_t adc16_config = {
+adc16_config_t adc16_config = {
     .channel_select = ADC16_CHANNEL_SELECT_MODE_AUTO,
     .conversion_clock_source = ADC16_CONVERSION_CLOCK_SOURCE_INTERNAL,
     .trigger_select = ADC16_TRIGGER_SELECT_MANUAL,
@@ -334,7 +335,7 @@ void sylvatica_init(void)
 
     spi3_init();
     UART_DEBUG_PRINT("Initialised SPI for ADC16.");
-    sensor_adc16_init(&adc16_config);
+    adc16_init(&adc16_config);
     UART_DEBUG_PRINT("Initialised ADC16.");
     
     sensor_adc12_init_filters();
