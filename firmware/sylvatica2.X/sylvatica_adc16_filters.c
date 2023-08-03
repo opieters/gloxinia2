@@ -5,7 +5,7 @@
 #include <spi.h>
 #include <pga.h>
 #include <dsp.h>
-#include <sensor_adc16.h>
+#include <adc16.h>
 #include <fir_common.h>
 #include <libpic30.h>
 //#include <event_controller.h>
