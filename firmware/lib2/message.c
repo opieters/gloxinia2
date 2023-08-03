@@ -6,10 +6,6 @@
 #include <event_controller.h>
 #include <i2c.h>
 #include <sensor.h>
-#ifdef __DICIO__
-#include "../dicio.X/dicio.h"
-#include "../dicio.X/sdcard.h"
-#endif
 #include <libpic30.h>
 
 void address_get_task(void *data);
@@ -124,11 +120,13 @@ void message_process(const message_t *m) {
     switch (m->command) {
         case M_REQUEST_ADDRESS_AVAILABLE:
             UART_DEBUG_PRINT("CAN_REQUEST_ADDRESS_AVAILABLE");
-            cmd_request_address_available(m);
+            if(m->identifier == controller_address)
+                cmd_request_address_available(m);
             break;
         case M_ADDRESS_TAKEN:
             UART_DEBUG_PRINT("CAN_ADDRESS_TAKEN");
-            cmd_address_taken(m);
+            if(m->identifier == controller_address)
+                cmd_address_taken(m);
             break;
         case M_UPDATE_ADDRESS:
             UART_DEBUG_PRINT("CAN_UPDATE_ADDRESS");
@@ -189,17 +187,6 @@ void message_process(const message_t *m) {
         case M_HELLO:
             UART_DEBUG_PRINT("CAN_HELLO");
             break;
-        case M_CONFIG_DONE_START_READOUT:
-            UART_DEBUG_PRINT("M_CONFIG_DONE_START_READOUT");
-            #ifdef __DICIO__
-            cmd_config_done_start_readout(m);
-            #endif  
-            break;
-        case M_DATA_READ:
-            #ifdef __DICIO__
-            cmd_data_read(m);
-            #endif
-            break;
         case M_CONFIG_SAVED:
             UART_DEBUG_PRINT("M_CONFIG_SAVED");
             break;
@@ -209,25 +196,21 @@ void message_process(const message_t *m) {
 }
 
 void cmd_request_address_available(const message_t *m) {
-    if (m->identifier == controller_address) {
-        message_t rm;
-        message_init(&rm,
-                m->identifier,
-                0,
-                M_ADDRESS_TAKEN,
-                NO_INTERFACE_ID,
-                NO_SENSOR_ID,
-                NULL,
-                0);
-        message_send(&rm);
-        UART_DEBUG_PRINT("CAN address collision detected, sending reply");
-    } else {
-        UART_DEBUG_PRINT("CAN address not taken by this node.");
-    }
+    message_t rm;
+    message_init(&rm,
+            m->identifier,
+            0,
+            M_ADDRESS_TAKEN,
+            NO_INTERFACE_ID,
+            NO_SENSOR_ID,
+            NULL,
+            0);
+    message_send(&rm);
+    UART_DEBUG_PRINT("CAN address collision detected, sending reply");
 }
 
 void cmd_address_taken(const message_t *m) {
-    if (controller_address == m->identifier) {
+    if (!m->request_message_bit) {
         controller_address = ADDRESS_UNSET;
 
         UART_DEBUG_PRINT("Cleared address.");
@@ -261,7 +244,7 @@ void address_get_task(void *data) {
 }
 
 void cmd_update_address(const message_t *m) {
-    if ((m->identifier == controller_address) && (m->length == 2)) {
+    if (m->length == 2) {
         address_set_and_check_available((m->data[0] << 8) | m->data[1]);
     }
 
@@ -300,7 +283,7 @@ void cmd_discovery(const message_t *m) {
 }
 
 void cmd_node_info(const message_t *m) {
-    if ((m->identifier != controller_address) && (!m->request_message_bit)) {
+    if (!m->request_message_bit) {
         return;
     }
     uint8_t data[4];
@@ -363,17 +346,7 @@ void cmd_sensor_config(const message_t *m) {
         message_send(&m_sensor);
         
     } else {
-        
-        
-#ifdef __DICIO__
-        if(m->identifier == controller_address)
-        {
-            sensor_set_config_from_buffer(m->interface_id, m->sensor_id, &m->data[0], m->length);
-        }
-        dicio_process_node_config(m);
-#else
         sensor_set_config_from_buffer(m->interface_id, m->sensor_id, &m->data[0], m->length);
-#endif
     }
 }
 
