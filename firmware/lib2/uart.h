@@ -21,7 +21,11 @@
 #define UART_FIFO_TX_DATA_BUFFER_SIZE 16U
 
 /// @brief UART FIFO RX queue size
+#ifdef __DICIO__
+#define UART_FIFO_RX_BUFFER_SIZE 512U
+#else
 #define UART_FIFO_RX_BUFFER_SIZE 64U
+#endif
 #define UART_FIFO_RX_DATA_BUFFER_SIZE CAN_MAX_N_BYTES
 
 /// @brief UART header size (includes start and stop bytes)
