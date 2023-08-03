@@ -142,3 +142,11 @@ firmware/uart_bootloader.X/debug/
 firmware/dicio_debug.X/debug/
 firmware - Copy/
 firmware/planalta2.X/.generated_files/
+firmware/dicio.X/defmplabxtrace.log.inx
+debugtool
+pcb_design/usb-to-terminals/usb-to-terminals.kicad_prl
+pcb_design/usb-to-terminals/fp-info-cache
+firmware/dicio.X/debug/default/queuelogs/debugtool
+defmplabxtrace.log.inx
+gui_qt/GloxiniaConfigurator/CMakeLists.txt.user
+gui_qt/GloxiniaConfigurator/empty.txt
