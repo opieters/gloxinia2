@@ -7,7 +7,7 @@
 #include "dac.h"
 #include <sensor_lia.h>
 
-
+#define PLANALTA_N_INTERFACES             4
 #define PLANALTA_N_CHANNELS               8
 #define PLANALTA_N_ADC_CHANNELS           8
 #define PLANALTA_ADC16_BUFFER_LENGTH      200
@@ -24,9 +24,6 @@
 
 #define PLANALTA_ADC_ON (1<<7)
 
-
-
-#define PLANALTA_N_ADDRESS_SEL_PINS 8
 
 #ifdef	__cplusplus
 extern "C" {
