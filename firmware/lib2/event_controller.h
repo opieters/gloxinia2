@@ -20,14 +20,27 @@
 /// @brief Reserved ID for the schedule that gets the address.
 #define ID_GET_ADDRESS 2
 
-/// @brief Reserved ID for the schedule that stored the node config data to the
-/// SD card.
-#define ID_DICIO_NODE_CONFIG_READOUT 3
+/// @brief Reserved ID for the schedule that stores the node config data to the
+/// SD card and starts the sensor readout in each node.
+#define ID_DICIO_BORADCAST_START 3
+
+/// @brief Reserved ID for the schedule that stops the sensor readout in each 
+/// node.
+#define ID_DICIO_BORADCAST_STOP 4
+
+#define ID_UART_OVERFLOW_SCHEDULE       5
 
 #define ID_SEARCH_START (0x10)
 
 /// @brief The frequency of the event controller in Hz.
 #define EVENT_CONTROLLER_FREQUENCY 10
+
+typedef enum {
+    TASK_STATUS_DONE,
+    TASK_STATUS_INITIALISED,
+    TASK_STATUS_QUEUED,
+    TASK_STATUS_EXEC,
+} task_status_t;
 
 /**
  * @brief A task is a function that takes no arguments and returns void and is executed at a certain time.
@@ -39,6 +52,7 @@ typedef struct
 {
     void (*cb)(void *data);
     void (*data)(void);
+    task_status_t status;
 } task_t;
 
 /**
@@ -59,6 +73,8 @@ typedef struct task_schedule_s
     uint16_t trigger_time;
 
     uint32_t id;
+    
+    task_t* queued_task;
 } task_schedule_t;
 
 /// @brief The number of tasks that are currently queued.
@@ -74,6 +90,9 @@ extern task_schedule_t schedule_list[MAX_N_SCHEDULES];
 extern "C"
 {
 #endif
+    
+    void task_init(task_t* task, void (*cb)(void *data), void (*data)(void));
+    void task_cleanup(task_t* task);
 
     /**
      * @brief Initializes the event controller.
@@ -89,7 +108,7 @@ extern "C"
     /**
      * @brief Schedules a task to be executed at a specific time.
      *
-     * @param s: The schedule to be initialized.
+     * @param s: The schedule to be initialised.
      * @param task: The task to be executed.
      * @param period: The period of the task in multiples of the base period (0.1 second).
      */
@@ -98,9 +117,9 @@ extern "C"
     /**
      * @brief Schedules an event to be executed at a specific time.
      *
-     * @details During schedulinig, interrupts are disabeled.
+     * @details During scheduling, interrupts are disabled.
      *
-     * @param s: The schedule to be initialized.
+     * @param s: The schedule to be initialised.
      * @return The ID of the schedule. DEFAULT_ID is returned if was not
      * possible to add the schedule.
      */
@@ -109,7 +128,7 @@ extern "C"
     /**
      * @brief Schedules an event to be executed with a specific ID.
      *
-     * @param s: The schedule to be initialized.
+     * @param s: The schedule to be initialised.
      * @param id: The ID of the schedule, should not be DEFAULT_ID
      * @return The ID of the schedule. DEFAULT_ID is returned if the ID is
      * invalid or it is already in use.
@@ -131,7 +150,7 @@ extern "C"
      * @details decreases n_queued_tasks by 1.
      * @return The next task to execute.
      */
-    task_t pop_queued_task(void);
+    task_t* pop_queued_task(void);
 
     /**
      * @brief Adds a task to the queue.
@@ -141,7 +160,7 @@ extern "C"
      * @param task: The task to be added to the queue.
      * @return true if the task was added to the queue, false otherwise.
      */
-    bool push_queued_task(task_t task);
+    task_t* push_queued_task(const task_t* task);
 
     /**
      * @brief A dummy task that does nothing.

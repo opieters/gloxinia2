@@ -17,7 +17,8 @@ void sensors_init(void) {
     int i, j;
 
     for (i = 0; i < N_SENSOR_INTERFACES; i++) {
-        task_t task = {task_dummy, NULL};
+        task_t task;
+        task_init(&task, task_dummy, NULL);
         for(j = 0; j < SENSOR_INTERFACE_MAX_SENSORS; j++)
         {
             sensor_gconfig_t* sgc = &sensor_interfaces[i]->gsensor_config[j];
@@ -299,7 +300,7 @@ void sensor_i2c_error_handle(sensor_gconfig_t *gsc, i2c_message_t *m, uint8_t lo
 
 void sensor_start(void) {
     for (int i = 0; i < N_SENSOR_INTERFACES; i++) {
-        // check if init was done correctly
+        // TODO check if init was done correctly
         for(int j = 0; j < SENSOR_INTERFACE_MAX_SENSORS; j++){
             sensor_set_status(i, j, SENSOR_STATUS_ACTIVE);
         }
@@ -310,9 +311,6 @@ void sensor_stop(void) {
     for (int i = 0; i < N_SENSOR_INTERFACES; i++) {
         for(int j = 0; j < SENSOR_INTERFACE_MAX_SENSORS; j++){
             if (sensor_interfaces[i]->gsensor_config[j].status == SENSOR_STATUS_RUNNING) {
-                // cancel event
-                //schedule_remove_event(sensor_interfaces[i].measure.id);
-
                 // update sensor status
                 sensor_set_status(i, j, SENSOR_STATUS_STOPPED);
             }

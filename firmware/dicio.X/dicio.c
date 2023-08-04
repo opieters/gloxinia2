@@ -166,14 +166,16 @@ void dicio_init(void)
     __delay_ms(100);
 
     task_schedule_t dicio_read_log;
-    task_t dicio_read_log_task = {dicio_send_ready_message, NULL};
+    task_t dicio_read_log_task;
+    task_init(&dicio_read_log_task, dicio_send_ready_message, NULL);
     schedule_init(&dicio_read_log, dicio_read_log_task, 10);
     //schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);
     
     task_schedule_t dicio_uart_recovery;
-    task_t dicio_uart_rx_overflow_check = {dicio_uart_rx_overflow, NULL};
+    task_t dicio_uart_rx_overflow_check;
+    task_init(&dicio_uart_rx_overflow_check, dicio_uart_rx_overflow, NULL);
     schedule_init(&dicio_uart_recovery, dicio_uart_rx_overflow_check, 10);
-    schedule_specific_event(&dicio_uart_recovery, ID_UART_OVERFLOW_SCHEDULE);
+    //schedule_specific_event(&dicio_uart_recovery, ID_UART_OVERFLOW_SCHEDULE);
     
     // try to run ADC12
     uint8_t buffer1[4] = {SENSOR_TYPE_ADC12, sensor_adc12_gloxinia_register_general, 0, 9};
@@ -203,7 +205,7 @@ void dicio_init_node_configurations(void)
     {
         node_configs[i].node_id = ADDRESS_UNSET;
         node_configs[i].node_type = M_NODE_UNKNOWN;
-        node_configs[i].sector_address = 0xffffffff;
+        node_configs[i].sector_address = DICIO_NODE_CONFIG_START_ADDRESS + i * DICIO_NODE_N_SECTORS;
         node_configs[i].n_interfaces = 0;
         node_configs[i].stored_config = false;
     }

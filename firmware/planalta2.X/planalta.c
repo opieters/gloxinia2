@@ -343,7 +343,8 @@ void planalta_init(void){
     UART_DEBUG_PRINT("Initialised ADC.");
 
     task_schedule_t planalta_read_log;
-    task_t planalta_read_log_task = {planalta_send_ready_message, NULL};
+    task_t planalta_read_log_task;
+    task_init(&planalta_read_log_task, planalta_send_ready_message, NULL);
     schedule_init(&planalta_read_log, planalta_read_log_task, 10);
     // schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);
     

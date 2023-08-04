@@ -42,9 +42,6 @@ fractional  __attribute__((space(xmemory), aligned(256), eds)) sensor_adc12_fir_
  0xffec, 0xfff0, 0xfff4, 0xfff7, 0xfffa, 0xfffc, 0xfffd, 0xfffe, 0xffff,
  0xffff};
 
-
-
-
 const fractional  __attribute__((space(xmemory), aligned(256), eds)) sensor_adc12_fir_coeffs_1[] = {
  0xffff, 0xffff, 0xfffe, 0xfffd, 0xfffc, 0xfffa, 0xfff7, 0xfff4, 0xfff0,
  0xffec, 0xffe6, 0xffdf, 0xffd8, 0xffd0, 0xffc7, 0xffbf, 0xffb5, 0xffad,
@@ -73,8 +70,6 @@ const fractional  __attribute__((space(xmemory), aligned(256), eds)) sensor_adc1
  0xffec, 0xfff0, 0xfff4, 0xfff7, 0xfffa, 0xfffc, 0xfffd, 0xfffe, 0xffff,
  0xffff};
 
-
-
 const fractional  __attribute__((space(xmemory), aligned(512), eds)) sensor_adc12_fir_coeffs_3[] = {
  0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
  0x0000, 0x0000, 0xffff, 0xfffe, 0xfffd, 0xfffc, 0xfffb, 0xfffa, 0xfffa,
@@ -99,13 +94,15 @@ const fractional  __attribute__((space(xmemory), aligned(512), eds)) sensor_adc1
  0xffff, 0x0000, 0x0000, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
  0x0001, 0x0001, 0x0001 };
 
-
-
 void sensor_adc12_process_block0(void);
 void sensor_adc12_process_block1(void* data);
 void sensor_adc12_process_block2(void* data);
 void sensor_adc12_process_block3(void* data);
 void sensor_adc12_init_filters(void);
+
+task_t task_sensor_adc12_process_block1;
+task_t task_sensor_adc12_process_block2;
+task_t task_sensor_adc12_process_block3;
 
 void sensor_adc12_init_filters(void)
 {
@@ -197,8 +194,8 @@ void sensor_adc12_process_block0()
     
     block_counter += SENSOR_ADC12_BLOCK0_OUTPUT_SIZE;
     if(block_counter == SENSOR_ADC12_BLOCK1_INPUT_SIZE){
-        task_t task = {sensor_adc12_process_block1, NULL};
-        push_queued_task(task);
+        task_init(&task_sensor_adc12_process_block1, sensor_adc12_process_block1, NULL);
+        push_queued_task(&task_sensor_adc12_process_block1);
         block_counter = 0;
         
         adc12_output_buffer0_select ^= 1;
@@ -233,8 +230,8 @@ void sensor_adc12_process_block1(void* data){
     }
     block_counter += SENSOR_ADC12_BLOCK1_OUTPUT_SIZE;
     if(block_counter == SENSOR_ADC12_BLOCK2_INPUT_SIZE){
-        task_t task = {sensor_adc12_process_block2, NULL};
-        push_queued_task(task);
+        task_init(&task_sensor_adc12_process_block2, sensor_adc12_process_block2, NULL);
+        push_queued_task(&task_sensor_adc12_process_block2);
         block_counter = 0;
     }
 }
@@ -253,8 +250,8 @@ void sensor_adc12_process_block2(void* data){
     block_counter += SENSOR_ADC12_BLOCK2_OUTPUT_SIZE;
     if(block_counter == SENSOR_ADC12_BLOCK3_INPUT_SIZE){
         block_counter = 0;
-        task_t task = {sensor_adc12_process_block3, NULL};
-        push_queued_task(task);
+        task_init(&task_sensor_adc12_process_block3, sensor_adc12_process_block3, NULL);
+        push_queued_task(&task_sensor_adc12_process_block3);
     }
 }
 

@@ -1,6 +1,6 @@
 ; include common definitions
 .nolist
-.include	"../lib/dspcommon.inc"
+.include	"../lib2/dspcommon.inc"
 .list
 
 .section .dspExtensions, code

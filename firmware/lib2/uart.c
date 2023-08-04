@@ -337,21 +337,19 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA11Interrupt ( void )
             // schedule processing task
             task_t task = uart_rx_tasks[uart_rx_idx];
 #ifdef __DICIO__
-            task.cb =(void*) dicio_message_process;
+            task_init(&task, (void*) dicio_message_process, (void*) m);
 #else
-            task.cb =(void*) message_process;
+            task_init(&task, (void*) message_process, (void*) m);
 #endif
-            task.data = (void*) m;
-            push_queued_task(task);
+            push_queued_task(&task);
             
             uart_rx_idx = (uart_rx_idx+1) % UART_FIFO_RX_BUFFER_SIZE;
             
             // forward this message over CAN (this needs to be done in main loop
             // since EDS space is written during send_message_can call)
             task = uart_rx_tasks[uart_rx_idx];
-            task.cb =(void*) send_message_can;
-            task.data = (void*) m;
-            push_queued_task(task);
+            task_init(&task, (void*) send_message_can, (void*) m);
+            push_queued_task(&task);
         }
         // case 2: message for this node
         else if (m->identifier == controller_address)
@@ -361,13 +359,11 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA11Interrupt ( void )
             // schedule processing task
             task_t task = uart_rx_tasks[uart_rx_idx];
 #ifdef __DICIO__
-            task.cb =(void*) dicio_message_process;
+            task_init(&task,(void*) dicio_message_process, (void*) m );
 #else
-            task.cb =(void*) message_process;
+            task_init(&task,(void*) message_process, (void*) m );
 #endif
-
-            task.data = (void*) m;
-            push_queued_task(task);
+            push_queued_task(&task);
         }
         // case 3: message for other node
         else
@@ -375,9 +371,8 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA11Interrupt ( void )
             // forward this message over CAN (this needs to be done in main loop
             // since EDS space is written during send_message_can call)
             task_t task = uart_rx_tasks[uart_rx_idx];
-            task.cb =(void*) send_message_can;
-            task.data = (void*) m;
-            push_queued_task(task);
+            task_init(&task,(void*) send_message_can, (void*) m );
+            push_queued_task(&task);
         }
         
         uart_rx_idx = (uart_rx_idx+1) % UART_FIFO_RX_BUFFER_SIZE;

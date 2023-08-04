@@ -41,6 +41,10 @@ fractional output_buffer_a[SYLVATICA_N_CHANNELS];
 uint8_t adc16_buffer_selector = 0;
 volatile uint8_t copy_buffer_selector = 0;
 
+task_t task_process_filter_block0;
+task_t task_process_filter_block1;
+task_t task_process_filter_block2;
+
 void sylvatica_filters_init(void)
 {
     uint16_t i;
@@ -120,8 +124,8 @@ void sylvatic_adc16_callback(void){
     copy_counter += SYLVATICA_ADC16_BUFFER_LENGTH / SYLVATICA_N_CHANNELS;
     
     if(copy_counter == SYLVATICA_COPY_BUFFER_SIZE){
-        task_t task = {process_filter_block0, NULL};
-        push_queued_task(task);
+        task_init(&task_process_filter_block0, process_filter_block0, NULL);
+        push_queued_task(&task_process_filter_block0);
         copy_buffer_selector ^= 1;
         copy_counter = 0;
     }
@@ -159,8 +163,8 @@ void process_filter_block0(void* data)
     
     block_counter += SYLVATICA_BLOCK0_OUTPUT_SIZE;
     if(block_counter == SYLVATICA_BLOCK1_INPUT_SIZE){
-        task_t task = {process_filter_block1, NULL};
-        push_queued_task(task);
+        task_init(&task_process_filter_block1, process_filter_block1, NULL);
+        push_queued_task(&task_process_filter_block1);
         block_counter = 0;
         
         output_buffer0_select ^= 1;
@@ -192,8 +196,8 @@ void process_filter_block1(void* data){
     }
     block_counter += SYLVATICA_BLOCK1_OUTPUT_SIZE;
     if(block_counter == SYLVATICA_BLOCK2_INPUT_SIZE){
-        task_t task = {process_filter_block2, NULL};
-        push_queued_task(task);
+        task_init(&task_process_filter_block2, process_filter_block2, NULL);
+        push_queued_task(&task_process_filter_block2);
         block_counter = 0;
         
         output_buffer1_select ^= 1;
@@ -226,8 +230,8 @@ void process_filter_block2(void* data){
     block_counter += SYLVATICA_BLOCK2_OUTPUT_SIZE;
     if(block_counter == SYLVATICA_BLOCK3_INPUT_SIZE){
         block_counter = 0;
-        task_t task = {process_filter_block3, NULL};
-        push_queued_task(task);
+        task_init(&task_process_filter_block2, process_filter_block3, NULL);
+        push_queued_task(&task_process_filter_block2);
         
         output_buffer2_select ^= 1;
         if(output_buffer2_select == 0){

@@ -13,6 +13,13 @@ volatile uint16_t n_scheduled_events = 0;
 task_schedule_t schedule_list[MAX_N_SCHEDULES];
 
 
+void task_init(task_t* task, void (*cb)(void *data), void (*data)(void))
+{
+    task->cb = cb;
+    task->data = data;
+    task->status = TASK_STATUS_INITIALISED;
+}
+
 void event_controller_init(void){
     // configure scheduled event timer
     T9CONbits.TON = 0;
@@ -28,8 +35,13 @@ void event_controller_init(void){
     T9CONbits.TON = 1;
 }
 
-bool push_queued_task(task_t task) {
+task_t* push_queued_task(const task_t* task) {
     uint16_t index;
+    
+    if(task->status != TASK_STATUS_INITIALISED)
+        return NULL;
+    
+    bool gie_status = _GIE;
     _GIE = 0; // disable interrupts
 
     if (n_queued_tasks < MAX_N_TASKS) {
@@ -38,36 +50,44 @@ bool push_queued_task(task_t task) {
 
         n_queued_tasks++;
 
-        task_list[index] = task;
+        task_list[index] = *task;
+        task_list[index].status = TASK_STATUS_QUEUED;
     } else {
         _GIE = 1;
 
-        return false;
+        return NULL;
     }
 
-    _GIE = 1; // enable interrupts
+    _GIE = gie_status; // enable interrupts
 
-    return true;
+    return &task_list[index];
 }
 
-task_t pop_queued_task(void) {
-    task_t task;
+task_t* pop_queued_task(void) {
+    task_t* task;
 
+    bool gie_status = _GIE;
     _GIE = 0; // disable interrupts
 
     if (n_queued_tasks > 0) {
         n_queued_tasks--;
 
-        task = task_list[task_index];
+        task = &task_list[task_index];
         task_index = (task_index + 1) % MAX_N_TASKS;
     } else {
-        task.cb = task_dummy;
-        task.data = NULL;
+        task = NULL;
     }
+    
+    task->status = TASK_STATUS_EXEC;
 
-    _GIE = 1; // enable interrupts
+    _GIE = gie_status; // enable interrupts
 
     return task;
+}
+
+void task_cleanup(task_t* task)
+{
+    task->status = TASK_STATUS_DONE;
 }
 
 void schedule_init(task_schedule_t* s,
@@ -78,12 +98,13 @@ void schedule_init(task_schedule_t* s,
     s->task = task;
     s->period = period;
     s->trigger_time = period;
-    
+    s->queued_task = NULL;
 }
 
 uint32_t schedule_event(task_schedule_t* s) {
     uint32_t i = 0;
 
+    bool gie_status = _GIE;
     _GIE = 0; // disable interrupts
 
     // get id
@@ -102,7 +123,7 @@ uint32_t schedule_event(task_schedule_t* s) {
     id = schedule_specific_event(s, id);
     s->id = id;
 
-    _GIE = 1; // enable interrupts
+    _GIE = gie_status; // enable interrupts
 
     return id;
 }
@@ -117,6 +138,7 @@ uint32_t schedule_specific_event(task_schedule_t* s, uint32_t id) {
         return DEFAULT_ID;
     }
 
+    bool gie_status = _GIE;
     _GIE = 0; // disable interrupts
 
     // check if id is unique
@@ -137,7 +159,7 @@ uint32_t schedule_specific_event(task_schedule_t* s, uint32_t id) {
         id = DEFAULT_ID;
     }
 
-    _GIE = 1; // enable interrupts
+    _GIE = gie_status; // enable interrupts
 
     return id;
 }
@@ -150,6 +172,7 @@ uint32_t schedule_remove_event(uint32_t id){
     if(n_scheduled_events == 0)
         return DEFAULT_ID;
     
+    bool gie_status = _GIE;
     _GIE = 0; // disable interrupts
     
     for(i = 0; i < n_scheduled_events; i++){
@@ -174,7 +197,7 @@ uint32_t schedule_remove_event(uint32_t id){
     }
     n_scheduled_events--;
     
-    _GIE = 1; // enable interrupts
+    _GIE = gie_status; // enable interrupts
     
     return id;
 }
@@ -190,7 +213,12 @@ void __attribute__((interrupt,no_auto_psv)) _T9Interrupt(void) {
             s->trigger_time--;
         } else {
             s->trigger_time = s->period;
-            push_queued_task(s->task);
+            if(s->queued_task == NULL){
+                s->queued_task = push_queued_task(&s->task);
+            } else {
+                if(s->queued_task->status == TASK_STATUS_DONE)
+                    s->queued_task = push_queued_task(&s->task);
+            }
         }
     }
     _T9IF = 0;

@@ -28,6 +28,10 @@ fractional adc12_output_block2_buffers[ADC12_N_CHANNELS][SENSOR_ADC12_BLOCK3_INP
 extern sensor_interface_t* sensor_interfaces[];
 extern const uint8_t n_sensor_interfaces;
 
+task_t dicio_adc12_task_block0;
+task_t dicio_adc12_task_block1;
+task_t dicio_adc12_task_block2;
+
 fractional  __attribute__((space(xmemory), aligned(256), eds)) sensor_adc12_fir_coeffs_0[] = {
  0xffff, 0xffff, 0xfffe, 0xfffd, 0xfffc, 0xfffa, 0xfff7, 0xfff4, 0xfff0,
  0xffec, 0xffe6, 0xffdf, 0xffd8, 0xffd0, 0xffc7, 0xffbf, 0xffb5, 0xffad,
@@ -109,6 +113,7 @@ void sensor_adc12_init_filters(void);
 
 void sensor_adc12_init_filters(void)
 {
+    return;
     uint16_t i;
 
     
@@ -169,6 +174,7 @@ void sensor_adc12_init_filters(void)
 
 void sensor_adc12_process_block0()
 {
+    return;
     uint16_t i;
     static uint16_t block_counter = 0;
     static uint16_t sample_counter = 0;
@@ -196,8 +202,8 @@ void sensor_adc12_process_block0()
     
     block_counter += SENSOR_ADC12_BLOCK0_OUTPUT_SIZE;
     if(block_counter == SENSOR_ADC12_BLOCK1_INPUT_SIZE){
-        task_t task = {sensor_adc12_process_block1, NULL};
-        push_queued_task(task);
+        task_init(&dicio_adc12_task_block0, sensor_adc12_process_block1, NULL);
+        push_queued_task(&dicio_adc12_task_block0);
         block_counter = 0;
         
         adc12_output_buffer0_select ^= 1;
@@ -218,7 +224,9 @@ void sensor_adc12_process_block0()
     }
 }
 
-void sensor_adc12_process_block1(void* data){
+void sensor_adc12_process_block1(void* data)
+{
+    return;
     uint16_t i;
     static uint16_t block_counter = 0;
     
@@ -232,13 +240,14 @@ void sensor_adc12_process_block1(void* data){
     }
     block_counter += SENSOR_ADC12_BLOCK1_OUTPUT_SIZE;
     if(block_counter == SENSOR_ADC12_BLOCK2_INPUT_SIZE){
-        task_t task = {sensor_adc12_process_block2, NULL};
-        push_queued_task(task);
+        task_init(&dicio_adc12_task_block1, sensor_adc12_process_block2, NULL);
+        push_queued_task(&dicio_adc12_task_block1);
         block_counter = 0;
     }
 }
 
 void sensor_adc12_process_block2(void* data){
+    return;
     uint16_t i;
     static uint16_t block_counter = 0;
     
@@ -252,14 +261,15 @@ void sensor_adc12_process_block2(void* data){
     block_counter += SENSOR_ADC12_BLOCK2_OUTPUT_SIZE;
     if(block_counter == SENSOR_ADC12_BLOCK3_INPUT_SIZE){
         block_counter = 0;
-        task_t task = {sensor_adc12_process_block3, NULL};
-        push_queued_task(task);
+        task_init(&dicio_adc12_task_block2, sensor_adc12_process_block3, NULL);
+        push_queued_task(&dicio_adc12_task_block2);
     }
 }
 
 
 void sensor_adc12_process_block3(void* data)
 {
+    return;
     uint16_t i;
     fractional result;
     
