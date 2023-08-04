@@ -672,7 +672,7 @@ void GloxiniaConfigurator::startMeasuring(void)
         }
     }*/
 
-    GMessage mStart = GMessage(GMessage::Code::CONFIG_DONE_START_READOUT, GMessage::LogAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
+    GMessage mStart = GMessage(GMessage::Code::SENSOR_START, GMessage::LogAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
     emit devCom->queueMessage(mStart);
 
     qInfo() << "Started measuring";

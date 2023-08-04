@@ -102,8 +102,6 @@ QString GMessage::codeToString(GMessage::Code code)
         return "sensor stop";
     case SENSOR_CONFIG_END:
         return "sensor config end";
-    case CONFIG_DONE_START_READOUT:
-        return "config done start readout";	
     case CONFIG_SAVED:
         return "config saved";
     case ACTUATOR_STATUS:
@@ -122,6 +120,10 @@ QString GMessage::codeToString(GMessage::Code code)
         return "data burst";
     case DATA_BURST_STOP:
         return "stop data burst";
+    case DICIO_LOAD_CONFIGURATION_FROM_SDCARD:
+        return "load configuration from sdcard";
+    case DICIO_CLEAR_CONFIGURATION_ON_SDCARD:
+        return "clear configuration on sdcard";
     case BOOT_READ_VERSION:
         return "read bootloader version";
     case BOOT_READ_FLASH:

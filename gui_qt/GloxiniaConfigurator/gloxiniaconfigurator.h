@@ -205,8 +205,10 @@ private:
     void processBootSelfVerify(const GMessage&m);
     void processBootGetMemoryAddressRangeCommand(const GMessage&m);
     void processBootReady(const GMessage&m);
-    void processConfigDoneStartReadout(const GMessage&m);
+    void processSensorStart(const GMessage&m);
     void processConfigDoneFinishedReadout(const GMessage&m);
+    void processLoadConfigurationFromSDCard(const GMessage&m);
+    void processClearConfigurationOnSDCard(const GMessage&m);
 
     /*
      * Dialog screen to edit the system settings

@@ -57,11 +57,17 @@ void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
         case GMessage::Code::BOOT_READY:
             processBootReady(m);
             break;
-        case GMessage::Code::CONFIG_DONE_START_READOUT:
-            processConfigDoneStartReadout(m);
+        case GMessage::Code::SENSOR_START:
+            processSensorStart(m);
             break;
         case GMessage::Code::CONFIG_SAVED:
             processConfigDoneFinishedReadout(m);
+            break;
+        case DICIO_LOAD_CONFIGURATION_FROM_SDCARD:
+            processLoadConfigurationFromSDCard(m);
+            break;
+        case DICIO_CLEAR_CONFIGURATION_ON_SDCARD:
+            processClearConfigurationOnSDCard(m);
             break;
         default:
             break;
@@ -379,7 +385,7 @@ bool GloxiniaConfigurator::handleBootMessageStatus(const GMessage &m){
     return false;
 }
 
-void GloxiniaConfigurator::processConfigDoneStartReadout(const GMessage&m)
+void GloxiniaConfigurator::processSensorStart(const GMessage&m)
 {
     // we don't need to do anything for this message
 }
@@ -388,4 +394,13 @@ void GloxiniaConfigurator::processConfigDoneFinishedReadout(const GMessage&m)
 {
     //GMessage start_measurements(GMessage::Code::SENSOR_START, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
     //emit devCom->queueMessage(start_measurements);
+}
+
+void GloxiniaConfigurator::processLoadConfigurationFromSDCard(const GMessage&m)
+{
+    
+}
+void GloxiniaConfigurator::processClearConfigurationOnSDCard(const GMessage&m)
+{
+
 }
