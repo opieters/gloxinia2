@@ -70,11 +70,11 @@ void send_message_can(const message_t *m) {
     
     __delay_ms(100);
     
-    if(sent_status == CAN_NO_ERROR)
+    /*if(sent_status == CAN_NO_ERROR)
     {
         // log message when sent
         send_message_uart(m);
-    }
+    }*/
     
     //can_send_message_any_ch(&mc);
 }
@@ -119,54 +119,54 @@ void message_process(const message_t *m) {
 
     switch (m->command) {
         case M_REQUEST_ADDRESS_AVAILABLE:
-            UART_DEBUG_PRINT("CAN_REQUEST_ADDRESS_AVAILABLE");
+            //UART_DEBUG_PRINT("CAN_REQUEST_ADDRESS_AVAILABLE");
             if(m->identifier == controller_address)
                 cmd_request_address_available(m);
             break;
         case M_ADDRESS_TAKEN:
-            UART_DEBUG_PRINT("CAN_ADDRESS_TAKEN");
+            //UART_DEBUG_PRINT("CAN_ADDRESS_TAKEN");
             if(m->identifier == controller_address)
                 cmd_address_taken(m);
             break;
         case M_UPDATE_ADDRESS:
-            UART_DEBUG_PRINT("CAN_UPDATE_ADDRESS");
+            //UART_DEBUG_PRINT("CAN_UPDATE_ADDRESS");
             cmd_update_address(m);
             break;
         case M_DISCOVERY:
-            UART_DEBUG_PRINT("CAN_DISCOVERY");
+            //UART_DEBUG_PRINT("CAN_DISCOVERY");
             cmd_discovery(m);
             break;
         case M_MSG_TEXT:
-            UART_DEBUG_PRINT("MSG_TEXT");
+            //UART_DEBUG_PRINT("MSG_TEXT");
             send_message_uart(m);
             break;
         case M_NODE_INFO:
-            UART_DEBUG_PRINT("NODE_INFO");
+            //UART_DEBUG_PRINT("NODE_INFO");
             cmd_node_info(m);
             break;
         case M_SENSOR_STATUS:
-            UART_DEBUG_PRINT("SENSOR_STATUS");
+            //UART_DEBUG_PRINT("SENSOR_STATUS");
             cmd_sensor_status(m);
             break;
         case M_SENSOR_ERROR:
-            UART_DEBUG_PRINT("SENSOR_ERROR");
+            //UART_DEBUG_PRINT("SENSOR_ERROR");
             cmd_sensor_error(m);
             break;
         case M_SENSOR_START:
-            UART_DEBUG_PRINT("SENSOR_START");
+            //UART_DEBUG_PRINT("SENSOR_START");
             cmd_sensor_start(m);
             break;
         case M_SENSOR_STOP:
-            UART_DEBUG_PRINT("SENSOR_STOP");
+            //UART_DEBUG_PRINT("SENSOR_STOP");
             cmd_sensor_stop(m);
             break;
         case M_SENSOR_CONFIG:
-            UART_DEBUG_PRINT("SENSOR_CONFIG");
+            //UART_DEBUG_PRINT("SENSOR_CONFIG");
             cmd_sensor_config(m);
             break;
         case M_NODE_RESET:
         {
-            UART_DEBUG_PRINT("NODE_RESET");
+            //UART_DEBUG_PRINT("NODE_RESET");
             can_disable();
             i2c1_disable();
             i2c2_disable();
@@ -176,19 +176,19 @@ void message_process(const message_t *m) {
         }
         // these messages do not trigger an action
         case M_DATA_BURST_START:
-            UART_DEBUG_PRINT("DATA_BURST_STOP");
+            //UART_DEBUG_PRINT("DATA_BURST_STOP");
             break;
         case M_DATA_BURST:
-            UART_DEBUG_PRINT("DATA_BURST");
+            //UART_DEBUG_PRINT("DATA_BURST");
             break;
         case M_DATA_BURST_STOP:
-            UART_DEBUG_PRINT("DATA_BURST_STOP");
+            //UART_DEBUG_PRINT("DATA_BURST_STOP");
             break;
         case M_HELLO:
-            UART_DEBUG_PRINT("CAN_HELLO");
+            //UART_DEBUG_PRINT("CAN_HELLO");
             break;
         case M_CONFIG_SAVED:
-            UART_DEBUG_PRINT("M_CONFIG_SAVED");
+            //UART_DEBUG_PRINT("M_CONFIG_SAVED");
             break;
         default:
             break;
@@ -233,9 +233,10 @@ void cmd_address_taken(const message_t *m) {
         }
 
         // new attempt to get address
-        task_t task_get_address = {address_get_task, NULL};
+        task_t task_get_address;
+        task_init(&task_get_address, address_get_task, NULL);
 
-        push_queued_task(task_get_address);
+        push_queued_task(&task_get_address);
     }
 }
 

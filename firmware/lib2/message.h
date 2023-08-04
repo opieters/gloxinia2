@@ -26,9 +26,8 @@ typedef enum
     M_SENSOR_ERROR = 0x11,
     M_SENSOR_DATA = 0x12,
     M_SENSOR_CONFIG = 0x13, // configure sensors or read configuration
-    M_CONFIG_DONE_START_READOUT = 0x17,
+    M_SENSOR_START = 0x17,
     M_CONFIG_SAVED = 0x18,
-    M_SENSOR_START = 0x14,
     M_SENSOR_STOP = 0x15,
     M_SENSOR_CONFIG_END = 0x16, // ends burst of configuration data
     M_ACTUATOR_STATUS = 0x20,
@@ -39,6 +38,8 @@ typedef enum
     M_DATA_BURST_START = 0x43,
     M_DATA_BURST = 0x44,
     M_DATA_BURST_STOP = 0x45,
+    M_DICIO_LOAD_CONFIGURATION_FROM_SDCARD = 0x50,
+    M_DICIO_CLEAR_CONFIGURATION_ON_SDCARD = 0x51,        
     M_BOOT_READ_VERSION = 0x80,
     M_BOOT_READ_FLASH = 0x81,
     M_BOOT_WRITE_FLASH = 0x82,
@@ -133,6 +134,8 @@ extern "C"
     void cmd_data_clear(const message_t* m);
     void cmd_data_read(const message_t* m);
     void cmd_data_write(const message_t* m);
+    void cmd_dicio_load_configuration_from_sdcard(const message_t* m);
+    void cmd_dicio_clear_configuration_on_sdcard(const message_t* m);
 
 #ifdef __cplusplus
 }
