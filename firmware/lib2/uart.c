@@ -153,6 +153,8 @@ void uart_print(const char *message, size_t length)
     if (n_uart_tx_messages2 == ARRAY_LENGTH(uart_tx_queue2))
         return;
 
+    bool gie_status = _GIE;
+    _GIE = 0;
     uart_message_t* m = &uart_tx_queue2[uart_tx_queue_idx2];
 
     m->data = uart_tx_data2[uart_tx_queue_idx2];
@@ -164,6 +166,7 @@ void uart_print(const char *message, size_t length)
 
     uart_tx_queue_idx2 = (uart_tx_queue_idx2 + 1) % ARRAY_LENGTH(uart_tx_queue2);
     n_uart_tx_messages2++;
+    _GIE = gie_status;
 
     process_uart_tx_queue();
 #endif
@@ -205,6 +208,8 @@ void uart_queue_message(message_t *m)
 
 void process_uart_tx_queue(void)
 {
+    bool gie_status = _GIE;
+    _GIE = 0;
     if ((uart_tx_ongoing == 0) && (n_uart_tx_messages > 0))
     {
         // copy to actual message to transmit
@@ -265,6 +270,7 @@ void process_uart_tx_queue(void)
         DMA12CONbits.CHEN = 1;
         DMA12REQbits.FORCE = 1;
     }
+    _GIE = gie_status;
 }
 
 void uart_parse_to_raw_buffer(uint8_t *data, message_t *m, const size_t max_length)
