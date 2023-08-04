@@ -6,6 +6,7 @@
 
 /// reserved addresses
 #define ADDRESS_GATEWAY 0xffU      ///< gateway address of the readout PC
+#define ADDRESS_LOG_NODE (0xfeU)
 #ifdef __DICIO__
 #define ADDRESS_SEARCH_START 0xfeU ///< start address for searching for a free address
 #else
