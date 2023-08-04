@@ -358,13 +358,13 @@ static const struct SD_COMMAND_TABLE_ENTRY sdmmc_cmdtable[] =
  * Custom definitions for improved performance
  *****************************************************************************/
 // TODO: might need additional memory attributes for alignment and memory type
-uint8_t sdcard_sector_buffer_a[SDCARD_SECTOR_SIZE];//__attribute__((space(dma), aligned(SDCARD_SECTOR_SIZE), eds));; // space(auto_psv)
-uint8_t sdcard_sector_buffer_b[SDCARD_SECTOR_SIZE];// __attribute__((space(dma), aligned(SDCARD_SECTOR_SIZE), eds));;
+uint8_t __attribute__((aligned(SDCARD_SECTOR_SIZE))) sdcard_sector_buffer_a[SDCARD_SECTOR_SIZE ]; // 
+uint8_t __attribute__((aligned(SDCARD_SECTOR_SIZE))) sdcard_sector_buffer_b[SDCARD_SECTOR_SIZE];
 uint8_t sdcard_sector_cmd_buffer[6];
 uint8_t* sdcard_sector_buffer = sdcard_sector_buffer_a;
 uint8_t sdcard_sector_buffer_selector = 0;
 uint16_t sdcard_n_bytes_buffered = 0;
-uint32_t sdcard_data_address = DICIO_NODE_CONFIG_START_ADDRESS;
+uint32_t sdcard_data_address = DICIO_DATA_START_ADDRESS;
 
 typedef enum {
     SDCARD_DATA_SEND_CMD,
@@ -463,13 +463,6 @@ void sdcard_start_sector_write(void)
     DMA3CONbits.CHEN = 1;
     DMA3REQbits.FORCE = 1;
     
-    UART_DEBUG_PRINT("STORING DATA TO %lu", sdcard_data_address);
-    
-    for(int i = 0; i < (SDCARD_SECTOR_DATA); i++)
-    {
-        sdcard_sector_buffer[i] = (uint8_t) 0x12;
-    }
-    
     // flip data already
     if(sdcard_sector_buffer_selector == 0)
     {
@@ -479,7 +472,6 @@ void sdcard_start_sector_write(void)
         sdcard_sector_buffer = sdcard_sector_buffer_a;
         sdcard_n_bytes_buffered = 0;
     }
-    
     
     // move address
     if (mediaInformation.gSDMode == SD_MODE_NORMAL)  
@@ -492,11 +484,11 @@ void sdcard_start_sector_write(void)
 
 bool sdcard_save_data(uint8_t *buffer, size_t length)
 {
-    if((DMA3REQbits.FORCE == 1) || (length > SDCARD_SECTOR_DATA)){
+    if((DMA3REQbits.FORCE == 1) || (length > SDCARD_SECTOR_SIZE)){
         return false;
     }
     // check if we can fit everything into the current buffer
-    if((length + sdcard_n_bytes_buffered) < SDCARD_SECTOR_DATA)
+    if((length + sdcard_n_bytes_buffered) < SDCARD_SECTOR_SIZE)
     {
         for(size_t i = 0; i < length; i++)
         {
@@ -504,13 +496,11 @@ bool sdcard_save_data(uint8_t *buffer, size_t length)
         }
     } else {
         // fill remaining space in buffer
-        size_t remaining_space = SDCARD_SECTOR_DATA - sdcard_n_bytes_buffered;
+        size_t remaining_space = SDCARD_SECTOR_SIZE - sdcard_n_bytes_buffered;
         for(size_t i = 0; i < remaining_space; i++)
         {
             sdcard_sector_buffer[sdcard_n_bytes_buffered++] = buffer[i];
         }
-        
-        UART_DEBUG_PRINT("STORING DATA TO SD");
         
         // start DMA transfer
         // this also flips the buffer sdcard_sector_buffer
@@ -540,7 +530,7 @@ void __attribute__((interrupt, no_auto_psv)) _DMA4Interrupt(void)
     {
         case SDCARD_DATA_SEND_CMD:
             
-            UART_DEBUG_PRINT("SD CMD SENT CHECKING STATE");
+            //UART_DEBUG_PRINT("SD CMD SENT CHECKING STATE");
             
             sdcard_sector_cmd_buffer[0]=0xff;
             
@@ -557,7 +547,7 @@ void __attribute__((interrupt, no_auto_psv)) _DMA4Interrupt(void)
         case SDCARD_DATA_CHECK_CMD_RESPONSE:
             if(sdcard_sector_cmd_buffer[0] == SD_TOKEN_FLOATING_BUS)
             {
-                UART_DEBUG_PRINT("DUMMY PULSES");
+                //UART_DEBUG_PRINT("DUMMY PULSES");
                 
                 sdcard_sector_cmd_buffer[0]=0xff;
                 sdcard_data_transfer_status = SDCARD_DATA_SEND_TIMING_DUMMY;
@@ -568,7 +558,7 @@ void __attribute__((interrupt, no_auto_psv)) _DMA4Interrupt(void)
             } 
             else 
             {
-                UART_DEBUG_PRINT("POLLING CMD STATE");
+                //UART_DEBUG_PRINT("POLLING CMD STATE");
                 if(error_count < SDCARD_POLL_ERR_TH)
                 {
                     sdcard_sector_cmd_buffer[0]=0xff;
@@ -576,14 +566,14 @@ void __attribute__((interrupt, no_auto_psv)) _DMA4Interrupt(void)
                     DMA3REQbits.FORCE = 1;
                     error_count++;
                 } else {
-                    UART_DEBUG_PRINT("ERROR 1");
+                    //UART_DEBUG_PRINT("ERROR 1");
                     sdcard_data_transfer_status = SDCARD_DATA_ERROR;
                 }
                 
             }
             break;
         case SDCARD_DATA_SEND_TIMING_DUMMY:
-            UART_DEBUG_PRINT("SENDING START TOKEN");
+            //UART_DEBUG_PRINT("SENDING START TOKEN");
             
             sdcard_sector_cmd_buffer[0]=0xfe;
             sdcard_data_transfer_status = SDCARD_DATA_SEND_START_TOKEN;
@@ -591,7 +581,7 @@ void __attribute__((interrupt, no_auto_psv)) _DMA4Interrupt(void)
             DMA3REQbits.FORCE = 1;
             break;
         case SDCARD_DATA_SEND_START_TOKEN:
-            UART_DEBUG_PRINT("SENDING DATA");
+            //UART_DEBUG_PRINT("SENDING DATA");
 
             // start actual data transfer
             // set DMA transfer and destination
@@ -626,7 +616,7 @@ void __attribute__((interrupt, no_auto_psv)) _DMA4Interrupt(void)
             break;
                 
         case SDCARD_DATA_SEND_DATA:
-            UART_DEBUG_PRINT("READING CRC");
+            //UART_DEBUG_PRINT("READING CRC");
             sdcard_sector_cmd_buffer[0]=0xff;
             sdcard_sector_cmd_buffer[1]=0xff;
             
@@ -647,7 +637,7 @@ void __attribute__((interrupt, no_auto_psv)) _DMA4Interrupt(void)
             break;
             
         case SDCARD_DATA_READ_CRC:
-            UART_DEBUG_PRINT("CHECKING DATA STATE");
+            //UART_DEBUG_PRINT("CHECKING DATA STATE");
             
             sdcard_sector_cmd_buffer[0] = 0xff;
             
@@ -665,7 +655,7 @@ void __attribute__((interrupt, no_auto_psv)) _DMA4Interrupt(void)
         case SDCARD_DATA_POLL_BUSY:
             if((sdcard_sector_cmd_buffer[0] &  SD_WRITE_RESPONSE_TOKEN_MASK) == SD_TOKEN_DATA_ACCEPTED)
             {
-                UART_DEBUG_PRINT("DATA STORED");
+                //UART_DEBUG_PRINT("DATA STORED");
                 // lower CS
                 SD_SPI_ChipDeselect();
                 
@@ -679,20 +669,20 @@ void __attribute__((interrupt, no_auto_psv)) _DMA4Interrupt(void)
             } else {
                 if(error_count < SDCARD_POLL_ERR_TH)
                 {
-                    UART_DEBUG_PRINT("POLLING DATA STATE");
+                    //UART_DEBUG_PRINT("POLLING DATA STATE");
                     sdcard_sector_cmd_buffer[0] = 0xff;
                     
                     DMA3CONbits.CHEN = 1;
                     DMA3REQbits.FORCE = 1;
                     error_count++;
                 } else {
-                    UART_DEBUG_PRINT("ERROR 2");
+                    //UART_DEBUG_PRINT("ERROR 2");
                     sdcard_data_transfer_status = SDCARD_DATA_ERROR;
                 }
             }
             break;
         case SDCARD_DATA_DUMMY_PULSES:
-            UART_DEBUG_PRINT("DONE");
+            //UART_DEBUG_PRINT("DONE");
             
             sdcard_data_transfer_status = SDCARD_DATA_WAITING;
             break;
@@ -700,7 +690,7 @@ void __attribute__((interrupt, no_auto_psv)) _DMA4Interrupt(void)
         case SDCARD_DATA_WAITING:
             break;
         case SDCARD_DATA_ERROR:
-            UART_DEBUG_PRINT("ERROR 3");
+            //UART_DEBUG_PRINT("ERROR 3");
             break;
         default:
             break;
