@@ -9,10 +9,10 @@
 #define DICIO_CONFIG_ADDRESS            0x00000000U
 #define DICIO_NODE_CONFIG_START_ADDRESS 0x00000020U
 #define DICIO_MAX_N_NODES               50U
-#define DICIO_MAX_N_INTERFACES          8U
-#define DICIO_DATA_START_ADDRESS        ( DICIO_NODE_CONFIG_START_ADDRESS + DICIO_MAX_N_NODES * ( 1 + DICIO_MAX_N_INTERFACES ) )
-
-#define ID_UART_OVERFLOW_SCHEDULE       5
+#define DICIO_MAX_N_INTERFACES          16U
+#define DICIO_MAX_N_SENSORS             16U
+#define DICIO_NODE_N_SECTORS            ( 1 + DICIO_MAX_N_INTERFACES*DICIO_MAX_N_SENSORS )
+#define DICIO_DATA_START_ADDRESS        ( DICIO_NODE_CONFIG_START_ADDRESS + DICIO_MAX_N_NODES * DICIO_NODE_N_SECTORS )
 
 /**
  * @brief Node configuration structure.
@@ -171,11 +171,15 @@ extern "C"
   void dicio_process_node_config(const message_t *m);
   
   void dicio_config_node_config_readout(void *data);
-  void cmd_config_done_start_readout(const message_t* m);
+  void dicio_broadcast_stop_task(void *data);
+  void dicio_broadcast_measurement_start(const message_t* m);
+  void dicio_broadcast_measurement_stop(const message_t* m);
   
   void dicio_message_process(const message_t* m);
   
   void dicio_register_node(const message_t *m);
+  
+  void dicio_save_node_info(node_config_t* config, uint8_t index);
 
 #ifdef __cplusplus
 }
