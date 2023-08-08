@@ -150,3 +150,4 @@ firmware/dicio.X/debug/default/queuelogs/debugtool
 defmplabxtrace.log.inx
 gui_qt/GloxiniaConfigurator/CMakeLists.txt.user
 gui_qt/GloxiniaConfigurator/empty.txt
+firmware/lib_old/
