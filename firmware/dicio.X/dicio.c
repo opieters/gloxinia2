@@ -205,7 +205,7 @@ void dicio_init_node_configurations(void)
     {
         node_configs[i].node_id = ADDRESS_UNSET;
         node_configs[i].node_type = M_NODE_UNKNOWN;
-        node_configs[i].sector_address = DICIO_NODE_CONFIG_START_ADDRESS + i * DICIO_NODE_N_SECTORS;
+        node_configs[i].sector_address = DICIO_NODE_CONFIG_START_ADDRESS + i * (1 + DICIO_MAX_N_INTERFACES*DICIO_MAX_N_SENSORS);
         node_configs[i].n_interfaces = 0;
         node_configs[i].stored_config = false;
     }
