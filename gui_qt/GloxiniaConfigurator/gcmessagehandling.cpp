@@ -63,10 +63,10 @@ void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
         case GMessage::Code::CONFIG_SAVED:
             processConfigDoneFinishedReadout(m);
             break;
-        case DICIO_LOAD_CONFIGURATION_FROM_SDCARD:
+        case GMessage::Code::DICIO_LOAD_CONFIGURATION_FROM_SDCARD:
             processLoadConfigurationFromSDCard(m);
             break;
-        case DICIO_CLEAR_CONFIGURATION_ON_SDCARD:
+        case GMessage::Code::DICIO_CLEAR_CONFIGURATION_ON_SDCARD:
             processClearConfigurationOnSDCard(m);
             break;
         default:
@@ -92,7 +92,7 @@ void GloxiniaConfigurator::processCANDiscoveryMessage(const GMessage &m)
     {
         // request node info
         GMessage reply(GMessage::Code::NODE_INFO, m.getMessageAddress(), GMessage::NoInterfaceID, GMessage::NoSensorID, true, std::vector<quint8>());
-        devCom->queueMessage(reply);
+        emit devCom->queueMessage(reply);
     }
 }
 

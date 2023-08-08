@@ -67,7 +67,13 @@ public:
     static constexpr uint8_t UnlockSequenceH = 0x55;
     static constexpr uint8_t UnlockSequenceL = 0xAA;
 
-    GMessage(GMessage::Code code = NOP, quint8 messageAddress = ComputerAddress, quint8 interfaceID = NoInterfaceID, quint8 sensorID = NoSensorID, bool request = false, std::vector<quint8> data = std::vector<quint8>());
+    GMessage(
+        GMessage::Code code = NOP,
+        quint8 messageAddress = ComputerAddress,
+        quint8 interfaceID = NoInterfaceID,
+        quint8 sensorID = NoSensorID,
+        bool request = false,
+        std::vector<quint8> data = std::vector<quint8>());
 
     int toBytes(quint8 *data, unsigned int maxLength) const;
 

@@ -20,7 +20,7 @@
      <x>0</x>
      <y>0</y>
      <width>1307</width>
-     <height>22</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -58,6 +58,8 @@
     <addaction name="actionUpdateDevice"/>
     <addaction name="actionReadoutData"/>
     <addaction name="actionClearData"/>
+    <addaction name="actionClearConfigMemory"/>
+    <addaction name="actionLoadConfigFromMemory"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -191,6 +193,16 @@
   <action name="actionClearData">
    <property name="text">
     <string>Clear data</string>
+   </property>
+  </action>
+  <action name="actionClearConfigMemory">
+   <property name="text">
+    <string>Clear config memory</string>
+   </property>
+  </action>
+  <action name="actionLoadConfigFromMemory">
+   <property name="text">
+    <string>Load config from memory</string>
    </property>
   </action>
  </widget>

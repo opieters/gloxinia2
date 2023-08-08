@@ -129,7 +129,8 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     connect(ui->actionReset, &QAction::triggered, this, &GloxiniaConfigurator::resetSystem);
     connect(ui->actionUpdateDevice, &QAction::triggered, this, &GloxiniaConfigurator::updateDevice);
     connect(ui->actionReadoutData, &QAction::triggered, this, &GloxiniaConfigurator::readoutData);
-
+    connect(ui->actionClearConfigMemory, &QAction::triggered, this, &GloxiniaConfigurator::clearConfigMemory);
+    connect(ui->actionLoadConfigFromMemory, &QAction::triggered, this, &GloxiniaConfigurator::loadConfigFromMemory);
 
     // set data models
     messageView->setModel(this->messageModel);
@@ -227,14 +228,29 @@ void GloxiniaConfigurator::autoScaleSeries(QXYSeries* series)
 
 void GloxiniaConfigurator::resetSystem(void)
 {
-    GMessage reset(GMessage::Code::NODE_RESET, GMessage::ComputerAddress, GMessage::NoSensorID, true);
+    GMessage reset(GMessage::Code::NODE_RESET, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
 
-    devCom->queueMessage(reset);
+    emit devCom->queueMessage(reset);
 
     // disable start option, enable stop option
     updateUI();
 
     treeModel->removeRows(0, treeModel->rowCount());
+}
+
+void GloxiniaConfigurator::clearConfigMemory(void)
+{
+    GMessage m(GMessage::Code::DICIO_CLEAR_CONFIGURATION_ON_SDCARD, GMessage::LogAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
+
+    emit devCom->queueMessage(m);
+
+}
+
+void GloxiniaConfigurator::loadConfigFromMemory(void)
+{
+    GMessage m(GMessage::Code::DICIO_LOAD_CONFIGURATION_FROM_SDCARD, GMessage::LogAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
+
+    emit devCom->queueMessage(m);
 }
 
 void GloxiniaConfigurator::updateDevice(void)
@@ -579,7 +595,7 @@ void GloxiniaConfigurator::runDiscovery()
     /*if(treeModel->rowCount() == 0){
         qInfo() << "Assiging address of node conncted to computer.";
         std::vector<uint8_t> data = {(uint8_t) (GMessage::SearchStartAddress >> 8), (uint8_t) GMessage::SearchStartAddress};
-        GMessage m(GMessage::Code::UPDATE_ADDRESS, GMessage::UnsetAddress, GMessage::NoSensorID, false, data);
+        GMessage m(GMessage::Code::UPDATE_ADDRESS, GMessage::UnsetAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, false, data);
         length = m.toBytes(rawData, 32);
     } else {*/
     qInfo() << "Running discovery broadcast";
@@ -998,7 +1014,7 @@ void GloxiniaConfigurator::editSensor()
             configMs = sensorAPDS9306->getConfigurationMessages();
 
             for(const GMessage &m : configMs){
-                devCom->queueMessage(m);
+                emit devCom->queueMessage(m);
                 qInfo() << "Send APDS9306 065 config" << m.toString();
 
             }

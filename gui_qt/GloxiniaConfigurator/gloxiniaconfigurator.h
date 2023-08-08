@@ -92,6 +92,9 @@ private slots:
     void resetSystem(void);
     void updateDevice(void);
     void readoutData(void);
+    void clearConfigMemory(void);
+
+    void loadConfigFromMemory(void);
 
     void runDiscovery(void);
     // void addNode(void);
