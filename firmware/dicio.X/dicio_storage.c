@@ -119,11 +119,6 @@ void dicio_register_node(const message_t *m)
     node_config_t *config = &node_configs[n_nodes];
     n_nodes++;
 
-    if (n_nodes >= 2)
-        config->sector_address = node_configs[n_nodes - 2].sector_address + node_configs[n_nodes - 2].n_interfaces + 1;
-    else
-        config->sector_address = DICIO_NODE_CONFIG_START_ADDRESS;
-
     switch (m->data[0])
     {
     case M_NODE_DICIO:
