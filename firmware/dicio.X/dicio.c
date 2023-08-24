@@ -93,6 +93,22 @@ void dicio_init_clock(void)
     while (OSCCONbits.LOCK != 1);
 }
 
+
+void dicio_check_stored_config(void)
+{
+    uint8_t buffer[SDCARD_SECTOR_SIZE];
+    SD_SPI_SectorRead(DICIO_MEASUREMENT_RUNNING_ADDRESS, buffer, 1);
+    
+    if(buffer[0])
+    {
+        // check readout of
+        dicio_load_node_configs();
+    }
+    
+    // todo: start readout
+}
+
+
 void dicio_init(void)
 {
     CORCONbits.VAR = 0;
@@ -131,6 +147,7 @@ void dicio_init(void)
     if (SD_SPI_MediaInitialize() == true)
     {
         dicio_read_sdconfig_data();
+        dicio_check_stored_config();
         UART_DEBUG_PRINT("Initialised SD card");
         
         sdcard_init_dma();
@@ -143,6 +160,8 @@ void dicio_init(void)
     sensor_adc12_init_filters();
     sensor_adc12_set_callback(sensor_adc12_process_block0);
     UART_DEBUG_PRINT("Initialised ADC12.");
+    
+    
 
     // task_schedule_t dicio_read_log = {{dicio_send_ready_message, NULL}, 1, 0};
     // schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);

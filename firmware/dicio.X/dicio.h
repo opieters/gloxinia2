@@ -6,13 +6,14 @@
 #include <uart.h>
 #include <message.h>
 
-#define DICIO_CONFIG_ADDRESS            0x00000000U
-#define DICIO_NODE_CONFIG_START_ADDRESS 0x00000020U
-#define DICIO_MAX_N_NODES               50U
-#define DICIO_MAX_N_INTERFACES          16U
-#define DICIO_MAX_N_SENSORS             16U
-#define DICIO_NODE_N_SECTORS            ( 1 + DICIO_MAX_N_INTERFACES*DICIO_MAX_N_SENSORS )
-#define DICIO_DATA_START_ADDRESS        ( DICIO_NODE_CONFIG_START_ADDRESS + DICIO_MAX_N_NODES * DICIO_NODE_N_SECTORS )
+#define DICIO_CONFIG_ADDRESS              0x00000000U
+#define DICIO_MEASUREMENT_RUNNING_ADDRESS 0x0000001FU
+#define DICIO_NODE_CONFIG_START_ADDRESS   0x00000020U
+#define DICIO_MAX_N_NODES                 50U
+#define DICIO_MAX_N_INTERFACES            16U
+#define DICIO_MAX_N_SENSORS               16U
+#define DICIO_NODE_N_SECTORS              ( 1 + DICIO_MAX_N_INTERFACES*DICIO_MAX_N_SENSORS )
+#define DICIO_DATA_START_ADDRESS          ( DICIO_NODE_CONFIG_START_ADDRESS + DICIO_MAX_N_NODES * DICIO_NODE_N_SECTORS )
 
 /**
  * @brief Node configuration structure.
@@ -58,8 +59,9 @@ typedef struct
  * 
  * DICIO_NODE_CONFIG_START_ADDRESS
  *     used to store node configuration data. Each node has a fixed number of
- *     pages allocated to it. The number of pages is determined by the number
- *     of interfaces the node has. The first page contains the node ID and
+ *     pages allocated to it, defined by DICIO_NODE_N_SECTORS. The number of
+ *     pages fixed and  determined by the number
+ *     of interfaces the "largest" node has. The first page contains the node ID and
  *     the number of interfaces. The following pages contain the interface
  *     configuration data. At most DICIO_MAX_N_INTERFACES interfaces are
  *     supported.
@@ -180,6 +182,7 @@ extern "C"
   void dicio_register_node(const message_t *m);
   
   void dicio_save_node_info(node_config_t* config, uint8_t index);
+  void dicio_load_node_configs(void);
 
 #ifdef __cplusplus
 }
