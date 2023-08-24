@@ -106,8 +106,12 @@ extern "C"
      */
     void can2_detect_devices(void);
     
-    /// TODO
-    void copy_can2_message(can2_message_t* m1, can2_message_t* m2);
+    /**
+     * @brief Copies a CAN message.
+     * 
+     * @details Copies a CAN message from one struct to another.
+    */
+    void copy_can2_message(const can2_message_t* src, can2_message_t* dest);
 
 #ifdef __cplusplus
 }

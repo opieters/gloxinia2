@@ -80,16 +80,16 @@ void can2_init(void)
     C2CTRL1bits.WIN = 0;
 
     // interrupt configuration
-    // C2INTEbits.IVRIE = 0; // invalid message interrupt disabled
+    C2INTEbits.IVRIE = 0; // invalid message interrupt disabled
     // C2INTEbits.WAKIE = 0; // bus wake-up activity interrupt disabled
-    // C2INTEbits.ERRIE = 1; // error interrupt enable bit enabled TODO: interrupt service!
-    // C2INTEbits.FIFOIE = 0; // FIFO almost full interrupt enable off
-    // C2INTEbits.RBOVIE = 0; // buffer overflow interrupt disabled
-    // C2INTEbits.RBIE = 1; // RX buffer interrupt enabled
-    // C2INTEbits.TBIE = 1; // TX buffer interrupt disabled
+    C2INTEbits.ERRIE = 1; // error interrupt enable bit enabled TODO: interrupt service!
+    C2INTEbits.FIFOIE = 0; // FIFO almost full interrupt enable off
+    C2INTEbits.RBOVIE = 0; // buffer overflow interrupt disabled
+    C2INTEbits.RBIE = 1; // RX buffer interrupt enabled
+    C2INTEbits.TBIE = 1; // TX buffer interrupt disabled
 
     // enable ECAN interrupts
-    //_C2IE = 1;
+    _C2IE = 1;
 
     // configure first 8 buffers for sending data
     C2TR01CONbits.TXEN0 = 1;  // configure buffer 0 for transmission
@@ -124,7 +124,7 @@ void can2_init(void)
     DMA13STAL = (unsigned int)&ecan_message_buffer;
     DMA13STAH = 0; //(unsigned int) &ecan_message_buffer;
 
-    _DMA13IE = 1;          // enable DMA channel interrupt
+    _DMA13IE = 0;          // disable DMA channel interrupt
     _DMA13IF = 0;          // clear DMA interrupt flag
     DMA13CONbits.CHEN = 1; // enable DMA channel
 
@@ -141,7 +141,7 @@ void can2_init(void)
     DMA14STAL = (unsigned int)&ecan_message_buffer;
     DMA14STAH = 0; // (unsigned int) &ecan_message_buffer;
 
-    _DMA14IE = 1;          // enable DMA channel interrupt
+    _DMA14IE = 0;          // disable DMA channel interrupt
     _DMA14IF = 0;          // clear DMA interrupt flag
     DMA14CONbits.CHEN = 1; // enable DMA channel
 
@@ -163,10 +163,7 @@ void can2_disable(void)
     DMA14CONbits.CHEN = 0;
     DMA13CONbits.CHEN = 0;
     
-    _DMA13IE = 0;
-    _DMA14IE = 0;
-    _DMA13IF = 0;
-    _DMA14IF = 0;
+    _C2IE = 0;
 }
 
 void can_reset(void) {
@@ -452,40 +449,71 @@ void __attribute__((interrupt, no_auto_psv)) _DMA13Interrupt(void)
 
 void __attribute__((interrupt, no_auto_psv)) _DMA14Interrupt(void)
 {
-    can2_message_t m;
-    bool status;
-
-    // toggle_led();
-
-    while (C2FIFObits.FBP != C2FIFObits.FNRB)
-    {
-        // handle message
-        status = parse_from_can2_buffer(&m, ecan_message_buffer[C2FIFObits.FNRB]);
-
-        if (status)
-        {
-            boot_process_command(&m);
-        }
-        else
-        {
-
-        }
-
-        // clear buffer full interrupt bit
-        if (C2FIFObits.FNRB > 15)
-        {
-            CLEAR_BIT(&C2RXFUL2, C2FIFObits.FNRB - 16);
-        }
-        else
-        {
-            CLEAR_BIT(&C2RXFUL1, C2FIFObits.FNRB);
-        }
-    }
-
     _DMA14IF = 0; // Clear the DMA14 Interrupt Flag;
 }
 
-void copy_can2_message(can2_message_t* m1, can2_message_t* m2)
+void __attribute__((interrupt, no_auto_psv)) _C2Interrupt(void)
+{
+    can2_message_t m;
+    bool status;
+
+    _C2IF = 0;
+
+    if( C2INTFbits.TBIF )
+    {
+        C2INTFbits.TBIF = 0;
+    }
+
+    if(C2INTFbits.RBIF) {
+
+        can_message_t cm;
+        message_t m;
+
+        while (C2FIFObits.FBP != C2FIFObits.FNRB)
+        {
+            // handle message
+            status = parse_from_can2_buffer(&m, ecan_message_buffer[C2FIFObits.FNRB]);
+
+            if (status)
+            {
+                boot_process_command(&m);
+            }
+            else
+            {
+
+            }
+
+            // clear buffer full interrupt bit
+            if (C2FIFObits.FNRB > 15)
+            {
+                CLEAR_BIT(&C2RXFUL2, C2FIFObits.FNRB - 16);
+            }
+            else
+            {
+                CLEAR_BIT(&C2RXFUL1, C2FIFObits.FNRB);
+            }
+        }
+
+        C2INTFbits.RBIF = 0;
+    }
+
+    if(C2INTFbits.RBOVIF) {
+        C2RXOVF1 = 0;
+        C2RXOVF2 = 0;
+        C2INTFbits.RBOVIF = 0;
+    }
+    if(C2INTFbits.FIFOIF) {
+        C2INTFbits.FIFOIF = 0;
+    }
+    if(C2INTFbits.IVRIF) {
+        C2INTFbits.IVRIF = 0;
+    }
+    if(C2INTFbits.ERRIF) {
+        C2INTFbits.ERRIF = 0;
+    }
+}
+
+void copy_can2_message(const can2_message_t* m1, can2_message_t* m2)
 {
     m2->command = m1->command;
     m2->length = m1->length;
