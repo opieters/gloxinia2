@@ -10,3 +10,13 @@ void clear_buffer(uint8_t* buffer, size_t length)
         buffer[i] = 0;
     }
 }
+
+bool buffer_is_empty(uint8_t *buffer, size_t length)
+{
+    for(int j = 0; j < length; j++)
+    {
+        if(buffer[j] != 0)
+            return false;
+    }
+    return true;
+}

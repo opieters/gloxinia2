@@ -14,6 +14,115 @@ static uint8_t* dicio_data_buffer;
 static uint8_t dicio_data_buffer_a[SDCARD_SECTOR_SIZE];
 static uint8_t dicio_data_buffer_b[SDCARD_SECTOR_SIZE];
 
+void dicio_load_node_configs(void)
+{
+    uint8_t dicio_sector_buffer[SDCARD_SECTOR_SIZE];
+    message_t m_tx;
+    uint32_t i;
+    uint16_t j = 0;
+    message_cmd_t cmd;
+    uint8_t interface_id, sensor_id, length;
+    
+    int state = 0;
+
+    // start from here
+    i = DICIO_NODE_CONFIG_START_ADDRESS; 
+
+    n_nodes = 0;
+
+    // loop over all sectors
+    while(i < DICIO_DATA_START_ADDRESS)
+    {
+        if (SD_SPI_SectorRead(i, dicio_sector_buffer, 1))
+        {
+            // check if sector is empty -> move to next sector 
+            if(buffer_is_empty(dicio_sector_buffer, ARRAY_LENGTH(dicio_sector_buffer))){
+                i = i + DICIO_NODE_N_SECTORS - ((i - DICIO_NODE_CONFIG_START_ADDRESS) % DICIO_NODE_N_SECTORS); 
+                continue;
+            }
+
+            // general info
+            if(((i - DICIO_NODE_CONFIG_START_ADDRESS) % DICIO_NODE_N_SECTORS) == 0) 
+            {
+                j = 0;
+                
+                node_config_t* node_config = &node_configs[n_nodes];
+                clear_buffer(dicio_sector_buffer, ARRAY_LENGTH(dicio_sector_buffer));
+
+                node_config->node_id = dicio_sector_buffer[j++];
+                node_config->node_id = (node_config->node_id << 8) | dicio_sector_buffer[j++];
+
+                node_config->node_type = dicio_sector_buffer[j++];
+                node_config->n_interfaces = dicio_sector_buffer[j++];
+
+                node_config->v_hw = dicio_sector_buffer[j++];
+                node_config->v_sw_u = dicio_sector_buffer[j++];
+                node_config->v_sw_l = dicio_sector_buffer[j++];
+                
+                n_nodes++;
+            // configuration info (= wrapped messages) -> send messages over CAN
+            } else {
+                j = 0;
+                while(j < SDCARD_SECTOR_SIZE)
+                {
+                    switch(state)
+                    {
+                        // detect start byte
+                        case 0:
+                            if(dicio_sector_buffer[j++] == SDCARD_START_BYTE)
+                            {
+                                state = 1;
+                            }
+                            break;
+                        // read message
+                        case 1:
+                            if(j < (SDCARD_SECTOR_SIZE-4)){
+                                cmd = dicio_sector_buffer[j++];
+                                interface_id = dicio_sector_buffer[j++];
+                                sensor_id = dicio_sector_buffer[j++];
+                                length = dicio_sector_buffer[j++];
+                                
+                                if( (j+length) < SDCARD_SECTOR_SIZE) {
+                                    message_init(&m_tx,
+                                        node_configs[n_nodes-1].node_id,
+                                        false,
+                                        cmd,
+                                        interface_id,
+                                        sensor_id,
+                                        &dicio_sector_buffer[j],
+                                        length);
+                                    j += length;
+                                    
+                                    state = 2;
+                                }
+                            } else {
+                                // not enough data in buffer, move to end
+                                j = SDCARD_SECTOR_SIZE;
+                                state = 0;
+                            }
+                            
+           
+                            break;
+                        // detect stop byte
+                        case 2:
+                            if(dicio_sector_buffer[j++] == SDCARD_STOP_BYTE)
+                            {
+                                message_send(&m_tx);
+                                
+                                state = 0;
+                            }
+                            break;
+                        default:
+                            state = 0;
+                            break;
+                    }
+                }
+            }
+        }
+        i++;
+    }
+}
+
 void dicio_read_sdconfig_data(void)
 {
     uint8_t dicio_sector_buffer[SDCARD_SECTOR_SIZE];
@@ -71,32 +180,6 @@ void dicio_write_sdconfig_data(void)
         write_counter += sizeof(sensor_interfaces[i]);
         SD_SPI_SectorWrite(address++, dicio_sector_buffer, 1);
         clear_buffer(dicio_sector_buffer, ARRAY_LENGTH(dicio_sector_buffer));
-    }
-}
-
-void dicio_write_node_configs_sd(void)
-{
-    // loop over nodes
-    for (int i = 0; i < n_nodes; i++)
-    {
-        node_config_t *config = &node_configs[i];
-
-        config->stored_config = false;
-
-        if (i == 0)
-        {
-            message_t m;
-
-            message_init(&m, config->node_id,
-                         MESSAGE_REQUEST,
-                         M_SENSOR_CONFIG,
-                         NO_INTERFACE_ID,
-                         NO_SENSOR_ID,
-                         NULL,
-                         0);
-
-            message_send(&m);
-        }
     }
 }
 
@@ -283,15 +366,8 @@ void dicio_dump_sdcard_data(uint32_t sector_start, uint32_t sector_stop)
         {
             // check if sector is empty, if so, stop sending data if auto_stop is on
             if(auto_stop)
-            {
-                bool all_zero = true;
-                for(int j = 0; (j < SDCARD_SECTOR_SIZE) && all_zero; j++)
-                {
-                    if(dicio_sector_buffer[j] != 0)
-                        all_zero = false;
-                }
-                
-                if(all_zero)
+            {                
+                if(buffer_is_empty(dicio_sector_buffer, ARRAY_LENGTH(dicio_sector_buffer)))
                 {
                     sector_stop = i;
                     continue;
@@ -374,31 +450,20 @@ void cmd_data_read(const message_t* m) {
 }
 
 void cmd_data_write(const message_t* m) {
-    static uint16_t write_counter = 0;
-    
-    // check if there is enough space
-    if((write_counter + 6 + m->length) > SDCARD_SECTOR_SIZE){
-        // TODO: write buffer
-        
-        
-        
-        dicio_data_buffer = (dicio_data_buffer == dicio_data_buffer_a) ? dicio_data_buffer_b : dicio_data_buffer_a;
-        write_counter = 0;
-    }
-    
-    
-    // write message meta data
-    dicio_data_buffer[write_counter++] = SDCARD_START_BYTE;
-    dicio_data_buffer[write_counter++] = m->command;
-    dicio_data_buffer[write_counter++] = m->interface_id;
-    dicio_data_buffer[write_counter++] = m->sensor_id;
-    dicio_data_buffer[write_counter++] = m->length;
+    uint8_t buffer[SDCARD_SECTOR_SIZE];
 
-    // write message data
-    for (int i = 0; i < m->length; i++)
+    if(m->length < 5)
+        return;
+
+    // calculate sector address
+    uint32_t address = (m->data[0] << 24) | (m->data[1] << 16) | (m->data[2] << 8) | m->data[3];
+    address -= address % SDCARD_SECTOR_SIZE;
+
+    for(int i = 0; i < m->length - 4; i++)
     {
-        dicio_data_buffer[write_counter++] = m->data[i];
+        buffer[(address % SDCARD_SECTOR_SIZE) + i] = m->data[i+4];
     }
-    dicio_data_buffer[write_counter++] = SDCARD_STOP_BYTE;
-    
+
+
+    SD_SPI_SectorWrite(address, buffer, 1);
 }

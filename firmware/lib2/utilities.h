@@ -103,6 +103,8 @@ extern "C"
      */
     void clear_buffer(uint8_t *buffer, size_t length);
 
+    bool buffer_is_empty(uint8_t *buffer, size_t length);
+
 #ifdef __cplusplus
 }
 #endif
