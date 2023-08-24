@@ -34,7 +34,7 @@ typedef enum
     M_TX_ERROR = 0x30,
     M_DATA_CLEAR = 0x40,
     M_DATA_READ = 0x41,
-    M_DATA_WRITE = 0x42,
+    M_DATA_WRITE = 0x42,    // write data to sd card (first four bytes are address is little endian format, next bytes are data)
     M_DATA_BURST_START = 0x43,
     M_DATA_BURST = 0x44,
     M_DATA_BURST_STOP = 0x45,
