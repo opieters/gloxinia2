@@ -142,6 +142,8 @@ void sht35_init_sensor(struct sensor_gconfig_s *gsc)
         break;
     default:
         UART_DEBUG_PRINT("SHT35: periodicity option not supported.");
+        callback = sht35_i2c_cb_single_shot_m_read;
+        break;
     }
 
     i2c_init_message(
