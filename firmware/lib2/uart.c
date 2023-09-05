@@ -4,12 +4,10 @@
 #include <address.h>
 #include <can.h>
 #include <event_controller.h>
+#include <i2c.h>
 
-#include "i2c.h"
-
-// TODO: change to full import?
 #ifdef __DICIO__
-void dicio_message_process(const message_t* m);
+#include "../dicio.X/dicio.h"
 #endif
 
 // UART TX FIFO buffer variables
@@ -47,7 +45,7 @@ void uart_init(uint32_t baudrate)
     U2MODEbits.ABAUD = 0; // Autobaud Disabled
     U2MODEbits.BRGH = 0;  // 16x mode (16 clock cycles per data bit)
     U2MODEbits.RTSMD = 0; // DTE-DTE mode
-    U2MODEbits.URXINV = 0;
+    U2MODEbits.URXINV = 0; // idle state is 1
     U2BRG = ((FCY / baudrate) / 16) - 1; // BAUD Rate Setting for 9600
 
 #ifdef __DICIO__
@@ -336,7 +334,7 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _DMA11Interrupt ( void )
         m->status = M_RX_FROM_UART;
         
         // case 1: broadcast request
-        if((m->identifier == ADDRESS_GATEWAY) && (m->request_message_bit))
+        if(m->identifier == ADDRESS_GATEWAY)
         {
             send_message_uart(m);
             
