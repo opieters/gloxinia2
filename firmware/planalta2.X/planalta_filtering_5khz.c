@@ -208,7 +208,7 @@ void adc_rx_callback_5khz(void){
     
     if(copy_counter == PLANALTA_5KHZ_F2_INPUT_SIZE){
         task_init(&task_adc_rx_callback_5khz, run_filter2_5khz, NULL);
-        push_queued_task(task_adc_rx_callback_5khz);
+        push_queued_task(&task_adc_rx_callback_5khz);
         
         copy_counter = 0;
         
@@ -256,7 +256,7 @@ void run_filter2_5khz(void *data){
     block_counter += PLANALTA_5KHZ_F2_OUTPUT_SIZE;
     if(block_counter == PLANALTA_5KHZ_F3_INPUT_SIZE){
         task_init(&task_run_filter2_5khz, run_filter3_5khz, NULL);
-        push_queued_task(task_run_filter2_5khz);
+        push_queued_task(&task_run_filter2_5khz);
         block_counter = 0;
         
         select_f2_to_f3 ^= 1;
@@ -303,7 +303,7 @@ void run_filter3_5khz(void *data){
     
     if(block_counter == PLANALTA_5KHZ_F4_INPUT_SIZE){
         task_init(&task_run_filter3_5khz, run_filter4_5khz, NULL);
-        push_queued_task(task_run_filter3_5khz);
+        push_queued_task(&task_run_filter3_5khz);
         block_counter = 0;
         
         select_f3_to_f4 ^= 1;
@@ -351,8 +351,8 @@ void run_filter4_5khz(void *data){
     
     if(block_counter == PLANALTA_5KHZ_F5_INPUT_SIZE){
         block_counter = 0;
-        task_init(task_run_filter4_5khz, run_filter5_5khz, NULL);
-        push_queued_task(task_run_filter4_5khz);
+        task_init(&task_run_filter4_5khz, run_filter5_5khz, NULL);
+        push_queued_task(&task_run_filter4_5khz);
         
         select_f4_to_f5 ^= 1;
         
