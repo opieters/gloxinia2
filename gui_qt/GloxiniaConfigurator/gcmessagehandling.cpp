@@ -1,5 +1,6 @@
 #include "gloxiniaconfigurator.h"
 #include <QThread>
+#include <QDateTime>
 
 void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
 {
@@ -68,6 +69,17 @@ void GloxiniaConfigurator::processIncomingGMessage(const GMessage &m)
             break;
         case GMessage::Code::DICIO_CLEAR_CONFIGURATION_ON_SDCARD:
             processClearConfigurationOnSDCard(m);
+            break;
+        case GMessage::Code::DICIO_TIME:
+            processDicioTime(m);
+            break;
+        default:
+            break;
+        }
+    } else {
+        switch(m.getCode()){
+        case GMessage::Code::DICIO_TIME:
+            processDicioTime(m);
             break;
         default:
             break;
@@ -403,4 +415,24 @@ void GloxiniaConfigurator::processLoadConfigurationFromSDCard(const GMessage&m)
 void GloxiniaConfigurator::processClearConfigurationOnSDCard(const GMessage&m)
 {
 
+}
+
+void GloxiniaConfigurator::processDicioTime(const GMessage&m)
+{
+    if(m.getRequest() && (m.getMessageAddress() == GMessage::ComputerAddress))
+    {
+        // send current time to device
+        QDateTime utc_time(QDateTime::currentDateTimeUtc());
+        std::vector<uint8_t> time_data(7, 0);
+        time_data[0] = utc_time.date().year()-2000;
+        time_data[1] = utc_time.date().month();
+        time_data[2] = utc_time.date().day();
+        time_data[3] = utc_time.date().dayOfWeek();
+        time_data[4] = utc_time.time().hour();
+        time_data[5] = utc_time.time().minute();
+        time_data[6] = utc_time.time().second();
+        GMessage m_time(GMessage::Code::DICIO_TIME, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, false, time_data);
+
+        emit devCom->queueMessage(m_time);
+    }
 }

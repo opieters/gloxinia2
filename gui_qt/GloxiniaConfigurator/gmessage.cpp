@@ -124,6 +124,8 @@ QString GMessage::codeToString(GMessage::Code code)
         return "load configuration from sdcard";
     case DICIO_CLEAR_CONFIGURATION_ON_SDCARD:
         return "clear configuration on sdcard";
+    case DICIO_TIME:
+        return "time";
     case BOOT_READ_VERSION:
         return "read bootloader version";
     case BOOT_READ_FLASH:

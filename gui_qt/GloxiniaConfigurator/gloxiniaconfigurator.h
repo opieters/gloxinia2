@@ -212,6 +212,7 @@ private:
     void processConfigDoneFinishedReadout(const GMessage&m);
     void processLoadConfigurationFromSDCard(const GMessage&m);
     void processClearConfigurationOnSDCard(const GMessage&m);
+    void processDicioTime(const GMessage&m);
 
     /*
      * Dialog screen to edit the system settings
