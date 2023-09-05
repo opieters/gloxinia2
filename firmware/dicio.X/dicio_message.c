@@ -170,6 +170,9 @@ void dicio_message_process(const message_t* m)
         case M_DICIO_CLEAR_CONFIGURATION_ON_SDCARD:  
             cmd_dicio_clear_configuration_on_sdcard(m);
             break;
+        case M_DICIO_TIME:
+            cmd_dicio_time(m);
+            break;
         default:
             break;
     }
@@ -317,5 +320,52 @@ void cmd_dicio_clear_configuration_on_sdcard(const message_t* m)
         }
         
         SD_SPI_SectorWrite(i, dicio_sector_buffer, 1);
+    }
+}
+
+void cmd_dicio_time(const message_t* m)
+{
+    message_t reply;
+    uint8_t data[CAN_MAX_N_BYTES];
+    clock_time_t ct;
+    
+    if((m->identifier == controller_address) && (m->request_message_bit))
+    {
+        // send current time config
+
+        clock_get_time(&ct);
+        data[0] = ct.year;
+        data[1] = ct.month;
+        data[2] = ct.day;
+        data[3] = ct.wday;
+        data[4] = ct.hour;
+        data[5] = ct.minute;
+        data[6] = ct.second;
+
+        message_init(&reply,
+            controller_address,
+            false,
+            M_DICIO_TIME,
+            NO_INTERFACE_ID,
+            NO_SENSOR_ID,
+            data,
+            7); // better to use sizeof()?
+        message_send(&reply);
+    }
+    
+    // received time from computer, update
+    if((m->length == 7) && (m->identifier == ADDRESS_GATEWAY))
+    {
+        ct.year = m->data[0];
+        ct.month = m->data[1];
+        ct.day = m->data[2];
+        ct.wday = m->data[3];
+        ct.hour = m->data[4];
+        ct.minute = m->data[5];
+        ct.second = m->data[6];
+
+        UART_DEBUG_PRINT("Setting time");
+        
+        clock_set_time(&ct);
     }
 }

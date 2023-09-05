@@ -40,6 +40,7 @@ typedef enum
     M_DATA_BURST_STOP = 0x45,
     M_DICIO_LOAD_CONFIGURATION_FROM_SDCARD = 0x50,
     M_DICIO_CLEAR_CONFIGURATION_ON_SDCARD = 0x51,        
+    M_DICIO_TIME = 0x52,
     M_BOOT_READ_VERSION = 0x80,
     M_BOOT_READ_FLASH = 0x81,
     M_BOOT_WRITE_FLASH = 0x82,
@@ -136,6 +137,7 @@ extern "C"
     void cmd_data_write(const message_t* m);
     void cmd_dicio_load_configuration_from_sdcard(const message_t* m);
     void cmd_dicio_clear_configuration_on_sdcard(const message_t* m);
+    void cmd_dicio_time(const message_t* m);
 
 #ifdef __cplusplus
 }
