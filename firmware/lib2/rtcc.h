@@ -7,8 +7,8 @@
  * @brief Structure for holding time information.
  *
  * @param year: year (0-99)
- * @param month: month (1-12)
- * @param day: day (1-31)
+ * @param month: month (0-11)
+ * @param day: day (0-30)
  * @param wday: day of week (0-6)
  * @param hour: hour (0-23)
  * @param minute: minute (0-59)
@@ -67,6 +67,14 @@ extern "C"
      * during time retrieval to ensure the time value is correct.
      */
     void clock_get_raw_time(uint16_t *ctime);
+    
+    /**
+     * @brief Get time configuration as formatted object
+     * 
+     * @param time: data struct to store time
+     */
+    void clock_get_time(clock_time_t* time);
+    
 
 #ifdef __cplusplus
 }
