@@ -126,7 +126,9 @@ void sensor_adc16_measure(void *data)
 
 bool validate_adc16_config(sensor_adc16_config_t *config)
 {    
-    // todo: add check for planalta and sylvatica
+    if(config->pga == NULL)
+        return false;
+    
     return true;
 }
 
