@@ -300,7 +300,6 @@ void sensor_i2c_error_handle(sensor_gconfig_t *gsc, i2c_message_t *m, uint8_t lo
 
 void sensor_start(void) {
     for (int i = 0; i < N_SENSOR_INTERFACES; i++) {
-        // TODO check if init was done correctly
         for(int j = 0; j < SENSOR_INTERFACE_MAX_SENSORS; j++){
             sensor_set_status(i, j, SENSOR_STATUS_ACTIVE);
         }
