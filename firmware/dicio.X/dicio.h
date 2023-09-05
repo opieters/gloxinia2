@@ -6,12 +6,40 @@
 #include <uart.h>
 #include <message.h>
 
-#define DICIO_CONFIG_ADDRESS              0x00000000U
-#define DICIO_MEASUREMENT_RUNNING_ADDRESS 0x0000001FU
-#define DICIO_NODE_CONFIG_START_ADDRESS   0x00000020U
-#define DICIO_MAX_N_NODES                 50U
-#define DICIO_MAX_N_INTERFACES            16U
-#define DICIO_MAX_N_SENSORS               16U
+/** Data storage format 
+ * 
+ * The memory layout is specified here. SD cards use sector sizes of 512 bytes,
+ * so each configuration part is also stored on a separate page for convenience.
+ *               
+ * DICIO_CONFIG_ADDRESS
+ *     used to store configuration data about this specific dicio node
+ *     and information about connected nodes and sensor data.
+ * 
+ *     ! Important ! There is no specific record on the total number of pages
+ *     written. Each page is formatted such that empty pages are not possible.
+ *     Consequently, the system will need to search for the last page written. 
+ * 
+ * DICIO_NODE_CONFIG_START_ADDRESS
+ *     used to store node configuration data. Each node has a fixed number of
+ *     pages allocated to it, defined by DICIO_NODE_N_SECTORS. The number of
+ *     pages fixed and  determined by the number
+ *     of interfaces the "largest" node has. The first page contains the node ID and
+ *     the number of interfaces. The following pages contain the interface
+ *     configuration data. At most DICIO_MAX_N_INTERFACES interfaces are
+ *     supported.
+ * 
+ * DICIO_DATA_START_ADDRESS
+ *     used to store data from the nodes.
+ * 
+*/
+
+#define DICIO_CONFIG_ADDRESS              (0x00000000U)
+#define DICIO_TIME_CONFIG_ADDRESS         (0x00000001U)
+#define DICIO_MEASUREMENT_RUNNING_ADDRESS (0x0000001FU)
+#define DICIO_NODE_CONFIG_START_ADDRESS   (0x00000020U)
+#define DICIO_MAX_N_NODES                 (50U)
+#define DICIO_MAX_N_INTERFACES            (16U)
+#define DICIO_MAX_N_SENSORS               (16U)
 #define DICIO_NODE_N_SECTORS              ( 1 + DICIO_MAX_N_INTERFACES*DICIO_MAX_N_SENSORS )
 #define DICIO_DATA_START_ADDRESS          ( DICIO_NODE_CONFIG_START_ADDRESS + DICIO_MAX_N_NODES * DICIO_NODE_N_SECTORS )
 
@@ -43,33 +71,6 @@ typedef struct
   uint8_t v_sw_l;
 } node_config_t;
 
-/** Data storage format 
- * 
- * The memory layout is specified here. SD cards use sector sizes of 512 bytes,
- * so each configuration part is also stored on a separate page for convenience.
- *               
- * DICIO_CONFIG_ADDRESS
- *     used to store configuration data about this specific dicio node
- *     and information about connected nodes and sensor data.
- * 
- *     ! Important ! There is no specific record on the total number of pages
- *     written. Each page is formatted such that empty pages are not possible.
- *     Consequently, the system will need to fetch each page to know the data
- *     length. 
- * 
- * DICIO_NODE_CONFIG_START_ADDRESS
- *     used to store node configuration data. Each node has a fixed number of
- *     pages allocated to it, defined by DICIO_NODE_N_SECTORS. The number of
- *     pages fixed and  determined by the number
- *     of interfaces the "largest" node has. The first page contains the node ID and
- *     the number of interfaces. The following pages contain the interface
- *     configuration data. At most DICIO_MAX_N_INTERFACES interfaces are
- *     supported.
- * 
- * DICIO_DATA_START_ADDRESS
- *     used to store data from the nodes.
- * 
-*/
 
 #ifdef __cplusplus
 extern "C"
@@ -111,8 +112,8 @@ extern "C"
    * @brief Loads initialisation from SD card if there is any.
    *
    *
-   * @details Some configuration data is stored on the SD card. In case of an unextected
-   * power interrupts this is useful to resume operation. However, no validation
+   * @details Some configuration data is stored on the SD card. In case of unexpected
+   * power interrupts, this is useful to resume operation. However, no validation
    * is performed and if errors occur the configuration is not altered to reflect
    * these in case of future power interruptions or restarts.
    *
