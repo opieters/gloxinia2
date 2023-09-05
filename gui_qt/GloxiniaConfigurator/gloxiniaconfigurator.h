@@ -3,7 +3,6 @@
 
 #include "updatedialog.h"
 #include <QMainWindow>
-#include <QSerialPort>
 #include <QStringListModel>
 #include <QLabel>
 #include <QChart>
@@ -67,25 +66,21 @@ public:
     void exit(void);
     bool handleBootMessageStatus(const GMessage &m);
 
-    enum SerialReadoutState
-    {
-        FindStartByte,
-        ReadAddress,
-        ReadCommand,
-        ReadRequest,
-        ReadInterfaceID,
-        ReadSensorId,
-        ReadLength,
-        ReadData,
-        DetectStopByte
-    };
-
     friend class UpdateDialog;
+
+signals:
+    void queueMessage(const GMessage& m);
+    void serialPortSelected(const QString& comPort);
+    void closeSerialPortEvent();
+
+public slots:
+    void serialPortError(const QString errorMessage);
+    void setSerialOpenStatus(bool status);
+
 
 private slots:
     void openSerialPort();
     void closeSerialPort();
-    void readData();
     void setSerialPort();
 
     void updatePreferences(void);
@@ -166,11 +161,6 @@ private:
      * This model stores the message log (i.e. messages received over the serial connection and UI logging messages)
      */
     QStringListModel *messageModel;
-
-    /*
-     * Serial port used for communication with the system
-     */
-    QSerialPort *serial;
 
     /*
      * Stores a list of actions for the UI, each representing an option in the serial port selection list
@@ -264,12 +254,12 @@ private:
 
     void addSHT35Sensor(void);
 
+    bool serialOpenStatus = false;
+
 
 
 protected:
     void closeEvent(QCloseEvent *event) override;
-
-    GDeviceCommunication* devCom = nullptr;
 };
 
 #endif // GLOXINIACONFIGURATOR_H

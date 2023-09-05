@@ -23,7 +23,6 @@
 GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::GloxiniaConfigurator),
-      serial(new QSerialPort(this)),
       status(new QLabel),
       systemSettings(new SettingsDialog),
       sensorSettings(new SensorDialog),
@@ -39,7 +38,6 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
       measurementSettings(new MeasurementSettingsDialog),
       newProjectDialog(new NewProjectDialog),
       updateDialog(new UpdateDialog),
-      devCom(new GDeviceCommunication()),
       liaEngineDialog(new LIAEngineDialog()),
       readoutDialog(new GCReadoutDialog())
 {
@@ -87,22 +85,26 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     recentFileSeparatorAction = ui->menuFile->insertSeparator(recentFileActions[0]);
 
     // serial data readout trigger
-    connect(serial, &QSerialPort::readyRead, this, &GloxiniaConfigurator::readData);
+
     updateDialog->setConfigurator(this);
-    devCom->setSerialPort(serial);
 
     QThread* thread = new QThread;
+    GDeviceCommunication* devCom = new GDeviceCommunication();
     devCom->moveToThread(thread);
-    serial->moveToThread(thread);
 
     // https://mayaposch.wordpress.com/2011/11/01/how-to-really-truly-use-qthreads-the-full-explanation/
     // https://wiki.qt.io/QThreads_general_usage
     //connect(devCom, SIGNAL(error(QString)), this, SLOT(errorString(QString)));
     //connect(thread, SIGNAL(started()), devCom, SLOT(process()));
     //connect(devCom, SIGNAL(finished()), thread, SLOT(quit()));
-    //connect(devCom, SIGNAL(finished()), devCom, SLOT(deleteLater()));
+    connect(devCom, SIGNAL(finished()), devCom, SLOT(deleteLater()));
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-    connect(devCom, &GDeviceCommunication::queueMessage, devCom, &GDeviceCommunication::handleMessage);
+    connect(this, &GloxiniaConfigurator::queueMessage, devCom, &GDeviceCommunication::handleMessage);
+    connect(devCom, &GDeviceCommunication::serialOpenStatusChange, this,&GloxiniaConfigurator::setSerialOpenStatus);
+    connect(this, &GloxiniaConfigurator::serialPortSelected, devCom, &GDeviceCommunication::openSerialPort);
+    connect(this, &GloxiniaConfigurator::closeSerialPortEvent, devCom, &GDeviceCommunication::closeSerialPort);
+    connect(devCom, &GDeviceCommunication::receivedMessage, this, &GloxiniaConfigurator::processIncomingGMessage);
+
     thread->start();
 
 
@@ -230,7 +232,7 @@ void GloxiniaConfigurator::resetSystem(void)
 {
     GMessage reset(GMessage::Code::NODE_RESET, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
 
-    emit devCom->queueMessage(reset);
+    emit queueMessage(reset);
 
     // disable start option, enable stop option
     updateUI();
@@ -242,7 +244,7 @@ void GloxiniaConfigurator::clearConfigMemory(void)
 {
     GMessage m(GMessage::Code::DICIO_CLEAR_CONFIGURATION_ON_SDCARD, GMessage::LogAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
 
-    emit devCom->queueMessage(m);
+    emit queueMessage(m);
 
 }
 
@@ -250,7 +252,7 @@ void GloxiniaConfigurator::loadConfigFromMemory(void)
 {
     GMessage m(GMessage::Code::DICIO_LOAD_CONFIGURATION_FROM_SDCARD, GMessage::LogAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
 
-    emit devCom->queueMessage(m);
+    emit queueMessage(m);
 }
 
 void GloxiniaConfigurator::updateDevice(void)
@@ -329,7 +331,7 @@ void GloxiniaConfigurator::readoutData(void)
     std::vector<uint8_t> data = { (uint8_t) (settings.startAddress >> 8), (uint8_t) (settings.startAddress), (uint8_t) (settings.stopAddress >> 8), (uint8_t) (settings.stopAddress) };
     GMessage m(GMessage::Code::DATA_READ, GMessage::LogAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, false, data);
 
-    emit devCom->queueMessage(m);
+    emit queueMessage(m);
 }
 
 
@@ -473,7 +475,7 @@ void GloxiniaConfigurator::updateUI(){
     if(settings.success){
         ui->actionSave->setEnabled(true);
 
-        if(serial->isOpen()){
+        if(serialOpenStatus){
             ui->actionConnect->setEnabled(false);
             ui->actionDisconnect->setEnabled(true);
             ui->actionLoadDeviceConfig->setEnabled(true);
@@ -601,7 +603,7 @@ void GloxiniaConfigurator::runDiscovery()
     qInfo() << "Running discovery broadcast";
 
     GMessage m(GMessage::Code::DISCOVERY, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true, std::vector<quint8>());
-    emit devCom->queueMessage(m);
+    emit queueMessage(m);
 }
 
 /*void GloxiniaConfigurator::addNode()
@@ -681,7 +683,7 @@ void GloxiniaConfigurator::startMeasuring(void)
             {
                 GMessage mStart = sensor->getStartMessage();
 
-                emit devCom->queueMessage(mStart);
+                emit queueMessage(mStart);
                 qInfo() << "Sending sensor start" << mStart.toString();
             }
 
@@ -689,14 +691,14 @@ void GloxiniaConfigurator::startMeasuring(void)
     }*/
 
     GMessage mStart = GMessage(GMessage::Code::SENSOR_START, GMessage::LogAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
-    emit devCom->queueMessage(mStart);
+    emit queueMessage(mStart);
 
     qInfo() << "Started measuring";
 }
 void GloxiniaConfigurator::stopMeasuring(void)
 {
     GMessage mStop = GMessage(GMessage::Code::SENSOR_STOP, GMessage::LogAddress ,GMessage::NoInterfaceID, GMessage::NoSensorID, true);
-    emit devCom->queueMessage(mStop);
+    emit queueMessage(mStop);
 
     // enable start option, disable stop option
     updateUI();
@@ -966,7 +968,7 @@ void GloxiniaConfigurator::editSensor()
             configMs = sensorADC12->getConfigurationMessages();
 
             for(const GMessage &m : configMs){
-                emit devCom->queueMessage(m);
+                emit queueMessage(m);
                 qInfo() << "Send ADC12 config" << m.toString();
 
             }
@@ -990,7 +992,7 @@ void GloxiniaConfigurator::editSensor()
             configMs = sensorADC16->getConfigurationMessages();
 
             for(const GMessage &m : configMs){
-                emit devCom->queueMessage(m);
+                emit queueMessage(m);
                 qInfo() << "Send ADC16 config" << m.toString();
 
             }
@@ -1014,7 +1016,7 @@ void GloxiniaConfigurator::editSensor()
             configMs = sensorAPDS9306->getConfigurationMessages();
 
             for(const GMessage &m : configMs){
-                emit devCom->queueMessage(m);
+                emit queueMessage(m);
                 qInfo() << "Send APDS9306 065 config" << m.toString();
 
             }
@@ -1038,7 +1040,7 @@ void GloxiniaConfigurator::editSensor()
             configMs = sensorLIA->getConfigurationMessages();
 
             for(const GMessage &m : configMs){
-                emit devCom->queueMessage(m);
+                emit queueMessage(m);
                 qInfo() << "Send LIA config" << m.toString();
 
             }
@@ -1063,7 +1065,7 @@ void GloxiniaConfigurator::editSensor()
             configMs = sensorSHT35->getConfigurationMessages();
 
             for(const GMessage &m : configMs){
-                emit devCom->queueMessage(m);
+                emit queueMessage(m);
                 qInfo() << "Send SHT35 config" << m.toString();
 
             }
@@ -1150,7 +1152,7 @@ void GloxiniaConfigurator::editSensor()
                 configMs = sensorADC12->getConfigurationMessages();
 
                 for(const GMessage &m : configMs){
-                    emit devCom->queueMessage(m);
+                    emit queueMessage(m);
                     qInfo() << "Send APDS9306 065 config" << m.toString();
 
                 }
@@ -1169,7 +1171,7 @@ void GloxiniaConfigurator::editSensor()
                 configMs = sensorADC16->getConfigurationMessages();
 
                 for(const GMessage &m : configMs){
-                    emit devCom->queueMessage(m);
+                    emit queueMessage(m);
                     qInfo() << "Send APDS9306 065 config" << m.toString();
 
                 }
@@ -1188,7 +1190,7 @@ void GloxiniaConfigurator::editSensor()
                 configMs = sensorAPDS9306->getConfigurationMessages();
 
                 for(const GMessage &m : configMs){
-                    emit devCom->queueMessage(m);
+                    emit queueMessage(m);
                     qInfo() << "Send APDS9306 065 config" << m.toString();
 
                 }
@@ -1209,7 +1211,7 @@ void GloxiniaConfigurator::editSensor()
                 configMs = sensorLIA->getConfigurationMessages();
 
                 for(const GMessage &m : configMs){
-                    emit devCom->queueMessage(m);
+                    emit queueMessage(m);
                     qInfo() << "Send LIA config" << m.toString();
                 }
                 sensorLIA->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorLIA->getMeasurementPeriod() + 1));
@@ -1228,7 +1230,7 @@ void GloxiniaConfigurator::editSensor()
                 configMs = sensorSHT35->getConfigurationMessages();
 
                 for(const GMessage &m : configMs){
-                    emit devCom->queueMessage(m);
+                    emit queueMessage(m);
                     qInfo() << "Send SHT35 config" << m.toString();
                 }
                 sensorSHT35->setMaxPlotSize(((unsigned int) settings.plotBufferWindow) * 10 / (sensorSHT35->getMeasurementPeriod() + 1));

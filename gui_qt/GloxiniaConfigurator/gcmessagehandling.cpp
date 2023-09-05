@@ -104,7 +104,7 @@ void GloxiniaConfigurator::processCANDiscoveryMessage(const GMessage &m)
     {
         // request node info
         GMessage reply(GMessage::Code::NODE_INFO, m.getMessageAddress(), GMessage::NoInterfaceID, GMessage::NoSensorID, true, std::vector<quint8>());
-        emit devCom->queueMessage(reply);
+        emit queueMessage(reply);
     }
 }
 
@@ -171,7 +171,7 @@ void GloxiniaConfigurator::processNodeInfoMessage(const GMessage &m)
 
                 // send a message to detect existing sensors
                 GMessage sensor_request(GMessage::Code::SENSOR_CONFIG, m.getMessageAddress(), i, j, true, std::vector<quint8>());
-                emit devCom->queueMessage(sensor_request);
+                emit queueMessage(sensor_request);
 
                 this->treeModel->setData(interfaceIndex, QVariant::fromValue(sensorData), Qt::EditRole);
             }
@@ -270,7 +270,7 @@ void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
 
         // new sensor, request status too
         GMessage status_request(GMessage::Code::SENSOR_STATUS, m.getMessageAddress(), m.getInterfaceID(), m.getSensorID(), true, std::vector<quint8>());
-        emit devCom->queueMessage(status_request);
+        emit queueMessage(status_request);
     } else {
         // update todos
     }
@@ -405,7 +405,7 @@ void GloxiniaConfigurator::processSensorStart(const GMessage&m)
 void GloxiniaConfigurator::processConfigDoneFinishedReadout(const GMessage&m)
 {
     //GMessage start_measurements(GMessage::Code::SENSOR_START, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
-    //emit devCom->queueMessage(start_measurements);
+    //emit queueMessage(start_measurements);
 }
 
 void GloxiniaConfigurator::processLoadConfigurationFromSDCard(const GMessage&m)
@@ -433,6 +433,6 @@ void GloxiniaConfigurator::processDicioTime(const GMessage&m)
         time_data[6] = utc_time.time().second();
         GMessage m_time(GMessage::Code::DICIO_TIME, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, false, time_data);
 
-        emit devCom->queueMessage(m_time);
+        emit queueMessage(m_time);
     }
 }

@@ -32,50 +32,44 @@ void GloxiniaConfigurator::connectToDevice(void)
 // https://code.qt.io/cgit/qt/qtserialport.git/tree/examples/serialport/terminal/mainwindow.cpp?h=5.15
 void GloxiniaConfigurator::openSerialPort()
 {
-    // const SettingsDialog::Settings p = m_settings->settings();
-    serial->setPortName(settings.comPort);
-    serial->setBaudRate(50000);
-    serial->setDataBits(QSerialPort::Data8);
-    serial->setParity(QSerialPort::NoParity);
-    serial->setStopBits(QSerialPort::OneStop);
-    serial->setFlowControl(QSerialPort::HardwareControl);
-    if (serial->open(QIODevice::ReadWrite))
-    {
-        serial->clear();
-        // m_console->setEnabled(true);
-        // m_console->setLocalEchoEnabled(p.localEchoEnabled);
-        ui->actionConnect->setEnabled(false);
-        ui->actionDisconnect->setEnabled(true);
-        ui->actionLoadDeviceConfig->setEnabled(true);
-        ui->actionConfigureSerial->setEnabled(false);
-        showStatusMessage(tr("Connected to ") + settings.comPort);
-        /*showStatusMessage(tr("Connected to %1 : %2, %3, %4, %5, %6")
-                          .arg(p.name).arg(p.stringBaudRate).arg(p.stringDataBits)
-                          .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl));*/
+    emit serialPortSelected(settings.comPort);
+    qInfo() << "Opening serial port";
 
-        // TODO make timer run/stop based on settings
-        //discoveryTimer->start(30 * 1000); // run every 30 seconds
-
-        runDiscovery();
-    }
-    else
-    {
-        QMessageBox::critical(this, tr("Error"), serial->errorString());
-
-        showStatusMessage(tr("Open error"));
-    }
+    ui->actionConnect->setEnabled(false);
+    ui->actionDisconnect->setEnabled(true);
+    ui->actionLoadDeviceConfig->setEnabled(true);
+    ui->actionConfigureSerial->setEnabled(false);
 }
+
+
+void GloxiniaConfigurator::serialPortError(const QString errorMessage)
+{
+    QMessageBox::critical(this, tr("Error"), errorMessage);
+
+    showStatusMessage(tr("Open error"));
+
+    ui->actionConnect->setEnabled(true);
+    ui->actionDisconnect->setEnabled(false);
+    ui->actionLoadDeviceConfig->setEnabled(false);
+    ui->actionConfigureSerial->setEnabled(true);
+}
+
+void GloxiniaConfigurator::setSerialOpenStatus(bool status)
+{
+    serialOpenStatus = status;
+
+    updateUI();
+}
+
 
 void GloxiniaConfigurator::closeSerialPort()
 {
+
+    emit closeSerialPortEvent();
+
     discoveryTimer->stop();
 
-    if (serial->isOpen())
-    {
-        serial->flush();
-        serial->close();
-        showStatusMessage(tr("Disconnected"));
-    }
+
     // m_console->setEnabled(false);
     /*ui->actionConnect->setEnabled(true);
     ui->actionDisconnect->setEnabled(false);
@@ -86,227 +80,7 @@ void GloxiniaConfigurator::closeSerialPort()
 
 }
 
-void GloxiniaConfigurator::readData()
-{
-    static SerialReadoutState readoutState = FindStartByte;
-    short n_read = 0;
-    static int read_length = 0;
-    static char data[255 + 5];
 
-    do
-    {
-        switch (readoutState)
-        {
-        case FindStartByte:
-            n_read = serial->read(data, 1);
-            if (n_read != 1)
-            {
-                return;
-            }
-            if (data[0] == GMessage::GMessageStartByte)
-            {
-                readoutState = ReadAddress;
-            }
-            else
-            {
-                break;
-            }
-        case ReadAddress:
-
-            n_read = serial->read(&data[1], 1); // read id H
-            if (n_read < 0)
-            {
-                // an error occurred -> return to initial state
-                readoutState = FindStartByte;
-                qInfo() << "Error reading id H";
-                return;
-            }
-            if (n_read == 1)
-            {
-                // we were able to read code -> read id L
-                readoutState = ReadCommand;
-            }
-            else
-            {
-                break;
-            }
-        case ReadCommand:
-
-            n_read = serial->read(&data[2], 1); // read id
-            if (n_read < 0)
-            {
-                readoutState = FindStartByte;
-                qInfo() << "Error reading command";
-                return;
-            }
-            if (n_read == 1)
-            {
-                // we were able to read -> read sensor id H
-                readoutState = ReadRequest;
-                read_length = 0;
-            }
-            else
-            {
-                break;
-            }
-        case ReadRequest:
-
-            n_read = serial->read(&data[3], 1); // read id
-            if (n_read < 0)
-            {
-                readoutState = FindStartByte;
-                qInfo() << "Error reading request byte";
-                return;
-            }
-            if (n_read == 1)
-            {
-                // we were able to read -> read sensor id H
-                readoutState = ReadInterfaceID;
-                read_length = 0;
-            }
-            else
-            {
-                break;
-            }
-        case ReadInterfaceID:
-
-            n_read = serial->read(&data[4], 1); // read ext id H
-            if (n_read < 0)
-            {
-                readoutState = FindStartByte;
-                qInfo() << "Error reading sensor id H";
-                return;
-            }
-            if (n_read == 1)
-            {
-                // we were able to read -> read ext id L
-                readoutState = ReadSensorId;
-                read_length = 0;
-            }
-            else
-            {
-                break;
-            }
-        case ReadSensorId:
-            n_read = serial->read(&data[5], 1); // read ext id L
-            if (n_read < 0)
-            {
-                readoutState = FindStartByte;
-                qInfo() << "Error reading sensor id L";
-                return;
-            }
-            if (n_read == 1)
-            {
-                // we were able to read -> read length
-                readoutState = ReadLength;
-                read_length = 0;
-            }
-            else
-            {
-                break;
-            }
-        case ReadLength:
-            n_read = serial->read(&data[6], 1); // read length
-            if (n_read < 0)
-            {
-                readoutState = FindStartByte;
-                qInfo() << "Error reading length";
-                return;
-            }
-            if (n_read == 1)
-            {
-                // we were able to read the length -> read data (if any)
-                read_length = 0;
-                if (data[6] == 0)
-                {
-                    readoutState = DetectStopByte;
-                    break;
-                }
-                else
-                {
-                    readoutState = ReadData;
-                }
-            }
-            else
-            {
-                break;
-            }
-        case ReadData:
-            if((data[6] - read_length) > 0){
-                n_read = serial->read(&data[7 + read_length], data[6] - read_length);
-                if (n_read < 0)
-                {
-                    readoutState = FindStartByte;
-                    qInfo() << "Error reading data";
-                    return;
-                }
-                read_length += n_read;
-                if (read_length == data[6])
-                {
-                    readoutState = DetectStopByte;
-                }
-                else
-                {
-                    break;
-                }
-            } else {
-                qInfo() << "Error reading data (2)";
-                readoutState = FindStartByte;
-                return;
-            }
-        case DetectStopByte:
-            n_read = serial->read(&data[7 + read_length], 1);
-            if (n_read < 0)
-            {
-                qInfo() << "Error reading stop";
-                readoutState = FindStartByte;
-                read_length = 0;
-                return;
-            }
-            if (n_read == 1)
-            {
-                if (data[7 + read_length] == GMessage::GMessageStopByte)
-                {
-                    quint8 *udata = (quint8 *)data;
-                    if (read_length == 0)
-                    {
-                        GMessage m((GMessage::Code)udata[2], udata[1], udata[4], udata[5], udata[3] == 0 ? false : true);
-                        qInfo() << m.toString();
-                        processIncomingGMessage(m);
-                    }
-                    else
-                    {
-                        GMessage m((GMessage::Code)udata[2], udata[1], udata[4], udata[5], udata[3] == 0 ? false : true, std::vector<quint8>(&data[7], &data[7 + read_length]));
-                        qInfo() << m.toString();
-                        processIncomingGMessage(m);
-                    }
-
-                    /*if(model->insertRow(model->rowCount())){
-                        QModelIndex index = model->index(model->rowCount() - 1, 0);
-                        model->setData(index, "Data received!");
-                    }*/
-                }
-                else
-                {
-                    qInfo() << "Error incorrect stop byte received";
-                    // incorrect data byte received -> reset state
-                }
-                readoutState = FindStartByte;
-                read_length = 0;
-                break;
-            }
-            else
-            {
-                break;
-            }
-
-            break;
-        default:
-            readoutState = FindStartByte;
-            break;
-        }
-    } while (n_read > 0);
-}
 
 void GloxiniaConfigurator::setSerialPort(void)
 {

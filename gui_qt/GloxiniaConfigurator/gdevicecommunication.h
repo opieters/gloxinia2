@@ -15,14 +15,30 @@ public:
     GDeviceCommunication();
     ~GDeviceCommunication();
 
-    void setSerialPort(QSerialPort* port);
+    enum SerialReadoutState
+    {
+        FindStartByte,
+        ReadAddress,
+        ReadCommand,
+        ReadRequest,
+        ReadInterfaceID,
+        ReadSensorId,
+        ReadLength,
+        ReadData,
+        DetectStopByte
+    };
+
+    void openSerialPort(const QString& comPort);
+    void closeSerialPort();
 
 public slots:
     void process();
     void handleMessage(const GMessage& m);
+    void readData();
 
 signals:
-    void queueMessage(const GMessage& m);
+    void serialOpenStatusChange(bool statusChanged);
+    void receivedMessage(const GMessage m);
 
 signals:
     void finished();
@@ -31,7 +47,7 @@ signals:
 private:
     QList<GMessage> mList;
 
-    QSerialPort *serial;
+    QSerialPort serial;
 
     quint8 data[8+8];
 
