@@ -23,34 +23,34 @@
 GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::GloxiniaConfigurator),
-      status(new QLabel),
-      systemSettings(new SettingsDialog),
-      sensorSettings(new SensorDialog),
-      globalMeasurementPolicyDialog(new GlobalMeasurementPolicyDialog),
-      sensorAPDS9306_065Dialog(new SensorAPDS9306_065Dialog),
-      sensorSHT35Dialog(new SensorSHT35Dialog),
-      sensorADC12Dialog(new SensorADC12Dialog),
-      sensorADC16Dialog(new SensorADC16Dialog),
-      sensorLIADialog(new SensorLIADialog),
-      nodeDicioDialog(new NodeDicioDialog),
+    status(new QLabel(this)),
+    systemSettings(new SettingsDialog(this)),
+    sensorSettings(new SensorDialog(this)),
+    globalMeasurementPolicyDialog(new GlobalMeasurementPolicyDialog(this)),
+      sensorAPDS9306_065Dialog(new SensorAPDS9306_065Dialog(this)),
+      sensorSHT35Dialog(new SensorSHT35Dialog(this)),
+      sensorADC12Dialog(new SensorADC12Dialog(this)),
+      sensorADC16Dialog(new SensorADC16Dialog(this)),
+      sensorLIADialog(new SensorLIADialog(this)),
+      nodeDicioDialog(new NodeDicioDialog(this)),
       chart(new QChart),
-      messageModel(new QStringListModel),
-      measurementSettings(new MeasurementSettingsDialog),
-      newProjectDialog(new NewProjectDialog),
-      updateDialog(new UpdateDialog),
-      liaEngineDialog(new LIAEngineDialog()),
-      readoutDialog(new GCReadoutDialog())
+      messageModel(new QStringListModel(this)),
+      measurementSettings(new MeasurementSettingsDialog(this)),
+      newProjectDialog(new NewProjectDialog(this)),
+      updateDialog(new UpdateDialog(this)),
+      liaEngineDialog(new LIAEngineDialog(this)),
+      readoutDialog(new GCReadoutDialog(this))
 {
     // build UI
     ui->setupUi(this);
     ui->statusbar->addWidget(status);
 
-    mainLayout = new QHBoxLayout;
+    mainLayout = new QHBoxLayout();
     // horizontal layout
-    splitter = new QSplitter;
-    splitter2 = new QSplitter;
-    messageView = new QListView;
-    systemOverview = new QTreeView;
+    splitter = new QSplitter(this);
+    splitter2 = new QSplitter(this);
+    messageView = new QListView(this);
+    systemOverview = new QTreeView(this);
     chartView = new QChartView(chart);
 
     mainLayout->addWidget(splitter);
@@ -157,12 +157,12 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
     sensorLIADialog->setLIAEngineDialog(liaEngineDialog);
 
     // add plot window to UI
-    dummySeries = new QLineSeries();
+    dummySeries = new QLineSeries(chart);
     chart->addSeries(dummySeries);
     //chart->legend()->hide();
     //chart->setTitle("Analog readout [a.u.]");
 
-    xAxis = new QDateTimeAxis;
+    xAxis = new QDateTimeAxis(chart);
     xAxis->setTickCount(10);
     xAxis->setFormat("mm:ss");
     xAxis->setTitleText("time");
@@ -172,7 +172,7 @@ GloxiniaConfigurator::GloxiniaConfigurator(QWidget *parent)
 
 
     // timer use to send discovery messages
-    discoveryTimer = new QTimer();
+    discoveryTimer = new QTimer(this);
     connect(discoveryTimer, &QTimer::timeout, this, &GloxiniaConfigurator::runDiscovery);
 
     // Load application configuration and set default values
