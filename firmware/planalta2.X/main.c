@@ -40,7 +40,7 @@
 #pragma config APL = OFF            //Auxiliary Segment Code-protect bit->Aux Flash Code protect is disabled
 #pragma config APLK = OFF           //Auxiliary Segment Key bits->Aux Flash Write Protection and Code Protection is Disabled
 
-static task_t task;
+static task_t* task;
 
 int main(void) 
 {    
@@ -51,7 +51,8 @@ int main(void)
 
         if (n_queued_tasks > 0) {
             task = pop_queued_task();
-            task.cb(task.data);
+            task->cb(task->data);
+            task_cleanup(task);
         }
     }
 
