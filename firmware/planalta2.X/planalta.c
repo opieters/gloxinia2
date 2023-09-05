@@ -82,6 +82,7 @@ pga_config_t pga_config[N_SENSOR_INTERFACES] = {
 
 const uint8_t n_sensor_interfaces = N_SENSOR_INTERFACES;
 
+dac_config_t dac_config;
 
 void planalta_clock_init(void)
 {
@@ -302,8 +303,6 @@ void planalta_init(void){
     
     planalta_init_pins();
     
-   
-    
     __builtin_enable_interrupts();
     
     // UART serial communication (debug + print interface)
@@ -424,7 +423,109 @@ void planalta_filters_init(void)
 void planalta_clear_filter_buffers(void){
     uint16_t i, j;
     
-    // todo: clear delay buffers
+    for(i = 0; i < N_FIR_COEFFS0; i++)
+    {
+        delay_buffers_0_0[i] = 0;
+        delay_buffers_0_1[i] = 0;
+        delay_buffers_0_2[i] = 0;
+        delay_buffers_0_3[i] = 0;
+        delay_buffers_0_4[i] = 0;
+        delay_buffers_0_5[i] = 0;
+        delay_buffers_0_6[i] = 0;
+        delay_buffers_0_7[i] = 0;
+    }
+
+    for(i = 0; i < N_FIR_COEFFS1_Q; i++)
+    {
+        delay_buffers_1_q_0[i] = 0;
+        delay_buffers_1_q_1[i] = 0;
+        delay_buffers_1_q_2[i] = 0;
+        delay_buffers_1_q_3[i] = 0;
+        delay_buffers_1_q_4[i] = 0;
+        delay_buffers_1_q_5[i] = 0;
+        delay_buffers_1_q_6[i] = 0;
+        delay_buffers_1_q_7[i] = 0;
+    }
+
+    for(i = 0; i < N_FIR_COEFFS1_I; i++)
+    {
+        delay_buffers_1_i_0[i] = 0;
+        delay_buffers_1_i_1[i] = 0;
+        delay_buffers_1_i_2[i] = 0;
+        delay_buffers_1_i_3[i] = 0;
+        delay_buffers_1_i_4[i] = 0;
+        delay_buffers_1_i_5[i] = 0;
+        delay_buffers_1_i_6[i] = 0;
+        delay_buffers_1_i_7[i] = 0;
+    }    
+    
+    for(i = 0; i < N_FIR_COEFFS2; i++)
+    {
+        delay_buffers_2_q_0[i] = 0;
+        delay_buffers_2_i_0[i] = 0;
+        delay_buffers_2_q_1[i] = 0;
+        delay_buffers_2_i_1[i] = 0;
+        delay_buffers_2_q_2[i] = 0;
+        delay_buffers_2_i_2[i] = 0;
+        delay_buffers_2_q_3[i] = 0;
+        delay_buffers_2_i_3[i] = 0;
+        delay_buffers_2_q_4[i] = 0;
+        delay_buffers_2_i_4[i] = 0;
+        delay_buffers_2_q_5[i] = 0;
+        delay_buffers_2_i_5[i] = 0;
+        delay_buffers_2_q_6[i] = 0;
+        delay_buffers_2_i_6[i] = 0;
+        delay_buffers_2_q_7[i] = 0;
+        delay_buffers_2_i_7[i] = 0;
+    }
+
+    for(i = 0; i < N_FIR_COEFFS3; i++)
+    {
+        delay_buffers_3_q_0[i] = 0;
+        delay_buffers_3_i_0[i] = 0;
+        delay_buffers_3_q_1[i] = 0;
+        delay_buffers_3_i_1[i] = 0;
+        delay_buffers_3_q_2[i] = 0;
+        delay_buffers_3_i_2[i] = 0;
+        delay_buffers_3_q_3[i] = 0;
+        delay_buffers_3_i_3[i] = 0;
+        delay_buffers_3_q_4[i] = 0;
+        delay_buffers_3_i_4[i] = 0;
+        delay_buffers_3_q_5[i] = 0;
+        delay_buffers_3_i_5[i] = 0;
+        delay_buffers_3_q_6[i] = 0;
+        delay_buffers_3_i_6[i] = 0;
+        delay_buffers_3_q_7[i] = 0;
+        delay_buffers_3_i_7[i] = 0;
+    }
+
+    for(i = 0; i < N_FIR_COEFFS4; i++)
+    {
+        delay_buffers_4_q_0[i] = 0;
+        delay_buffers_4_i_0[i] = 0;
+        delay_buffers_4_q_1[i] = 0;
+        delay_buffers_4_i_1[i] = 0;
+        delay_buffers_4_q_2[i] = 0;
+        delay_buffers_4_i_2[i] = 0;
+        delay_buffers_4_q_3[i] = 0;
+        delay_buffers_4_i_3[i] = 0;
+        delay_buffers_4_q_4[i] = 0;
+        delay_buffers_4_i_4[i] = 0;
+        delay_buffers_4_q_5[i] = 0;
+        delay_buffers_4_i_5[i] = 0;
+        delay_buffers_4_q_6[i] = 0;
+        delay_buffers_4_i_6[i] = 0;
+        delay_buffers_4_q_7[i] = 0;
+        delay_buffers_4_i_7[i] = 0;
+    }
+    
+    for(i = 0; i < N_FIR_SHARED; i++)
+    {
+        delay_buffers_5_q_0[i] = 0;
+        delay_buffers_5_i_0[i] = 0;
+        delay_buffers_5_q_1[i] = 0;
+        delay_buffers_5_i_1[i] = 0;
+    }
     
     for(i = 0; i < PLANALTA_N_ADC_CHANNELS; i++){
         for(j = 0; j < PLANALTA_F2_INPUT_SIZE; j++){
