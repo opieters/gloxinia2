@@ -51,6 +51,8 @@ sensor_interface_t* sensor_interfaces[N_SENSOR_INTERFACES] =
 
 const uint8_t n_sensor_interfaces = N_SENSOR_INTERFACES;
 
+extern uint32_t sdcard_data_address;
+
 // internal functions
 void dicio_uart_rx_overflow(void* data);
 
@@ -99,11 +101,92 @@ void dicio_check_stored_config(void)
     
     if(buffer[0])
     {
-        // check readout of
+        UART_DEBUG_PRINT("Detected unfinished experiment.");
+        
+        // load node configurations and broadcast these to resp. nodes
         dicio_load_node_configs();
+        
+        // search final sector
+        bool final_sector_found = false;
+        const uint32_t sector_address_max = SD_SPI_GetSectorCount();
+        
+        uint32_t sector_address = sector_address_max - 1;
+        uint32_t address_range_start = DICIO_DATA_START_ADDRESS;
+        uint32_t address_range_stop = SD_SPI_GetSectorCount() - 1;
+        uint32_t sector_step = address_range_stop - address_range_start + 1;
+        uint32_t sector_empty_address, sector_written_address;
+        
+        // sanity check
+        SD_SPI_SectorRead(address_range_start, buffer, 1);
+        if(buffer_is_empty(buffer, ARRAY_LENGTH(buffer)))
+        {
+            sdcard_data_address = DICIO_DATA_START_ADDRESS;
+        } else {
+            SD_SPI_SectorRead(address_range_stop, buffer, 1);
+            if(!buffer_is_empty(buffer, ARRAY_LENGTH(buffer)))
+            {
+                // sdcard is full
+                sdcard_data_address = address_range_stop + 1;
+            } else {
+                while(!final_sector_found && (sector_step > 1))
+                {
+                    do {
+                        sector_empty_address = sector_address;
+                        sector_address = sector_address - sector_step;
+                        sector_step = MAX(sector_step / 2, 1);
+                        SD_SPI_SectorRead(sector_address, buffer, 1);
+                    } while(buffer_is_empty(buffer, ARRAY_LENGTH(buffer)) && (sector_written_address < sector_empty_address));
+                    
+                    if((sector_written_address + 1) == sector_empty_address)
+                    {
+                        final_sector_found = true;
+                    }
+                    
+                    do {
+                        sector_written_address = sector_address;
+                        sector_address = sector_address + sector_step;
+                        sector_step = MAX(sector_step / 2, 1);
+                        SD_SPI_SectorRead(sector_address, buffer, 1);
+                    } while(!buffer_is_empty(buffer, ARRAY_LENGTH(buffer)) && (sector_written_address < sector_empty_address));
+                    
+                    if((sector_written_address + 1) == sector_empty_address)
+                    {
+                        final_sector_found = true;
+                    }
+                }
+            }
+            UART_DEBUG_PRINT("First empty sector: %08lx.", sector_empty_address);
+
+            sdcard_data_address = sector_empty_address;
+        }
+            
+        // start readout
+        message_t m;
+        message_init(&m,
+                controller_address,
+                true,
+                M_SENSOR_START,
+                NO_INTERFACE_ID,
+                NO_SENSOR_ID,
+                NULL,
+                0);
+        dicio_broadcast_measurement_start(&m);
+        cmd_sensor_start(&m);
+    } else {
+        sdcard_data_address = DICIO_DATA_START_ADDRESS;
     }
-    
-    // todo: start readout
+}
+
+void dicio_load_clock_config(void)
+{
+    uint8_t dicio_sector_buffer[SDCARD_SECTOR_SIZE];
+    if(SD_SPI_SectorRead(DICIO_TIME_CONFIG_ADDRESS, dicio_sector_buffer, 1))
+    {
+        // readout values
+        
+        // TODO
+        //dicio_sector_buffer
+    }
 }
 
 
@@ -140,6 +223,8 @@ void dicio_init(void)
     event_controller_init();
     UART_DEBUG_PRINT("Initialised event controller.");
     
+    clock_init();
+    
     if(spi1_open())
     {
         UART_DEBUG_PRINT("Initialised SPI");
@@ -147,23 +232,41 @@ void dicio_init(void)
     {
         UART_DEBUG_PRINT("SPI ERROR");
     }
-
-    if (SD_SPI_MediaInitialize() == true)
+    
+    sensor_adc12_init_filters();
+    sensor_adc12_set_callback(sensor_adc12_process_block0);
+    UART_DEBUG_PRINT("Initialised ADC12.");
+    
+    if(SD_SPI_MediaInitialize() == true)
     {
-        dicio_read_sdconfig_data();
-        dicio_check_stored_config();
+        //dicio_read_sdconfig_data();
+        //dicio_check_stored_config();
+        // TODO: remove and reactivate above lines
+        sdcard_data_address = DICIO_DATA_START_ADDRESS;
         UART_DEBUG_PRINT("Initialised SD card");
         
         sdcard_init_dma();
+        //dicio_load_clock_config();
     }
     else
     {
         UART_DEBUG_PRINT("Unable to initialise SD card");
     }
     
-    sensor_adc12_init_filters();
-    sensor_adc12_set_callback(sensor_adc12_process_block0);
-    UART_DEBUG_PRINT("Initialised ADC12.");
+    if(uart_connection_active)
+    {
+        // request time
+        message_t m;
+        message_init(&m,
+                ADDRESS_GATEWAY,
+                true,
+                M_DICIO_TIME,
+                NO_INTERFACE_ID,
+                NO_SENSOR_ID,
+                NULL,
+                0);
+        message_send(&m);
+    }
     
     
 
@@ -209,6 +312,8 @@ void dicio_init(void)
     
     //sensor_set_status( (0<<4) | 1, SENSOR_STATUS_ACTIVE);
     //sensor_adc12_activate(sensor_config);
+    
+    sdcard_data_address = DICIO_DATA_START_ADDRESS;
 }
 
 void dicio_uart_rx_overflow(void* data)
@@ -416,11 +521,10 @@ void dicio_init_pins(void)
     _ANSB0 = 1; // AS4
 
     /*
-     * USB connection
+     * USB connection 
      * D+ -> G2
      * D- -> G3
      */
-    // TODO
 
     /*
      * user interface

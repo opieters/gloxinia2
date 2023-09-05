@@ -10,10 +10,6 @@ extern uint8_t n_nodes;
 extern node_config_t node_configs[DICIO_MAX_N_NODES];
 static uint8_t dicio_sector_buffer[SDCARD_SECTOR_SIZE];
 
-static uint8_t* dicio_data_buffer;
-static uint8_t dicio_data_buffer_a[SDCARD_SECTOR_SIZE];
-static uint8_t dicio_data_buffer_b[SDCARD_SECTOR_SIZE];
-
 void dicio_load_node_configs(void)
 {
     uint8_t dicio_sector_buffer[SDCARD_SECTOR_SIZE];
@@ -125,13 +121,25 @@ void dicio_load_node_configs(void)
 
 void dicio_read_sdconfig_data(void)
 {
-    uint8_t dicio_sector_buffer[SDCARD_SECTOR_SIZE];
+    uint8_t dicio_sector_buffer[SDCARD_SECTOR_SIZE] = {0};
 
-    if (!SD_SPI_SectorRead(DICIO_CONFIG_ADDRESS, dicio_sector_buffer, 1))
+    if (!SD_SPI_SectorRead(DICIO_MEASUREMENT_RUNNING_ADDRESS, dicio_sector_buffer, 1))
     {
-        UART_DEBUG_PRINT("Unable to read sector 0!");
+        UART_DEBUG_PRINT("Unable to read configuration data!");
     }
-    // TODO
+ 
+    // an experiment was running when the device was powered down, resume this experiment
+    if(dicio_sector_buffer[0] == 1)
+    {
+        // search where last data frame was written
+        
+        // load sensor config of this node
+        
+        // load configuration data for each node from memory
+        dicio_load_node_configs();
+        
+        // start readout
+    }
 }
 
 void dicio_write_sdconfig_data(void)
@@ -456,7 +464,7 @@ void cmd_data_write(const message_t* m) {
         return;
 
     // calculate sector address
-    uint32_t address = (m->data[0] << 24) | (m->data[1] << 16) | (m->data[2] << 8) | m->data[3];
+    uint32_t address = (((uint32_t) m->data[0]) << 24) | (((uint32_t) m->data[1]) << 16) | (((uint32_t) m->data[2]) << 8) | m->data[3];
     address -= address % SDCARD_SECTOR_SIZE;
 
     for(int i = 0; i < m->length - 4; i++)
