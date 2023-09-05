@@ -214,7 +214,14 @@ extern "C"
      */
     void can_configure_filter(uint8_t n, uint16_t sid, uint32_t eid, bool exide, uint8_t mask, uint8_t target);
     
-    // TODO
+    /**
+     * @brief Convenience function to configure CAN mask
+     * 
+     * @param n mask number (0-2)
+     * @param sid standard identifier to match (11-bit)
+     * @param eid extended identifier to match (18-bit)
+     * @param mide true if EID-messages-only mask
+    */
     void can_configure_mask(uint8_t n, int16_t sid, uint32_t eid, bool mide) ;
 
 #ifdef __cplusplus
