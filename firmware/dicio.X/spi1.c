@@ -15,7 +15,7 @@ bool spi1_open(void)
         SPI1CON1bits.MSTEN = 1;     // enable master mode
         SPI1CON1bits.CKP = 1;       // high level is idle state
         SPI1CON1bits.SPRE = 0b000;  // set secondary prescaler to 1:8
-        SPI1CON1bits.PPRE = 0b11;   // set primary prescaler to 1:64
+        SPI1CON1bits.PPRE = 0b11;   // set primary prescaler to 1:1
         
         SPI1CON2 = 0x0000;
         SPI1STATbits.SPIEN = 1;    // enable SPI interface
