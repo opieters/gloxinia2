@@ -357,8 +357,7 @@ static const struct SD_COMMAND_TABLE_ENTRY sdmmc_cmdtable[] =
 /******************************************************************************
  * Custom definitions for improved performance
  *****************************************************************************/
-// TODO: might need additional memory attributes for alignment and memory type
-uint8_t __attribute__((aligned(SDCARD_SECTOR_SIZE))) sdcard_sector_buffer_a[SDCARD_SECTOR_SIZE ]; // 
+uint8_t __attribute__((aligned(SDCARD_SECTOR_SIZE))) sdcard_sector_buffer_a[SDCARD_SECTOR_SIZE];
 uint8_t __attribute__((aligned(SDCARD_SECTOR_SIZE))) sdcard_sector_buffer_b[SDCARD_SECTOR_SIZE];
 uint8_t sdcard_sector_cmd_buffer[6];
 uint8_t* sdcard_sector_buffer = sdcard_sector_buffer_a;
@@ -440,7 +439,7 @@ void sdcard_init_dma(void)
 void sdcard_start_sector_write(void)
 {    
     SD_SPI_ChipSelect();
-
+    
     sdcard_sector_cmd_buffer[0] = sdmmc_cmdtable[SD_WRITE_SINGLE_BLOCK].CmdCode | SD_COMMAND_TRANSMIT_BIT_MASK;
     sdcard_sector_cmd_buffer[4] = (uint8_t) sdcard_data_address;
     sdcard_sector_cmd_buffer[3] = (uint8_t) (sdcard_data_address >> 8);
@@ -1680,7 +1679,6 @@ static SD_RESPONSE SD_SendCmd (uint8_t cmd, uint32_t address)
         longTimeout = SD_WRITE_TIMEOUT;
         do
         {
-            // TODO: change back to previous version
             response.r1._byte = SD_SPI_exchangeByte (0xFF);
             longTimeout--;
         }while((response.r1._byte == 0x00) && (longTimeout != 0));
