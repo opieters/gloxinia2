@@ -11,9 +11,7 @@
 #include <rtcc.h>
 #include "dicio_adc12_filters.h"
 #include "spi1.h"
-
-// TODO REMOVE DEBUG INCLUDES
-#include <sensor_apds9306_065.h>
+#include <stdbool.h>
 
 uint8_t n_nodes = 0;
 node_config_t node_configs[DICIO_MAX_N_NODES];
@@ -126,6 +124,12 @@ void dicio_init(void)
     uart_init(50000);
 
     UART_DEBUG_PRINT("Configured UART.");
+    
+    if(_RF2 == 1)
+    {
+        uart_connection_active = true;
+        UART_DEBUG_PRINT("Detected UART host.");
+    }
 
     i2c1_init(&dicio_i2c1_config);
     UART_DEBUG_PRINT("Initialised I2C1.");
@@ -483,6 +487,9 @@ void dicio_init_pins(void)
     _U2CTSR = 44;
     _TRISB12 = 1;
     _TRISF2 = 1; // U2 RX
+    _CNPDF2 = 1; // enable weak pull-down resistor. If the RX pin is not 
+    // connected to TX of a computer, this will drive the pin low, which can be 
+    // used for auto-detection of readout device
     _RP99R = _RPOUT_U2TX;
     _TRISF3 = 0; // U2 TX
     _U2RXR = 98;
@@ -502,6 +509,9 @@ void dicio_init_pins(void)
     _ANSG8 = 0; // U1 RX
     _TRISG8 = 1;
     _U1RXR = 120;
+    _CNPDG8 = 1; // enable weak pull-down resistor. If the RX pin is not 
+    // connected to TX of a computer, this will drive the pin low, which can be 
+    // used for auto-detection of readout device
 
     /*
      * ECAN pin configuration

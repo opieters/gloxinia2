@@ -148,7 +148,10 @@ void planalta_init_pins(void){
     
     // UART
     _TRISD4 = 1; // U2RX
-    _U2RXR = 68;            
+    _U2RXR = 68;      
+    _CNPDD4 = 1; // enable weak pull-down resistor. If the RX pin is not 
+    // connected to TX of a computer, this will drive the pin low, which can be 
+    // used for auto-detection of readout device
     _TRISD1 = 0; // RTS
     _RP65R = _RPOUT_U2RTS;
     _TRISD3 = 0; // U2TX
@@ -306,6 +309,12 @@ void planalta_init(void){
     // UART serial communication (debug + print interface)
     uart_init(50000);
     UART_DEBUG_PRINT("Configured UART.");
+    
+    if(_RD4 == 1)
+    {
+        uart_connection_active = true;
+        UART_DEBUG_PRINT("Detected UART host.");
+    }
     
     can_init();
     UART_DEBUG_PRINT("Initialised ECAN.");

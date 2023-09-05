@@ -40,9 +40,7 @@ pga_config_t pga_config[N_SENSOR_INTERFACES] = {
     { .cs_pin = PIN_INIT(F, 2) },
 };
 
-bool uart_connection_active = true; // TODO: false???
-
-
+bool uart_connection_active = false;
 
 adc16_config_t adc16_config = {
     .channel_select = ADC16_CHANNEL_SELECT_MODE_AUTO,
@@ -193,6 +191,9 @@ void sylvatica_init_pins(void){
     _ANSE6 = 0; // RXD
     _TRISE6 = 1;
     _U2RXR = 86;
+    _CNPDE6 = 1; // enable weak pull-down resistor. If the RX pin is not 
+    // connected to TX of a computer, this will drive the pin low, which can be 
+    // used for auto-detection of readout device
     _ANSG6 = 0; // RTS
     _TRISG6 = 0; 
     _RP118R = _RPOUT_U2RTS;
@@ -299,6 +300,12 @@ void sylvatica_init(void)
     // UART serial communication (debug + print interface)
     uart_init(50000);
     UART_DEBUG_PRINT("Configured UART.");
+    
+    if(_RE6 == 1)
+    {
+        uart_connection_active = true;
+        UART_DEBUG_PRINT("Detected UART host.");
+    }
    
     can_init();
     UART_DEBUG_PRINT("Initialised ECAN.");
