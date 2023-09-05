@@ -8,22 +8,24 @@ void spi1_close(void)
 
 bool spi1_open(void)
 {
+    // the SPI interface is configured to 125kHz, which is below the upper limit
+    // for this interface (9MHz, see table 32-32 p526)
     if(!SPI1STATbits.SPIEN)
     {
-        SPI1CON1 = 0x0060;
+        SPI1CON1bits.MSTEN = 1;     // enable master mode
+        SPI1CON1bits.CKP = 1;       // high level is idle state
+        SPI1CON1bits.SPRE = 0b000;  // set secondary prescaler to 1:8
+        SPI1CON1bits.PPRE = 0b11;   // set primary prescaler to 1:64
+        
         SPI1CON2 = 0x0000;
-        SPI1STAT = 0x0000 | 0x8000;
+        SPI1STATbits.SPIEN = 1;    // enable SPI interface
         
         //_SPI1IE = 1;
-        
-        
-        //TODO: fix
-        //TRISDbits.TRISD1 = spi1_configuration[spiUniqueConfiguration].operation;
-        //TRISDbits.TRISD11 = spi1_configuration[spiUniqueConfiguration].operation;
         return true;
     }
     return false;
 }
+
 
 // Full Duplex SPI Functions
 uint8_t spi1_exchange_byte(uint8_t b)
