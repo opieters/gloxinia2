@@ -3,8 +3,11 @@
 #include <utilities.h>
 #include <address.h>
 #include <adc16.h>
+#include <dac.h>
+#include "../planalta2.X/planalta.h"
 
 extern adc16_config_t adc16_config;
+extern dac_config_t dac_config;
 
 void sensor_lia_get_config(sensor_gconfig_t* intf, uint8_t reg, uint8_t* buffer, uint8_t* length){
     sensor_lia_config_t *config = &intf->sensor_config.lia;
@@ -200,10 +203,10 @@ void sensor_lia_activate(sensor_gconfig_t* config)
     
     // configure DAC only once
     planalta_init_dac_config(
-            dac_config_t* config, 
-            sensor_lia_op_mode_t operation_mode, 
-            sensor_lia_fs_freq_t sweep_frequency, 
-            bool calibration);
+            &dac_config, 
+            config->sensor_config.lia.mode,
+            config->sensor_config.lia.fs_low,
+            false); // TODO: check if false is the right choice here
     
     // start ADC only once
     if(adc16_config.status != ADC16_STATUS_ON)
