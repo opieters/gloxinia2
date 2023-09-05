@@ -2,7 +2,36 @@
 
 void clock_init(void)
 {
-    // TODO??
+    NVMKEY = 0x55;
+    NVMKEY = 0xaa;
+    RCFGCALbits.RTCWREN = 0;    //disable the RTCC peripheral       
+
+    /* Configure the alarm settings*/
+    ALCFGRPTbits.CHIME = 0;     // no rolloever of the repeat count
+    ALCFGRPTbits.AMASK = 0;     // alarm mask configuration bits
+    ALCFGRPTbits.ARPT = 0;      // alarm repeat counter value bits
+    RCFGCALbits.RTCOE = 0;      // disable RTCC output
+
+    /* Load the initial values to the RTCC value registers*/
+    RCFGCALbits.RTCPTR = 3;     // point to year register
+    clock_time_t base_time = {
+            .year = 23,
+            .month = 1,
+            .day = 1,
+            .wday = 6,
+            .hour = 0,
+            .minute = 0,
+            .second = 0
+    };
+    
+    clock_set_time(&base_time);
+
+    RCFGCALbits.RTCEN = 1;      //enable RTCC peripheral
+    RCFGCALbits.RTCWREN = 0;    //lock the RTCC value registers
+
+    /* Enable the RTCC interrupt*/
+    _RTCIF = 0;                 //clear the RTCC interrupt flag
+    _RTCIE = 1;                 //enable the RTCC interrupt
 }
 
 void clock_set_time(clock_time_t* time)
@@ -107,4 +136,18 @@ void clock_get_raw_time(uint16_t* ctime)
     ctime[2] = RTCVAL;
     ctime[3] = RTCVAL;
     _GIE = gie_value;
+}
+
+void clock_get_time(clock_time_t* time)
+{
+    uint16_t data[4];
+    clock_get_raw_time(data);
+    
+    time->year = (data[0] & 0xf) + ((data[0] >> 4) & 0xf)*10;
+    time->month = ((data[1] >> 8) & 0xf) + (data[1] >> 12)*10;
+    time->day = (data[1] & 0xf) + ((data[1] >> 4) & 0x3)*10;
+    time->wday = (data[2] >> 8) & 0x7;
+    time->hour = (data[2] & 0xf) + ((data[2] >> 4) & 0x3)*10;
+    time->minute = ((data[3] >> 8) & 0xf) + (data[3] >> 12)*10;
+    time->second = (data[3] & 0xf) + ((data[3] >> 4) & 0x7)*10;
 }
