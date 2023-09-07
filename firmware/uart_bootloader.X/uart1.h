@@ -8,14 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "bootloader_config.h"
-#include <message.h>
-
-typedef struct {
-    uint8_t data[BOOT_CONFIG_MAX_PACKET_SIZE+10];
-    message_cmd_t command;
-    uint16_t length;
-    bool unlock;
-} uart1_message_t;
+#include "bootloader.h"
 
 
 #ifdef __cplusplus  // Provide C++ Compatibility
@@ -57,13 +50,13 @@ void uart1_deactivate(void);
  * 
  * @return 
  */
-void copy_uart1_message(uart1_message_t* m_src, uart1_message_t* m_dst);
+void bootloader_copy_message(const bootloader_message_t* m_src, bootloader_message_t* m_dst);
 
 /**
  * 
  * @return 
  */
-void uart1_tx_message(uart1_message_t* m);
+void uart1_tx_message(bootloader_message_t* m);
 
 /**
  * 

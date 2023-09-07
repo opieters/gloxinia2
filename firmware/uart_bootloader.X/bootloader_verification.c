@@ -6,7 +6,7 @@
 #include "flash_memory.h"
 #include "bootloader_config.h"
 #include <stdio.h>
-#include "uart_bootloader.h"
+#include "bootloader.h"
 #include "app_image.h"
 
 #define MEMCPY_BUFFERS_MATCH 0

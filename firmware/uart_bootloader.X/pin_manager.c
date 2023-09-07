@@ -4,7 +4,7 @@
 
 #include <xc.h>
 #include <stdio.h>
-#include "uart_bootloader.h"
+#include "bootloader.h"
 
 /**
  Section: Driver Interface Function Definitions

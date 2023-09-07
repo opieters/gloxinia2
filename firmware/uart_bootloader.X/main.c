@@ -1,5 +1,5 @@
 #include <xc.h>
-#include "uart_bootloader.h"
+#include "bootloader.h"
 
 
 #ifdef OMIT_CONFIGURATIONS
@@ -49,10 +49,9 @@ int main(void)
 {
     system_initialise();
     
-    while (1)
-    {
-        bootloader_run();
-    }
+    
+    bootloader_run();
+
     return 1; 
 }
 

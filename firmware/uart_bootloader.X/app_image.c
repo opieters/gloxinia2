@@ -1,7 +1,7 @@
 #include <string.h>
 #include "app_image.h"
 #include "bootloader_config.h"
-#include "uart_bootloader.h"
+#include "bootloader.h"
 #include "flash_memory.h"
 
 const static app_image_t images[] = 

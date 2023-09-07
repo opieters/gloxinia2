@@ -1,9 +1,10 @@
 #include <xc.h>
 #include <libpic30.h>
-#include "uart_bootloader.h"
+#include "bootloader.h"
 #include "uart1.h"
 #include "flash.h"
 #include "traps.h"
+#include "can2.h"
 
 #define DOWNLOADED_IMAGE    0u
 #define EXECUTION_IMAGE     0u
@@ -13,6 +14,7 @@ static bool app_image_valid = false;
 
 volatile bool received_bootloader_message = false;
 volatile uint32_t last_address_written = 0xf;
+bootloader_message_t* m_process = NULL;
 
 void system_initialise(void)
 {
@@ -32,7 +34,7 @@ void bootloader_init(void) {
     received_bootloader_message = false;
     last_address_written = 0x0;
     
-    uart1_message_t broadcast;
+    bootloader_message_t broadcast;
     broadcast.command = M_BOOT_READY;
     broadcast.unlock = false;
     broadcast.length = 0;
@@ -44,31 +46,36 @@ void bootloader_init(void) {
 void bootloader_run(void) {
     uint32_t checksum;
     
-    if (!received_bootloader_message) {
-        if (app_image_run_validation == true) {
-            app_image_valid = app_image_verification(EXECUTION_IMAGE, &checksum);
-        }
+    while(1){
+        if (!received_bootloader_message) {
+            if (app_image_run_validation == true) {
+                app_image_valid = app_image_verification(EXECUTION_IMAGE, &checksum);
+            }
 
-        if (!app_image_valid) {
-            // stay in bootloader mode since the image is not valid
-            received_bootloader_message = true;
-        } else {
-            /* NOTE: Before starting the application, all interrupts used
-             * by the bootloader must be disabled. Add code here to return
-             * the peripherals/interrupts to the reset state before starting
-             * the application code. */
-            pins_reset();
-            uart1_deactivate();
-            bootloader_start_app_image();
+            if (!app_image_valid) {
+                // stay in bootloader mode since the image is not valid
+                received_bootloader_message = true;
+            } else {
+                /* NOTE: Before starting the application, all interrupts used
+                 * by the bootloader must be disabled. Add code here to return
+                 * the peripherals/interrupts to the reset state before starting
+                 * the application code. */
+                pins_reset();
+                uart1_deactivate();
+                can2_disable();
+                bootloader_start_app_image();
+            }
         }
-    }
-    if(_U1RXIE == 0){
-        boot_process_command();
-        _U1RXIE = 1;
-    }   
-    // make sure overflow does not block the UART module
-    if(U1STAbits.OERR == 1){
-        U1STAbits.OERR = 0;
+        
+        m_process = boot_queue_pop();
+        
+        if(m_process != NULL)
+            boot_process_command(m_process);
+        
+        // make sure overflow does not block the UART module
+        if(U1STAbits.OERR == 1){
+            U1STAbits.OERR = 0;
+        }
     }
 }
 
@@ -109,4 +116,49 @@ void clock_init(void)
     while (OSCCONbits.LOCK != 1);
 }
 
+void bootloader_tx_message(bootloader_message_t* m)
+{
+    // TODO
+}
 
+#define BOOT_QUEUE_SIZE 16
+bootloader_message_t boot_message_queue[BOOT_QUEUE_SIZE];
+volatile uint8_t boot_message_queue_index = 0;
+volatile uint8_t bool_message_queue_n = 0;
+
+bool boot_queue_push(const bootloader_message_t* m)
+{
+    if(bool_message_queue_n >= (BOOT_QUEUE_SIZE - 1)){
+        return false;
+    }
+    
+    bootloader_copy_message(m, &boot_message_queue[boot_message_queue_index]);
+    boot_message_queue_index = (boot_message_queue_index+1) % BOOT_QUEUE_SIZE;
+    
+    bool_message_queue_n++;
+    
+    return true;
+}
+
+bootloader_message_t* boot_queue_pop(void)
+{
+    if(bool_message_queue_n == 0)
+        return NULL;
+    
+    bool_message_queue_n--;
+    
+    int16_t index = (boot_message_queue_index - bool_message_queue_n) % BOOT_QUEUE_SIZE;
+    
+    return &boot_message_queue[index];
+}
+
+void bootloader_copy_message(const bootloader_message_t* m1, bootloader_message_t* m2)
+{
+    *m2 = *m1;
+    
+    
+    /*for(unsigned int i = 0; i < m1->length; i++)
+    {
+        m2->data[i] = m1->data[i];
+    }*/
+}

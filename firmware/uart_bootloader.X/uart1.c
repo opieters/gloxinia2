@@ -2,19 +2,22 @@
 #include <libpic30.h>
 #include "uart1.h"
 #include "bootloader_config.h"
+#include "bootloader.h"
 #include <uart.h>
 #include <utilities.h>
+#include "can2.h"
 
 
 uint8_t uart1_tx_buffer[10]; // TODO: check 10
 uint16_t uart1_tx_mlength = 0;
-uart1_message_t uart1_tx_m;
+bootloader_message_t uart1_tx_m;
 uint16_t uart_tx_data_idx = 0;
 volatile uart_tx_state_t uart1_tx_state = UART_TX_STATE_DONE;
 
 volatile uart_rx_state_t uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
 uint16_t uart_rx_data_idx = 0;
-uart1_message_t uart1_rx_m;
+bootloader_message_t uart1_rx_m;
+uint8_t rx_buffer[256];
 
 
 void uart1_init(void)
@@ -70,19 +73,6 @@ void uart1_deactivate(void)
     _U1EIE = 0;
 }
 
-
-void copy_uart1_message(uart1_message_t* m1, uart1_message_t* m2)
-{
-    m2->command = m1->command;
-    m2->length = m1->length;
-    m2->unlock = m1->unlock;
-    
-    for(unsigned int i = 0; i < m1->length; i++)
-    {
-        m2->data[i] = m1->data[i];
-    }
-}
-
 void __attribute__((interrupt, no_auto_psv)) _U1ErrInterrupt(void)
 {
     if(U1STAbits.OERR == 1)
@@ -90,7 +80,7 @@ void __attribute__((interrupt, no_auto_psv)) _U1ErrInterrupt(void)
     _U1EIF = 0; // Clear the UART1 Error Interrupt Flag
 }
 
-uint8_t rx_buffer[256];
+// todo: modify for new code!!!
 void __attribute__((interrupt, no_auto_psv)) _U1RXInterrupt(void)
 {
     _U1RXIF = 0;
@@ -118,48 +108,24 @@ void __attribute__((interrupt, no_auto_psv)) _U1RXInterrupt(void)
         if(rx_value != 0x00)
             uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
         else 
-            uart1_rx_state = UART_RX_STATE_READ_CMD;
-        break;
-    case UART_RX_STATE_READ_CMD:
-        uart1_rx_m.command = rx_value;
-        uart1_rx_state = UART_RX_STATE_READ_REQUEST;
+            uart1_rx_state = UART_RX_STATE_READ_REQUEST;
         break;
     case UART_RX_STATE_READ_REQUEST:
         if(rx_value != 0x00)
             uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
         else 
-            uart1_rx_state = UART_RX_STATE_READ_SIDH;
+            uart1_rx_state = UART_RX_STATE_READ_EIDU;
         break;
-    case UART_RX_STATE_READ_SIDH:
-        if((uart1_rx_m.command == M_BOOT_WRITE_FLASH) || (uart1_rx_m.command == M_BOOT_ERASE_FLASH)){
-            if(rx_value != 0x55){
-                uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
-            } else {
-                uart1_rx_state = UART_RX_STATE_READ_SIDL;
-            }
-        } else {
-            if(rx_value != 0x00){
-                uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
-            } else {
-                uart1_rx_state = UART_RX_STATE_READ_SIDL;
-            }
-        }
+    case UART_RX_STATE_READ_EIDU:
+        uart1_rx_m.unlock = rx_value == CAN2_UNLOCK_SEQUENCE;
+        uart1_rx_state = UART_RX_STATE_READ_EIDH;
         break;
-    case UART_RX_STATE_READ_SIDL:
-        if((uart1_rx_m.command == M_BOOT_WRITE_FLASH) || (uart1_rx_m.command == M_BOOT_ERASE_FLASH)){
-            if(rx_value != 0xAA){
-                uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
-            } else {
-                uart1_rx_state = UART_RX_STATE_READ_LENGTH;
-                uart1_rx_m.unlock = true;
-            }
-        } else {
-            if(rx_value != 0x00){
-                uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
-            } else {
-                uart1_rx_state = UART_RX_STATE_READ_LENGTH;
-            }
-        }
+    case UART_RX_STATE_READ_EIDH:
+        uart1_rx_m.command = rx_value;
+        uart1_rx_state = UART_RX_STATE_READ_EIDL;
+        break;
+    case UART_RX_STATE_READ_EIDL:
+        uart1_rx_m.address_low = rx_value;
         uart1_rx_state = UART_RX_STATE_READ_LENGTH;
         break;
     case UART_RX_STATE_READ_LENGTH:
@@ -193,7 +159,7 @@ void __attribute__((interrupt, no_auto_psv)) _U1RXInterrupt(void)
     case UART_RX_STATE_DETECT_STOP:
         if (rx_value == UART_CMD_STOP)
         {
-            _U1RXIE = 0;
+            boot_queue_push(&uart1_rx_m);
         }
 
         uart1_rx_state = UART_RX_STATE_FIND_START_BYTE;
@@ -205,7 +171,7 @@ void __attribute__((interrupt, no_auto_psv)) _U1RXInterrupt(void)
     
 }
 
-void uart1_tx_message(uart1_message_t* m){
+void uart1_tx_message(bootloader_message_t* m){
     // wait until previous message sent
     uart1_wait_tx();
 

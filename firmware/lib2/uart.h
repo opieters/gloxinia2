@@ -29,7 +29,7 @@
 #define UART_FIFO_RX_DATA_BUFFER_SIZE CAN_MAX_N_BYTES
 
 /// @brief UART header size (includes start and stop bytes)
-#define UART_HEADER_SIZE 8U
+#define UART_HEADER_SIZE 9U
 
 /// @brief UART receive state enumeration
 typedef enum
@@ -37,10 +37,10 @@ typedef enum
     UART_RX_STATE_FIND_START_BYTE, ///< Find start byte
     UART_RX_STATE_READ_IDH,        ///< Read ID high byte
     UART_RX_STATE_READ_IDL,        ///< Read ID low byte
-    UART_RX_STATE_READ_CMD,        ///< Read command byte
     UART_RX_STATE_READ_REQUEST,    ///< Read request byte
-    UART_RX_STATE_READ_SIDH,       ///< Read sensor ID high byte
-    UART_RX_STATE_READ_SIDL,       ///< Read sensor ID low byte
+    UART_RX_STATE_READ_EIDU,       ///< Read extended ID upper byte
+    UART_RX_STATE_READ_EIDH,       ///< Read extended ID high byte
+    UART_RX_STATE_READ_EIDL,       ///< Read extended ID low byte
     UART_RX_STATE_READ_LENGTH,     ///< Read data length byte
     UART_RX_STATE_READ_DATA,       ///< Read data (len: variable length)
     UART_RX_STATE_DETECT_STOP      ///< Detect stop byte
