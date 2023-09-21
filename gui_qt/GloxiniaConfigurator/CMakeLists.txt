@@ -20,7 +20,6 @@ set(TS_FILES GloxiniaConfigurator_en_GB.ts)
 
 set(PROJECT_SOURCES
         main.cpp
-        serialcom.h serialcom.cpp
         gmessage.h gmessage.cpp
         gloxiniaconfigurator.cpp gloxiniaconfigurator.h gloxiniaconfigurator.ui
         settingsdialog.h settingsdialog.cpp settingsdialog.ui
