@@ -9,7 +9,7 @@
 
 #define ADC12_CHANNEL_SAMPLE_RATE         8000UL
 #define ADC12_N_CHANNELS                      8U
-#define ADC12_DMA_BUFFER_SIZE               64U
+#define ADC12_DMA_BUFFER_SIZE               50U
 #define ADC12_FULL_SAMPLE_CONVERSION_T_AD    20U
 
 /// @brief ADC12 sensor sample data length
@@ -23,11 +23,10 @@
 #define SENSOR_ADC12_DEC_FACT_F2 10
 #define SENSOR_ADC12_DEC_FACT_F3 5
 
-#define SENSOR_ADC12_COPY_BUFFER_SIZE         (10*SENSOR_ADC12_DEC_FACT_F0)
 #define SENSOR_ADC12_BLOCK1_INPUT_SIZE        (10*SENSOR_ADC12_DEC_FACT_F1)
 #define SENSOR_ADC12_BLOCK2_INPUT_SIZE        (1*SENSOR_ADC12_DEC_FACT_F2)
 #define SENSOR_ADC12_BLOCK3_INPUT_SIZE        (SENSOR_ADC12_DEC_FACT_F3)
-#define SENSOR_ADC12_BLOCK0_OUTPUT_SIZE       (SENSOR_ADC12_COPY_BUFFER_SIZE  / SENSOR_ADC12_DEC_FACT_F0)
+#define SENSOR_ADC12_BLOCK0_OUTPUT_SIZE       (ADC12_DMA_BUFFER_SIZE  / SENSOR_ADC12_DEC_FACT_F0)
 #define SENSOR_ADC12_BLOCK1_OUTPUT_SIZE       (SENSOR_ADC12_BLOCK1_INPUT_SIZE / SENSOR_ADC12_DEC_FACT_F1)
 #define SENSOR_ADC12_BLOCK2_OUTPUT_SIZE       (SENSOR_ADC12_BLOCK2_INPUT_SIZE / SENSOR_ADC12_DEC_FACT_F2)
 #define SENSOR_ADC12_BLOCK3_OUTPUT_SIZE       (SENSOR_ADC12_BLOCK3_INPUT_SIZE / SENSOR_ADC12_DEC_FACT_F3)
@@ -92,7 +91,8 @@ extern "C" {
 
     
     void sensor_adc12_init(struct sensor_gconfig_s *config);
-    void sensor_adc12_activate(struct sensor_gconfig_s *config);
+    void sensor_adc12_activate(struct sensor_gconfig_s* intf);
+    void sensor_adc12_deactivate(struct sensor_gconfig_s* intf);
     
     bool validate_sensor_adc12_config(sensor_adc12_config_t *config);
     bool validate_adc12_config(sensor_adc12_config_t *config);

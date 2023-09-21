@@ -51,14 +51,19 @@ void sensor_adc12_shared_config(void)
     AD1CON1bits.SSRCG  = 0; // clock selection
     AD1CON1bits.SSRC = 0b010; // Timer3 compare ends sampling and starts conversion
     AD1CON1bits.ASAM = 1; // Sampling begins immediately after the last conversion; SAMP bit is auto-set
-    AD1CON2bits.VCFG = 0b000; // AVDD and AVSS are VREFH and VREFL respectively
+    AD1CON2bits.VCFG = 0b100; // AVDD and AVSS are VREFH and VREFL respectively
     AD1CON2bits.CSCNA = 1; // scan inputs
+    AD1CON2bits.CHPS = 0;                       // Converts CH0
+    AD1CHS0bits.CH0NA = 0; // Vref- is negative input for CH0
     AD1CON2bits.SMPI = 0b0000; // increment DMA address upon every conversion
     AD1CON4bits.ADDMAEN = 1; // Conversion results stored in ADCxBUF0 register for DMA transfer
     AD1CON4bits.DMABL = 0b0; // not used
     
     AD1CON3bits.ADRC = 0; // clock is derived from system clock
     AD1CON3bits.ADCS = (FCY / (ADC12_FULL_SAMPLE_CONVERSION_T_AD * ADC12_N_CHANNELS * ADC12_CHANNEL_SAMPLE_RATE)); // T_AD = (20*T_CY) // ADC conversion clock
+    
+    AD1CHS123 = 0;
+    AD1CHS0 = 0; 
     
     // input scan selection registers
     AD1CSSH = 0x0;
@@ -114,7 +119,7 @@ void sensor_adc12_shared_config2(void)
     if(num_scan_channels == 0)
         return;
     
-    AD1CON2bits.SMPI = ( num_scan_channels - 1 );
+    ///AD1CON2bits.SMPI = ( num_scan_channels - 1 );
 
     DMA0CNT = (num_scan_channels * ADC12_DMA_BUFFER_SIZE - 1);    
     
@@ -374,9 +379,24 @@ void sensor_adc12_activate(sensor_gconfig_t* intf)
     
     sensor_adc12_shared_config2();
     
+#ifdef __DICIO__
+    _RB8 = 1;
+#endif
+    
     // Start ADC
     AD1CON1bits.ADON = 1; // enable ADC
     T3CONbits.TON = 1; // start conversion trigger
+}
+
+void sensor_adc12_deactivate(sensor_gconfig_t* intf)
+{    
+#ifdef __DICIO__
+    _RB8 = 0;
+#endif
+    
+    // Stop ADC
+    AD1CON1bits.ADON = 0; // enable ADC
+    T3CONbits.TON = 0; // start conversion trigger
 }
 
 
@@ -394,7 +414,7 @@ void sensor_adc12_measure(void *data)
     
     if(config->average)
     {
-        config->result = (fractional) config->count / config->count;
+        config->result = (fractional) (config->sum / config->count);
         config->count = 0;
         config->sum = 0;
     }
