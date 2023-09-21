@@ -172,6 +172,7 @@ extern "C"
 
     void sensor_apds9306_065_init_sensor(struct sensor_gconfig_s *intf);
     void sensor_apds9306_065_activate(struct sensor_gconfig_s *intf);
+    void sensor_apds9306_065_deactivate(struct sensor_gconfig_s* gconfig);
 
     /**
      * @brief Send APDS9306-065 I2C data over CAN bus.

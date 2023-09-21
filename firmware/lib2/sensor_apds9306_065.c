@@ -425,6 +425,10 @@ void sensor_apds9306_065_activate(sensor_gconfig_t* gconfig){
     gconfig->status = SENSOR_STATUS_RUNNING;
 }
 
+void sensor_apds9306_065_deactivate(sensor_gconfig_t* gconfig){
+    
+}
+
 void sensor_apds9306_065_i2c_cb(i2c_message_t* m) {
     sensor_gconfig_t* sgc = (sensor_gconfig_t*) m->callback_data;
 

@@ -238,6 +238,34 @@ void sensor_set_status(uint8_t interface_id, uint8_t sensor_id, sensor_status_t 
             if (gsc->status == SENSOR_STATUS_RUNNING) {
                 schedule_remove_event(gsc->measure.id);
             }
+                switch (gsc->sensor_type) {
+                    case SENSOR_NOT_SET:
+                        break;
+                    case SENSOR_TYPE_SHT35:
+                        sensor_sht35_deactivate(gsc);
+                        break;
+                    case SENSOR_TYPE_APDS9306_065:
+                        sensor_apds9306_065_deactivate(gsc);
+                        break;
+#if defined(__DICIO__) || defined(__SYLVATICA__)
+                    case SENSOR_TYPE_ADC12:
+                        sensor_adc12_deactivate(gsc);
+                        break;
+#endif
+#if defined(__SYLVATICA__) || defined(__PLANALTA__)
+                    case SENSOR_TYPE_ADC16:
+                        sensor_adc16_deactivate(gsc);
+                        break;
+#endif
+#ifdef __PLANALTA__
+                    case SENSOR_TYPE_LIA:
+                        sensor_lia_deactivate(gsc);
+                        break;
+#endif
+                    default:
+                        break;
+                }
+            
             gsc->status = SENSOR_STATUS_STOPPED;
             break;
         case SENSOR_STATUS_INACTIVE:

@@ -68,6 +68,7 @@ extern "C" {
     void sensor_lia_measure(void *data);
     void lia_init_sensor(struct sensor_gconfig_s *intf);
     void sensor_lia_activate(struct sensor_gconfig_s* intf);
+    void sensor_lia_deactivate(struct sensor_gconfig_s* intf);
     bool validate_lia_config(sensor_lia_config_t *config);
 
 

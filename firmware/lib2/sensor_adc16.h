@@ -54,6 +54,7 @@ extern "C"
     bool validate_adc16_config(sensor_adc16_config_t *config);
     
     void sensor_adc16_activate(struct sensor_gconfig_s* intf);
+    void sensor_adc16_deactivate(struct sensor_gconfig_s* intf);
     
     void sensor_adc16_measure(void *data);
 

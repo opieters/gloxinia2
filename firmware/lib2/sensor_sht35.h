@@ -173,6 +173,8 @@ extern "C"
      * configuration was successful.
      */
     void sensor_sht35_activate(struct sensor_gconfig_s *intf);
+    
+    void sensor_sht35_deactivate(struct sensor_gconfig_s *intf);
 
     /**
      * @brief Prepare SHT35 measurement.

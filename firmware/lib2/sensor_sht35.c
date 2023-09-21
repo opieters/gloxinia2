@@ -421,6 +421,10 @@ void sensor_sht35_activate(struct sensor_gconfig_s* gsc){
     gsc->status = SENSOR_STATUS_RUNNING;
 }
 
+void sensor_sht35_deactivate(struct sensor_gconfig_s* gsc){
+    //TODO
+}
+
 void sht35_i2c_cb_periodic_m_fetch(i2c_message_t *m)
 {
     struct sensor_gconfig_s *gsc = (struct sensor_gconfig_s *)m->callback_data;
