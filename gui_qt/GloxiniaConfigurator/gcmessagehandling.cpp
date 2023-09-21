@@ -103,7 +103,7 @@ void GloxiniaConfigurator::processCANDiscoveryMessage(const GMessage &m)
     if (treeModel->checkUniqueNodeID(m.getMessageAddress()))
     {
         // request node info
-        GMessage reply(GMessage::Code::NODE_INFO, m.getMessageAddress(), GMessage::NoInterfaceID, GMessage::NoSensorID, true, std::vector<quint8>());
+        GMessage reply(GMessage::Code::NODE_INFO, m.getMessageAddress(), GMessage::EmptyReservedField, GMessage::NoInterfaceID, GMessage::NoSensorID, true, std::vector<quint8>());
         emit queueMessage(reply);
     }
 }
@@ -170,7 +170,7 @@ void GloxiniaConfigurator::processNodeInfoMessage(const GMessage &m)
                 GCSensor *sensorData = nullptr;
 
                 // send a message to detect existing sensors
-                GMessage sensor_request(GMessage::Code::SENSOR_CONFIG, m.getMessageAddress(), i, j, true, std::vector<quint8>());
+                GMessage sensor_request(GMessage::Code::SENSOR_CONFIG, m.getMessageAddress(), GMessage::EmptyReservedField, i, j, true, std::vector<quint8>());
                 emit queueMessage(sensor_request);
 
                 this->treeModel->setData(interfaceIndex, QVariant::fromValue(sensorData), Qt::EditRole);
@@ -269,7 +269,7 @@ void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
         }
 
         // new sensor, request status too
-        GMessage status_request(GMessage::Code::SENSOR_STATUS, m.getMessageAddress(), m.getInterfaceID(), m.getSensorID(), true, std::vector<quint8>());
+        GMessage status_request(GMessage::Code::SENSOR_STATUS, m.getMessageAddress(), GMessage::EmptyReservedField, m.getInterfaceID(), m.getSensorID(), true, std::vector<quint8>());
         emit queueMessage(status_request);
     } else {
         // update todos
@@ -431,7 +431,7 @@ void GloxiniaConfigurator::processDicioTime(const GMessage&m)
         time_data[4] = utc_time.time().hour();
         time_data[5] = utc_time.time().minute();
         time_data[6] = utc_time.time().second();
-        GMessage m_time(GMessage::Code::DICIO_TIME, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, false, time_data);
+        GMessage m_time(GMessage::Code::DICIO_TIME, GMessage::ComputerAddress, GMessage::EmptyReservedField, GMessage::NoInterfaceID, GMessage::NoSensorID, false, time_data);
 
         emit queueMessage(m_time);
     }

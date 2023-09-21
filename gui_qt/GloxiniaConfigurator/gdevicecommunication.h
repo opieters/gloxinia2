@@ -18,11 +18,12 @@ public:
     enum SerialReadoutState
     {
         FindStartByte,
-        ReadAddress,
-        ReadCommand,
+        ReadIDH,
+        ReadIDL,
         ReadRequest,
-        ReadInterfaceID,
-        ReadSensorId,
+        ReadEIDU,
+        ReadEIDH,
+        ReadEIDL,
         ReadLength,
         ReadData,
         DetectStopByte
@@ -49,7 +50,7 @@ private:
 
     QSerialPort serial;
 
-    quint8 data[8+8];
+    quint8 data[9+8];
 
     QTimer timer;
 };

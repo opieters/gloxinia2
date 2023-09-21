@@ -230,7 +230,7 @@ void GloxiniaConfigurator::autoScaleSeries(QXYSeries* series)
 
 void GloxiniaConfigurator::resetSystem(void)
 {
-    GMessage reset(GMessage::Code::NODE_RESET, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
+    GMessage reset(GMessage::Code::NODE_RESET, GMessage::ComputerAddress, GMessage::EmptyReservedField, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
 
     emit queueMessage(reset);
 
@@ -242,7 +242,7 @@ void GloxiniaConfigurator::resetSystem(void)
 
 void GloxiniaConfigurator::clearConfigMemory(void)
 {
-    GMessage m(GMessage::Code::DICIO_CLEAR_CONFIGURATION_ON_SDCARD, GMessage::LogAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
+    GMessage m(GMessage::Code::DICIO_CLEAR_CONFIGURATION_ON_SDCARD, GMessage::LogAddress,  GMessage::EmptyReservedField, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
 
     emit queueMessage(m);
 
@@ -250,7 +250,7 @@ void GloxiniaConfigurator::clearConfigMemory(void)
 
 void GloxiniaConfigurator::loadConfigFromMemory(void)
 {
-    GMessage m(GMessage::Code::DICIO_LOAD_CONFIGURATION_FROM_SDCARD, GMessage::LogAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
+    GMessage m(GMessage::Code::DICIO_LOAD_CONFIGURATION_FROM_SDCARD, GMessage::LogAddress,  GMessage::EmptyReservedField, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
 
     emit queueMessage(m);
 }
@@ -329,7 +329,7 @@ void GloxiniaConfigurator::readoutData(void)
         settings.stopAddress = 0;
 
     std::vector<uint8_t> data = { (uint8_t) (settings.startAddress >> 8), (uint8_t) (settings.startAddress), (uint8_t) (settings.stopAddress >> 8), (uint8_t) (settings.stopAddress) };
-    GMessage m(GMessage::Code::DATA_READ, GMessage::LogAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, false, data);
+    GMessage m(GMessage::Code::DATA_READ, GMessage::LogAddress, GMessage::EmptyReservedField, GMessage::NoInterfaceID, GMessage::NoSensorID, false, data);
 
     emit queueMessage(m);
 }
@@ -602,7 +602,7 @@ void GloxiniaConfigurator::runDiscovery()
     } else {*/
     qInfo() << "Running discovery broadcast";
 
-    GMessage m(GMessage::Code::DISCOVERY, GMessage::ComputerAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true, std::vector<quint8>());
+    GMessage m(GMessage::Code::DISCOVERY, GMessage::ComputerAddress, GMessage::EmptyReservedField, GMessage::NoInterfaceID, GMessage::NoSensorID, true, std::vector<quint8>());
     emit queueMessage(m);
 }
 
@@ -690,14 +690,14 @@ void GloxiniaConfigurator::startMeasuring(void)
         }
     }*/
 
-    GMessage mStart = GMessage(GMessage::Code::SENSOR_START, GMessage::LogAddress, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
+    GMessage mStart = GMessage(GMessage::Code::SENSOR_START, GMessage::LogAddress, GMessage::EmptyReservedField, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
     emit queueMessage(mStart);
 
     qInfo() << "Started measuring";
 }
 void GloxiniaConfigurator::stopMeasuring(void)
 {
-    GMessage mStop = GMessage(GMessage::Code::SENSOR_STOP, GMessage::LogAddress ,GMessage::NoInterfaceID, GMessage::NoSensorID, true);
+    GMessage mStop = GMessage(GMessage::Code::SENSOR_STOP, GMessage::LogAddress, GMessage::EmptyReservedField, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
     emit queueMessage(mStop);
 
     // enable start option, disable stop option

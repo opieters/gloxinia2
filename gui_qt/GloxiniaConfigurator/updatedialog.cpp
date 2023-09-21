@@ -40,7 +40,7 @@ UpdateDialog::UpdateDialog(QWidget *parent) :
 void UpdateDialog::resetNode(void)
 {
     //GMessage m(GMessage::Code::NODE_RESET, node->getID(), GMessage::NoSensorID, true);
-    GMessage m(GMessage::Code::BOOT_RESET_DEVICE, GMessage::ComputerAddress, GMessage::NoSensorID, false);
+    GMessage m(GMessage::Code::BOOT_RESET_DEVICE, GMessage::ComputerAddress, GMessage::EmptyReservedField, GMessage::NoInterfaceID, GMessage::NoSensorID, false);
     emit configurator->queueMessage(m);
 }
 
@@ -566,7 +566,7 @@ void UpdateDialog::flash(void)
     uint8_t flash_data[info.writeRowSize];
 
     // start flash sequence
-    GMessage mStartFlash(GMessage::Code::BOOT_WRITE_FLASH_INIT, GMessage::ComputerAddress ,GMessage::NoSensorID, false);
+    GMessage mStartFlash(GMessage::Code::BOOT_WRITE_FLASH_INIT, GMessage::ComputerAddress, GMessage::EmptyReservedField, GMessage::NoInterfaceID, GMessage::NoSensorID, false);
     emit configurator->queueMessage(mStartFlash);
 
     flashOngoing = true;
@@ -589,11 +589,11 @@ void UpdateDialog::flash(void)
         writeFlash(i+flashStartAddress, flash_data, info.writeRowSize);
     }
 
-    GMessage mStopFlash(GMessage::Code::BOOT_WRITE_FLASH_DONE, GMessage::ComputerAddress ,GMessage::NoSensorID, false);
+    GMessage mStopFlash(GMessage::Code::BOOT_WRITE_FLASH_DONE, GMessage::ComputerAddress, GMessage::EmptyReservedField, GMessage::NoInterfaceID, GMessage::NoSensorID, false);
     emit configurator->queueMessage(mStopFlash);
 
     // send device verification
-    GMessage mVerify(GMessage::Code::BOOT_SELF_VERIFY, GMessage::ComputerAddress ,GMessage::NoSensorID, false);
+    GMessage mVerify(GMessage::Code::BOOT_SELF_VERIFY, GMessage::ComputerAddress, GMessage::EmptyReservedField, GMessage::NoInterfaceID, GMessage::NoSensorID, false);
     emit configurator->queueMessage(mVerify);
 
     // send reset to device
@@ -622,13 +622,15 @@ void UpdateDialog::getVersion(void)
 
     ui->status->setText("Reading device parameters.");
 
-    GMessage m(GMessage::Code::BOOT_READ_VERSION,
-             GMessage::ComputerAddress,
-               GMessage::NoInterfaceID,
-             GMessage::NoSensorID,
-             false,
-             std::vector<quint8>()
-            );
+    GMessage m(
+        GMessage::Code::BOOT_READ_VERSION,
+        GMessage::ComputerAddress,
+        GMessage::EmptyReservedField,
+        GMessage::NoInterfaceID,
+        GMessage::NoSensorID,
+        false,
+        std::vector<quint8>()
+    );
 
     emit configurator->queueMessage(m);
 
@@ -670,12 +672,14 @@ void UpdateDialog::writeFlash(uint32_t address, uint8_t* data, uint8_t len)
         mdata.push_back(0x00);
     }
 
-    GMessage m(GMessage::Code::BOOT_WRITE_FLASH,
-             GMessage::ComputerAddress,
-             GMessage::UnlockSequenceH,
-               GMessage::UnlockSequenceL,
-             false,
-             mdata
+    GMessage m(
+        GMessage::Code::BOOT_WRITE_FLASH,
+        GMessage::ComputerAddress,
+        GMessage::EmptyReservedField,
+        GMessage::UnlockSequenceH,
+        GMessage::UnlockSequenceL,
+        false,
+        mdata
             );
 
     emit configurator->queueMessage(m);
@@ -686,6 +690,8 @@ void UpdateDialog::resetDevice()
 {
     GMessage m(GMessage::Code::BOOT_RESET_DEVICE,
              GMessage::ComputerAddress,
+             GMessage::EmptyReservedField,
+             GMessage::NoInterfaceID,
              GMessage::NoSensorID,
              false
             );
@@ -718,7 +724,7 @@ void UpdateDialog::setBootReady(bool status)
     if(status)
     {
         // send message to keep the device in bootloader mode
-        GMessage m(GMessage::Code::BOOT_READ_VERSION,             GMessage::ComputerAddress,
+         GMessage m(GMessage::Code::BOOT_READ_VERSION,             GMessage::ComputerAddress, GMessage::EmptyReservedField, GMessage::NoInterfaceID,
                    GMessage::NoSensorID,false);
         emit configurator->queueMessage(m);
     }
@@ -750,8 +756,12 @@ void UpdateDialog::setNodeInfo(FlashNodeInfo& info)
     if(deviceBootLoaderActive)
     {
         // send message to keep the device in bootloader mode
-        GMessage m(GMessage::Code::BOOT_GET_MEMORY_ADDRESS_RANGE_COMMAND,             GMessage::ComputerAddress,
-                   GMessage::NoSensorID, false);
+        GMessage m(GMessage::Code::BOOT_GET_MEMORY_ADDRESS_RANGE_COMMAND,
+                   GMessage::ComputerAddress,
+                   GMessage::EmptyReservedField,
+                   GMessage::NoInterfaceID,
+                   GMessage::NoSensorID,
+                   false);
         emit configurator->queueMessage(m);
     }
 
@@ -773,7 +783,7 @@ void UpdateDialog::showEvent( QShowEvent* event ) {
         // send reset message to activate bootloader
         if(!deviceBootLoaderActive)
         {
-            GMessage m(GMessage::Code::NODE_RESET, node->getID(), GMessage::NoSensorID, true);
+            GMessage m(GMessage::Code::NODE_RESET, node->getID(),GMessage::EmptyReservedField, GMessage::NoInterfaceID, GMessage::NoSensorID, true);
             emit configurator->queueMessage(m);
         }
     }

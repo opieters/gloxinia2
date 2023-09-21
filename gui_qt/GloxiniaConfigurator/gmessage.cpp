@@ -11,9 +11,11 @@ GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint16_t sensorID, bo
 {
     this->data = std::vector<quint8>(data, data+size);
 }*/
-GMessage::GMessage(GMessage::Code code, uint8_t messageID, uint8_t interfaceID, uint8_t sensorID, bool request, std::vector<quint8> data) : code(code),
-    messageAddress(messageID),
+GMessage::GMessage(GMessage::Code code, uint16_t messageAddress, uint8_t reservedField, uint8_t interfaceID, uint8_t sensorID, bool request, std::vector<quint8> data) :
+    code(code),
+    messageAddress(messageAddress),
     interfaceID(interfaceID),
+    reservedField(reservedField),
     sensorID(sensorID),
     request(request),
     data(data)
@@ -30,12 +32,13 @@ int GMessage::toBytes(quint8 *data, unsigned int maxLength) const
 
     data[0] = GMessage::GMessageStartByte;
     data[headerSize - 1 + 8] = GMessage::GMessageStopByte;
-    data[1] = (quint8)messageAddress;
-    data[2] = cmd;
+    data[1] = (quint8)(messageAddress >> 8);
+    data[2] = (quint8)messageAddress;
     data[3] = request ? 1 : 0;
-    data[4] = interfaceID;
-    data[5] = sensorID;
-    data[6] = this->data.size();
+    data[4] = reservedField;
+    data[5] = cmd;
+    data[6] = (interfaceID << 4) | sensorID;
+    data[7] = this->data.size();
     for (int i = 0; i < 8; i++)
     {
         if(i < this->data.size())

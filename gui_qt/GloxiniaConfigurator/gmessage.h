@@ -57,7 +57,7 @@ public:
 
     static constexpr uint8_t GMessageStartByte = 0x5B;
     static constexpr uint8_t GMessageStopByte = 0x5D;
-    static constexpr uint8_t headerSize = 8;
+    static constexpr uint8_t headerSize = 9;
 
     static constexpr uint8_t ComputerAddress = 0xff;
     static constexpr uint8_t SearchStartAddress = 0xfd;
@@ -67,13 +67,15 @@ public:
     static constexpr uint8_t NoInterfaceID = 0xf;
     static constexpr uint8_t UnlockSequenceH = 0x55;
     static constexpr uint8_t UnlockSequenceL = 0xAA;
+    static constexpr uint8_t EmptyReservedField = 0x00;
 
     GMessage(
-        GMessage::Code code = NOP,
-        quint8 messageAddress = ComputerAddress,
-        quint8 interfaceID = NoInterfaceID,
-        quint8 sensorID = NoSensorID,
-        bool request = false,
+        GMessage::Code code,
+        quint16 messageAddress,
+        quint8 reservedField,
+        quint8 interfaceID,
+        quint8 sensorID,
+        bool request,
         std::vector<quint8> data = std::vector<quint8>());
 
     int toBytes(quint8 *data, unsigned int maxLength) const;
@@ -101,6 +103,7 @@ private:
     quint16 messageAddress;
     quint8 sensorID;
     quint8 interfaceID;
+    quint8 reservedField;
 };
 
 std::ostream &operator<<(std::ostream &outs, const GMessage::Code &code);

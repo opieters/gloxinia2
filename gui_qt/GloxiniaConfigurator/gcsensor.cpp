@@ -91,12 +91,12 @@ bool GCSensor::startMeasurement(void)
 GMessage GCSensor::getStartMessage(void)
 {
     std::vector<quint8> data = {GCSensor::GCSensorStatus::ACTIVE};
-    return GMessage(GMessage::Code::SENSOR_STATUS, this->node->getID(), this->interfaceID, this->sensorID, false, data);
+    return GMessage(GMessage::Code::SENSOR_STATUS, this->node->getID(), GMessage::EmptyReservedField, this->interfaceID, this->sensorID, false, data);
 }
 GMessage GCSensor::getStopMessage(void)
 {
     std::vector<quint8> data = {GCSensor::GCSensorStatus::STOPPED};
-    return GMessage(GMessage::Code::SENSOR_STATUS, this->node->getID(), this->interfaceID, this->sensorID, false, data);
+    return GMessage(GMessage::Code::SENSOR_STATUS, this->node->getID(), GMessage::EmptyReservedField, this->interfaceID, this->sensorID, false, data);
 }
 
 void GCSensor::stopMeasurement(void)
@@ -410,7 +410,7 @@ QList<GMessage> GCSensorSHT35::getConfigurationMessages()
     mData[1] = GCSensorSHT35::Register::MEASUREMENT;
     mData[2] = (quint8) (measurementPeriod >> 8);
     mData[3] = (quint8) (measurementPeriod & 0xff);
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
     mData = std::vector<quint8>(7);
     mData[0] = (quint8)GCSensor::sensor_class::SHT35;
@@ -420,7 +420,7 @@ QList<GMessage> GCSensorSHT35::getConfigurationMessages()
     mData[4] = config.clockStretching;
     mData[5] = config.rate;
     mData[6] = config.periodicity;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
     return mList;
 }
@@ -665,7 +665,7 @@ QList<GMessage> GCSensorAPDS9306::getConfigurationMessages()
     mData[1] = GCSensorAPDS9306::Register::MEASUREMENT;
     mData[2] = (quint8) measurementPeriod >> 8;
     mData[3] = (quint8) measurementPeriod & 0xff;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
     mData = std::vector<quint8>(7);
     mData[0] = (quint8)GCSensor::sensor_class::APDS9306_065;
@@ -675,7 +675,7 @@ QList<GMessage> GCSensorAPDS9306::getConfigurationMessages()
     mData[4] = alsMeasurementRate;
     mData[5] = alsResolution;
     mData[6] = alsGain;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
     mData = std::vector<quint8>(6);
     mData[0] = (quint8)GCSensor::sensor_class::APDS9306_065;
@@ -684,7 +684,7 @@ QList<GMessage> GCSensorAPDS9306::getConfigurationMessages()
     mData[3] = (quint8) (alsTHHigh >> 16) & 0xff;
     mData[4] = (quint8) (alsTHHigh >> 8) & 0xff;
     mData[5] = (quint8) (alsTHHigh) & 0xff;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
     mData = std::vector<quint8>(6);
     mData[0] = (quint8)GCSensor::sensor_class::APDS9306_065;
@@ -693,7 +693,7 @@ QList<GMessage> GCSensorAPDS9306::getConfigurationMessages()
     mData[3] = (quint8) (alsTHLow >> 16) & 0xff;
     mData[4] = (quint8) (alsTHLow >> 8) & 0xff;
     mData[5] = (quint8) (alsTHLow) & 0xff;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
     return mList;
 }
@@ -803,13 +803,13 @@ QList<GMessage> GCSensorADC12::getConfigurationMessages()
     mData[1] = GCSensorADC12::Register::MEASUREMENT;
     mData[2] = (quint8) (measurementPeriod >> 8);
     mData[3] = (quint8) (measurementPeriod & 0xff);
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
     mData = std::vector<quint8>(3);
     mData[0] = (quint8)GCSensor::sensor_class::ADC12;
     mData[1] = GCSensorADC12::Register::CONFIG;
     mData[2] = average ? 1 : 0;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
     return mList;
 }
@@ -939,20 +939,20 @@ QList<GMessage> GCSensorADC16::getConfigurationMessages()
     mData[1] = GCSensorADC16::Register::MEASUREMENT;
     mData[2] = (quint8) (measurementPeriod >> 8);
     mData[3] = (quint8) (measurementPeriod & 0xff);
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
     mData = std::vector<quint8>(3);
     mData[0] = (quint8)GCSensor::sensor_class::ADC16;
     mData[1] = GCSensorADC16::Register::CONFIG;
     mData[2] = average ? 1 : 0;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
     mData = std::vector<quint8>(4);
     mData[0] = (quint8)GCSensor::sensor_class::ADC16;
     mData[1] = GCSensorADC16::Register::PGA;
     mData[2] = gain;
     mData[3] = autoGainConfig ? 1 : 0;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
     return mList;
 }
@@ -1072,7 +1072,7 @@ QList<GMessage> GCSensorLIA::getConfigurationMessages()
     mData[1] = GCSensorLIA::Register::MEASUREMENT;
     mData[2] = (quint8) (measurementPeriod >> 8);
     mData[3] = (quint8) (measurementPeriod & 0xff);
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
     mData = std::vector<quint8>(6);
     mData[0] = (quint8)GCSensor::sensor_class::LIA;
@@ -1081,14 +1081,14 @@ QList<GMessage> GCSensorLIA::getConfigurationMessages()
     mData[3] = fsHigh;
     mData[4] = fsLow;
     mData[5] = output ? 1 : 0;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
     mData = std::vector<quint8>(4);
     mData[0] = (quint8)GCSensor::sensor_class::LIA;
     mData[1] = GCSensorLIA::Register::PGA;
     mData[2] = gain;
     mData[3] = autoGainConfig ? 1 : 0;
-    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), interfaceID, sensorID, false, mData));
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
     return mList;
 }

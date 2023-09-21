@@ -25,7 +25,7 @@ void GDeviceCommunication::process()
     GMessage m = mList.at(0);
     mList.removeFirst();
 
-    auto length = m.toBytes(data, 8+8);
+    auto length = m.toBytes(data, 9+8);
 
     if(serial.isOpen()){
         serial.write(QByteArray((char *)data, length));
@@ -97,13 +97,13 @@ void GDeviceCommunication::readData()
             }
             if (data[0] == GMessage::GMessageStartByte)
             {
-                readoutState = ReadAddress;
+                readoutState = ReadIDH;
             }
             else
             {
                 break;
             }
-        case ReadAddress:
+        case ReadIDH:
 
             n_read = serial.read(&data[1], 1); // read id H
             if (n_read < 0)
@@ -116,13 +116,13 @@ void GDeviceCommunication::readData()
             if (n_read == 1)
             {
                 // we were able to read code -> read id L
-                readoutState = ReadCommand;
+                readoutState = ReadIDL;
             }
             else
             {
                 break;
             }
-        case ReadCommand:
+        case ReadIDL:
 
             n_read = serial.read(&data[2], 1); // read id
             if (n_read < 0)
@@ -133,7 +133,7 @@ void GDeviceCommunication::readData()
             }
             if (n_read == 1)
             {
-                // we were able to read -> read sensor id H
+                // we were able to read -> read request info
                 readoutState = ReadRequest;
                 read_length = 0;
             }
@@ -152,15 +152,15 @@ void GDeviceCommunication::readData()
             }
             if (n_read == 1)
             {
-                // we were able to read -> read sensor id H
-                readoutState = ReadInterfaceID;
+                // we were able to read -> read sensor id U
+                readoutState = ReadEIDU;
                 read_length = 0;
             }
             else
             {
                 break;
             }
-        case ReadInterfaceID:
+        case ReadEIDU:
 
             n_read = serial.read(&data[4], 1); // read ext id H
             if (n_read < 0)
@@ -172,15 +172,33 @@ void GDeviceCommunication::readData()
             if (n_read == 1)
             {
                 // we were able to read -> read ext id L
-                readoutState = ReadSensorId;
+                readoutState = ReadEIDH;
                 read_length = 0;
             }
             else
             {
                 break;
             }
-        case ReadSensorId:
+        case ReadEIDH:
             n_read = serial.read(&data[5], 1); // read ext id L
+            if (n_read < 0)
+            {
+                readoutState = FindStartByte;
+                qInfo() << "Error reading sensor id L";
+                return;
+            }
+            if (n_read == 1)
+            {
+                // we were able to read -> read length
+                readoutState = ReadEIDL;
+                read_length = 0;
+            }
+            else
+            {
+                break;
+            }
+        case ReadEIDL:
+            n_read = serial.read(&data[6], 1); // read ext id L
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
@@ -198,7 +216,7 @@ void GDeviceCommunication::readData()
                 break;
             }
         case ReadLength:
-            n_read = serial.read(&data[6], 1); // read length
+            n_read = serial.read(&data[7], 1); // read length
             if (n_read < 0)
             {
                 readoutState = FindStartByte;
@@ -209,7 +227,7 @@ void GDeviceCommunication::readData()
             {
                 // we were able to read the length -> read data (if any)
                 read_length = 0;
-                if (data[6] == 0)
+                if (data[7] == 0)
                 {
                     readoutState = DetectStopByte;
                     break;
@@ -224,8 +242,8 @@ void GDeviceCommunication::readData()
                 break;
             }
         case ReadData:
-            if((data[6] - read_length) > 0){
-                n_read = serial.read(&data[7 + read_length], data[6] - read_length);
+            if((data[7] - read_length) > 0){
+                n_read = serial.read(&data[8 + read_length], data[7] - read_length);
                 if (n_read < 0)
                 {
                     readoutState = FindStartByte;
@@ -233,7 +251,7 @@ void GDeviceCommunication::readData()
                     return;
                 }
                 read_length += n_read;
-                if (read_length == data[6])
+                if (read_length == data[7])
                 {
                     readoutState = DetectStopByte;
                 }
@@ -247,7 +265,7 @@ void GDeviceCommunication::readData()
                 return;
             }
         case DetectStopByte:
-            n_read = serial.read(&data[7 + read_length], 1);
+            n_read = serial.read(&data[8 + read_length], 1);
             if (n_read < 0)
             {
                 qInfo() << "Error reading stop";
@@ -257,18 +275,18 @@ void GDeviceCommunication::readData()
             }
             if (n_read == 1)
             {
-                if (data[7 + read_length] == GMessage::GMessageStopByte)
+                if (data[8 + read_length] == GMessage::GMessageStopByte)
                 {
                     quint8 *udata = (quint8 *)data;
                     if (read_length == 0)
                     {
-                        GMessage m((GMessage::Code)udata[2], udata[1], udata[4], udata[5], udata[3] == 0 ? false : true);
+                        GMessage m((GMessage::Code) udata[5], (udata[1] << 8) | udata[2], udata[4], udata[6] >> 4, udata[5] & 0xf, udata[3] == 0 ? false : true);
                         qInfo() << m.toString();
                         emit receivedMessage(m);
                     }
                     else
                     {
-                        GMessage m((GMessage::Code)udata[2], udata[1], udata[4], udata[5], udata[3] == 0 ? false : true, std::vector<quint8>(&data[7], &data[7 + read_length]));
+                        GMessage m((GMessage::Code) udata[5], (udata[1] << 8) | udata[2], udata[4], udata[6] >> 4, udata[6] & 0xf, udata[3] == 0 ? false : true, std::vector<quint8>(&data[8], &data[8 + read_length]));
                         qInfo() << m.toString();
                         emit receivedMessage(m);
                     }
