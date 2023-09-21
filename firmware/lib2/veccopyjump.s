@@ -1,6 +1,6 @@
 .global _vector_copy_jump
 _vector_copy_jump:
-    ; w0 = number of coefficients in source array
+    ; w0 = number of coefficients in destination array
     ; w1 = destination array
     ; w2 = source array (low byte)
     ; w3 = source array (high byte)
