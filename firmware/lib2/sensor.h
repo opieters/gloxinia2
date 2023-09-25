@@ -13,6 +13,7 @@
 #include <sensor_apds9306_065.h>
 #include <sensor_lia.h>
 #include <sensor_sht35.h>
+#include <sensor_ads1219.h>
 
 /// @brief Maximum number of distinct sensors connected to a single interface
 #define SENSOR_INTERFACE_MAX_SENSORS 4
@@ -44,6 +45,7 @@ typedef union sensor_config_s
     sensor_adc12_config_t adc12;               ///< Internal 12-bit sensor configuration
     sensor_adc16_config_t adc16;               ///< 16-bit ADC sensor configuration
     sensor_lia_config_t lia;                   ///< lock-in amplifier sensor configuration
+    sensor_ads1219_config_t ads1219;           ///< ADS1219 sensor configuration
 } sensor_config_t;
 
 typedef struct sensor_gconfig_s
