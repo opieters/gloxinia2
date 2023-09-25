@@ -5,6 +5,7 @@
 #include <utilities.h>
 #include <spi.h>
 #include <pga.h> 
+#include <adc16.h>
 
 #define SENSOR_ADC16_CAN_DATA_LENGTH (sizeof(fractional))
 
@@ -28,9 +29,10 @@ typedef struct {
     
     fractional result;
     uint16_t count;
-    uint32_t sum;
+    int32_t sum;
     
     pga_config_t* pga;
+    adc16_config_t* adc;
 } sensor_adc16_config_t;
 
 /**

@@ -106,7 +106,7 @@ void sensor_adc16_measure(void *data)
 
     if(config->average && (config->count > 0))
     {
-        config->result = config->result / config->count;
+        config->result = (fractional) (config->sum / config->count);
         config->count = 0;
     }
 
@@ -129,11 +129,20 @@ bool validate_adc16_config(sensor_adc16_config_t *config)
     if(config->pga == NULL)
         return false;
     
+    if(config->adc == NULL)
+        return false;
+    
     return true;
 }
 
 void sensor_adc16_activate(sensor_gconfig_t* intf)
 {
+    adc16_start(intf->sensor_config.adc16.adc);
+    
     intf->status = SENSOR_STATUS_RUNNING;
 }
 
+void sensor_adc16_deactivate(sensor_gconfig_t* intf)
+{
+    adc16_stop(intf->sensor_config.adc16.adc);
+}
