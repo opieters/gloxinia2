@@ -187,9 +187,9 @@ void sensor_adc12_process_block0()
     
     for(i = 0; i < ADC12_N_CHANNELS; i++){
         if(sensor_adc12_adc_buffer_selector == 0){
-            vector_copy_jump(ARRAY_LENGTH(adc12_buffer_b) / ADC12_N_CHANNELS, sample_buffer, &adc12_buffer_b[i], (DMA0CNT+1) / ADC12_DMA_BUFFER_SIZE);
+            vector_copy_jump(ARRAY_LENGTH(adc12_buffer_b) / ADC12_N_CHANNELS, sample_buffer, &adc12_buffer_b[i], ADC12_N_CHANNELS);
         } else {
-            vector_copy_jump(ARRAY_LENGTH(adc12_buffer_a) / ADC12_N_CHANNELS, sample_buffer, &adc12_buffer_a[i], (DMA0CNT+1) / ADC12_DMA_BUFFER_SIZE);
+            vector_copy_jump(ARRAY_LENGTH(adc12_buffer_a) / ADC12_N_CHANNELS, sample_buffer, &adc12_buffer_a[i], ADC12_N_CHANNELS);
         }
         
         FIRDecimate(SENSOR_ADC12_BLOCK0_OUTPUT_SIZE, 
