@@ -23,18 +23,14 @@ fractional __attribute__((space(ymemory), aligned(256), eds)) delay_buffers_3[SY
 uint16_t copy_buffers_a[SYLVATICA_N_CHANNELS][SYLVATICA_COPY_BUFFER_SIZE];
 uint16_t copy_buffers_b[SYLVATICA_N_CHANNELS][SYLVATICA_COPY_BUFFER_SIZE];
 fractional* output_block0_buffer[SYLVATICA_N_CHANNELS];
-fractional* output_block1_buffer[SYLVATICA_N_CHANNELS];
-fractional* output_block2_buffer[SYLVATICA_N_CHANNELS];
 fractional* input_block1_buffer[SYLVATICA_N_CHANNELS];
-fractional* input_block2_buffer[SYLVATICA_N_CHANNELS];
-fractional* input_block3_buffer[SYLVATICA_N_CHANNELS];
-uint8_t output_buffer0_select = 0, output_buffer1_select = 0, output_buffer2_select = 0;
+
+uint8_t output_buffer0_select = 0;
 fractional output_block0_buffers_a[SYLVATICA_N_CHANNELS][SYLVATICA_BLOCK1_INPUT_SIZE];
-fractional output_block1_buffers_a[SYLVATICA_N_CHANNELS][SYLVATICA_BLOCK2_INPUT_SIZE];
-fractional output_block2_buffers_a[SYLVATICA_N_CHANNELS][SYLVATICA_BLOCK3_INPUT_SIZE];
+fractional output_block1_buffer[SYLVATICA_N_CHANNELS][SYLVATICA_BLOCK2_INPUT_SIZE];
+fractional output_block2_buffer[SYLVATICA_N_CHANNELS][SYLVATICA_BLOCK3_INPUT_SIZE];
 fractional output_block0_buffers_b[SYLVATICA_N_CHANNELS][SYLVATICA_BLOCK1_INPUT_SIZE];
-fractional output_block1_buffers_b[SYLVATICA_N_CHANNELS][SYLVATICA_BLOCK2_INPUT_SIZE];
-fractional output_block2_buffers_b[SYLVATICA_N_CHANNELS][SYLVATICA_BLOCK3_INPUT_SIZE];
+
 
 fractional output_buffer_a[SYLVATICA_N_CHANNELS];
 
@@ -93,6 +89,17 @@ void sylvatica_filters_init(void)
         FIRDelayInit(&filters_3[i]);
     }
 
+    if(output_buffer0_select == 0){
+        for(i = 0; i < SYLVATICA_N_CHANNELS; i++){
+            output_block0_buffer[i] = output_block0_buffers_b[i];
+            input_block1_buffer[i] = output_block0_buffers_a[i];
+        }
+    } else {
+        for(i = 0; i < SYLVATICA_N_CHANNELS; i++){
+            output_block0_buffer[i] = output_block0_buffers_a[i];
+            input_block1_buffer[i] = output_block0_buffers_b[i];
+        }
+    }
 }
 
 
@@ -157,10 +164,6 @@ void process_filter_block0(void* data)
                 SYLVATICA_DEC_FACT_F0);
     }
     
-    if(sample_counter == 10000){
-        sample_counter = 0;
-    }
-    
     block_counter += SYLVATICA_BLOCK0_OUTPUT_SIZE;
     if(block_counter == SYLVATICA_BLOCK1_INPUT_SIZE){
         task_init(&task_process_filter_block1, process_filter_block1, NULL);
@@ -199,20 +202,6 @@ void process_filter_block1(void* data){
         task_init(&task_process_filter_block2, process_filter_block2, NULL);
         push_queued_task(&task_process_filter_block2);
         block_counter = 0;
-        
-        output_buffer1_select ^= 1;
-        if(output_buffer1_select == 0){
-            for(i = 0; i < SYLVATICA_N_CHANNELS; i++){
-                output_block1_buffer[i] = output_block1_buffers_b[i];
-                input_block2_buffer[i] = output_block1_buffers_a[i];
-            }
-        } else {
-            for(i = 0; i < SYLVATICA_N_CHANNELS; i++){
-                output_block1_buffer[i] = output_block1_buffers_a[i];
-                input_block2_buffer[i] = output_block1_buffers_b[i];
-            }
-        }
-        
     }
 }
 
@@ -223,7 +212,7 @@ void process_filter_block2(void* data){
     for(i = 0; i < SYLVATICA_N_CHANNELS; i++){   
         FIRDecimate(SYLVATICA_BLOCK2_OUTPUT_SIZE, 
                 &output_block2_buffer[i][block_counter], 
-                input_block2_buffer[i], 
+                output_block1_buffer[i], 
                 &filters_2[i], 
                 SYLVATICA_DEC_FACT_F2);
     }
@@ -232,20 +221,6 @@ void process_filter_block2(void* data){
         block_counter = 0;
         task_init(&task_process_filter_block2, process_filter_block3, NULL);
         push_queued_task(&task_process_filter_block2);
-        
-        output_buffer2_select ^= 1;
-        if(output_buffer2_select == 0){
-            for(i = 0; i < SYLVATICA_N_CHANNELS; i++){
-                output_block2_buffer[i] = output_block2_buffers_b[i];
-                input_block3_buffer[i] = output_block2_buffers_a[i];
-            }
-        } else {
-            for(i = 0; i < SYLVATICA_N_CHANNELS; i++){
-                output_block2_buffer[i] = output_block2_buffers_a[i];
-                input_block3_buffer[i] = output_block2_buffers_b[i];
-            }
-        }
-        
     }
 }
 
@@ -258,7 +233,7 @@ void process_filter_block3(void* data)
     {   
         FIRDecimate(SYLVATICA_BLOCK3_OUTPUT_SIZE, 
                 &output_buffer_a[i], 
-                input_block3_buffer[i], 
+                output_block2_buffer[i], 
                 &filters_3[i], 
                 SYLVATICA_DEC_FACT_F3);
        
