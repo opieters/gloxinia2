@@ -334,6 +334,7 @@ void sylvatica_init(void)
         pga_init(&pga_config[i]);
         
         sensor_interfaces[i]->gsensor_config[0].sensor_config.adc16.pga = &pga_config[i];
+        sensor_interfaces[i]->gsensor_config[0].sensor_config.adc16.adc = &adc16_config;
     }
     UART_DEBUG_PRINT("Initialised PGAs.");
     
