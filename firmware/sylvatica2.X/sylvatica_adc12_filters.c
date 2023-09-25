@@ -168,28 +168,21 @@ void sensor_adc12_process_block0()
 {
     uint16_t i;
     static uint16_t block_counter = 0;
-    static uint16_t sample_counter = 0;
-    fractional sample_buffer[SENSOR_ADC12_COPY_BUFFER_SIZE];
-    
-    sample_counter += SENSOR_ADC12_COPY_BUFFER_SIZE;
-    
-    // TODO: change code to handle "weird" number of coefficients coming from DMA
-    if(sensor_adc12_adc_buffer_selector == 0){
-        vector_copy_jump(ADC12_DMA_BUFFER_SIZE, sample_buffer, adc12_buffer_b, ADC12_N_CHANNELS);
-    } else {
-        vector_copy_jump(ADC12_DMA_BUFFER_SIZE, sample_buffer, adc12_buffer_a, ADC12_N_CHANNELS);
-    }
+    fractional sample_buffer[ADC12_DMA_BUFFER_SIZE];
     
     for(i = 0; i < ADC12_N_CHANNELS; i++){
+        // TODO: change code to handle "weird" number of coefficients coming from DMA
+        if(sensor_adc12_adc_buffer_selector == 0){
+            vector_copy_jump(ARRAY_LENGTH(adc12_buffer_b) / ADC12_N_CHANNELS, sample_buffer, adc12_buffer_b, ADC12_N_CHANNELS);
+        } else {
+            vector_copy_jump(ARRAY_LENGTH(adc12_buffer_a) / ADC12_N_CHANNELS, sample_buffer, adc12_buffer_a, ADC12_N_CHANNELS);
+        }
+        
         FIRDecimate(SENSOR_ADC12_BLOCK0_OUTPUT_SIZE, 
                 &adc12_output_block0_buffer[i][block_counter], 
                 sample_buffer,
                 &sensor_adc12_filters_0[i],
                 SENSOR_ADC12_DEC_FACT_F0);
-    }
-    
-    if(sample_counter == 10000){
-        sample_counter = 0;
     }
     
     block_counter += SENSOR_ADC12_BLOCK0_OUTPUT_SIZE;
