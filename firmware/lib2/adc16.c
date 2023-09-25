@@ -405,6 +405,9 @@ void __attribute__((__interrupt__, no_auto_psv)) _IC1Interrupt(void)
 
 void adc16_start(adc16_config_t *config)
 {
+    if(config->status == ADC16_STATUS_ON)
+        return;
+    
     // reset DMA transfer lengths (just in case)
     DMA5CNT = config->adc16_buffer_size - 1;
     DMA4CNT = ADC16_TX_BUFFER_LENGTH - 1;
@@ -450,6 +453,9 @@ void adc16_start(adc16_config_t *config)
 void adc16_stop(adc16_config_t *config)
 {
     uint16_t dummy_read;
+    
+    if(config->status == ADC16_STATUS_OFF)
+        return;
 
     config->status = ADC16_STATUS_OFF;
 
