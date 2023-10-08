@@ -280,7 +280,7 @@ void GDeviceCommunication::readData()
                     quint8 *udata = (quint8 *)data;
                     if (read_length == 0)
                     {
-                        GMessage m((GMessage::Code) udata[5], (udata[1] << 8) | udata[2], udata[4], udata[6] >> 4, udata[5] & 0xf, udata[3] == 0 ? false : true);
+                        GMessage m((GMessage::Code) udata[5], (udata[1] << 8) | udata[2], udata[4], udata[6] >> 4, udata[6] & 0xf, udata[3] == 0 ? false : true);
                         qInfo() << m.toString();
                         emit receivedMessage(m);
                     }
