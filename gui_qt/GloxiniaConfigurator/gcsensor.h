@@ -24,7 +24,8 @@ public:
         APDS9306_065 = 0x02,
         ADC12 = 0x03,
         ADC16 = 0x04,
-        LIA = 0x5,
+        LIA = 0x05,
+        ADS1219 = 0x06,
     };
 
     enum GCSensorStatus
@@ -392,5 +393,80 @@ protected:
 };
 
 Q_DECLARE_METATYPE(GCSensorLIA *)
+
+class GCSensorADS1219 : public GCSensorI2C
+{
+public:
+    enum Register {
+        MEASUREMENT = 0x0,
+        CONFIG = 0x1,
+        CHANNELS = 0x2,
+    };
+
+    enum ConversionMode {
+        SingleShot = 0x00,
+        Continuous = 0x01
+    };
+
+    enum ConversionRate {
+        SPS_20 = 0x00,
+        SPS_90 = 0x01,
+        SPS_330 = 0x02,
+        SPS_1000 = 0x03,
+    };
+
+    const std::vector<quint8> addressesOptions = {
+        0b1000000,
+        0b1000001,
+        0b1000010,
+        0b1000011,
+        0b1000100,
+        0b1000101,
+        0b1000110,
+        0b1000111,
+        0b1001000,
+        0b1001001,
+        0b1001010,
+        0b1001011,
+        0b1001100,
+        0b1001101,
+        0b1001110,
+        0b1001111};
+
+    GCSensorADS1219(GCNode* const node = nullptr, quint8 interface_id=0, quint8 id = 0, quint8 i2cAddress = 0b1000000);
+    GCSensorADS1219(const GCSensorADS1219 &s) = default;
+    ~GCSensorADS1219() override;
+
+    bool setI2CAddress(const quint8 a) override;
+    bool setEnabledChannels(quint8);
+    bool setGain(quint8);
+    bool setConversionRate(quint8);
+    bool setConversionMode(quint8);
+    bool setReferenceVoltage(quint8);
+
+    quint8 getEnabledChannels(void);
+    quint8 getGain(void);
+    quint8 getConversionRate(void);
+    quint8 getConversionMode(void);
+    quint8 getReferenceVoltage(void);
+
+    int i2cAddressToInt(quint8 a) override;
+
+    QString toString(void) const override;
+    QString toConfigString(void) const override;
+    bool fromConfigString(const QStringList &config) override;
+    QList<GMessage> getConfigurationMessages() override;
+    void saveData(std::vector<quint8>& data) override;
+    void printHeader(void) override;
+
+private:
+    quint8 enabledChannels;
+    quint8 gain;
+    quint8 conversionRate;
+    quint8 conversionMode;
+    quint8 referenceVoltage;
+};
+
+Q_DECLARE_METATYPE(GCSensorADS1219 *)
 
 #endif // GCSENSOR_H

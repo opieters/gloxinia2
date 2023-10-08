@@ -236,30 +236,43 @@ void GloxiniaConfigurator::processSensorConfig(const GMessage &m)
         {
             GCSensorADC12* sensor_adc12 = new GCSensorADC12(node, m.getInterfaceID(), m.getSensorID());
             status = treeModel->setData(index, QVariant::fromValue(sensor_adc12));
+            qInfo() << "Creating new ADC12 sensor: " << sensor_adc12;
             break;
         }
         case GCSensor::sensor_class::ADC16:
         {
             GCSensorADC16* sensor_adc16 = new GCSensorADC16(node, m.getInterfaceID(), m.getSensorID());
             status = treeModel->setData(index, QVariant::fromValue(sensor_adc16));
+            qInfo() << "Creating new ADC16 sensor: " << sensor_adc16;
             break;
         }
         case GCSensor::sensor_class::APDS9306_065:
         {
             GCSensorAPDS9306* sensor_apds9306_065 = new GCSensorAPDS9306(node,m.getInterfaceID(), m.getSensorID());
             status = treeModel->setData(index, QVariant::fromValue(sensor_apds9306_065));
+            qInfo() << "Creating new APDS9306 065 sensor: " << sensor_apds9306_065;
             break;
         }
         case GCSensor::sensor_class::LIA:
         {
             GCSensorLIA* sensor_lia = new GCSensorLIA(node, m.getInterfaceID(), m.getSensorID());
             status = treeModel->setData(index, QVariant::fromValue(sensor_lia));
+            qInfo() << "Creating new LIA sensor: " << sensor_lia;
             break;
         }
         case GCSensor::sensor_class::SHT35:
         {
             GCSensorSHT35* sensor_sht35 = new GCSensorSHT35(node, m.getInterfaceID(), m.getSensorID());
             status = treeModel->setData(index, QVariant::fromValue(sensor_sht35));
+            qInfo() << "Creating new SHT35 sensor: " << sensor_sht35;
+
+            break;
+        }
+        case GCSensor::sensor_class::ADS1219:
+        {
+            GCSensorADS1219* sensor_ads1219 = new GCSensorADS1219(node, m.getInterfaceID(), m.getSensorID());
+            status = treeModel->setData(index, QVariant::fromValue(sensor_ads1219));
+            qInfo() << "Creating new ADS1219 sensor: " << sensor_ads1219;
 
             break;
         }

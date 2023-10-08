@@ -30,6 +30,7 @@ set(PROJECT_SOURCES
         sensorsht35dialog.h sensorsht35dialog.cpp sensorsht35dialog.ui
         sensoradc12dialog.h sensoradc12dialog.cpp sensoradc12dialog.ui
         sensoradc16dialog.h sensoradc16dialog.cpp sensoradc16dialog.ui
+        sensorads1219dialog.h sensorads1219dialog.cpp sensorads1219dialog.ui
         sensorliadialog.h sensorliadialog.cpp sensorliadialog.ui
         liaenginedialog.h liaenginedialog.cpp liaenginedialog.ui
         gliaengine.h gliaengine.cpp
@@ -58,6 +59,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(GloxiniaConfigurator
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        sensorads1219dialog.h sensorads1219dialog.cpp sensorads1219dialog.ui
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET GloxiniaConfigurator APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

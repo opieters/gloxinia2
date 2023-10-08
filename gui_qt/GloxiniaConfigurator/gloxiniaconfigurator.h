@@ -34,6 +34,7 @@
 #include <sensorliadialog.h>
 #include <liaenginedialog.h>
 #include <gcreadoutdialog.h>
+#include <sensorads1219dialog.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -240,6 +241,7 @@ private:
     SensorADC16Dialog *sensorADC16Dialog;
     SensorLIADialog *sensorLIADialog;
     LIAEngineDialog* liaEngineDialog;
+    SensorADS1219Dialog* sensorADS1219Dialog;
 
     /*
      * The file stores the sensor data

@@ -137,6 +137,7 @@ GCSensor* GCSensor::fromQVariant(const QVariant data)
     GCSensorADC12 *sensorADC12 = data.value<GCSensorADC12 *>();
     GCSensorADC16 *sensorADC16 = data.value<GCSensorADC16 *>();
     GCSensorLIA *sensorLIA = data.value<GCSensorLIA *>();
+    GCSensorADS1219 *sensorADS1219 = data.value<GCSensorADS1219 *>();
 
     if(sensorSHT35 != nullptr)
         return sensorSHT35;
@@ -148,6 +149,8 @@ GCSensor* GCSensor::fromQVariant(const QVariant data)
         return sensorADC16;
     if(sensorLIA != nullptr)
         return sensorLIA;
+    if(sensorADS1219 != nullptr)
+        return sensorADS1219;
     return nullptr;
 }
 
@@ -1124,4 +1127,229 @@ void GCSensorLIA::printHeader(void)
     file->write("# Intermediate storage file for ADC12\n");
     file->write("# ADC12 is a 16-bit filtered analogue readout. The data is stored in the `channel` column. Each value is timestamped.\n");
     file->write("time; channel\n");
+}
+
+
+GCSensorADS1219::GCSensorADS1219(GCNode* node, quint8 interface_id, quint8 id, quint8 i2cAddress) : GCSensorI2C(node, interface_id, id, i2cAddress)
+{
+    if(node == nullptr){
+        filePath = "node-0-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "-ADS1219.csv";
+    } else {
+        filePath = "node-" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "-ADS1219.csv";
+    }
+    filePath = QDir::cleanPath(filePath);
+
+    QString prefix;
+    if(!label.isEmpty())
+        prefix += label + " ";
+    else
+        prefix += "ADS1219 ";
+    if(node != nullptr)
+        prefix += "[" + QString::number(node->getID()) + "-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "] ";
+    else
+        prefix += "[0-" + QString::number(interfaceID) + "-" + QString::number(sensorID) + "] ";
+
+
+    plotSeries.append(new QLineSeries());
+    plotSeries[0]->setName(prefix + "analogue");
+    measurementVariableTypes.append(VariableType::Analogue);
+}
+
+GCSensorADS1219::~GCSensorADS1219() {}
+
+bool GCSensorADS1219::setI2CAddress(const quint8 a)
+{
+    auto it = std::find(addressesOptions.begin(), addressesOptions.end(), a);
+
+    if (it != addressesOptions.end()){
+        i2cAddress = a;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool GCSensorADS1219::setEnabledChannels(quint8 v)
+{
+    enabledChannels = v;
+    return true;
+}
+bool GCSensorADS1219::setGain(quint8 v)
+{
+    gain = std::min(v, (quint8)0b1);
+    return v == gain;
+}
+bool GCSensorADS1219::setConversionRate(quint8 v)
+{
+    conversionRate = std::min(v, (quint8)0b111);
+    return v == conversionRate;
+}
+bool GCSensorADS1219::setConversionMode(quint8 v)
+{
+    conversionMode = std::min(v, (quint8)0b1);
+    return v == conversionMode;
+}
+
+
+bool GCSensorADS1219::setReferenceVoltage(quint8 v)
+{
+    referenceVoltage = std::min(v, (quint8)0b1);
+    return v == referenceVoltage;
+}
+
+
+quint8 GCSensorADS1219::getEnabledChannels(void)
+{
+    return enabledChannels;
+}
+quint8 GCSensorADS1219::getGain(void)
+{
+    return gain;
+}
+quint8 GCSensorADS1219::getConversionRate(void)
+{
+    return conversionRate;
+}
+quint8 GCSensorADS1219::getConversionMode(void)
+{
+    return conversionMode;
+}
+
+
+int GCSensorADS1219::i2cAddressToInt(quint8 a)
+{
+    return a;
+}
+
+QString GCSensorADS1219::toString(void) const
+{
+    QString dLabel;
+    if (!label.isEmpty())
+    {
+        dLabel = label;
+    }
+    else
+    {
+        dLabel = "ADS1219";
+    }
+    return "[" + QString::number(interfaceID) + "." + QString::number(sensorID) + "] " + dLabel + " (" + QString::number(i2cAddress) + ") - " + statusToString(status);
+}
+
+QString GCSensorADS1219::toConfigString(void) const
+{
+    QString nLabel = label;
+    nLabel.replace(' ', "\\ ");
+    return "S ADS1219 "
+           + QString::number(interfaceID) + " "
+           + QString::number(sensorID) + " "
+           + nLabel + " "
+           + QString::number(i2cAddress) + " "
+           + QString::number(enabledChannels) + " "
+           + QString::number(gain) + " "
+           + QString::number(conversionRate) + " "
+           + QString::number(conversionMode) + " "
+           + QString::number(referenceVoltage) + " " + ";";
+}
+
+bool GCSensorADS1219::fromConfigString(const QStringList &config)
+{
+    GCSensorADS1219 s(nullptr, config[2].toInt(), config[3].toInt());
+
+    if (config.count() != 11)
+        return false;
+
+    if ((config[0] != "S") || (config[1] != "SHT35"))
+        return false;
+
+    bool success = true;
+    s.setLabel(config[4]);
+    success = success && s.setI2CAddress(config[5].toInt());
+    success = success && s.setEnabledChannels(config[6].toInt());
+    success = success && s.setGain(config[7].toInt());
+    success = success && s.setConversionRate(config[8].toInt());
+    success = success && s.setConversionMode(config[9].toInt());
+    success = success && s.setReferenceVoltage(config[10].toInt());
+
+    if (success)
+    {
+        //this->setInterfaceID(s.getInterfaceID());
+        this->setLabel(s.getLabel());
+        this->setI2CAddress(s.getI2CAddress());
+        this->setEnabledChannels(s.getEnabledChannels());
+        this->setGain(s.getGain());
+        this->setConversionRate(s.getConversionRate());
+        this->setConversionMode(s.getConversionMode());
+        this->setReferenceVoltage(s.getReferenceVoltage());
+    }
+
+    return success;
+}
+
+quint8 GCSensorADS1219::getReferenceVoltage(void)
+{
+    return referenceVoltage;
+}
+
+QList<GMessage> GCSensorADS1219::getConfigurationMessages()
+{
+    QList<GMessage> mList;
+
+    auto mData = std::vector<quint8>(4);
+    mData[0] = (quint8)GCSensor::sensor_class::ADS1219;
+    mData[1] = GCSensorADS1219::Register::MEASUREMENT;
+    mData[2] = (quint8) measurementPeriod >> 8;
+    mData[3] = (quint8) measurementPeriod & 0xff;
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
+
+    quint8 enabledChannels;
+    quint8 gain;
+    quint8 conversionRate;
+    quint8 conversionMode;
+    quint8 referenceVoltage;
+
+    mData = std::vector<quint8>(8);
+    mData[0] = (quint8)GCSensor::sensor_class::ADS1219;
+    mData[1] = GCSensorADS1219::Register::CONFIG;
+    mData[2] = i2cAddress;
+    mData[3] = enabledChannels;
+    mData[4] = gain;
+    mData[5] = conversionRate;
+    mData[6] = conversionMode;
+    mData[7] = referenceVoltage;
+    mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
+
+    return mList;
+}
+
+void GCSensorADS1219::printHeader(void)
+{
+    file->write("# Intermediate storage file for APDS9306 065\n");
+    file->write("# APDS9306 065 is a visible light sensor that produces data in lux. The data is stored in the `pd` column. Each value is timestamped.\n");
+    file->write("time; pd\n");
+}
+
+void GCSensorADS1219::saveData(std::vector<quint8>& data)
+{
+    QString formattedData;
+    uint32_t value;
+
+
+    QDateTime date = QDateTime::currentDateTime();
+    formattedData.append(date.toString("dd.MM.yyyy hh:mm:ss"));
+    formattedData.append("; ");
+    if(data.size() == 3){
+        value = data[0] | (data[1] << 8) | (data[2] << 16);
+        formattedData.append(QString::number(value)); // print in scientific format with precision of 6
+
+        plotSeries[0]->append(date.toMSecsSinceEpoch(), value);
+
+    } else {
+        formattedData.append("NaN");
+
+        plotSeries[0]->append(date.toMSecsSinceEpoch(), nan(""));
+    }
+    formattedData.append("\n");
+
+    if((file != nullptr) && file->isOpen())
+        file->write(formattedData.toUtf8());
 }
