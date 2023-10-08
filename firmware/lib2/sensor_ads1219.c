@@ -6,6 +6,7 @@ void sensor_ads1219_config_cb(i2c_message_t* m);
 void sensor_ads1219_check_a_cb(i2c_message_t* m);
 void sensor_ads1219_check_b_cb(i2c_message_t* m);
 void sensor_ads1219_result_cb(i2c_message_t* m);
+sensor_ads1219_input_mux_configuration_t sensor_ads1219_channel_to_mux(uint8_t channel);
 
 
 sensor_status_t sensor_ads1219_config(struct sensor_gconfig_s *gconfig, const uint8_t *buffer, const uint8_t length)
@@ -28,6 +29,8 @@ sensor_status_t sensor_ads1219_config(struct sensor_gconfig_s *gconfig, const ui
             
             schedule_init(&gconfig->measure, gconfig->measure.task, (((uint16_t)buffer[1]) << 8) | buffer[2]);
             
+            sensor_ads1219_init(gconfig);
+            
             break;
         case sensor_ads1219_gloxinia_register_config:
             if(length != 7) { return SENSOR_STATUS_ERROR; }
@@ -39,10 +42,6 @@ sensor_status_t sensor_ads1219_config(struct sensor_gconfig_s *gconfig, const ui
             config->conversion = buffer[5];
             config->vref = buffer[6];
             
-            break;
-        case sensor_ads1219_gloxinia_register_channels:
-            if(length != 2) { return SENSOR_STATUS_ERROR; }
-            config->enabled_channels = buffer[1];
             break;
         default:
             break;
@@ -80,12 +79,7 @@ void sensor_ads1219_get_config(struct sensor_gconfig_s *gconfig, uint8_t reg, ui
             
             *length = 8;
             
-            break;
-        case sensor_ads1219_gloxinia_register_channels:
-            buffer[2] = config->enabled_channels;
-            
-            *length = 2;
-            break;
+            break; 
         default:
             *length = 0;
             break;
@@ -154,10 +148,28 @@ void sensor_ads1219_measure(void *data)
     sensor_gconfig_t* gconfig = (sensor_gconfig_t*) data;
     sensor_ads1219_config_t* config = &gconfig->sensor_config.ads1219;
     
-    config->m_config_data[0] = sensor_ads1219_command_wreg | sensor_ads1219_register_0;
-    config->m_config_data[1] = SENSOR_ADS1219_GET_CONFIG_REGISTER(sensor_ads1219_input_mux_avdd_2, config->gain, config->fs, config->conversion, config->vref);
+    config->selected_channel = 1;
     
-    config->selected_channel = 0;
+    do {
+        config->selected_channel <<= 1;
+    } while (((config->selected_channel & config->enabled_channels) == 0) && (config->selected_channel != 0));
+    
+    if(config->selected_channel == 0)
+    {
+        gconfig->log_data[0] = 0;
+        gconfig->log_data[1] = 0;
+        gconfig->log_data[2] = S_ADS1219_ERROR_NO_CHANNEL_FOUND;
+        gconfig->log_data[2] = 0;
+
+        sensor_error_log(gconfig, gconfig->log_data, 4);
+        
+        gconfig->status = SENSOR_STATUS_ERROR;
+        sensor_error_handle(gconfig);
+        return;
+    }
+    
+    config->m_config_data[0] = sensor_ads1219_command_wreg | sensor_ads1219_register_0;
+    config->m_config_data[1] = SENSOR_ADS1219_GET_CONFIG_REGISTER(sensor_ads1219_channel_to_mux(config->selected_channel), config->gain, config->fs, config->conversion, config->vref);
     
     i2c_init_message(&config->m_config,
             I2C_WRITE_ADDRESS(config->address),
@@ -357,6 +369,31 @@ void sensor_ads1219_result_cb(i2c_message_t* m)
                 SENSOR_ADS1219_CAN_DATA_LENGTH);
         message_send(&gconfig->log);
     }
+    
+    do {
+        config->selected_channel <<= 1;
+    } while (((config->selected_channel & config->enabled_channels) == 0) && (config->selected_channel != 0));
+    
+    if(config->selected_channel != 0)
+    {
+        config->m_config_data[0] = sensor_ads1219_command_wreg | sensor_ads1219_register_0;
+        config->m_config_data[1] = SENSOR_ADS1219_GET_CONFIG_REGISTER(sensor_ads1219_channel_to_mux(config->selected_channel), config->gain, config->fs, config->conversion, config->vref);
+
+        i2c_init_message(&config->m_config,
+                I2C_WRITE_ADDRESS(config->address),
+                config->i2c_bus,
+                config->m_config_data,
+                ARRAY_LENGTH(config->m_config_data),
+                I2C_NO_DATA,
+                0,
+                i2c_get_write_controller(config->i2c_bus),
+                3,
+                sensor_ads1219_config_cb,
+                gconfig,
+                0);
+
+        i2c_queue_message(&config->m_config);
+    }
 }
 
 bool validate_sensor_ads1219_config(sensor_ads1219_config_t* config) {
@@ -383,6 +420,32 @@ bool validate_sensor_ads1219_config(sensor_ads1219_config_t* config) {
     if(config->enabled_channels != original.enabled_channels){
         return false;
     }
+    if((config->address & 0b1110000) != 0b1000000){
+        return false;
+    }
     
     return true;
+}
+
+sensor_ads1219_input_mux_configuration_t sensor_ads1219_channel_to_mux(uint8_t channel)
+{
+    switch(channel)
+    {
+        case 0b00000001:
+        case 0b00000100:
+        case 0b00010000:
+        case 0b01000000:
+            return sensor_ads1219_input_mux_avdd_2;
+        case 0b00000010:
+            return sensor_ads1219_input_mux_ain0_agnd;
+        case 0b00001000:
+            return sensor_ads1219_input_mux_ain1_agnd;
+        case 0b00100000:
+            return sensor_ads1219_input_mux_ain2_agnd;
+        case 0b10000000:
+            return sensor_ads1219_input_mux_ain3_agnd;
+        default:
+            break;
+    }
+    return sensor_ads1219_input_mux_avdd_2;
 }

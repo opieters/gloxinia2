@@ -56,6 +56,9 @@ void sensor_get_config(uint8_t interface_id, uint8_t sensor_id, uint8_t reg, uin
         case SENSOR_TYPE_APDS9306_065:
             sensor_apds9306_065_get_config(sgc, reg, buffer, length);
             break;
+        case SENSOR_TYPE_ADS1219:
+            sensor_ads1219_get_config(sgc, reg, buffer, length);
+            break;
 #if defined(__DICIO__) || defined(__SYLVATICA__)
         case SENSOR_TYPE_ADC12:
             sensor_adc12_get_config(sgc, reg, buffer, length);
@@ -111,6 +114,9 @@ void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t sensor_id, cons
         case SENSOR_TYPE_APDS9306_065:
             status = sensor_apds9306_065_config(gsc, &buffer[1], length - 1);
             break;
+        case SENSOR_TYPE_ADS1219:
+            status = sensor_ads1219_config(gsc, &buffer[1], length - 1);
+            break;
 #if defined(__DICIO__) || defined(__SYLVATICA__)
         case SENSOR_TYPE_ADC12:
 #ifdef __DICIO__
@@ -151,7 +157,7 @@ void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t sensor_id, cons
     }
 
     // update sensor status based on variables
-    if ((gsc->status == SENSOR_STATUS_INACTIVE) || (gsc->status == SENSOR_STATUS_STOPPED))
+    if ((status == SENSOR_STATUS_INACTIVE) || (status == SENSOR_STATUS_STOPPED))
         gsc->status = status;
     if (status == SENSOR_STATUS_ERROR) {
         gsc->status = status;
@@ -213,6 +219,9 @@ void sensor_set_status(uint8_t interface_id, uint8_t sensor_id, sensor_status_t 
                     case SENSOR_TYPE_APDS9306_065:
                         sensor_apds9306_065_activate(gsc);
                         break;
+                    case SENSOR_TYPE_ADS1219:
+                        sensor_ads1219_activate(gsc);
+                        break;
 #if defined(__DICIO__) || defined(__SYLVATICA__)
                     case SENSOR_TYPE_ADC12:
                         sensor_adc12_activate(gsc);
@@ -246,6 +255,9 @@ void sensor_set_status(uint8_t interface_id, uint8_t sensor_id, sensor_status_t 
                         break;
                     case SENSOR_TYPE_APDS9306_065:
                         sensor_apds9306_065_deactivate(gsc);
+                        break;
+                    case SENSOR_TYPE_ADS1219:
+                        sensor_ads1219_deactivate(gsc);
                         break;
 #if defined(__DICIO__) || defined(__SYLVATICA__)
                     case SENSOR_TYPE_ADC12:

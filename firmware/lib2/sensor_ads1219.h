@@ -71,7 +71,6 @@ typedef enum {
 typedef enum {
     sensor_ads1219_gloxinia_register_general = 0x00,
     sensor_ads1219_gloxinia_register_config = 0x01,
-    sensor_ads1219_gloxinia_register_channels = 0x02,
 } sensor_ads1219_gloxinia_register_t;
 
 /// @brief ADS1219 error codes during initialisation or readout
@@ -80,7 +79,8 @@ typedef enum
     S_ADS1219_ERROR_CONFIG,
     S_ADS1219_ERROR_STATUS_A,
     S_ADS1219_ERROR_STATUS_B,
-    S_ADS1219_ERROR_READOUT
+    S_ADS1219_ERROR_READOUT,
+    S_ADS1219_ERROR_NO_CHANNEL_FOUND,
 } sensor_ads1219_error_t;
 
 /**
