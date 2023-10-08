@@ -305,15 +305,23 @@ void dicio_init(void)
     
     // try to run ADC12
     uint8_t buffer1[4] = {SENSOR_TYPE_ADC12, sensor_adc12_gloxinia_register_general, 0, 9};
-    sensor_set_config_from_buffer(2, 2, buffer1, 4);
+    //sensor_set_config_from_buffer(3, 1, buffer1, 4);
     
     uint8_t buffer2[4] = {SENSOR_TYPE_ADC12, sensor_adc12_gloxinia_register_config, true};
-    sensor_set_config_from_buffer(2, 2, buffer2, 3);
+    //sensor_set_config_from_buffer(3, 1, buffer2, 3);
     
-    //sensor_set_status( (0<<4) | 1, SENSOR_STATUS_ACTIVE);
-    //sensor_adc12_activate(sensor_config);
+    // ADS1219
+    uint8_t buffer3[4] = {SENSOR_TYPE_ADS1219, sensor_ads1219_gloxinia_register_general, 0, 9};
+    sensor_set_config_from_buffer(0, 0, buffer3, 4);
     
-    sdcard_data_address = DICIO_DATA_START_ADDRESS;
+    uint8_t buffer4[8] = {SENSOR_TYPE_ADS1219, sensor_ads1219_gloxinia_register_config, 0x46, 0xff, sensor_ads1219_gain_1, sensor_ads1219_90_sps, sensor_ads1219_conversion_mode_single_shot, sensor_ads1219_vref_external};
+    sensor_set_config_from_buffer(0, 0, buffer4, 8);
+    
+    for(int i = 0; i < 4; i ++)
+    {
+        UART_DEBUG_PRINT("All done.");
+    }
+    
 }
 
 void dicio_uart_rx_overflow(void* data)
