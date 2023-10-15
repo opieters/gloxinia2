@@ -325,6 +325,7 @@ void cmd_dicio_clear_configuration_on_sdcard(const message_t* m)
 
 void cmd_dicio_time(const message_t* m)
 {
+    return;
     message_t reply;
     uint8_t data[CAN_MAX_N_BYTES];
     clock_time_t ct;
@@ -366,6 +367,7 @@ void cmd_dicio_time(const message_t* m)
 
         UART_DEBUG_PRINT("Setting time");
         
-        clock_set_time(&ct);
+        // TODO: reactivate
+        //clock_set_time(&ct);
     }
 }

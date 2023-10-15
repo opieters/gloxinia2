@@ -5,6 +5,7 @@
 #include <utilities.h>
 #include <uart.h>
 #include <message.h>
+#include <sensor.h>
 
 /** Data storage format 
  * 
@@ -184,6 +185,8 @@ extern "C"
   
   void dicio_save_node_info(node_config_t* config, uint8_t index);
   void dicio_load_node_configs(void);
+  void dicio_sensor_interface_supply(uint8_t interface_id, interface_supply_t vconfig);
+  bool dicio_configure_interrupt_routine(sensor_interface_t* interface, task_t task);
 
 #ifdef __cplusplus
 }

@@ -67,8 +67,7 @@ void send_message_can(const message_t *m) {
         sent_status = can_send_message(&mc, m->identifier % 8);
         n_attempts++;
     } while ((sent_status != CAN_NO_ERROR) && (n_attempts < 8U));
-    
-    __delay_ms(100);
+
     
     /*if(sent_status == CAN_NO_ERROR)
     {
@@ -189,6 +188,9 @@ void message_process(const message_t *m) {
             break;
         case M_CONFIG_SAVED:
             //UART_DEBUG_PRINT("M_CONFIG_SAVED");
+            break;
+        case M_INTERFACE_SUPPLY:
+            cmd_interface_supply(m);
             break;
         default:
             break;
@@ -374,4 +376,18 @@ void cmd_sensor_stop(const message_t* m) {
     sensor_stop();
 }
 
-
+void dicio_sensor_interface_supply(uint8_t interface_id, interface_supply_t vconfig);
+void sylvatica_sensor_interface_supply(uint8_t interface_id, interface_supply_t vconfig);
+void planalta_sensor_interface_supply(uint8_t interface_id, interface_supply_t vconfig);
+void cmd_interface_supply(const message_t* m)
+{
+#ifdef __DICIO__
+    dicio_sensor_interface_supply(m->interface_id, m->data[0]);
+#endif
+#ifdef __SYLVATICA__
+    sylvatica_sensor_interface_supply(m->interface_id, m->data[0]);
+#endif
+#ifdef __PLANTALTA__
+    planalta_sensor_interface_supply(m->interface_id, m->data[0]);
+#endif
+}

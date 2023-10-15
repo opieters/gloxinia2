@@ -3,6 +3,7 @@
 #include <rtcc.h>
 #ifdef __DICIO__
 #include <../dicio.X/sdcard.h>
+#include <../dicio.X/dicio.h>
 #endif
 
 #if defined(__SYLVATICA__) || defined(__PLANALTA__)
@@ -157,7 +158,7 @@ void sensor_set_config_from_buffer(uint8_t interface_id, uint8_t sensor_id, cons
     }
 
     // update sensor status based on variables
-    if ((status == SENSOR_STATUS_INACTIVE) || (status == SENSOR_STATUS_STOPPED))
+    if ((gsc->status == SENSOR_STATUS_INACTIVE) || (gsc->status == SENSOR_STATUS_STOPPED))
         gsc->status = status;
     if (status == SENSOR_STATUS_ERROR) {
         gsc->status = status;
@@ -322,9 +323,10 @@ void sensor_error_handle(sensor_gconfig_t *gsc) {
 }
 
 void sensor_i2c_error_handle(sensor_gconfig_t *gsc, i2c_message_t *m, uint8_t location) {
-    gsc->log_data[0] = m->status;
-    gsc->log_data[1] = m->error;
-    gsc->log_data[2] = location;
+    gsc->log_data[0] = gsc->status;
+    gsc->log_data[1] = m->status;
+    gsc->log_data[2] = m->error;
+    gsc->log_data[3] = location;
 
     message_init(&gsc->log,
             controller_address,
@@ -332,7 +334,7 @@ void sensor_i2c_error_handle(sensor_gconfig_t *gsc, i2c_message_t *m, uint8_t lo
             M_SENSOR_STATUS,
             gsc->interface->interface_id, gsc->sensor_id,
             gsc->log_data,
-            3);
+            4);
     message_send(&gsc->log);
 
     schedule_remove_event(gsc->measure.id);
@@ -409,3 +411,23 @@ void sensor_save_data(uint8_t address, uint8_t interface, uint8_t sensor_id, con
     sdcard_save_data(sd_buffer, 9+length);
 }
 #endif
+
+void sensor_interface_set_supply(uint8_t interface_id, interface_supply_t supply)
+{
+    sensor_interface_t* intf = sensor_interfaces[interface_id];
+    message_t m_supply;
+    uint8_t data[1];
+    
+    intf->analogue_supply = supply;
+    
+    data[0] = supply;
+    message_init(
+            &m_supply, 
+            controller_address, 
+            MESSAGE_NO_REQUEST,
+            M_INTERFACE_SUPPLY, 
+            interface_id, 
+            NO_SENSOR_ID, data, 
+            ARRAY_LENGTH(data));
+    message_send(&m_supply);
+}

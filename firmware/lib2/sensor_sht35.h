@@ -78,8 +78,9 @@ extern "C"
         S_SHT35_ERROR_READOUT_PERIODIC,    ///< Error reading out periodic data
         S_SHT35_ERROR_READOUT_SINGLE_SHOT, ///< Error reading out single shot data
         S_SHT35_ERROR_CONFIG_SINGLE_SHOT,  ///< Error configuring single shot data
-        S_SHT35_ERROR_PHASE1_CB,           ///< Error in phase 1 callback
-        S_SHT35_ERROR_PHASE2_CB            ///< Error in phase 2 callback
+        S_SHT35_ERROR_CONFIG_PERIODIC_CB,
+                S_SHT35_ERROR_STATUS_CB,
+                S_SHT35_ERROR_CONFIG_SS_CB,
     } sensor_sht35_error_t;
 
     /**
@@ -95,7 +96,6 @@ extern "C"
      * @param m_config2: I2C message for configuration
      * @param m_read: I2C message for reading data
      * @param m_fetch: I2C message for fetching data
-     * @param data_ready: Data ready flag
      * @param m_config_data: I2C configuration data
      * @param m_read_data: I2C read data
      * @param m_fetch_data: I2C fetch data
@@ -110,16 +110,14 @@ extern "C"
         sensor_sht35_sample_rate_t rate;
         sensor_sht35_periodicity_t periodicity;
 
-        i2c_message_t m_config;
-        i2c_message_t m_config2;
+        i2c_message_t m_command;
+        i2c_message_t m_abort;
         i2c_message_t m_read;
         i2c_message_t m_fetch;
 
-        bool data_ready;
-
-        uint8_t m_config_data[SENSOR_SHT35_CONFIG_DATA_LENGTH];
+        uint8_t m_command_data[SENSOR_SHT35_CONFIG_DATA_LENGTH];
+        uint8_t m_fetch_data[SENSOR_SHT35_CONFIG_DATA_LENGTH];
         uint8_t m_read_data[SENSOR_SHT35_DATA_LENGTH];
-        uint8_t m_fetch_data[SENSOR_SHT35_FETCH_DATA_LENGTH];
     } sensor_sht35_config_t;
 
     // forward declaration of sensor_interface_s since cyclic dependency is not

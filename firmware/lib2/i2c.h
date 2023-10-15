@@ -10,7 +10,7 @@
 #define I2C_MESSAGE_BUFFER_LENGTH 256
 
 /// @brief I2C/SCL target frequency in Hz
-#define FREQUENCY_SCL 100000
+#define FREQUENCY_SCL 10000
 
 /// @brief I2C bus delay correction factor
 #define DELAY_I2C 0
@@ -47,7 +47,6 @@ extern "C"
         I2C_QUEUE_FULL,              ///< I2C message queue is full
         I2C_BUFFER_FULL,             ///< I2C message buffer is full
         I2C_MISSED_DATA,             ///< I2C message data was missed
-        I2C_ZERO_ATTEMPTS,           ///< I2C message has zero attempts left
         I2C_TOO_MANY_READS,          ///< I2C message has more read operations than expected
         I2C_MSG_NOT_INITIALISED,     ///< I2C message is not initialised correctly
         I2C_MESSAGE_BUS_INACTIVE,    ///< I2C bus is inactive
@@ -117,7 +116,6 @@ extern "C"
         uint8_t *read_data;
         uint8_t read_length;
         void (*controller)(i2c_message_t *m);
-        int8_t n_attempts;
         volatile i2c_mstatus_t status;
         volatile i2c_error_t error;
         void (*callback)(i2c_message_t *m);
@@ -191,7 +189,6 @@ extern "C"
         uint8_t *read_data,
         uint8_t read_length,
         void (*controller)(i2c_message_t *m),
-        int8_t n_attempts,
         void (*callback)(i2c_message_t *m),
         void *callback_data,
         uint8_t callback_data_length);
@@ -211,7 +208,7 @@ extern "C"
      * @param m: I2C message to initialise
      * @param n_attempts: number of attempts to send message
      */
-    void i2c_reset_message(i2c_message_t *m, uint8_t n_attempts);
+    void i2c_reset_message(i2c_message_t *m);
 
     /**
      * @brief Initialises I2C1 module.

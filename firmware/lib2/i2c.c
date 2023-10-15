@@ -3,7 +3,7 @@
 
 // i2c queue variables
 volatile uint8_t transfer_done = 0;
-i2c_message_t* m = NULL;
+i2c_message_t* i2c_current_m = NULL;
 i2c_message_t* i2c_message_queue [I2C_MESSAGE_BUFFER_LENGTH];
 volatile uint16_t i2c_queue_idx = 0;
 volatile uint16_t i2c_queue_valid = 0;
@@ -20,6 +20,7 @@ void i2c1_init(i2c_config_t* config) {
 
     I2C1CONbits.A10M = 0; // 7-bit slave address
     I2C1CONbits.SCLREL = 1; // release clock
+    I2C1CONbits.DISSLW = 1;
 
     frequency = FCY / (2 * FREQUENCY_SCL) - DELAY_I2C * (FCY / 2) - 2;
     if (frequency > 0x1FF) {
@@ -116,7 +117,6 @@ void i2c_init_message(i2c_message_t* m,
         uint8_t* read_data,
         uint8_t read_length,
         void (*controller)(i2c_message_t* m),
-        int8_t n_attempts,
         void (*callback)(i2c_message_t* m),
         void* callback_data,
         uint8_t callback_data_length) {
@@ -132,11 +132,10 @@ void i2c_init_message(i2c_message_t* m,
     m->callback_data = callback_data;
     m->callback_data_length = callback_data_length;
     m->i2c_bus = i2c_bus;
-    i2c_reset_message(m, n_attempts);
+    i2c_reset_message(m);
 }
 
-void i2c_reset_message(i2c_message_t* m, uint8_t n_attempts) {
-    m->n_attempts = n_attempts;
+void i2c_reset_message(i2c_message_t* m) {
     m->status = I2C_MESSAGE_HANDLED;
     m->error = I2C_NO_ERROR;
 }
@@ -148,76 +147,50 @@ void i2c_queue_message(i2c_message_t* message) {
         message->error = I2C_QUEUE_FULL;
         UART_DEBUG_PRINT("I2C queue full.");
     } else {
-        if (message->n_attempts < 1) {
+        if((message->i2c_bus == I2C1_BUS) && (I2C1CONbits.I2CEN == 0)){
             message->status = I2C_MESSAGE_HANDLED;
-            message->error = I2C_ZERO_ATTEMPTS;
-        } else {
-            if((message->i2c_bus == I2C1_BUS) && (I2C1CONbits.I2CEN == 0)){
-                message->status = I2C_MESSAGE_HANDLED;
-                message->error = I2C_MESSAGE_BUS_INACTIVE;
-                return;
-            }
-            if((message->i2c_bus == I2C2_BUS) && (I2C2CONbits.I2CEN == 0)){
-                message->status = I2C_MESSAGE_HANDLED;
-                message->error = I2C_MESSAGE_BUS_INACTIVE;
-                return;
-            }
-            message->status = I2C_MESSAGE_QUEUED;
-            i2c_message_queue[i2c_queue_valid] = message;
-            i2c_queue_valid = (i2c_queue_valid + 1) % I2C_MESSAGE_BUFFER_LENGTH;
-            message->error = I2C_NO_ERROR;
-            n_i2c_queued_messages++;
-            //UART_DEBUG_PRINT("I2C added message to %x on bus %x.", message->address, message->i2c_bus);
+            message->error = I2C_MESSAGE_BUS_INACTIVE;
+            return;
         }
+        if((message->i2c_bus == I2C2_BUS) && (I2C2CONbits.I2CEN == 0)){
+            message->status = I2C_MESSAGE_HANDLED;
+            message->error = I2C_MESSAGE_BUS_INACTIVE;
+            return;
+        }
+        message->status = I2C_MESSAGE_QUEUED;
+        i2c_message_queue[i2c_queue_valid] = message;
+        i2c_queue_valid = (i2c_queue_valid + 1) % I2C_MESSAGE_BUFFER_LENGTH;
+        message->error = I2C_NO_ERROR;
+        n_i2c_queued_messages++;
+        //UART_DEBUG_PRINT("I2C added message to %x on bus %x.", message->address, message->i2c_bus);
     }
 }
 
 void i2c_process_queue(void) {
     if (transfer_done == 1) {
-        if (m != NULL) {
-            switch (m->status) {
+        if (i2c_current_m != NULL) {
+            switch (i2c_current_m->status) {
                 case I2C_MESSAGE_PROCESSING:
-                    if(m->callback != NULL){
-                        m->callback(m); // execute callback
+                    i2c_current_m->status = I2C_MESSAGE_HANDLED;
+                    
+                    if(i2c_current_m->callback != NULL){
+                        i2c_current_m->callback(i2c_current_m); // execute callback
                     }
-                    m->status = I2C_MESSAGE_HANDLED;
-
+                   
                     //UART_DEBUG_PRINT("I2C callback.");
                 case I2C_MESSAGE_HANDLED:
-                    // check if transfer went OK or max attempts reached
-                    if ((m->error == I2C_NO_ERROR) || (m->n_attempts <= 0)) {
+                    T2CONbits.TON = 0; // disable timer (everything OK!)
 
-                        //UART_DEBUG_PRINT("I2C message handled.");
-                        T2CONbits.TON = 0; // disable timer (everything OK!)
-
-                        i2c_queue_idx = (i2c_queue_idx + 1) % I2C_MESSAGE_BUFFER_LENGTH;
-                        m = NULL;
-                        n_i2c_queued_messages--;
-
-                       // if (m->callback == i2c_free_callback) {
-                            // TODO when upgraded to new message structure
-                            //free(m->read_data);
-                            //free(m->write_data);
-                        //    free(m);
-                        //}
-                    } else {
-
-
-                        //UART_DEBUG_PRINT("I2C ERROR, restarting.");
-                        m->n_attempts--;
-                        m->status = I2C_MESSAGE_TRANSFERRING;
-                        m->error = I2C_NO_ERROR;
-
-                        // reset the transfer status (just in case)
-                        i2c_transfer_status = 0;
-                    }
+                    i2c_queue_idx = (i2c_queue_idx + 1) % I2C_MESSAGE_BUFFER_LENGTH;
+                    i2c_current_m = NULL;
+                    n_i2c_queued_messages--;
 
                     break;
                 case I2C_MESSAGE_QUEUED:
-                    m->status = I2C_MESSAGE_TRANSFERRING;
+                    i2c_current_m->status = I2C_MESSAGE_TRANSFERRING;
                     TMR2 = 0; // clear timer register
                     // start timer: transfer must finish within approx. 25ms
-                    T2CONbits.TON = 1;
+                    T2CONbits.TON = 0;
 
                     //UART_DEBUG_PRINT("I2C message queued.");
 
@@ -225,22 +198,22 @@ void i2c_process_queue(void) {
 
                     //UART_DEBUG_PRINT("I2C message transferring.");
 
-                    m->controller(m);
+                    i2c_current_m->controller(i2c_current_m);
                     break;
                 case I2C_MESSAGE_CANCELED:
-                    if (m->i2c_bus == I2C1_BUS) {
+                    if (i2c_current_m->i2c_bus == I2C1_BUS) {
                         I2C1CONbits.PEN = 1;
                     } else {
                         I2C2CONbits.PEN = 1;
                     }
 
-                    if (m->cancelled_callback != NULL) {
-                        m->cancelled_callback(m);
+                    if (i2c_current_m->cancelled_callback != NULL) {
+                        i2c_current_m->cancelled_callback(i2c_current_m);
                     }
 
                     // move to next message
                     i2c_queue_idx = (i2c_queue_idx + 1) % I2C_MESSAGE_BUFFER_LENGTH;
-                    m = NULL;
+                    i2c_current_m = NULL;
                     n_i2c_queued_messages--;
 
                     break;
@@ -248,14 +221,14 @@ void i2c_process_queue(void) {
                     T2CONbits.TON = 0; // disable timer (everything OK!)
 
                     i2c_queue_idx = (i2c_queue_idx + 1) % I2C_MESSAGE_BUFFER_LENGTH;
-                    m = NULL;
+                    i2c_current_m = NULL;
                     n_i2c_queued_messages--;
-                    m->status = I2C_MESSAGE_CANCELED;
+                    i2c_current_m->status = I2C_MESSAGE_CANCELED;
             }
         } else {
             if (i2c_queue_idx != i2c_queue_valid) 
             {
-                m = i2c_message_queue[i2c_queue_idx];
+                i2c_current_m = i2c_message_queue[i2c_queue_idx];
 
                 //UART_DEBUG_PRINT("Fetched message from queue: %x on bus %x.", m->address, m->i2c_bus);
 
@@ -320,7 +293,7 @@ void __attribute__((interrupt, no_auto_psv)) _MI2C1Interrupt(void) {
     
     _MI2C1IF = 0;
     
-    i2c_process_queue();
+    //i2c_process_queue();
 }
 
 void __attribute__((interrupt, no_auto_psv)) _MI2C2Interrupt(void) {
@@ -328,25 +301,27 @@ void __attribute__((interrupt, no_auto_psv)) _MI2C2Interrupt(void) {
     
     _MI2C2IF = 0;
     
-    i2c_process_queue();
+    //i2c_process_queue();
 }
 
 void __attribute__((no_auto_psv)) __T2Interrupt(void) {
-    UART_DEBUG_PRINT("I2C error, cancelling message (%02x) on bus %x.", m->address, m->i2c_bus);
+    //UART_DEBUG_PRINT("I2C error, cancelling message (%02x) on bus %x.", m->address, m->i2c_bus);
 
-    if ((I2C1CONbits.I2CEN == 1) && (m->i2c_bus == I2C1_BUS)) {
+    if ((I2C1CONbits.I2CEN == 1) && (i2c_current_m->i2c_bus == I2C1_BUS)) {
         I2C1CONbits.PEN = 1;
-        UART_DEBUG_PRINT("Sending stop on bus 0.");
+        //UART_DEBUG_PRINT("Sending stop on bus 0.");
     }
 
-    if ((I2C2CONbits.I2CEN == 1) && (m->i2c_bus == I2C2_BUS)) {
+    if ((I2C2CONbits.I2CEN == 1) && (i2c_current_m->i2c_bus == I2C2_BUS)) {
         I2C2CONbits.PEN = 1;
-        UART_DEBUG_PRINT("Sending stop on bus 1.");
+        //UART_DEBUG_PRINT("Sending stop on bus 1.");
     }
     transfer_done = 1;
 
-    m->status = I2C_MESSAGE_CANCELED;
-    m->n_attempts = 0;
+    if(i2c_current_m != NULL)
+    {
+        i2c_current_m->status = I2C_MESSAGE_CANCELED;
+    }
 
     // disable timer
     T2CONbits.TON = 0;

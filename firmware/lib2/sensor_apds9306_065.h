@@ -19,10 +19,10 @@ extern "C"
     /// @brief APDS9306 065 Gloxinia register addresses for external interface.
     typedef enum
     {
-        sensor_apds9306_065_gloxinia_register_general = 0x00,
-        sensor_apds9306_065_gloxinia_register_config = 0x01,
-        sensor_apds9306_065_gloxinia_register_als_th_high = 0x02,
-        sensor_apds9306_065_gloxinia_register_als_th_low = 0x03,
+        sensor_apds9306_065_register_general = 0x00,
+        sensor_apds9306_065_register_config = 0x01,
+        sensor_apds9306_065_register_als_th_high = 0x02,
+        sensor_apds9306_065_register_als_th_low = 0x03,
     } sensor_apds9306_065_gloxinia_register_t;
 
     /// @brief APDS9306 065 (raw) register addresses.

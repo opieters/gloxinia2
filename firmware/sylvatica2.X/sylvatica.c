@@ -378,6 +378,8 @@ void sylvatica_init(void)
     //sensor_set_status( (0<<4) | 1, SENSOR_STATUS_ACTIVE);
     //sensor_adc12_activate(sensor_config);
     
+    sensor_start();
+    
 }
 
 void sylvatica_send_ready_message(void *data)

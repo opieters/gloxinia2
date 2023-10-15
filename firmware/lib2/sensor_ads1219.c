@@ -1,17 +1,23 @@
 #include <sensor_ads1219.h>
 #include <sensor.h>
 #include <address.h>
+#ifdef __DICIO__
+#include <../dicio.X/dicio.h>
+#endif
+#ifdef __SYLVATICA__
+#include <../sylvatica.X/sylvatica.h>
+#endif 
 
-void sensor_ads1219_config_cb(i2c_message_t* m);
-void sensor_ads1219_check_a_cb(i2c_message_t* m);
-void sensor_ads1219_check_b_cb(i2c_message_t* m);
 void sensor_ads1219_result_cb(i2c_message_t* m);
+void sensor_ads1219_start_cb(i2c_message_t* m);
+void sensor_ads1219_interrupt_cb(void* data);
 sensor_ads1219_input_mux_configuration_t sensor_ads1219_channel_to_mux(uint8_t channel);
 
 
 sensor_status_t sensor_ads1219_config(struct sensor_gconfig_s *gconfig, const uint8_t *buffer, const uint8_t length)
 {
     sensor_ads1219_config_t* config = &gconfig->sensor_config.ads1219;
+    task_t interrupt_task;
     
     if(length < 1){
         return SENSOR_STATUS_ERROR;
@@ -29,18 +35,29 @@ sensor_status_t sensor_ads1219_config(struct sensor_gconfig_s *gconfig, const ui
             
             schedule_init(&gconfig->measure, gconfig->measure.task, (((uint16_t)buffer[1]) << 8) | buffer[2]);
             
-            sensor_ads1219_init(gconfig);
+            task_init(&interrupt_task, sensor_ads1219_interrupt_cb, (void*) gconfig);
+            
+#ifdef __DICIO__
+            dicio_configure_interrupt_routine(gconfig->interface, interrupt_task);
+#elif defined(__SYLVATICA__)
+            sylvatica_configure_interrupt_routine(gconfig->interface, interrupt_task);
+#else
+#error "Board not supported for this sensor."
+#endif
             
             break;
         case sensor_ads1219_gloxinia_register_config:
             if(length != 7) { return SENSOR_STATUS_ERROR; }
             
             config->address = buffer[1];
+            config->i2c_bus = sensor_get_i2c_bus(gconfig->interface->interface_id);
             config->enabled_channels = buffer[2];
             config->gain = buffer[3];
             config->fs = buffer[4];
             config->conversion = buffer[5];
             config->vref = buffer[6];
+            
+            sensor_ads1219_init(gconfig);
             
             break;
         default:
@@ -86,33 +103,89 @@ void sensor_ads1219_get_config(struct sensor_gconfig_s *gconfig, uint8_t reg, ui
     }
 }
 
+
 void sensor_ads1219_init(struct sensor_gconfig_s *gconfig)
 {
     sensor_ads1219_config_t* config = &gconfig->sensor_config.ads1219;
-    
-    i2c_message_t m;
-    uint8_t data[1] = {sensor_ads1219_command_reset};
+   
+    config->m_reset_data[0] = sensor_ads1219_command_reset;
     
     // send reset
-    i2c_init_message(&m,
+    i2c_init_message(&config->m_reset,
             I2C_WRITE_ADDRESS(config->address),
             config->i2c_bus,
-            data,
-            ARRAY_LENGTH(data),
+            config->m_reset_data,
+            ARRAY_LENGTH(config->m_reset_data),
             I2C_NO_DATA,
             0,
             i2c_get_write_controller(config->i2c_bus),
-            3,
-            I2C_NO_CALLBACK,
-            I2C_NO_DATA,
+            sensor_ads1219_reset_cb,
+            gconfig,
             0);
 
-    i2c_queue_message(&m);
+    i2c_queue_message(&config->m_reset);
+}
+
+void sensor_ads1219_reset_cb(i2c_message_t* m)
+{
+    sensor_gconfig_t* gconfig = (sensor_gconfig_t*) m->callback_data;
+    
+    //UART_DEBUG_PRINT("ADS1219 RCB");
+    
+    if(m->error != I2C_NO_ERROR){
+        //UART_DEBUG_PRINT("ADS1219 ERROR");
+        
+        gconfig->status = SENSOR_STATUS_ERROR;
+        
+        sensor_i2c_error_handle(gconfig, m, S_ADS1219_ERROR_RESET_CB);
+    }
 }
 
 void sensor_ads1219_activate(struct sensor_gconfig_s *gconfig)
 {
-    //sensor_ads1219_config_t* config = &gconfig->sensor_config.ads1219;
+    sensor_ads1219_config_t* config = &gconfig->sensor_config.ads1219;
+    
+    config->m_config_data[0] = sensor_ads1219_command_wreg;
+
+    i2c_init_message(&config->m_config,
+            I2C_WRITE_ADDRESS(config->address),
+            config->i2c_bus,
+            config->m_config_data,
+            ARRAY_LENGTH(config->m_config_data),
+            I2C_NO_DATA,
+            0,
+            i2c_get_write_controller(config->i2c_bus),
+            NULL,
+            I2C_NO_DATA,
+            0);
+    
+    config->m_start_data[0] = sensor_ads1219_command_start_sync;
+
+    i2c_init_message(&config->m_start,
+            I2C_WRITE_ADDRESS(config->address),
+            config->i2c_bus,
+            config->m_start_data,
+            ARRAY_LENGTH(config->m_start_data),
+            I2C_NO_DATA,
+            0,
+            i2c_get_write_controller(config->i2c_bus),
+            sensor_ads1219_start_cb,
+            gconfig,
+            0);
+    
+    config->m_result_write[0] = sensor_ads1219_command_rdata;
+
+    i2c_init_message(&config->m_result,
+            I2C_WRITE_ADDRESS(config->address),
+            config->i2c_bus,
+            config->m_result_write,
+            ARRAY_LENGTH(config->m_result_write),
+            config->m_result_read,
+            ARRAY_LENGTH(config->m_result_read),
+            i2c_get_write_read_controller(config->i2c_bus),
+            sensor_ads1219_result_cb,
+            gconfig,
+            0);
     
     UART_DEBUG_PRINT("Activating sensor ADS1219");
     
@@ -122,217 +195,65 @@ void sensor_ads1219_activate(struct sensor_gconfig_s *gconfig)
 void sensor_ads1219_deactivate(struct sensor_gconfig_s *gconfig)
 {
     sensor_ads1219_config_t* config = &gconfig->sensor_config.ads1219;
-    
-    i2c_message_t m;
-    uint8_t data[1] = {sensor_ads1219_command_powerdown};
+   
+    config->m_reset_data[0] = sensor_ads1219_command_powerdown;
     
     // send reset
-    i2c_init_message(&m,
+    i2c_init_message(&config->m_reset,
             I2C_WRITE_ADDRESS(config->address),
             config->i2c_bus,
-            data,
-            ARRAY_LENGTH(data),
+            config->m_reset_data,
+            ARRAY_LENGTH(config->m_reset_data),
             I2C_NO_DATA,
             0,
             i2c_get_write_controller(config->i2c_bus),
-            3,
             I2C_NO_CALLBACK,
             I2C_NO_DATA,
             0);
 
-    i2c_queue_message(&m);
+    i2c_queue_message(&config->m_reset);
 }
 
 void sensor_ads1219_measure(void *data)
 {
+    
     sensor_gconfig_t* gconfig = (sensor_gconfig_t*) data;
     sensor_ads1219_config_t* config = &gconfig->sensor_config.ads1219;
     
     config->selected_channel = 1;
     
-    do {
+    while (((config->selected_channel & config->enabled_channels) == 0) && (config->selected_channel != 0))
+    {
         config->selected_channel <<= 1;
-    } while (((config->selected_channel & config->enabled_channels) == 0) && (config->selected_channel != 0));
+    }
     
     if(config->selected_channel == 0)
     {
-        gconfig->log_data[0] = 0;
-        gconfig->log_data[1] = 0;
-        gconfig->log_data[2] = S_ADS1219_ERROR_NO_CHANNEL_FOUND;
-        gconfig->log_data[2] = 0;
-
-        sensor_error_log(gconfig, gconfig->log_data, 4);
-        
         gconfig->status = SENSOR_STATUS_ERROR;
         sensor_error_handle(gconfig);
         return;
     }
     
-    config->m_config_data[0] = sensor_ads1219_command_wreg | sensor_ads1219_register_0;
-    config->m_config_data[1] = SENSOR_ADS1219_GET_CONFIG_REGISTER(sensor_ads1219_channel_to_mux(config->selected_channel), config->gain, config->fs, config->conversion, config->vref);
-    
-    i2c_init_message(&config->m_config,
-            I2C_WRITE_ADDRESS(config->address),
-            config->i2c_bus,
-            config->m_config_data,
-            ARRAY_LENGTH(config->m_config_data),
-            I2C_NO_DATA,
-            0,
-            i2c_get_write_controller(config->i2c_bus),
-            3,
-            sensor_ads1219_config_cb,
-            data,
-            0);
+    config->m_config_data[1] = SENSOR_ADS1219_GET_CONFIG_REGISTER(
+            sensor_ads1219_channel_to_mux(config->selected_channel), 
+            config->gain, config->fs, config->conversion, config->vref);
 
+    i2c_reset_message(&config->m_config);
     i2c_queue_message(&config->m_config);
+    
+    i2c_reset_message(&config->m_start);
+    i2c_queue_message(&config->m_start);
 }
 
-void sensor_ads1219_config_cb(i2c_message_t* m)
+void sensor_ads1219_start_cb(i2c_message_t* m)
 {
     sensor_gconfig_t* gconfig = (sensor_gconfig_t*) m->callback_data;
-    sensor_ads1219_config_t* config = &gconfig->sensor_config.ads1219;
+    //sensor_ads1219_config_t* config = &gconfig->sensor_config.ads1219;
     
     if(m->error != I2C_NO_ERROR)
-    {
-        gconfig->log_data[0] = m->status;
-        gconfig->log_data[1] = m->error;
-        gconfig->log_data[2] = S_ADS1219_ERROR_CONFIG;
-        gconfig->log_data[3] = config->selected_channel;
-
-        sensor_error_log(gconfig, gconfig->log_data, 4);
-        
+    {        
         gconfig->status = SENSOR_STATUS_ERROR;
-        sensor_error_handle(gconfig);
-    } else {
-        config->m_status_data_write[0] = sensor_ads1219_command_rreg | sensor_ads1219_register_1;
-
-        i2c_init_message(&config->m_status_check_a,
-                I2C_WRITE_ADDRESS(config->address),
-                config->i2c_bus,
-                config->m_status_data_write,
-                ARRAY_LENGTH(config->m_status_data_write),
-                config->m_status_data_read,
-                ARRAY_LENGTH(config->m_status_data_read),
-                i2c_get_write_read_controller(config->i2c_bus),
-                1,
-                sensor_ads1219_check_a_cb,
-                m->callback_data,
-                0);
-
-        i2c_queue_message(&config->m_status_check_a);
-    }
-}
-
-void sensor_ads1219_check_a_cb(i2c_message_t* m)
-{
-    sensor_gconfig_t* gconfig = (sensor_gconfig_t*) m->callback_data;
-    sensor_ads1219_config_t* config = &gconfig->sensor_config.ads1219;
-    
-    if(m->error != I2C_NO_ERROR)
-    {
-        gconfig->log_data[0] = m->status;
-        gconfig->log_data[1] = m->error;
-        gconfig->log_data[2] = S_ADS1219_ERROR_STATUS_A;
-        gconfig->log_data[3] = config->selected_channel;
-
-        sensor_error_log(gconfig, gconfig->log_data, 4);
-        
-        gconfig->status = SENSOR_STATUS_ERROR;
-        sensor_error_handle(gconfig);
-    } else {
-        if((config->m_status_data_read[0] & 0b10000000) != 0)
-        {
-            i2c_init_message(&config->m_status_check_b,
-                    I2C_WRITE_ADDRESS(config->address),
-                    config->i2c_bus,
-                    config->m_status_data_write,
-                    ARRAY_LENGTH(config->m_status_data_write),
-                    config->m_status_data_read,
-                    ARRAY_LENGTH(config->m_status_data_read),
-                    i2c_get_write_read_controller(config->i2c_bus),
-                    1,
-                    sensor_ads1219_check_a_cb,
-                    m->callback_data,
-                    0);
-
-            i2c_queue_message(&config->m_status_check_b);
-        }
-        else 
-        {
-            config->m_result_write[0] = sensor_ads1219_command_rdata;
-
-            i2c_init_message(&config->m_result,
-                    I2C_WRITE_ADDRESS(config->address),
-                    config->i2c_bus,
-                    config->m_result_write,
-                    ARRAY_LENGTH(config->m_result_write),
-                    config->m_result_read,
-                    ARRAY_LENGTH(config->m_result_read),
-                    i2c_get_write_read_controller(config->i2c_bus),
-                    1,
-                    sensor_ads1219_result_cb,
-                    m->callback_data,
-                    0);
-
-            i2c_queue_message(&config->m_result);
-        }
-    }
-}
-
-void sensor_ads1219_check_b_cb(i2c_message_t* m)
-{
-    sensor_gconfig_t* gconfig = (sensor_gconfig_t*) m->callback_data;
-    sensor_ads1219_config_t* config = &gconfig->sensor_config.ads1219;
-    
-    
-    if(m->error != I2C_NO_ERROR)
-    {
-        gconfig->log_data[0] = m->status;
-        gconfig->log_data[1] = m->error;
-        gconfig->log_data[2] = S_ADS1219_ERROR_STATUS_B;
-        gconfig->log_data[3] = config->selected_channel;
-
-        sensor_error_log(gconfig, gconfig->log_data, 4);
-        
-        gconfig->status = SENSOR_STATUS_ERROR;
-        sensor_error_handle(gconfig);
-    } else {
-        if((config->m_status_data_read[0] & 0b10000000) != 0)
-        {
-            i2c_init_message(&config->m_status_check_a,
-                    I2C_WRITE_ADDRESS(config->address),
-                    config->i2c_bus,
-                    config->m_status_data_write,
-                    ARRAY_LENGTH(config->m_status_data_write),
-                    config->m_status_data_read,
-                    ARRAY_LENGTH(config->m_status_data_read),
-                    i2c_get_write_read_controller(config->i2c_bus),
-                    1,
-                    sensor_ads1219_check_a_cb,
-                    m->callback_data,
-                    0);
-
-            i2c_queue_message(&config->m_status_check_a);
-        }
-        else 
-        {
-            config->m_result_write[0] = sensor_ads1219_command_rdata;
-
-            i2c_init_message(&config->m_result,
-                    I2C_WRITE_ADDRESS(config->address),
-                    config->i2c_bus,
-                    config->m_result_write,
-                    ARRAY_LENGTH(config->m_result_write),
-                    config->m_result_read,
-                    ARRAY_LENGTH(config->m_result_read),
-                    i2c_get_write_read_controller(config->i2c_bus),
-                    1,
-                    sensor_ads1219_result_cb,
-                    m->callback_data,
-                    0);
-
-            i2c_queue_message(&config->m_result);
-        }
+        sensor_i2c_error_handle(gconfig, m, S_ADS1219_ERROR_START_CB);
     }
 }
 
@@ -343,16 +264,9 @@ void sensor_ads1219_result_cb(i2c_message_t* m)
     sensor_ads1219_config_t* config = &gconfig->sensor_config.ads1219;
     
     if(m->error != I2C_NO_ERROR)
-    {
-        gconfig->log_data[0] = m->status;
-        gconfig->log_data[1] = m->error;
-        gconfig->log_data[2] = S_ADS1219_ERROR_READOUT;
-        gconfig->log_data[3] = config->selected_channel;
-
-        sensor_error_log(gconfig, gconfig->log_data, 4);
-        
+    {        
         gconfig->status = SENSOR_STATUS_ERROR;
-        sensor_error_handle(gconfig);
+        sensor_i2c_error_handle(gconfig, m, S_ADS1219_ERROR_RESULT_CB);
     } else {
         config->m_data[0] = config->selected_channel;
         config->m_data[1] = m->read_data[0];
@@ -376,23 +290,13 @@ void sensor_ads1219_result_cb(i2c_message_t* m)
     
     if(config->selected_channel != 0)
     {
-        config->m_config_data[0] = sensor_ads1219_command_wreg | sensor_ads1219_register_0;
         config->m_config_data[1] = SENSOR_ADS1219_GET_CONFIG_REGISTER(sensor_ads1219_channel_to_mux(config->selected_channel), config->gain, config->fs, config->conversion, config->vref);
 
-        i2c_init_message(&config->m_config,
-                I2C_WRITE_ADDRESS(config->address),
-                config->i2c_bus,
-                config->m_config_data,
-                ARRAY_LENGTH(config->m_config_data),
-                I2C_NO_DATA,
-                0,
-                i2c_get_write_controller(config->i2c_bus),
-                3,
-                sensor_ads1219_config_cb,
-                gconfig,
-                0);
-
+        i2c_reset_message(&config->m_config);
         i2c_queue_message(&config->m_config);
+        
+        i2c_reset_message(&config->m_start);
+        i2c_queue_message(&config->m_start);
     }
 }
 
@@ -448,4 +352,13 @@ sensor_ads1219_input_mux_configuration_t sensor_ads1219_channel_to_mux(uint8_t c
             break;
     }
     return sensor_ads1219_input_mux_avdd_2;
+}
+
+void sensor_ads1219_interrupt_cb(void* data)
+{
+    sensor_gconfig_t* gconfig = (sensor_gconfig_t*) data;
+    sensor_ads1219_config_t* config = &gconfig->sensor_config.ads1219;
+    
+    i2c_reset_message(&config->m_result);
+    i2c_queue_message(&config->m_result);
 }

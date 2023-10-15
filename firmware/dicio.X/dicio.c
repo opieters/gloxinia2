@@ -11,6 +11,7 @@
 #include <rtcc.h>
 #include "dicio_adc12_filters.h"
 #include "spi1.h"
+#include <sensor_sht35.h>
 #include <stdbool.h>
 
 uint8_t n_nodes = 0;
@@ -40,6 +41,8 @@ sensor_interface_t sensor_interface2;
 sensor_interface_t sensor_interface3;
 sensor_interface_t sensor_interface4;
 
+task_t pin_interrupt_tasks[N_SENSOR_INTERFACES];
+
 sensor_interface_t* sensor_interfaces[N_SENSOR_INTERFACES] = 
 {
     &sensor_interface1,
@@ -55,6 +58,10 @@ extern uint32_t sdcard_data_address;
 
 // internal functions
 void dicio_uart_rx_overflow(void* data);
+
+// INFO: necessary to define this here because we already initialise some
+// sensors
+extern volatile uint16_t n_i2c_queued_messages;
 
 
 void dicio_init_clock(void)
@@ -189,6 +196,113 @@ void dicio_load_clock_config(void)
     }
 }
 
+void dicio_init_interfaces(void)
+{
+    pin_t pin1 = PIN_INIT(E, 2);
+    pin_t pin2 = PIN_INIT(B, 4);
+    sensor_interface1.int_pin = pin1;
+    sensor_interface2.int_pin = pin1;
+    sensor_interface3.int_pin = pin2;
+    sensor_interface4.int_pin = pin2;
+    
+    dicio_sensor_interface_supply(0, INTERFACE_SUPPLY_DIGITAL);
+    
+    for(int i = 0; i < N_SENSOR_INTERFACES; i++)
+    {
+        pin_interrupt_tasks[i].cb = NULL;
+    }
+}
+
+void dicio_sensor_interface_supply(uint8_t interface_id, interface_supply_t vconfig)
+{
+    // apply new voltage supply
+    switch(vconfig)
+    {
+        case INTERFACE_SUPPY_ANALOGUE:
+            _RB5 = 0;
+            __delay_us(10);
+            _RB8 = 1;
+            break;
+        case INTERFACE_SUPPLY_DIGITAL:
+            _RB8 = 0;
+            __delay_us(10);
+            _RB5 = 1;
+            break;
+        default:
+            return;
+    }
+    
+    // update status and notify host
+    for(int i = 0; i < N_SENSOR_INTERFACES; i++){
+        sensor_interface_set_supply(i, vconfig);
+    };
+}
+
+void dicio_init_sensors(void){
+    dicio_sensor_interface_supply(0, INTERFACE_SUPPLY_DIGITAL);
+    
+    __delay_ms(10);
+    
+    // ADS1219
+    uint8_t buffer0_ads1219[4] = {SENSOR_TYPE_ADS1219, sensor_ads1219_gloxinia_register_general, 0, 9};
+    sensor_set_config_from_buffer(1, 0, buffer0_ads1219, ARRAY_LENGTH(buffer0_ads1219));
+    sensor_set_config_from_buffer(2, 0, buffer0_ads1219, ARRAY_LENGTH(buffer0_ads1219));
+    sensor_set_config_from_buffer(3, 0, buffer0_ads1219, ARRAY_LENGTH(buffer0_ads1219));
+    
+    // OW pins are used as data ready input signal
+    // TODO: remove hard-coded values and upgrade to software-set system
+    _CNPUE7 = 1;
+    _CNPUB3 = 1;
+    _CNPUB1 = 1;
+    
+    uint8_t buffer1_ads1219[8] = {
+        SENSOR_TYPE_ADS1219, 
+        sensor_ads1219_gloxinia_register_config, 
+        0x46, 
+        0xff, 
+        sensor_ads1219_gain_1, 
+        sensor_ads1219_90_sps, 
+        sensor_ads1219_conversion_mode_single_shot, sensor_ads1219_vref_external};
+    buffer1_ads1219[2] = 0x46;
+    sensor_set_config_from_buffer(1, 0, buffer1_ads1219, ARRAY_LENGTH(buffer1_ads1219));
+    buffer1_ads1219[2] = 0x42;
+    sensor_set_config_from_buffer(2, 0, buffer1_ads1219, ARRAY_LENGTH(buffer1_ads1219));
+    buffer1_ads1219[2] = 0x46;
+    sensor_set_config_from_buffer(3, 0, buffer1_ads1219, ARRAY_LENGTH(buffer1_ads1219));
+    
+    // SHT35
+    uint8_t buffer0_sht35[4] = {SENSOR_TYPE_SHT35, sensor_sht35_gloxinia_register_general, 0, 9};
+    sensor_set_config_from_buffer(0, 0, buffer0_sht35, ARRAY_LENGTH(buffer0_sht35));
+    
+    uint8_t buffer1_sht35[7] = {
+        SENSOR_TYPE_SHT35, 
+        sensor_sht35_gloxinia_register_config, 
+        I2C_ADDRESS_0_SENSOR_SHT35, 
+        S_SHT35_HIGH_REPEATABILIBTY, S_SHT35_DISABLE_CLOCK_STRETCHING, 
+        S_SHT35_10_MPS, S_SHT35_SINGLE_SHOT};
+    sensor_set_config_from_buffer(0, 0, buffer1_sht35, ARRAY_LENGTH(buffer1_sht35));
+    
+    // APDS9306
+    uint8_t buffer0_apds9306[4] = {SENSOR_TYPE_APDS9306_065, sensor_apds9306_065_register_general, 0, 9};
+    sensor_set_config_from_buffer(0, 1, buffer0_apds9306, ARRAY_LENGTH(buffer0_apds9306));
+    
+    uint8_t buffer1_apds9306[6] = {
+        SENSOR_TYPE_APDS9306_065,
+        sensor_apds9306_065_register_config,
+        I2C_ADDRESS_SENSOR_APDS9306_065,
+        SENSOR_APDS9306_065_ALS_MEAS_RATE_500MS,
+        SENSOR_APDS9306_065_ALS_RESOLUTION_20BIT,
+        SENSOR_APDS9306_065_ALS_GAIN_1
+    };
+    sensor_set_config_from_buffer(0, 1, buffer1_apds9306, ARRAY_LENGTH(buffer1_apds9306));
+    
+    // make sure all messages are processed correctly
+    while(n_i2c_queued_messages > 0)
+        i2c_process_queue();
+    
+}
+
+
 
 void dicio_init(void)
 {
@@ -197,6 +311,7 @@ void dicio_init(void)
     dicio_init_clock();
     
     dicio_init_pins();
+    dicio_init_interfaces();
     
     sensors_init();
     dicio_init_node_configurations();
@@ -303,25 +418,14 @@ void dicio_init(void)
     schedule_init(&dicio_uart_recovery, dicio_uart_rx_overflow_check, 10);
     //schedule_specific_event(&dicio_uart_recovery, ID_UART_OVERFLOW_SCHEDULE);
     
-    // try to run ADC12
-    uint8_t buffer1[4] = {SENSOR_TYPE_ADC12, sensor_adc12_gloxinia_register_general, 0, 9};
-    //sensor_set_config_from_buffer(3, 1, buffer1, 4);
+    // INFO: we hard-coded sensor definitions and measurement start to make
+    // sure that the system operates correctly with minimal monitoring 
+    // requirements. The sensors can still be removed in the GUI and in the 
+    // future, this should be removed when the prototype is more production-
+    // ready.
+    dicio_init_sensors();
     
-    uint8_t buffer2[4] = {SENSOR_TYPE_ADC12, sensor_adc12_gloxinia_register_config, true};
-    //sensor_set_config_from_buffer(3, 1, buffer2, 3);
-    
-    // ADS1219
-    uint8_t buffer3[4] = {SENSOR_TYPE_ADS1219, sensor_ads1219_gloxinia_register_general, 0, 9};
-    sensor_set_config_from_buffer(0, 0, buffer3, 4);
-    
-    uint8_t buffer4[8] = {SENSOR_TYPE_ADS1219, sensor_ads1219_gloxinia_register_config, 0x46, 0xff, sensor_ads1219_gain_1, sensor_ads1219_90_sps, sensor_ads1219_conversion_mode_single_shot, sensor_ads1219_vref_external};
-    sensor_set_config_from_buffer(0, 0, buffer4, 8);
-    
-    for(int i = 0; i < 4; i ++)
-    {
-        UART_DEBUG_PRINT("All done.");
-    }
-    
+    sensor_start();
 }
 
 void dicio_uart_rx_overflow(void* data)
@@ -571,7 +675,9 @@ void dicio_init_pins(void)
     _ODCD10 = 1; // configure I2C pins as open drain outputs
 
     _ANSB4 = 0;  // configure nINT1 as digital pin
-    _TRISB4 = 1; // configure nINT1 as digital input pin
+    _TRISB4 = 1; // configure nINT1 as digital output pin
+    _RB4 = 0;
+    //_CNPUB4 = 1;
 
     /*
      * I2C2 pins
@@ -589,6 +695,8 @@ void dicio_init_pins(void)
 
     _ANSE2 = 0;  // configure nINT2 as digital pin
     _TRISE2 = 1; // configure nINT2 as digital input pin
+    //_RE2 = 1;
+    //_CNPUE2 = 1;
 
     /*
      * communication UART
@@ -649,14 +757,12 @@ void dicio_init_pins(void)
      */
     _ANSE6 = 0;
     _TRISE6 = 1;
-    _ANSB3 = 0;
-    _TRISB3 = 1;
     _ANSE7 = 0;
     _TRISE7 = 1;
+    _ANSB3 = 0;
+    _TRISB3 = 1;
     _ANSB1 = 0;
     _TRISB1 = 1;
-    _ANSB0 = 0;
-    _TRISB0 = 1;
 
     /*
      * SPI configuration
@@ -751,3 +857,50 @@ void dicio_send_ready_message(void *data)
     message_send(&m);
 }
 
+bool dicio_configure_interrupt_routine(sensor_interface_t* interface, task_t task)
+{
+    switch(interface->interface_id)
+    {
+        case 0:
+            CNENEbits.CNIEE6  = 1;
+            break;
+        case 1:
+            CNENEbits.CNIEE7  = 1;
+            break;
+        case 2:
+            CNENBbits.CNIEB3  = 1;
+            break;
+        case 3:
+            CNENBbits.CNIEB1  = 1;
+            break;
+        default:
+            return false;
+    }
+    
+    pin_interrupt_tasks[interface->interface_id] = task;
+    
+    _CNIE = 1;
+    
+    return true;
+}
+
+void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
+    if((_RE6 == 0) && (pin_interrupt_tasks[0].cb != NULL))
+    {
+        push_queued_task(&pin_interrupt_tasks[0]);
+    }
+    if((_RE7 == 0) && (pin_interrupt_tasks[1].cb != NULL))
+    {
+        push_queued_task(&pin_interrupt_tasks[1]);
+    }
+    if((_RB3 == 0) && (pin_interrupt_tasks[2].cb != NULL))
+    {
+        push_queued_task(&pin_interrupt_tasks[2]);
+    }
+    if((_RB1 == 0) && (pin_interrupt_tasks[3].cb != NULL))
+    {
+        push_queued_task(&pin_interrupt_tasks[3]);
+    }
+    
+    _CNIF = 0;
+}

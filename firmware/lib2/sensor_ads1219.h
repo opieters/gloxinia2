@@ -81,7 +81,15 @@ typedef enum
     S_ADS1219_ERROR_STATUS_B,
     S_ADS1219_ERROR_READOUT,
     S_ADS1219_ERROR_NO_CHANNEL_FOUND,
+    S_ADS1219_ERROR_CHECK_CB,
+    S_ADS1219_ERROR_RESULT_CB,
+    S_ADS1219_ERROR_STATUS_CB,
+    S_ADS1219_ERROR_CONFIG_CB,
+    S_ADS1219_ERROR_START_CB,
+    S_ADS1219_ERROR_RESET_CB
 } sensor_ads1219_error_t;
+
+
 
 /**
  * @brief ADS1219 sensor configuration
@@ -118,15 +126,17 @@ typedef struct {
     sensor_ads1219_vref_t vref;
     
     i2c_message_t m_config;
-    i2c_message_t m_status_check_a;
-    i2c_message_t m_status_check_b;
+    i2c_message_t m_start;
     i2c_message_t m_result;
+    i2c_message_t m_reset;
     
     uint8_t m_config_data[2];
-    uint8_t m_status_data_write[1];
-    uint8_t m_status_data_read[1];
+    uint8_t m_start_data[1];
     uint8_t m_result_write[1];
     uint8_t m_result_read[3];
+    uint8_t m_reset_data[1];
+    
+    pin_t dready_pin;
     
     uint8_t m_data[SENSOR_ADS1219_CAN_DATA_LENGTH];
 } sensor_ads1219_config_t;
@@ -205,6 +215,18 @@ extern "C" {
      * @param data: pointer to the initerface where this sensor is connected
      */
     void sensor_ads1219_measure(void *data);
+    
+    
+    /**
+     * @brief Callback for sensor reset sequence.
+     * 
+     * @details The reset sequence is used to reset the sensor and check if it 
+     * responds to I2C messages. This callback will update the status in case of 
+     * an error.
+     * 
+     * @param m I2C message
+     */
+    void sensor_ads1219_reset_cb(i2c_message_t* m);
 
 #ifdef	__cplusplus
 }

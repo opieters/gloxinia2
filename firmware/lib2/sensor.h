@@ -6,6 +6,7 @@
 #include <i2c.h>
 #include <sensor_common.h>
 #include <event_controller.h>
+#include <utilities.h>
 
 #include <sensor_adc12.h>
 #include <sensor_adc16.h>
@@ -64,6 +65,10 @@ typedef struct sensor_gconfig_s
     struct sensor_interface_s* interface;
 } sensor_gconfig_t;
 
+typedef enum {
+    INTERFACE_SUPPY_ANALOGUE,
+    INTERFACE_SUPPLY_DIGITAL,
+} interface_supply_t;
 
 /**
  * @brief Sensor interface structure
@@ -79,6 +84,8 @@ typedef struct sensor_gconfig_s
 typedef struct sensor_interface_s
 {
     uint8_t interface_id;
+    pin_t int_pin;
+    interface_supply_t analogue_supply;
 
     sensor_gconfig_t gsensor_config[SENSOR_INTERFACE_MAX_SENSORS];
 } sensor_interface_t;
@@ -197,6 +204,9 @@ extern "C"
      * @param length Length of buffer
      */
     void sensor_save_data(uint8_t address, uint8_t interface_id, uint8_t sensor_id, const uint8_t* buffer, size_t length);
+    
+    void sensor_interface_set_supply(uint8_t interface_id, interface_supply_t supply);
+    
 #endif
 
 #ifdef __cplusplus

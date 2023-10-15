@@ -31,6 +31,7 @@ typedef enum
     M_SENSOR_STOP = 0x15,
     M_SENSOR_CONFIG_END = 0x16, // ends burst of configuration data
     M_ACTUATOR_STATUS = 0x20,
+    M_INTERFACE_SUPPLY = 0x21,
     M_TX_ERROR = 0x30,
     M_DATA_CLEAR = 0x40,
     M_DATA_READ = 0x41,
@@ -141,6 +142,7 @@ extern "C"
     void cmd_dicio_load_configuration_from_sdcard(const message_t* m);
     void cmd_dicio_clear_configuration_on_sdcard(const message_t* m);
     void cmd_dicio_time(const message_t* m);
+    void cmd_interface_supply(const message_t* m);
 
 #ifdef __cplusplus
 }
