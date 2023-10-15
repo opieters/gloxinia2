@@ -1,4 +1,4 @@
-20953320305081667
+21003872670920027
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -87486,6 +87486,13 @@ custom_footprints
 9
 9
 custom_footprints
+AMPHENOL_124018612112A
+
+
+0
+30
+30
+custom_footprints
 APDS-9306-065
 
 
@@ -87591,6 +87598,13 @@ JLCPCB_ASSEMBLY_TOOL_HOLE
 0
 0
 custom_footprints
+LGA10_5x5mm_21-100481
+
+
+0
+10
+10
+custom_footprints
 L_6.5mmx4.5mm_Bourns
 
 
@@ -87611,6 +87625,13 @@ SJ-3524-SMT-TR
 0
 4
 4
+custom_footprints
+SMTM1225
+
+
+0
+3
+2
 custom_footprints
 SOIC-16_25.75x18.75mm_P2.5mm
 SOIC, 16 Pin (JEDEC MS-013AA, https://www.analog.com/media/en/package-pcb-resources/package/pkg_pdf/soic_wide-rw/rw_16.pdf), generated with kicad-footprint-generator ipc_gullwing_generator.py
@@ -87703,6 +87724,13 @@ WSOF5
 8
 5
 custom_footprints
+jumper_4_open
+
+
+0
+0
+0
+custom_footprints
 μMAX
 
 
@@ -87723,6 +87751,20 @@ custom_footprints
 0
 10
 10
+samtec
+SAMTEC-MMS-110-02-X-DV
+translated Allegro footprint
+
+0
+20
+20
+samtec
+SAMTEC_MMS-107-02-F-DV
+
+
+0
+14
+14
 samtec
 SAMTEC_TMMH-107-01-T-DV
 
