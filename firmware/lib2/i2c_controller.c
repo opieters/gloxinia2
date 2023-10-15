@@ -1,4 +1,5 @@
 #include <i2c.h>
+#include <libpic30.h>
 
 extern volatile uint8_t i2c_transfer_status;
 extern volatile uint8_t transfer_done;
@@ -76,8 +77,8 @@ void i2c1_write_read_controller(i2c_message_t* m) {
 
     switch (i2c_transfer_status) {
         case 0:
-            i2c_transfer_status = 1;
             n_transfers = 0;
+            i2c_transfer_status = 1;
         case 1:
             // i2c start condition
             transfer_done = 0;
