@@ -46,14 +46,14 @@ task_t* push_queued_task(const task_t* task) {
 
     if (n_queued_tasks < MAX_N_TASKS) {
 
-        index = task_index + n_queued_tasks;
+        index = (task_index + n_queued_tasks) % MAX_N_TASKS;;
 
         n_queued_tasks++;
 
         task_list[index] = *task;
         task_list[index].status = TASK_STATUS_QUEUED;
     } else {
-        _GIE = 1;
+        _GIE = gie_status;
 
         return NULL;
     }
@@ -132,6 +132,13 @@ uint32_t schedule_event(task_schedule_t* s) {
 uint32_t schedule_specific_event(task_schedule_t* s, uint32_t id) {
     bool unique_id = true;
     int i;
+    
+    if(id == 2)
+    {
+        Nop();
+        Nop();
+        Nop();
+    }
 
     // the default ID cannot be scheduled
     if (id == DEFAULT_ID) {
