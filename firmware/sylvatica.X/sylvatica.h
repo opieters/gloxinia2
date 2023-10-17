@@ -2,17 +2,20 @@
 #define	__SYLVATICA_H__
 
 #include <xc.h> 
-#include <adc.h>
-#include <pga.h>
+#include <dsp.h>
 #include <i2c.h>
-#include <filters_sylvatica.h>
 
 #define SYLVATICA_N_CHANNELS               8
 #define SYLVATICA_CHANNEL_BUFFER_SIZE      8
 #define SYLVATICA_I2C_BASE_ADDRESS         0b1000000
-#define SYLVATICA_ADC_BUFFER_LENGTH        200
+#define SYLVATICA_ADC16_BUFFER_LENGTH        200
 
-#define SYLVATICA_ADC_SAMPLE_FREQUENCY     80000
+#define SYLVATICA_DEC_FACT_F0 10
+#define SYLVATICA_DEC_FACT_F1 10
+#define SYLVATICA_DEC_FACT_F2 10
+#define SYLVATICA_DEC_FACT_F3 5
+
+#define SYLVATICA_ADC16_SAMPLE_FREQUENCY     80000
 #define SYLVATICA_COPY_BUFFER_SIZE         (10*SYLVATICA_DEC_FACT_F0)
 #define SYLVATICA_BLOCK1_INPUT_SIZE        (10*SYLVATICA_DEC_FACT_F1)
 #define SYLVATICA_BLOCK2_INPUT_SIZE        (SYLVATICA_DEC_FACT_F2)
@@ -46,6 +49,11 @@
 
 #define SYLVATICA_N_ADDRESS_SEL_PINS 8
 
+#define N_FIR_COEFFS0 100
+#define N_FIR_COEFFS1 100
+#define N_FIR_COEFFS2 100
+#define N_FIR_COEFFS3 192
+
 typedef enum {
     SYLVATICA_REG_STATUS     = 0,
     SYLVATICA_REG_ADC        = 1,
@@ -73,111 +81,27 @@ typedef enum {
     SYLVATICA_STATUS_RUNNING,        
 } sylvatica_status_t;
 
-typedef struct {
-    adc_config_t adc_config;
-    pga_config_t pga_config[SYLVATICA_N_CHANNELS];
-    sylvatica_channel_status_t channel_status[SYLVATICA_N_CHANNELS];
-    i2c_config_t i2c_config;
-    const pin_t address_selection[SYLVATICA_N_ADDRESS_SEL_PINS];
-    pin_t blinky_pin;
-    pin_t int_pin;
-} sylvatica_config_t;
-
 #ifdef	__cplusplus
 extern "C" {
 #endif
     
-    void init_sylvatica(void);
+    extern fractional fir_coeffs_0[100];
+    extern fractional fir_coeffs_1[100];
+    extern fractional fir_coeffs_2[100];
+    extern fractional fir_coeffs_3[192];
     
-    void loop_sylvatica(void);
+    void sylvatica_init(void);
+    void sylvatica_send_ready_message(void *data);
+    void sylvatica_init_pins(void);
+    void sylvatica_filters_init(void);
+    void sylvatic_adc16_callback(void);
     
-    void update_sylvatica_channel(uint8_t channel_n, sylvatica_channel_status_t status, sylvatica_config_t* config);
-
-    uint8_t i2c_get_address_sylvatica(sylvatica_config_t* config);
+    void process_filter_block0(void* data);
+    void process_filter_block1(void* data);
+    void process_filter_block2(void* data);
+    void process_filter_block3(void* data);
+    void sylatica_clock_init(void);
     
-    void init_pins_sylvatica(void);
-    
-    /*
-     * I2C communication protocol to read measurement data and configure the 
-     * sensor.
-     * 
-     * To write a certain register use the following procedure:
-     * | address + W | register | byte 1 | ... | byte n |
-     * 
-     * To read a certain register 2 procedures can be used.
-     * 1. | address + W | register | address + R | n bytes | byte 1 | ... | byte n |
-     * 2. | address + R | n bytes | byte 1 | ... | byte n | 
-     * 
-     * The following convention is always used: the last register that received 
-     * a write will be read.
-     * 
-     * @attention
-     * The write operation initiates a copy of this specific register to the
-     * read buffer after the write completed. Subsequent reads to the same
-     * register are not possible. A second read operation will result into all
-     * zero replies.
-     * 
-     * 
-     * The following registers are defined: 
-     *  - 0: status register
-     *  - 1: adc register
-     *  - 2: channel 0 config
-     *  - 3: channel 1 config
-     *  - 4: channel 2 config
-     *  - 5: channel 3 config
-     *  - 6: channel 4 config
-     *  - 7: channel 5 config
-     *  - 8: channel 6 config
-     *  - 9: channel 7 config
-     *  - 10: channel 0 data (read only)
-     *  - 11: channel 1 data (read only)
-     *  - 12: channel 2 data (read only)
-     *  - 13: channel 3 data (read only)
-     *  - 14: channel 4 data (read only)
-     *  - 15: channel 5 data (read only)
-     *  - 16: channel 6 data (read only)
-     *  - 17: channel 7 data (read only)
-     * 
-     * Register 0
-     * 
-     * | power down (low-power mode) | reset buffers | unimplemented |
-     * 
-     * Register 1
-     * 
-     * | adc on (starts measurement) | unimplemented |
-     * 
-     * If the ADC is runnig, then the channels cannot be reconfigured. The ADC
-     * must first be turned off to change the channel configuration.
-     * 
-     * Register 2 - 9
-     * 
-     * | power bit ch x | gain setting ch x |  unimplemented |
-     * 
-     * Each gain setting consists of 3 bits: to select a gain from 1 (0) to 
-     * 200 (7). Values: 1, 2, 5, 10, 20, 50, 100, 200
-     */
-    void i2c_mw_sr_cb_sylvatica(i2c_message_t* m);
-    void i2c_mr_sw_cb_sylvatica(i2c_message_t* m);
-    
-    void adc_rx_callback(void);
-
-    void process_filter_block0(void);
-    void process_filter_block1(void);
-    void process_filter_block2(void);
-    void process_filter_block3(void);
-
-    void print_values_uart();
-    
-    void init_uart_messages(void);
-    
-    void sylvatica_clear_buffers(void);
-    
-    void sylvatica_i2c_read_copy_channel_data();
-    void sylvatica_i2c_read_copy_raw_data();
-    
-    void sylvatica_i2c_channel_config(const uint8_t channel_n, uint8_t* data);
-    
-    void sylvatica_i2c_read_config(const sylvatica_reg_t reg);
     
 #ifdef	__cplusplus
 }
