@@ -86,13 +86,14 @@ sensor_interface_t* sensor_interfaces[N_SENSOR_INTERFACES] =
     &sensor_interface8,
 };
 
+task_t pin_interrupt_tasks[N_SENSOR_INTERFACES];
+
 
 const uint8_t n_sensor_interfaces = N_SENSOR_INTERFACES;
 
 
 void sensor_adc12_process_block0(void);
 void sensor_adc12_init_filters(void);
-
 
 void sylvatica_init_pins(void){
     // I2C 1
@@ -221,7 +222,7 @@ void sylvatica_init_pins(void){
     _RB15 = 1;
     _ANSE1 = 0; // EN_VDDA2
     _TRISE1 = 0;
-    _RE1 = 0;
+    _RE1 = 1;
     _ANSB12 = 0; // REF_C2
     _TRISB12 = 0;
     _RB12 = 1;
@@ -285,13 +286,132 @@ void sylvatica_interface_init(void)
             sensor_interfaces[i]->gsensor_config[j].status = SENSOR_STATUS_INACTIVE;
         }
     }
+    
+    pin_t pin1 = PIN_INIT(D, 8);
+    pin_t pin2 = PIN_INIT(B, 10);
+    sensor_interface1.int_pin = pin1;
+    sensor_interface2.int_pin = pin1;
+    sensor_interface3.int_pin = pin1;
+    sensor_interface4.int_pin = pin1;
+    sensor_interface5.int_pin = pin2;
+    sensor_interface6.int_pin = pin2;
+    sensor_interface7.int_pin = pin2;
+    sensor_interface8.int_pin = pin2;
+    
+    sylvatica_sensor_interface_supply(0, INTERFACE_SUPPY_ANALOGUE);
+    sylvatica_sensor_interface_supply(4, INTERFACE_SUPPY_ANALOGUE);
+    
+    for(int i = 0; i < N_SENSOR_INTERFACES; i++)
+    {
+        pin_interrupt_tasks[i].cb = NULL;
+    }
+}
+
+void sylvatica_sensor_interface_supply(uint8_t interface_id, interface_supply_t vconfig)
+{
+    // apply new voltage supply
+    if(interface_id < 4){
+        switch(vconfig)
+        {
+            case INTERFACE_SUPPY_ANALOGUE:
+                _RF0 = 0;
+                __delay_us(10);
+                _RE2 = 1;
+                break;
+            case INTERFACE_SUPPLY_DIGITAL:
+                _RE2 = 0;
+                __delay_us(10);
+                _RF0 = 1;
+                break;
+            default:
+                return;
+        }
+    } else {
+        switch(vconfig)
+        {
+            case INTERFACE_SUPPY_ANALOGUE:
+                _RB1 = 0;
+                __delay_us(10);
+                _RB0 = 1;
+                break;
+            case INTERFACE_SUPPLY_DIGITAL:
+                _RB0 = 0;
+                __delay_us(10);
+                _RB1 = 1;
+                break;
+            default:
+                return;
+        }
+    }
+    int if_start, if_end;
+    if(interface_id < 4){
+        if_start = 0; 
+        if_end = 4;
+    } else {
+        if_start = 4;
+        if_end = N_SENSOR_INTERFACES;
+    }
+    
+    // update status and notify host
+    for(int i = if_start; i < if_end; i++){
+        sensor_interface_set_supply(i, vconfig);
+    };
+}
+
+void sylvatica_init_sensors(void)
+{
+    // ADS1219
+    uint8_t buffer0_ads1219[4] = {SENSOR_TYPE_ADS1219, sensor_ads1219_gloxinia_register_general, 0, 9};
+    sensor_set_config_from_buffer(0, 0, buffer0_ads1219, ARRAY_LENGTH(buffer0_ads1219));
+    sensor_set_config_from_buffer(1, 0, buffer0_ads1219, ARRAY_LENGTH(buffer0_ads1219));
+    
+    // OW pins are used as data ready input signal
+    // TODO: remove hard-coded values and upgrade to software-set system
+    _CNPUB9 = 1;
+    _CNPUB8 = 1;
+    
+    uint8_t buffer1_ads1219[8] = {
+        SENSOR_TYPE_ADS1219, 
+        sensor_ads1219_gloxinia_register_config, 
+        0x46, 
+        0xff, 
+        sensor_ads1219_gain_1, 
+        sensor_ads1219_90_sps, 
+        sensor_ads1219_conversion_mode_single_shot, sensor_ads1219_vref_external};
+    buffer1_ads1219[2] = 0x4A;
+    sensor_set_config_from_buffer(0, 0, buffer1_ads1219, ARRAY_LENGTH(buffer1_ads1219));
+    buffer1_ads1219[2] = 0x49;
+    sensor_set_config_from_buffer(1, 0, buffer1_ads1219, ARRAY_LENGTH(buffer1_ads1219));
+    
+    
+        // manually configure sensors and interfaces
+    /*uint8_t buffer1[4] = {SENSOR_TYPE_ADC12, sensor_adc12_gloxinia_register_general, 0, 9};
+    sensor_set_config_from_buffer(1, buffer1, 4);
+    
+    uint8_t buffer2[4] = {SENSOR_TYPE_ADC12, sensor_adc12_gloxinia_register_config, true};
+    sensor_set_config_from_buffer(1, buffer2, 3);
+    
+    sensor_set_status( (0<<4) | 1, SENSOR_STATUS_ACTIVE);*/
+    //sensor_adc12_activate(sensor_config);
+    
+    // manually configure sensors and interfaces
+    //uint8_t buffer1[] = {SENSOR_TYPE_ADC16, sensor_adc16_gloxinia_register_general, 0, 9};
+    //sensor_set_config_from_buffer(0, 0, buffer1, 4);
+    
+    //uint8_t buffer2[] = {SENSOR_TYPE_ADC16, sensor_adc16_gloxinia_register_config, true};
+    //sensor_set_config_from_buffer(0, 0, buffer2, 3);
+    
+    //uint8_t buffer3[] = {SENSOR_TYPE_ADC16, sensor_adc16_gloxinia_register_pga, 0, false};
+    //sensor_set_config_from_buffer(0, 0, buffer3, 4);
+    
+    //sensor_set_status( (0<<4) | 1, SENSOR_STATUS_ACTIVE);
+    //sensor_adc12_activate(sensor_config);
 }
 
 void sylvatica_init(void)
 {
-    sylvatica_interface_init();
-    
     sylvatica_init_pins();
+    sylvatica_interface_init();
     
     sylatica_clock_init();
     
@@ -355,28 +475,9 @@ void sylvatica_init(void)
     schedule_init(&sylvatica_read_log, sylvatica_read_log_task, 100);
     //schedule_specific_event(&sylvatica_read_log, ID_READY_SCHEDULE);
     
-    // manually configure sensors and interfaces
-    /*uint8_t buffer1[4] = {SENSOR_TYPE_ADC12, sensor_adc12_gloxinia_register_general, 0, 9};
-    sensor_set_config_from_buffer(1, buffer1, 4);
+    // INFO: configuration similar to dicio project
+    sylvatica_init_sensors();
     
-    uint8_t buffer2[4] = {SENSOR_TYPE_ADC12, sensor_adc12_gloxinia_register_config, true};
-    sensor_set_config_from_buffer(1, buffer2, 3);
-    
-    sensor_set_status( (0<<4) | 1, SENSOR_STATUS_ACTIVE);*/
-    //sensor_adc12_activate(sensor_config);
-    
-    // manually configure sensors and interfaces
-    uint8_t buffer1[] = {SENSOR_TYPE_ADC16, sensor_adc16_gloxinia_register_general, 0, 9};
-    sensor_set_config_from_buffer(0, 0, buffer1, 4);
-    
-    uint8_t buffer2[] = {SENSOR_TYPE_ADC16, sensor_adc16_gloxinia_register_config, true};
-    sensor_set_config_from_buffer(0, 0, buffer2, 3);
-    
-    uint8_t buffer3[] = {SENSOR_TYPE_ADC16, sensor_adc16_gloxinia_register_pga, 0, false};
-    sensor_set_config_from_buffer(0, 0, buffer3, 4);
-    
-    //sensor_set_status( (0<<4) | 1, SENSOR_STATUS_ACTIVE);
-    //sensor_adc12_activate(sensor_config);
     
     sensor_start();
     
@@ -392,4 +493,78 @@ void sylvatica_send_ready_message(void *data)
     _RE3 ^= 1;
 }
 
+bool sylvatica_configure_interrupt_routine(sensor_interface_t* interface, task_t task)
+{
+    switch(interface->interface_id)
+    {
+        case 0:
+            CNENBbits.CNIEB9  = 1;
+            break;
+        case 1:
+            CNENBbits.CNIEB8  = 1;
+            break;
+        case 2:
+            CNENBbits.CNIEB5  = 1;
+            break;
+        case 3:
+            CNENEbits.CNIEE4  = 1;
+            break;
+        case 4:
+            CNENBbits.CNIEB14  = 1;
+            break;
+        case 5:
+            CNENBbits.CNIEB13  = 1;
+            break;
+        case 6:
+            CNENBbits.CNIEB4  = 1;
+            break;
+        case 7:
+            CNENBbits.CNIEB3  = 1;
+            break;
+        default:
+            return false;
+    }
+    
+    pin_interrupt_tasks[interface->interface_id] = task;
+    
+    _CNIE = 1;
+    
+    return true;
+}
 
+void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
+    if((_RB9 == 0) && (pin_interrupt_tasks[0].cb != NULL))
+    {
+        push_queued_task(&pin_interrupt_tasks[0]);
+    }
+    if((_RB8 == 0) && (pin_interrupt_tasks[1].cb != NULL))
+    {
+        push_queued_task(&pin_interrupt_tasks[1]);
+    }
+    if((_RB5 == 0) && (pin_interrupt_tasks[2].cb != NULL))
+    {
+        push_queued_task(&pin_interrupt_tasks[2]);
+    }
+    if((_RE4 == 0) && (pin_interrupt_tasks[3].cb != NULL))
+    {
+        push_queued_task(&pin_interrupt_tasks[3]);
+    }
+    if((_RB14 == 0) && (pin_interrupt_tasks[4].cb != NULL))
+    {
+        push_queued_task(&pin_interrupt_tasks[4]);
+    }
+    if((_RB13 == 0) && (pin_interrupt_tasks[5].cb != NULL))
+    {
+        push_queued_task(&pin_interrupt_tasks[5]);
+    }
+    if((_RB4 == 0) && (pin_interrupt_tasks[6].cb != NULL))
+    {
+        push_queued_task(&pin_interrupt_tasks[6]);
+    }
+    if((_RB3 == 0) && (pin_interrupt_tasks[7].cb != NULL))
+    {
+        push_queued_task(&pin_interrupt_tasks[7]);
+    }
+    
+    _CNIF = 0;
+}

@@ -4,6 +4,7 @@
 #include <xc.h> 
 #include <dsp.h>
 #include <i2c.h>
+#include <sensor.h>
 
 #define SYLVATICA_N_CHANNELS               8
 #define SYLVATICA_CHANNEL_BUFFER_SIZE      8
@@ -101,6 +102,8 @@ extern "C" {
     void process_filter_block2(void* data);
     void process_filter_block3(void* data);
     void sylatica_clock_init(void);
+    bool sylvatica_configure_interrupt_routine(sensor_interface_t* interface, task_t task);
+    void sylvatica_sensor_interface_supply(uint8_t interface_id, interface_supply_t vconfig);
     
     
 #ifdef	__cplusplus
