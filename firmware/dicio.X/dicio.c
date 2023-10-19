@@ -354,9 +354,9 @@ void dicio_init(void)
     
     if(SD_SPI_MediaInitialize() == true)
     {
-        //dicio_read_sdconfig_data();
-        //dicio_check_stored_config();
-        // TODO: remove and reactivate above lines
+        dicio_read_sdconfig_data();
+        dicio_check_stored_config();
+        
         sdcard_data_address = DICIO_DATA_START_ADDRESS;
         UART_DEBUG_PRINT("Initialised SD card");
         
