@@ -670,14 +670,13 @@ QList<GMessage> GCSensorAPDS9306::getConfigurationMessages()
     mData[3] = (quint8) measurementPeriod & 0xff;
     mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
-    mData = std::vector<quint8>(7);
+    mData = std::vector<quint8>(6);
     mData[0] = (quint8)GCSensor::sensor_class::APDS9306_065;
     mData[1] = GCSensorAPDS9306::Register::CONFIG;
     mData[2] = i2cAddress;
-    mData[3] = 1; // TODO: really needed?
-    mData[4] = alsMeasurementRate;
-    mData[5] = alsResolution;
-    mData[6] = alsGain;
+    mData[3] = alsMeasurementRate;
+    mData[4] = alsResolution;
+    mData[5] = alsGain;
     mList.append(GMessage(GMessage::Code::SENSOR_CONFIG, node->getID(), GMessage::EmptyReservedField, interfaceID, sensorID, false, mData));
 
     mData = std::vector<quint8>(6);
