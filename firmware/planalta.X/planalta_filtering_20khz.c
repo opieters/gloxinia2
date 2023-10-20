@@ -1,4 +1,4 @@
-#include "planalta_filtering.h"
+#include "planalta_definitions.h"
 #include <fir_common.h>
 #include <dsp.h>
 #include "planalta.h"
@@ -30,22 +30,7 @@ extern fractional* fo4_buffer_q_read[PLANALTA_N_ADC_CHANNELS];
 
 extern uint8_t select_f1_to_f2, select_f2_to_f3, select_f3_to_f4;
 
-extern fractional f1_to_f2_buffer_i_a[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_F2_INPUT_SIZE];
-extern fractional f1_to_f2_buffer_q_a[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_F2_INPUT_SIZE];
-extern fractional f2_to_f3_buffer_i_a[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_F3_INPUT_SIZE];
-extern fractional f2_to_f3_buffer_q_a[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_F3_INPUT_SIZE];
-extern fractional f1_to_f2_buffer_i_b[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_F2_INPUT_SIZE];
-extern fractional f1_to_f2_buffer_q_b[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_F2_INPUT_SIZE];
-extern fractional f2_to_f3_buffer_i_b[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_F3_INPUT_SIZE];
-extern fractional f2_to_f3_buffer_q_b[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_F3_INPUT_SIZE];
-extern fractional f3_to_f4_buffer_i_a[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_F4_INPUT_SIZE];
-extern fractional f3_to_f4_buffer_q_a[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_F4_INPUT_SIZE];
-extern fractional f4_to_fx_buffer_i_a[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_FX_INPUT_SIZE];
-extern fractional f4_to_fx_buffer_q_a[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_FX_INPUT_SIZE];
-extern fractional f3_to_f4_buffer_i_b[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_F4_INPUT_SIZE];
-extern fractional f3_to_f4_buffer_q_b[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_F4_INPUT_SIZE];
-extern fractional f4_to_fx_buffer_i_b[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_FX_INPUT_SIZE];
-extern fractional f4_to_fx_buffer_q_b[PLANALTA_N_ADC_CHANNELS][PLANALTA_5KHZ_FX_INPUT_SIZE];
+
 extern fractional output_buffer_a_i[PLANALTA_N_ADC_CHANNELS];
 extern fractional output_buffer_a_q[PLANALTA_N_ADC_CHANNELS];
 
@@ -56,11 +41,12 @@ extern uint8_t i2c_channel_data[PLANALTA_N_ADC_CHANNELS][PLANALTA_I2C_READ_CH_BU
 
 extern uint16_t planalta_fs_n_coeffs_written;
 
+//TODO: init filters
+//planalta_process_task = {adc_rx_callback_5khz, NULL};
+
 void adc_rx_callback_20khz(void){
     uint16_t i = 0;
     static uint16_t copy_counter = 0;
-    fractional conversion_buffer[PLANALTA_20KHZ_F0_OUTPUT_SIZE];
-    fractional sample_buffer[PLANALTA_20KHZ_F0_OUTPUT_SIZE];
 
     for(i = 0; i < PLANALTA_20KHZ_N_ADC_CHANNELS; i++){
         // convert samples to fractional format and split the different channels

@@ -5,7 +5,8 @@
 #include <utilities.h>
 #include <dsp.h>
 #include <stdbool.h>
-#include <adc.h>
+#include <sensor_adc12.h>
+#include <sensor_lia.h>
 #include "planalta_definitions.h"
 
 #define ADC_FS_BUFFER_LENGTH            200
@@ -379,11 +380,8 @@ extern fractional f4_to_f5_buffer_q_a[PLANALTA_N_ADC_CHANNELS][PLANALTA_F5_INPUT
 extern fractional f4_to_f5_buffer_i_b[PLANALTA_N_ADC_CHANNELS][PLANALTA_F5_INPUT_SIZE];
 extern fractional f4_to_f5_buffer_q_b[PLANALTA_N_ADC_CHANNELS][PLANALTA_F5_INPUT_SIZE];
 
-extern bool planalta_lia_obuffer_selector;
-extern fractional planalta_lia_obuffer_a_i[PLANALTA_N_ADC_CHANNELS];
-extern fractional planalta_lia_obuffer_a_q[PLANALTA_N_ADC_CHANNELS];
-extern fractional planalta_lia_obuffer_b_i[PLANALTA_N_ADC_CHANNELS];
-extern fractional planalta_lia_obuffer_b_q[PLANALTA_N_ADC_CHANNELS];
+extern fractional planalta_lia_obuffer_i[PLANALTA_N_ADC_CHANNELS];
+extern fractional planalta_lia_obuffer_q[PLANALTA_N_ADC_CHANNELS];
 
 extern uint8_t select_f0_to_f1, select_f1_to_f2, select_f2_to_f3, select_f3_to_f4, select_f4_to_f5;
 extern uint8_t adc_buffer_selector;
@@ -534,29 +532,29 @@ void adc_rx_callback_25khz(void);
 void adc_rx_callback_10khz(void);
 void adc_rx_callback_5khz(void);
 
-void run_filter2_5khz(void);
-void run_filter3_5khz(void);
-void run_filter4_5khz(void);
-void run_filter5_5khz(void);
-void run_filter6_5khz(void);
+void run_filter2_5khz(void *data);
+void run_filter3_5khz(void *data);
+void run_filter4_5khz(void *data);
+void run_filter5_5khz(void *data);
+void run_filter6_5khz(void *data);
 
-void run_filter2_10khz(void);
-void run_filter3_10khz(void);
-void run_filter4_10khz(void);
-void run_filter5_10khz(void);
-void run_filter6_10khz(void);
+void run_filter2_10khz(void *data);
+void run_filter3_10khz(void *data);
+void run_filter4_10khz(void *data);
+void run_filter5_10khz(void *data);
+void run_filter6_10khz(void *data);
 
-void run_filter2_25khz(void);
-void run_filter3_25khz(void);
-void run_filter4_25khz(void);
-void run_filter5_25khz(void);
-void run_filter6_25khz(void);
+void run_filter2_25khz(void *data);
+void run_filter3_25khz(void *data);
+void run_filter4_25khz(void *data);
+void run_filter5_25khz(void *data);
+void run_filter6_25khz(void *data);
 
-void run_filter2_50khz(void);
-void run_filter3_50khz(void);
-void run_filter4_50khz(void);
-void run_filter5_50khz(void);
-void run_filter6_50khz(void);
+void run_filter2_50khz(void *data);
+void run_filter3_50khz(void *data);
+void run_filter4_50khz(void *data);
+void run_filter5_50khz(void *data);
+void run_filter6_50khz(void *data);
 
 void init_filtering(void);
 
@@ -568,10 +566,10 @@ void planalta_filter_10khz(void);
 void planalta_filter_5khz(void);
 
 void planalta_fs_sample_50khz(void);
-void planalta_fs_sample_20khz_10khz_5khz(planalta_fs_freq_t freq);
-void planalta_fs_sample_2khz_1khz_500hz(planalta_fs_freq_t freq);
-void planalta_fs_sample_200hz_100hz_50hz(planalta_fs_freq_t freq);
-void planalta_fs_sample_20hz_10hz(planalta_fs_freq_t freq);
+void planalta_fs_sample_20khz_10khz_5khz(sensor_lia_fs_freq_t freq);
+void planalta_fs_sample_2khz_1khz_500hz(sensor_lia_fs_freq_t freq);
+void planalta_fs_sample_200hz_100hz_50hz(sensor_lia_fs_freq_t freq);
+void planalta_fs_sample_20hz_10hz(sensor_lia_fs_freq_t freq);
 
 void adc_rx_callback_fs_50khz(void);
 void adc_rx_callback_fs_20khz_10khz_5khz(void);

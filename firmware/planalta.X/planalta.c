@@ -1,175 +1,175 @@
 #include "planalta.h"
-#include <uart.h>
+#include "address.h"
+#include <can.h>
+#include <sensor.h>
 #include <spi.h>
-#include "filters_planalta.h"
-#include "fir_coeffs.h"
+#include <pga.h>
 #include <dsp.h>
+#include <sensor_adc16.h>
 #include <fir_common.h>
+#include "planalta_definitions.h"
 #include "planalta_filters.h"
-#include "planalta_calibration.h"
+#include <libpic30.h>
+#include <adc16.h>
+
+i2c_config_t planalta_i2c1_config =  {
+    .i2c_address = 0x0,
+    .status = I2C_STATUS_PRIMARY_ON,
+    .pw_sr_cb = I2C_NO_CALLBACK,
+    .pr_sw_cb = I2C_NO_CALLBACK,
+    .scl_pin = PIN_INIT(G, 2),
+    .sda_pin = PIN_INIT(G, 3)};
+
+i2c_config_t planalta_i2c2_config =  {
+    .i2c_address = 0x0,
+    .status = I2C_STATUS_PRIMARY_ON,
+    .pw_sr_cb = I2C_NO_CALLBACK,
+    .pr_sw_cb = I2C_NO_CALLBACK,
+    .scl_pin = PIN_INIT(F, 5),
+    .sda_pin = PIN_INIT(F, 4)};
+
+uint16_t copy_buffers_a[PLANALTA_N_CHANNELS][PLANALTA_COPY_BUFFER_SIZE];
+uint16_t copy_buffers_b[PLANALTA_N_CHANNELS][PLANALTA_COPY_BUFFER_SIZE];
+
+bool uart_connection_active = false;
+
+uint8_t adc16_buffer_selector = 0;
+volatile uint8_t copy_buffer_selector = 0;
 
 
-#define PLANALTA_ADC { \
-    .channel_select = ADC_CHANNEL_SELECT_MODE_AUTO,\
-    .conversion_clock_source = ADC_CONVERSION_CLOCK_SOURCE_INTERNAL,\
-    .trigger_select = ADC_TRIGGER_SELECT_MANUAL,\
-    .auto_trigger_rate = ADC_SAMPLE_RATE_AUTO_TRIGGER_500KSPS,\
-    .pin10_polarity = ADC_PIN10_POLARITY_SELECT_ACTIVE_LOW,\
-    .pin10_output = ADC_PIN10_OUTPUT_EOC,\
-    .pin10_io = ADC_PIN10_IO_SELECT_EOC_INT,\
-    .auto_nap = ADC_AUTO_NAP_POWERDOWN_DISABLE,\
-    .nap_powerdown = ADC_NAP_POWERDOWN_DISABLE,\
-    .deep_powerdown = ADC_DEEP_POWERDOWN_DISABLE,\
-    .tag_output = ADC_TAG_OUTPUT_DISABLE,\
-    .sw_reset = ADC_NORMAL_OPERATION,\
-    .channel = ADC_CH0,\
-    .sample_frequency = PLANALTA_ADC_SAMPLE_FREQUENCY,\
-    .rx_callback = adc_rx_callback_5khz,\
-    .spi_module = SPI_MODULE_SELECTOR_2,\
-    .rst_pin = PIN_INIT(B, 3),\
-    .cs_pin = PIN_INIT(E, 5),\
-    .conv_pin = PIN_INIT(E, 7)} 
+adc16_config_t adc16_config = {
+    .channel_select = ADC16_CHANNEL_SELECT_MODE_AUTO,
+    .conversion_clock_source = ADC16_CONVERSION_CLOCK_SOURCE_INTERNAL,
+    .trigger_select = ADC16_TRIGGER_SELECT_MANUAL,
+    .auto_trigger_rate = ADC16_SAMPLE_RATE_AUTO_TRIGGER_500KSPS,
+    .pin10_polarity = ADC16_PIN10_POLARITY_SELECT_ACTIVE_LOW,
+    .pin10_output = ADC16_PIN10_OUTPUT_EOC,
+    .pin10_io = ADC16_PIN10_IO_SELECT_EOC_INT,
+    .auto_nap = ADC16_AUTO_NAP_POWERDOWN_DISABLE,
+    .nap_powerdown = ADC16_NAP_POWERDOWN_DISABLE,
+    .deep_powerdown = ADC16_DEEP_POWERDOWN_DISABLE,
+    .tag_output = ADC16_TAG_OUTPUT_DISABLE,
+    .sw_reset = ADC16_NORMAL_OPERATION,
+    .channel = ADC16_CH0,
+    //.sample_frequency = PLANALTA_ADC16_SAMPLE_FREQUENCY, // TODO: should be set somewhere
+    .adc16_buffer_size = PLANALTA_ADC16_BUFFER_LENGTH,
+    .rx_callback = adc_rx_callback_5khz,
+    .spi_module = SPI_MODULE_SELECTOR_2,
+    .rst_pin = PIN_INIT(B, 3),
+    .cs_pin = PIN_INIT(E, 5),
+    .conv_pin = PIN_INIT(E, 7)}
+;
 
-#define PLANALTA_PGA0 {      \
-    .channel = PGA_MUX_CH1,   \
-    .gain = PGA_GAIN_1,       \
-    .cs_pin = PIN_INIT(B, 14), \
-    .spi_message_handler = spi1_send_message,\
-    .status = PGA_STATUS_OFF}
+sensor_interface_t sensor_interface1;
+sensor_interface_t sensor_interface2;
+sensor_interface_t sensor_interface3;
+sensor_interface_t sensor_interface4;
 
-#define PLANALTA_PGA1 {      \
-    .channel = PGA_MUX_CH1,   \
-    .gain = PGA_GAIN_1,       \
-    .cs_pin = PIN_INIT(B, 13), \
-    .spi_message_handler = spi1_send_message,\
-    .status = PGA_STATUS_OFF}
-
-#define PLANALTA_PGA2 {      \
-    .channel = PGA_MUX_CH1,   \
-    .gain = PGA_GAIN_1,       \
-    .cs_pin = PIN_INIT(B, 0), \
-    .spi_message_handler = spi1_send_message,\
-    .status = PGA_STATUS_OFF}
-
-#define PLANALTA_PGA3 {      \
-    .channel = PGA_MUX_CH1,   \
-    .gain = PGA_GAIN_1,       \
-    .cs_pin = PIN_INIT(B, 1), \
-    .spi_message_handler = spi1_send_message,\
-    .status = PGA_STATUS_OFF}
-
-#define PLANALTA_PGA_DUMMY { \
-    .status = PGA_STATUS_DUMMY}
-
-#define PLANALTA_I2C_CONFIG {\
-    .i2c_address = PLANALTA_I2C_BASE_ADDRESS,\
-    .status = I2C_STATUS_SLAVE_ON,\
-    .mw_sr_cb = i2c_mw_sr_cb_planalta,\
-    .mr_sw_cb = i2c_mr_sw_cb_planalta,\
-    .scl_pin = PIN_INIT(G, 2),\
-    .sda_pin = PIN_INIT(G, 3)}
-
-#define PLANALTA_DAC_CONFIG {       \
-    .signal_period = 64, \
-    .pwm_period = 1000, \
-    .status = DAC_STATUS_ON}
-
-planalta_config_t gconfig = {
-    .adc_config = PLANALTA_ADC,
-    .pga_config = {
-        PLANALTA_PGA0,
-        PLANALTA_PGA_DUMMY,
-        PLANALTA_PGA1,
-        PLANALTA_PGA_DUMMY,
-        PLANALTA_PGA2,
-        PLANALTA_PGA_DUMMY,
-        PLANALTA_PGA3,
-        PLANALTA_PGA_DUMMY,
-    },
-    .channel_status = {
-        PLANALTA_CHANNEL_ENABLED,
-        PLANALTA_CHANNEL_ENABLED,
-        PLANALTA_CHANNEL_ENABLED,
-        PLANALTA_CHANNEL_ENABLED,
-        PLANALTA_CHANNEL_ENABLED,
-        PLANALTA_CHANNEL_ENABLED,
-        PLANALTA_CHANNEL_ENABLED,
-        PLANALTA_CHANNEL_ENABLED,
-    },
-    .i2c_config = PLANALTA_I2C_CONFIG,
-    .address_selection = {
-        PIN_INIT(B, 15),
-        PIN_INIT(B, 10),
-        PIN_INIT(B, 9),
-        PIN_INIT(B, 12),
-        PIN_INIT(F, 6),
-        PIN_INIT(D, 8),
-        PIN_INIT(D, 9),
-        PIN_INIT(D, 10),
-    },
-    .blinky_pin = PIN_INIT(F, 0),
-    .dac_config =  PLANALTA_DAC_CONFIG,
-    .operation_mode = PLANALTA_LIA_F_5KHZ,
-    .filter_selection_pins = {
-        PIN_INIT(B, 6),
-        PIN_INIT(B, 7),
-    },
-    .int_pin = PIN_INIT(D, 0),
-    .status = PLANALTA_STATUS_INITIALISING,
+sensor_interface_t* sensor_interfaces[N_SENSOR_INTERFACES] = 
+{
+    &sensor_interface1,
+    &sensor_interface2,
+    &sensor_interface3,
+    &sensor_interface4,
 };
 
-i2c_message_t i2c_mr_message;
-uint8_t i2c_mr_message_data[PLANALTA_I2C_READ_BUFFER_LENGTH];
+pga_config_t pga_config[N_SENSOR_INTERFACES] = {
+    { .cs_pin = PIN_INIT(B, 14) },
+    { .cs_pin = PIN_INIT(B, 2) },
+    { .cs_pin = PIN_INIT(B, 0) },
+    { .cs_pin = PIN_INIT(B, 1) }
+};
 
-volatile planalta_reg_t i2c_write_reg = PLANALTA_REG_STATUS;
+const uint8_t n_sensor_interfaces = N_SENSOR_INTERFACES;
 
-uint8_t i2c_get_address_planalta(planalta_config_t* config){
-    uint16_t address = 0x00, i;
-    for(i = 0; i < PLANALTA_N_ADDRESS_SEL_PINS; i++){
-        address |= (GET_BIT(config->address_selection[i].port_r, config->address_selection[i].n) << i);
-    }
-    address = ~address;
-    address &= 0x7f;
-    
-    UART_DEBUG_PRINT("Read address: %x", address);
-   
-    // if the address is not valid, use the default one
-    if(!i2c_check_address(address)){
-        address = PLANALTA_I2C_BASE_ADDRESS;
-    }
-    
-    sprintf("Actual address: %x", address);
-    
-    return address;
+dac_config_t dac_config;
+
+void planalta_clock_init(void)
+{
+    // FRCDIV FRC/1; PLLPRE 2; DOZE 1:8; PLLPOST 1:2; DOZEN disabled; ROI disabled; 
+    CLKDIV = 0x3000;
+    // TUN Center frequency; 
+    OSCTUN = 0x00;
+    // ROON disabled; ROSEL FOSC; RODIV 0; ROSSLP disabled; 
+    REFOCON = 0x00;
+    // PLLDIV 62; 
+    PLLFBD = 0x3E;
+    // ENAPLL disabled; APLLPOST 1:256; FRCSEL FRC; SELACLK Auxiliary Oscillators; ASRCSEL Auxiliary Oscillator; AOSCMD AUX; APLLPRE 1:2; 
+    ACLKCON3 = 0x2201;
+    // APLLDIV 24; 
+    ACLKDIV3 = 0x07;
+    // AD1MD enabled; PWMMD enabled; T3MD enabled; T4MD enabled; T1MD enabled; U2MD enabled; T2MD enabled; U1MD enabled; QEI1MD enabled; SPI2MD enabled; SPI1MD enabled; C2MD enabled; C1MD enabled; DCIMD enabled; T5MD enabled; I2C1MD enabled; 
+    PMD1 = 0x00;
+    // OC5MD enabled; OC6MD enabled; OC7MD enabled; OC8MD enabled; OC1MD enabled; IC2MD enabled; OC2MD enabled; IC1MD enabled; OC3MD enabled; OC4MD enabled; IC6MD enabled; IC7MD enabled; IC5MD enabled; IC8MD enabled; IC4MD enabled; IC3MD enabled; 
+    PMD2 = 0x00;
+    // AD2MD enabled; PMPMD enabled; CMPMD enabled; U3MD enabled; QEI2MD enabled; RTCCMD enabled; T9MD enabled; T8MD enabled; CRCMD enabled; T7MD enabled; I2C2MD enabled; DAC1MD enabled; T6MD enabled; 
+    PMD3 = 0x00;
+    // U4MD enabled; REFOMD enabled; 
+    PMD4 = 0x00;
+    // OC9MD enabled; OC16MD enabled; IC10MD enabled; IC11MD enabled; IC12MD enabled; IC13MD enabled; IC14MD enabled; IC15MD enabled; IC16MD enabled; IC9MD enabled; OC14MD enabled; OC15MD enabled; OC12MD enabled; OC13MD enabled; OC10MD enabled; OC11MD enabled; 
+    PMD5 = 0x00;
+    // PWM2MD enabled; PWM1MD enabled; SPI4MD enabled; PWM4MD enabled; SPI3MD enabled; PWM3MD enabled; 
+    PMD6 = 0x00;
+    // DMA8MD enabled; DMA4MD enabled; DMA12MD enabled; DMA0MD enabled; 
+    PMD7 = 0x00;
+    // CF no clock failure; NOSC PRIPLL; LPOSCEN disabled; CLKLOCK unlocked; OSWEN Switch is Complete; IOLOCK not-active; 
+    __builtin_write_OSCCONH((uint8_t) (0x03));
+    __builtin_write_OSCCONL((uint8_t) (0x01));
+    // Wait for Clock switch to occur
+    while( OSCCONbits.COSC != 0b011 );
+    while (OSCCONbits.LOCK != 1);
 }
 
-void init_pins_planalta(void){
-    // I2C configuration
+
+void planalta_init_pins(void){
+    // I2C1
     _ODCG2 = 1; // configure I2C pins as open drain output
     _ODCG3 = 1; // configure I2C pins as open drain output
     _TRISG2 = 0;
     _TRISG3 = 0;
-    _ODCD0 = 1; // nINT
-    _TRISD0 = 0;
-    _RD0 = 1;
+    _ODCF6 = 1; // nINT
+    _TRISF6 = 0;
+    _RF6 = 1;
+    _CNPUG2 = 1;
+    _CNPUG3 = 1;
+    _CNPUF6 = 1;
+    
+    // I2C2
+    _ODCF4 = 1; // configure I2C pins as open drain output
+    _ODCF5 = 1; // configure I2C pins as open drain output
+    _TRISF4 = 0;
+    _TRISF5 = 0;
+    //_ODCE6 = 1; // nINT
+    _ANSE6 = 0;
+    _TRISE6 = 0;
+    _RE6 = 1;
+    _CNPUF4 = 1;
+    _CNPUF5 = 1;
+    _CNPUE6 = 1;
     
     // UART
-    _TRISD3 = 1; // U2RX
-    _U2RXR = 67;            
-    _TRISD2 = 0; // RTS
-    _RP66R = _RPOUT_U2RTS;
-    _TRISD1 = 0; // U2TX
-    _RP65R = _RPOUT_U2TX;
-    _TRISD4 = 1; // CTS
-    _U2CTSR = 68;
+    _TRISD4 = 1; // U2RX
+    _U2RXR = 68;      
+    _CNPDD4 = 1; // enable weak pull-down resistor. If the RX pin is not 
+    // connected to TX of a computer, this will drive the pin low, which can be 
+    // used for auto-detection of readout device
+    _TRISD1 = 0; // RTS
+    _RP65R = _RPOUT_U2RTS;
+    _TRISD3 = 0; // U2TX
+    _RP67R = _RPOUT_U2TX;
+    _TRISD2 = 1; // CTS
+    _U2CTSR = 66;
     
-    // SPI for ADC
-    _TRISG6 = 0; // SCK2 is output
+    // SPI3 for ADC
+    _TRISG6 = 0; // SCK3 is output
     _ANSG6 = 0;
+    _RP118R = _RPOUT_SCK3;
     _TRISG7 = 1; // SDI2 is input
     _ANSG7 = 0;
+    _SDI3R = 119;
     _TRISG8 = 0; // SDO2 is output
     _ANSG8 = 0;
+    _RP120R = _RPOUT_SDO3;
     _TRISE5 = 0;     // CS pin
     _ANSE5 = 0;
     _RP85R = _RPOUT_OC4;
@@ -183,22 +183,34 @@ void init_pins_planalta(void){
     _ANSB3 = 0;     // nRESET pin
     _TRISB3 = 0;
     
-    // SPI to PGA
-    _ANSD6 = 0;
+    // SPI1 to PGA
+    _ANSD6 = 0;           // SCK
     _TRISD6 = 0;
-    _RP69R = _RPOUT_SDO1;
-    _TRISD5 = 0;
     _RP70R = _RPOUT_SCK1;
+    _TRISD5 = 0;          // SDO
+    _RP69R = _RPOUT_SDO1;
+    _ANSB14 = 0;          // nCS1
+    _TRISB14 = 0;
+    _RB14 = 1;
+    _ANSB2 = 0;           // nCS2
+    _TRISB2 = 0;
+    _RB2 = 1;
+    _ANSB0 = 0;           // nCS3
+    _TRISB0 = 0;
+    _RB0 = 1;
+    _ANSB1 = 0;           // nCS4
+    _TRISB1 = 0;
+    _RB1 = 1;
     
     // drive signals
     _TRISF2 = 0;
     _RP98R = _RPOUT_OC2;   // DRV1 signal
     _TRISF3 = 0;
     _RP99R = _RPOUT_OC2;   // DRV2 signal
-    _TRISF4 = 0;
-    _RP101R = _RPOUT_OC2;  // DRV3 signal
-    _TRISF5 = 0;
-    _RP100R = _RPOUT_OC2;  // DRV4 signal
+    _TRISE2 = 0;
+    _RP82R = _RPOUT_OC2;  // DRV3 signal
+    _TRISE4 = 0;
+    _RP84R = _RPOUT_OC2;  // DRV4 signal
     
     // filter selection
     _ANSB6 = 0;
@@ -208,558 +220,422 @@ void init_pins_planalta(void){
     _TRISB7 = 0;
     _LATB7 = 0;
     
+    // buffer enable/disable
+    _TRISF1 = 0;        // SD1
+    _ODCF1 = 1;
+    _RF1 = 0;           // disable by default
+    _ANSG9 = 0;         // nSD2
+    _TRISG9 = 0;       
+    _RG9 = 0;          // disable by default
+    
+    // 3.3V ref to PGA
+    _ANSB5 = 0;
+    _TRISB5 = 0;
+    _RB5 = 1;
+    
+    // CAN configuration
+    _ANSE0 = 0; // CAN1 TX
+    _TRISE0 = 0;
+    _RP80R = _RPOUT_C1TX;
+    _TRISF0 = 1; // CAN1 RX
+    _C1RXR = 96;
+    _ANSB8 = 0; // CAN_C1
+    _TRISB8 = 1;
+    _ANSB9 = 0; // CAN_C2
+    _TRISB9 = 1;
+    _ANSD7 = 0; // TERM
+    _TRISD7 = 0;
+    _RD7 = 1;
+    
+    // VDDA LDO
+    _ANSB13 = 0;
+    _TRISB13 = 0;
+    _RB13 = 1;
+    
+    // RTCC
+    _TRISD8 = 1;
+    
+    // Blinky
+    _TRISD10 = 0;
+    _RD10 = 1;
+    
+    // power supply selection
+    _TRISD11 = 0; // digital supply
+    _RD11 = 0;
+    _TRISD0 = 0; // analog supply
+    _RD0 = 0;
+    
     // 4V LDO
     _ANSE1 = 0;
     _TRISE1 = 0;
     _RE1 = 1;
     
-    // blinky
-    _TRISF0 = 0;
-    _LATF0 = 0;
-    
     // 3.3V reference
-    _ANSE2 = 0;
-    _TRISE2 = 0;
-    _RE2 = 1;
-    
-    // 3.3V ref to PGA
-    _ANSE4 = 0;
-    _TRISE4 = 0;
-    _RE4 = 1;
-    
-    // address selection
-    _ANSB15 = 0;    // A0
-    _TRISB15 = 1;
-    _CNPUB15 = 1;
-    _ANSB10 = 0;    // A1
-    _TRISB10 = 1;
-    _CNPUB10 = 1;
-    _ANSB9 = 0;     // A2
-    _TRISB9 = 1;
-    _CNPUB9 = 1;
-    _ANSB12 = 0;    // A3
-    _TRISB12 = 1;
-    _CNPUB12 = 1;
-    _TRISF6 = 1;    // A4
-    _CNPUF6 = 1;
-    _TRISD8 = 1;    // A5
-    _CNPUD8 = 1;
-    _TRISD9 = 1;    // A6
-    _CNPUD9 = 1;
-    _TRISD10 = 1;   // A7
-    _CNPUD10 = 1;
-    
-    // PGA enable/disable
-    /*_TRISF1 = 0;        // SD1
-    _ODCF1 = 1;
-    _RF1 = 0;           // disable by default
-    
-    _TRISD11 = 0;       // SD2
-    _ODCD11 = 1;
-    _RD11 = 0;          // disable by default*/
+    _ANSE3 = 0;
+    _TRISE3 = 0;
+    _RE3 = 1;
 }
 
-void update_config_variables(planalta_config_t* config){
-    //TODO
+void planalta_interface_init(void)
+{
+    for(int i = 0; i < N_SENSOR_INTERFACES; i++)
+    {
+        sensor_interfaces[i]->interface_id = i;
+        for(int j = 0; j < SENSOR_INTERFACE_MAX_SENSORS; j++)
+        {
+            sensor_interfaces[i]->gsensor_config[j].sensor_id = j;
+            sensor_interfaces[i]->gsensor_config[j].interface = sensor_interfaces[i];
+            //sensor_interfaces[i]->gsensor_config[j].measure = NULL;
+            sensor_interfaces[i]->gsensor_config[j].sensor_type = SENSOR_NOT_SET;
+            sensor_interfaces[i]->gsensor_config[j].status = SENSOR_STATUS_INACTIVE;
+        }
+    }
 }
 
-void init_planalta(void){  
-    uint16_t i;
-    
-    // error function
-    set_error_loop_fn(i2c1_detect_stop);
-    set_error_pin(&gconfig.blinky_pin);
-    
-    init_filtering();
-    planalta_clear_buffers();
-    
-    init_pins_planalta();
-    UART_DEBUG_PRINT("Initialised pins.");
-    
-    blinky_init(&gconfig.blinky_pin, 1);
-    UART_DEBUG_PRINT("Initialised blinky.");
-    
-    // read I2C slave address (sets slave address for communication with dicio)
-    gconfig.i2c_config.i2c_address = i2c_get_address_planalta(&gconfig);
-    
-    UART_DEBUG_PRINT( "Initialised I2C slave address to 0x%x.", gconfig.i2c_config.i2c_address);
 
+void planalta_init(void){
     
-    i2c1_init(&gconfig.i2c_config);
-    UART_DEBUG_PRINT("Initialised I2C.");
+    CORCONbits.VAR = 0;
     
-    update_config_variables(&gconfig);
+    planalta_clock_init();
+    
+    planalta_interface_init();
+    
+    planalta_init_pins();
+    
+    __builtin_enable_interrupts();
+    
+    // UART serial communication (debug + print interface)
+    uart_init(50000);
+    UART_DEBUG_PRINT("Configured UART.");
+    
+    if(_RD4 == 1)
+    {
+        uart_connection_active = true;
+        UART_DEBUG_PRINT("Detected UART host.");
+    }
+    
+    can_init();
+    UART_DEBUG_PRINT("Initialised ECAN.");
+
+    i2c1_init(&planalta_i2c1_config);
+    UART_DEBUG_PRINT("Initialised I2C1.");
+
+    i2c2_init(&planalta_i2c2_config);
+    UART_DEBUG_PRINT("Initialised I2C2.");
+
+    sensors_init();
+    UART_DEBUG_PRINT("Initialised sensor interface.");
+
+    event_controller_init();
+    UART_DEBUG_PRINT("Initialised event controller.");
     
     spi1_init();
     spi2_init();
-    UART_DEBUG_PRINT("Initialised SPI2.");
+    UART_DEBUG_PRINT("Initialised SPI.");
     
-    delay_ms(100);
+    for(int i = 0; i < N_SENSOR_INTERFACES; i++){
+        pga_config[i].status = PGA_STATUS_ON;
+        pga_config[i].spi_message_handler = spi1_send_message;
+        pga_init(&pga_config[i]);
+        
+        sensor_interfaces[i]->gsensor_config[0].sensor_config.lia.pga_config = &pga_config[i];
+    }
+    UART_DEBUG_PRINT("Initialised PGAs.");
+    
+    planalta_filters_init();
+    planalta_clear_filter_buffers();
+    UART_DEBUG_PRINT("Initialised filters.");
+
+    adc16_init(&adc16_config);
+    UART_DEBUG_PRINT("Initialised ADC.");
+
+    task_schedule_t planalta_read_log;
+    task_t planalta_read_log_task;
+    task_init(&planalta_read_log_task, planalta_send_ready_message, NULL);
+    schedule_init(&planalta_read_log, planalta_read_log_task, 10);
+    // schedule_specific_event(&dicio_read_log, ID_READY_SCHEDULE);
+    
+    uint8_t buffer1[] = {SENSOR_TYPE_LIA, sensor_lia_gloxinia_register_general, 0, 9};
+    sensor_set_config_from_buffer(0, 0, buffer1, 4);
+    
+    uint8_t buffer2[] = {SENSOR_TYPE_LIA, sensor_lia_gloxinia_register_config, PLANALTA_LIA_F_5KHZ, 0, 0, true};
+    sensor_set_config_from_buffer(0, 0, buffer2, 6);
+    
+    uint8_t buffer3[] = {SENSOR_TYPE_LIA, sensor_lia_gloxinia_register_pga_config, PGA_GAIN_1, false};
+    sensor_set_config_from_buffer(0, 0, buffer3, 4);
+    
+    sensor_set_status( 0, 1, SENSOR_STATUS_ACTIVE);
+    
+}
+
+void planalta_send_ready_message(void *data)
+{
+    message_t m;
+
+    message_init(&m, controller_address, 0, M_READY, NO_INTERFACE_ID, NO_SENSOR_ID, NULL, 0);
+    message_send(&m);
+}
+
+
+void planalta_filters_init(void)
+{
+    uint16_t i;
+
+    fs_fo1_buffer_i_write = f1_to_f2_buffer_i_a[0];
+    fs_fo1_buffer_q_write = f1_to_f2_buffer_q_a[0];
+    fs_fo2_buffer_i_write = f2_to_f3_buffer_i_a[0];
+    fs_fo2_buffer_q_write = f2_to_f3_buffer_q_a[0];
+    fs_fo3_buffer_i_write = f3_to_f4_buffer_i_a[0];
+    fs_fo3_buffer_q_write = f3_to_f4_buffer_q_a[0];
+    fs_fo4_buffer_i_write = f4_to_f5_buffer_i_a[0];
+    fs_fo4_buffer_q_write = f4_to_f5_buffer_q_a[0];
+    
+    for(i = 0; i < PLANALTA_N_ADC_CHANNELS; i++){
+        fo2_buffer_i_read[i] = f1_to_f2_buffer_i_b[i];
+        fo2_buffer_q_read[i] = f1_to_f2_buffer_q_b[i];
+        fo3_buffer_i_read[i] = f2_to_f3_buffer_i_b[i];
+        fo3_buffer_q_read[i] = f2_to_f3_buffer_q_b[i];
+        fo4_buffer_i_read[i] = f3_to_f4_buffer_i_b[i];
+        fo4_buffer_q_read[i] = f3_to_f4_buffer_q_b[i];
+        fo5_buffer_i_read[i] = f4_to_f5_buffer_i_b[i];
+        fo5_buffer_q_read[i] = f4_to_f5_buffer_q_b[i];
+        
+        fo1_buffer_i_write[i] = f1_to_f2_buffer_i_a[i];
+        fo1_buffer_q_write[i] = f1_to_f2_buffer_q_a[i];
+        fo2_buffer_i_write[i] = f2_to_f3_buffer_i_a[i];
+        fo2_buffer_q_write[i] = f2_to_f3_buffer_q_a[i];
+        fo3_buffer_i_write[i] = f3_to_f4_buffer_i_a[i];
+        fo3_buffer_q_write[i] = f3_to_f4_buffer_q_a[i];
+        fo4_buffer_i_write[i] = f4_to_f5_buffer_i_a[i];
+        fo4_buffer_q_write[i] = f4_to_f5_buffer_q_a[i];
+    }
+    select_f0_to_f1 = 0;
+    select_f1_to_f2 = 0;
+    select_f2_to_f3 = 0;
+    select_f3_to_f4 = 0;
+    select_f4_to_f5 = 0;
+    
+    planalta_fs_n_coeffs_written = 0;
+}
+
+
+void planalta_clear_filter_buffers(void){
+    uint16_t i, j;
+    
+    for(i = 0; i < N_FIR_COEFFS0; i++)
+    {
+        delay_buffers_0_0[i] = 0;
+        delay_buffers_0_1[i] = 0;
+        delay_buffers_0_2[i] = 0;
+        delay_buffers_0_3[i] = 0;
+        delay_buffers_0_4[i] = 0;
+        delay_buffers_0_5[i] = 0;
+        delay_buffers_0_6[i] = 0;
+        delay_buffers_0_7[i] = 0;
+    }
+
+    for(i = 0; i < N_FIR_COEFFS1_Q; i++)
+    {
+        delay_buffers_1_q_0[i] = 0;
+        delay_buffers_1_q_1[i] = 0;
+        delay_buffers_1_q_2[i] = 0;
+        delay_buffers_1_q_3[i] = 0;
+        delay_buffers_1_q_4[i] = 0;
+        delay_buffers_1_q_5[i] = 0;
+        delay_buffers_1_q_6[i] = 0;
+        delay_buffers_1_q_7[i] = 0;
+    }
+
+    for(i = 0; i < N_FIR_COEFFS1_I; i++)
+    {
+        delay_buffers_1_i_0[i] = 0;
+        delay_buffers_1_i_1[i] = 0;
+        delay_buffers_1_i_2[i] = 0;
+        delay_buffers_1_i_3[i] = 0;
+        delay_buffers_1_i_4[i] = 0;
+        delay_buffers_1_i_5[i] = 0;
+        delay_buffers_1_i_6[i] = 0;
+        delay_buffers_1_i_7[i] = 0;
+    }    
+    
+    for(i = 0; i < N_FIR_COEFFS2; i++)
+    {
+        delay_buffers_2_q_0[i] = 0;
+        delay_buffers_2_i_0[i] = 0;
+        delay_buffers_2_q_1[i] = 0;
+        delay_buffers_2_i_1[i] = 0;
+        delay_buffers_2_q_2[i] = 0;
+        delay_buffers_2_i_2[i] = 0;
+        delay_buffers_2_q_3[i] = 0;
+        delay_buffers_2_i_3[i] = 0;
+        delay_buffers_2_q_4[i] = 0;
+        delay_buffers_2_i_4[i] = 0;
+        delay_buffers_2_q_5[i] = 0;
+        delay_buffers_2_i_5[i] = 0;
+        delay_buffers_2_q_6[i] = 0;
+        delay_buffers_2_i_6[i] = 0;
+        delay_buffers_2_q_7[i] = 0;
+        delay_buffers_2_i_7[i] = 0;
+    }
+
+    for(i = 0; i < N_FIR_COEFFS3; i++)
+    {
+        delay_buffers_3_q_0[i] = 0;
+        delay_buffers_3_i_0[i] = 0;
+        delay_buffers_3_q_1[i] = 0;
+        delay_buffers_3_i_1[i] = 0;
+        delay_buffers_3_q_2[i] = 0;
+        delay_buffers_3_i_2[i] = 0;
+        delay_buffers_3_q_3[i] = 0;
+        delay_buffers_3_i_3[i] = 0;
+        delay_buffers_3_q_4[i] = 0;
+        delay_buffers_3_i_4[i] = 0;
+        delay_buffers_3_q_5[i] = 0;
+        delay_buffers_3_i_5[i] = 0;
+        delay_buffers_3_q_6[i] = 0;
+        delay_buffers_3_i_6[i] = 0;
+        delay_buffers_3_q_7[i] = 0;
+        delay_buffers_3_i_7[i] = 0;
+    }
+
+    for(i = 0; i < N_FIR_COEFFS4; i++)
+    {
+        delay_buffers_4_q_0[i] = 0;
+        delay_buffers_4_i_0[i] = 0;
+        delay_buffers_4_q_1[i] = 0;
+        delay_buffers_4_i_1[i] = 0;
+        delay_buffers_4_q_2[i] = 0;
+        delay_buffers_4_i_2[i] = 0;
+        delay_buffers_4_q_3[i] = 0;
+        delay_buffers_4_i_3[i] = 0;
+        delay_buffers_4_q_4[i] = 0;
+        delay_buffers_4_i_4[i] = 0;
+        delay_buffers_4_q_5[i] = 0;
+        delay_buffers_4_i_5[i] = 0;
+        delay_buffers_4_q_6[i] = 0;
+        delay_buffers_4_i_6[i] = 0;
+        delay_buffers_4_q_7[i] = 0;
+        delay_buffers_4_i_7[i] = 0;
+    }
+    
+    for(i = 0; i < N_FIR_SHARED; i++)
+    {
+        delay_buffers_5_q_0[i] = 0;
+        delay_buffers_5_i_0[i] = 0;
+        delay_buffers_5_q_1[i] = 0;
+        delay_buffers_5_i_1[i] = 0;
+    }
+    
+    for(i = 0; i < PLANALTA_N_ADC_CHANNELS; i++){
+        for(j = 0; j < PLANALTA_F2_INPUT_SIZE; j++){
+            f1_to_f2_buffer_i_a[i][j] = 0;
+            f1_to_f2_buffer_q_a[i][j] = 0;
+            
+            f1_to_f2_buffer_i_b[i][j] = 0;
+            f1_to_f2_buffer_q_b[i][j] = 0;
+        }
+    }
+    for(i = 0; i < PLANALTA_N_ADC_CHANNELS; i++){
+        for(j = 0; j < PLANALTA_F3_INPUT_SIZE; j++){
+            f2_to_f3_buffer_i_a[i][j] = 0;
+            f2_to_f3_buffer_q_a[i][j] = 0;
+            
+            f2_to_f3_buffer_i_b[i][j] = 0;
+            f2_to_f3_buffer_q_b[i][j] = 0;
+        }
+    }
+    for(i = 0; i < PLANALTA_N_ADC_CHANNELS; i++){
+        for(j = 0; j < PLANALTA_F4_INPUT_SIZE; j++){
+            f3_to_f4_buffer_i_a[i][j] = 0;
+            f3_to_f4_buffer_q_a[i][j] = 0;
+            
+            f3_to_f4_buffer_i_b[i][j] = 0;
+            f3_to_f4_buffer_q_b[i][j] = 0;
+        }
+    }
+    for(i = 0; i < PLANALTA_N_ADC_CHANNELS; i++){
+        for(j = 0; j < PLANALTA_F5_INPUT_SIZE; j++){
+            f4_to_f5_buffer_i_a[i][j] = 0;
+            f4_to_f5_buffer_i_a[i][j] = 0;
+            
+            f4_to_f5_buffer_i_b[i][j] = 0;
+            f4_to_f5_buffer_i_b[i][j] = 0;
+        }
+    }
+}
+
+
+void planalta_adc16_callback(void){
+    uint16_t i;
+    static uint16_t copy_counter = 0;
+    
+    if (adc16_buffer_selector == 0) {
+        if(copy_buffer_selector == 0){
+            for(i = 0; i < PLANALTA_N_CHANNELS; i++){
+                copy_adc_data(PLANALTA_ADC16_BUFFER_LENGTH / PLANALTA_N_CHANNELS, (fractional*) &copy_buffers_a[i][copy_counter], (__eds__ fractional*) &adc16_rx_buffer_a[i]);
+            }
+        } else {
+            for(i = 0; i < PLANALTA_N_CHANNELS; i++){
+                copy_adc_data(PLANALTA_ADC16_BUFFER_LENGTH / PLANALTA_N_CHANNELS, (fractional*) &copy_buffers_b[i][copy_counter], (__eds__ fractional*) &adc16_rx_buffer_a[i]);
+            }
+        }
+    } else {
+        if(copy_buffer_selector == 0){
+            for(i = 0; i < PLANALTA_N_CHANNELS; i++){
+                copy_adc_data(PLANALTA_ADC16_BUFFER_LENGTH / PLANALTA_N_CHANNELS, (fractional*) &copy_buffers_a[i][copy_counter], (__eds__ fractional*) &adc16_rx_buffer_b[i]);
+            }
+        } else {
+            for(i = 0; i < PLANALTA_N_CHANNELS; i++){
+                copy_adc_data(PLANALTA_ADC16_BUFFER_LENGTH / PLANALTA_N_CHANNELS, (fractional*) &copy_buffers_b[i][copy_counter], (__eds__ fractional*) &adc16_rx_buffer_b[i]);
+            }
+        }
+    }
+    copy_counter += PLANALTA_ADC16_BUFFER_LENGTH / PLANALTA_N_CHANNELS;
+    
+    if(copy_counter == PLANALTA_COPY_BUFFER_SIZE){
+        //push_queued_task(planalta_process_task);
+        copy_buffer_selector ^= 1;
+        copy_counter = 0;
+    }
+    
+    adc16_buffer_selector ^= 1;
+}
+
+
+void planalta_start_lia(void)
+{
+   /*     size_t i;
+    
+    UART_DEBUG_PRINT("LIA at 5kHz activated.");
+
+    
+    // enable PGA
+    //_RF1 = 1;
+    //_RD11 = 1;
+    
+    gconfig.adc16_config.channel_select = ADC16_CHANNEL_SELECT_MODE_AUTO;
+    gconfig.adc16_config.channel = ADC16_CH0;
+    gconfig.adc16_config.sample_frequency = 5000UL*4*8;
+    gconfig.adc16_config.rx_callback = adc_rx_callback_5khz;
+    gconfig.adc16_config.adc16_buffer_size = ADC_5KHZ_BUFFER_LENGTH;
+    
+    init_filters_5khz_lia();
+    
+    // update DAC configuration
+    init_dac(&gconfig, false); // also starts DAC
+    
+    init_adc(&gconfig.adc_config);
     
     for(i = 0; i < PLANALTA_N_ADC_CHANNELS; i+=2){
-        if(i % 2 == 0){
-            gconfig.pga_config[i].status = PGA_STATUS_ON;
-            init_pga(&gconfig.pga_config[i]);
-        }
-        delay_ms(100);
-    }
-    UART_DEBUG_PRINT("Initialised PGAs.");  
-    
-    init_dac(&gconfig, false);
-    UART_DEBUG_PRINT("Initialised DAC.");
-
-    
-    init_adc(&gconfig.adc_config);  
-    UART_DEBUG_PRINT("Initialised ADC.");
-    
-/*
-    UART_DEBUG_PRINT("Calibrating input channels...");
-    //planalta_input_calibration(&gconfig);
-    
-
-    UART_DEBUG_PRINT( "Calibrating output channels...");
-
-    //planalta_output_calibration(&gconfig);*/
-    
-    // TODO: fix to READY
-    //gconfig.status = PLANALTA_STATUS_RUNNING;
-    gconfig.status = PLANALTA_STATUS_READY;
-    
-    //gconfig.operation_mode = PLANALTA_LIA_F_5KHZ;
-}
-
-
-void loop_planalta(void){
-    UART_DEBUG_PRINT("Entering loop...");
-    
-    while(1){
-        
-        while(gconfig.status != PLANALTA_STATUS_RUNNING){
-            i2c1_detect_stop();
-        }
-        
-        switch(gconfig.operation_mode){
-            case PLANALTA_LIA_F_50KHZ:
-                planalta_filter_50khz();
-                break;
-            case PLANALTA_LIA_F_25KHZ:
-                planalta_filter_25khz();
-                break;
-            case PLANALTA_LIA_F_10KHZ:
-                planalta_filter_10khz();
-                break;
-            case PLANALTA_LIA_F_5KHZ:
-                planalta_filter_5khz();
-                break;
-            case PLANALTA_FS:
-                planalta_sweep_frequency(&gconfig);
-                gconfig.status = PLANALTA_STATUS_READY;
-                break;
-            default:
-                report_error("planalta: configuration error signal frequency not supported.");
-                break;
-        }
-    }
-}
-
-void i2c_mr_sw_cb_planalta(i2c_message_t* m){
-    
-}
-
-void planalta_i2c_read_config(const planalta_reg_t reg){
-    switch(reg){
-        case PLANALTA_REG_STATUS:
-            i2c_mr_message_data[0] = 1;
-            i2c_mr_message_data[1] = 0;
-            i2c_mr_message_data[1] |= gconfig.status;
-
-            i2c_init_read_message(
-                &i2c_mr_message,
-                i2c_mr_message_data,
-                1+1);
-            break;
-        default:
-            i2c_init_read_message(
-                &i2c_mr_message,
-                i2c_mr_message_data,
-                0);
-            return;
+        gconfig.pga_config[i].status = PGA_STATUS_ON;
+        init_pga(&gconfig.pga_config[i]);
     }
     
-    i2c_set_read_message(&i2c_mr_message);
-}
+    planalta_set_filters(&gconfig);
+    
+    adc_start(&gconfig.adc_config); 
+    
 
-void i2c_mw_sr_cb_planalta(i2c_message_t* m){
-  
-    // master sends data to slave (last bit is 0)
-    if(m->data_length < 1){
-        return;
-    }
-        
-    i2c_write_reg = (planalta_reg_t) m->data[0];
-    
-    //UART_DEBUG_PRINT("MW SR reg: %x", i2c_write_reg);
-    
-    switch(i2c_write_reg){
-        case PLANALTA_REG_STATUS:
-            if(m->data_length >= 2){      
-                if((m->data[1] & PLANALTA_STATUS_OFF) == PLANALTA_STATUS_OFF){
-                    // TODO: real low power mode
-                    gconfig.status = PLANALTA_STATUS_READY;
-                }
-                
-                if((m->data[1] & PLANALTA_STATUS_RESET_BUFFER) == PLANALTA_STATUS_RESET_BUFFER){
-                    planalta_clear_buffers();
-                }
-                
-                if((m->data[1] & PLANALTA_STATUS_RESET) == PLANALTA_STATUS_RESET){
-                    asm ("RESET");
-                }
-            }
-            planalta_i2c_read_config(i2c_write_reg);
-            break;                
-        case PLANALTA_REG_ADC:
-            planalta_i2c_read_config(i2c_write_reg);
-            break;
-        case PLANALTA_REG_START_STOP:
-            if(m->data_length >= 2){
-                if(m->data[1] == 0){
-                    gconfig.status = PLANALTA_STATUS_READY;
-                    planalta_fs_all_coeffs_written = true;
-                } else {
-                    gconfig.status = PLANALTA_STATUS_RUNNING;
-                }
-            }
-            
-            break;
-        case PLANALTA_REG_MODE:
-            if(m->data_length >= 2){
-                if(m->data[1] < PLANALTA_N_OP_MODES){
-                    gconfig.operation_mode = m->data[1];
-                }
-            }
-            break;
-        case PLANALTA_REG_CONFIG_CH0:
-            planalta_i2c_channel_config(0, &m->data[1]);
-            break;
-        case PLANALTA_REG_CONFIG_CH1:
-            planalta_i2c_channel_config(1, &m->data[1]);
-            break;
-        case PLANALTA_REG_CONFIG_CH2:
-            planalta_i2c_channel_config(2, &m->data[1]);
-            break;
-        case PLANALTA_REG_CONFIG_CH3:
-            planalta_i2c_channel_config(3, &m->data[1]);
-            break;
-        case PLANALTA_REG_CONFIG_CH4:
-            planalta_i2c_channel_config(4, &m->data[1]);
-            break;
-        case PLANALTA_REG_CONFIG_CH5:
-            planalta_i2c_channel_config(5, &m->data[1]);
-            break;
-        case PLANALTA_REG_CONFIG_CH6:
-            planalta_i2c_channel_config(6, &m->data[1]);
-            break;
-        case PLANALTA_REG_CONFIG_CH7:
-            planalta_i2c_channel_config(7, &m->data[1]);
-            break;
-        case PLANALTA_REG_DATA_LIA:
-            planalta_i2c_read_copy_buffer_data();
-            break;
-        case PLANALTA_REG_CONFIG_T0:
-            if(m->data_length >= 3){
-                //TODO
-                //gconfig.dac_config.channels[0].pwm_period = (m->data[1] << 8) + m->data[2];
-            } 
-            planalta_i2c_read_config(i2c_write_reg);
-            break;
-        case PLANALTA_REG_CONFIG_T1:
-            if(m->data_length >= 3){
-                //TODO
-                //gconfig.dac_config.channels[1].pwm_period = (m->data[1] << 8) + m->data[2];
-            }
-            planalta_i2c_read_config(i2c_write_reg);
-            break;
-        case PLANALTA_REG_DATA_FS:
-            planalta_fs_i2c_copy_data();
-            break;
-        default:
-            break;
-    }
-}
-
-
-void planalta_i2c_read_buffer_write(uint8_t* data, size_t length){
-    size_t i;
-    
-    length = MIN(ARRAY_LENGTH(i2c_mr_message_data), length);
-    
-    i2c_mr_message_data[0] = (uint8_t) length;
-    
-    for(i = 0; i < length; i++){
-        i2c_mr_message_data[i+1] = data[i];
-    }
-    i2c_init_read_message(
-        &i2c_mr_message,
-        i2c_mr_message_data,
-        length+1);
-    
-    i2c_set_read_message(&i2c_mr_message);
-    
-    SET_PORT_BIT(gconfig.int_pin);
-    
-}
-
-void planalta_i2c_read_copy_buffer_data(){
-    size_t i;
-    
-    i2c_mr_message_data[0] = 4*PLANALTA_N_ADC_CHANNELS;
-    
-    if(planalta_lia_obuffer_selector){
-        for(i = 0; i < PLANALTA_N_ADC_CHANNELS; i++){
-            i2c_mr_message_data[1+4*i] = (planalta_lia_obuffer_b_i[PLANALTA_N_ADC_CHANNELS-i-1] >> 8) & 0xff;
-            i2c_mr_message_data[1+4*i+1] = planalta_lia_obuffer_b_i[PLANALTA_N_ADC_CHANNELS-i-1] & 0xff;
-            i2c_mr_message_data[1+4*i+2] = (planalta_lia_obuffer_b_q[PLANALTA_N_ADC_CHANNELS-i-1] >> 8) & 0xff;
-            i2c_mr_message_data[1+4*i+3] = planalta_lia_obuffer_b_q[PLANALTA_N_ADC_CHANNELS-i-1] & 0xff;
-        }
-    } else {
-        for(i = 0; i < PLANALTA_N_ADC_CHANNELS; i++){
-            i2c_mr_message_data[1+4*i] = (planalta_lia_obuffer_a_i[PLANALTA_N_ADC_CHANNELS-i-1] >> 8) & 0xff;
-            i2c_mr_message_data[1+4*i+1] = planalta_lia_obuffer_a_i[PLANALTA_N_ADC_CHANNELS-i-1] & 0xff;
-            i2c_mr_message_data[1+4*i+2] = (planalta_lia_obuffer_a_q[PLANALTA_N_ADC_CHANNELS-i-1] >> 8) & 0xff;
-            i2c_mr_message_data[1+4*i+3] = planalta_lia_obuffer_a_q[PLANALTA_N_ADC_CHANNELS-i-1] & 0xff;
-        }
-    }
-    
-    i2c_init_read_message(&i2c_mr_message, i2c_mr_message_data, 1+4*PLANALTA_N_ADC_CHANNELS);
-    
-    i2c_set_read_message(&i2c_mr_message);
-    SET_PORT_BIT(gconfig.int_pin);
-}
-
-void planalta_fs_i2c_copy_data(){
-    size_t i, j;
-    
-    // in case the frequency sweep is still ongoing, do not reply
-    if((gconfig.status != PLANALTA_STATUS_READY) && (gconfig.operation_mode != PLANALTA_FS)){
-        i2c_init_read_message(
-            &i2c_mr_message,
-            i2c_mr_message_data,
-            0);
-        
-        i2c_set_read_message(&i2c_mr_message);
-        SET_PORT_BIT(gconfig.int_pin);
-        
-            UART_DEBUG_PRINT("FS error.");
-
-        return;
-    }
-    for(i = 0; i < PLANALTA_FS_CHANNELS; i++){
-        if(gconfig.channel_data_status[i] != PLANALTA_CHANNEL_DATA_STATUS_NEW) {
-            i2c_init_read_message(
-                &i2c_mr_message,
-                i2c_mr_message_data,
-                0);
-            i2c_set_read_message(&i2c_mr_message);
-            SET_PORT_BIT(gconfig.int_pin);
-
-                UART_DEBUG_PRINT("No new data available in channel %d", i);
-
-            return;
-        }
-    }
-    for(i = 0; i < PLANALTA_FS_CHANNELS; i++){
-        gconfig.channel_data_status[i] = PLANALTA_CHANNEL_DATA_STATUS_READ;
-    }
-    
-    i2c_mr_message_data[0] = 5*PLANALTA_FS_FREQ_N*4;
-
-    for(j = 0; j < PLANALTA_FS_CHANNELS; j++){
-        for(i = 0; i < PLANALTA_FS_FREQ_N; i++){
-            // copy data to i2c buffer
-            i2c_mr_message_data[1 + j*PLANALTA_FS_FREQ_N + 4*i]   = (planalta_fs_data[j][i][0] >> 8) & 0xff;
-            i2c_mr_message_data[1 + j*PLANALTA_FS_FREQ_N + 4*i+1] = planalta_fs_data[j][i][0] & 0xff;
-            i2c_mr_message_data[1 + j*PLANALTA_FS_FREQ_N + 4*i+2] = (planalta_fs_data[j][i][1] >> 8) & 0xff;
-            i2c_mr_message_data[1 + j*PLANALTA_FS_FREQ_N + 4*i+3] = planalta_fs_data[j][i][1] & 0xff;
-
-            // clear data
-            planalta_fs_data[j][i][0] = 0;
-            planalta_fs_data[j][i][1] = 0;
-        }
-    }
-
-    i2c_init_read_message(
-        &i2c_mr_message,
-        i2c_mr_message_data,
-        5*PLANALTA_FS_FREQ_N*4+1);
-
-
-    i2c_set_read_message(&i2c_mr_message);
-
-        UART_DEBUG_PRINT("Copied data of channels to buffer.");
-    
-    SET_PORT_BIT(gconfig.int_pin);
-}
-
-void planalta_channel_config(uint8_t channel_n, 
-        planalta_channel_status_t status, pga_gain_t gain){    
-        // update configuration fields
-    if(status == PLANALTA_CHANNEL_ENABLED){
-        gconfig.channel_status[channel_n] = PLANALTA_CHANNEL_ENABLED;
-        gconfig.pga_config[channel_n].status = PGA_STATUS_ON;
-    } else {
-        gconfig.channel_status[channel_n] = PLANALTA_CHANNEL_DISABLED;
-        gconfig.pga_config[channel_n].status = PGA_STATUS_OFF;
-    }
-    
-    gconfig.pga_config[channel_n].gain = gain; 
-    
-    // update actual hardware
-    update_pga_status(&gconfig.pga_config[channel_n]);
-    
-    if(gconfig.channel_status[channel_n] == PLANALTA_CHANNEL_ENABLED){
-        switch(channel_n){
-            case 0:
-                _RP98R = _RPOUT_OC2;   // DRV1 signal
-                break;
-            case 1:
-                _RP99R = _RPOUT_OC2;   // DRV2 signal
-                break;
-            case 2:
-                _RP100R = _RPOUT_OC2;  // DRV3 signal
-                break;
-            case 3:
-                _RP101R = _RPOUT_OC2;  // DRV4 signal
-                break;
-            default:
-                break;
-        }
-    } else {
-        switch(channel_n){
-            case 0:
-                _RP98R = 0;   // DRV1 signal
-                _RF2 = 0;
-                break;
-            case 1:
-                _RP99R = 0;   // DRV2 signal
-                _RF3 = 0;
-                break;
-            case 2:
-                _RP100R = 0;  // DRV3 signal
-                _RF4 = 0;
-                break;
-            case 3:
-                _RP101R = 0;  // DRV4 signal
-                _RF5 = 0;
-                break;
-            default:
-                break;
-        }
-    }
-}
-
-void planalta_i2c_channel_config(uint8_t channel_n, uint8_t* data){
-    pga_gain_t gain; 
-    planalta_channel_status_t status; 
-
-    if(gconfig.adc_config.status == ADC_STATUS_ON){
-        return;
-    }
-    
-    gain = (pga_gain_t) ((data[0] & PLANALTA_CH_CONFIG_GAIN) >> 4); 
-    
-        // update configuration fields
-    if((data[0] & PLANALTA_CH_CONFIG_ON) == PLANALTA_CH_CONFIG_ON){
-        status = PLANALTA_CHANNEL_ENABLED;
-    } else {
-        status = PLANALTA_CHANNEL_DISABLED;
-    }
-    
-    planalta_channel_config(channel_n, status, gain);
-    
-    // prepare read message
-    switch(status){
-        case PLANALTA_CHANNEL_ENABLED:
-            i2c_mr_message_data[0] = 1;
-            break;
-        case PLANALTA_CHANNEL_DISABLED:
-            i2c_mr_message_data[0] = 0;
-            break;
-    }
-    
-    i2c_mr_message_data[0] = (i2c_mr_message_data[0] << 3) | PLANALTA_CH_CONFIG_SET_GAIN(gain);
-    i2c_mr_message_data[0] = i2c_mr_message_data[0] << 4;
-    
-    i2c_init_read_message(
-        &i2c_mr_message,
-        i2c_mr_message_data,
-        1);
-    
-    i2c_set_read_message(&i2c_mr_message);
-}
-
-void planalta_clear_buffers(void){
-    planalta_clear_filter_buffers();
-    
-    i2c_init_read_message(
-        &i2c_mr_message,
-        i2c_mr_message_data,
-        0);
-    
-    i2c_set_read_message(&i2c_mr_message);
-}
-
-void planalta_set_filters(planalta_config_t* config){
-    switch(config->operation_mode){
-        case PLANALTA_LIA_F_50KHZ:
-            CLEAR_PORT_BIT(gconfig.filter_selection_pins[0]);
-            CLEAR_PORT_BIT(gconfig.filter_selection_pins[1]);
-            break;
-        case PLANALTA_LIA_F_25KHZ:
-            SET_PORT_BIT(gconfig.filter_selection_pins[0]);
-            CLEAR_PORT_BIT(gconfig.filter_selection_pins[1]);
-            break;
-        case PLANALTA_LIA_F_10KHZ:
-            CLEAR_PORT_BIT(gconfig.filter_selection_pins[0]);
-            SET_PORT_BIT(gconfig.filter_selection_pins[1]);
-            break;
-        case PLANALTA_LIA_F_5KHZ:
-            SET_PORT_BIT(gconfig.filter_selection_pins[0]);
-            SET_PORT_BIT(gconfig.filter_selection_pins[1]);
-            break;
-        case PLANALTA_FS:
-            switch(config->sweep_frequency){
-                case PLANALTA_FS_FREQ_50KHZ:
-                    CLEAR_PORT_BIT(gconfig.filter_selection_pins[0]);
-                    CLEAR_PORT_BIT(gconfig.filter_selection_pins[1]);
-                    break;
-                case PLANALTA_FS_FREQ_20KHZ:
-                    SET_PORT_BIT(gconfig.filter_selection_pins[0]);
-                    CLEAR_PORT_BIT(gconfig.filter_selection_pins[1]);
-                    break;
-                case PLANALTA_FS_FREQ_10KHZ:
-                    CLEAR_PORT_BIT(gconfig.filter_selection_pins[0]);
-                    SET_PORT_BIT(gconfig.filter_selection_pins[1]);
-                    break;
-                case PLANALTA_FS_FREQ_5KHZ:
-                case PLANALTA_FS_FREQ_2KHZ:
-                case PLANALTA_FS_FREQ_1KHZ:
-                case PLANALTA_FS_FREQ_500HZ:
-                case PLANALTA_FS_FREQ_200HZ:
-                case PLANALTA_FS_FREQ_100HZ:
-                case PLANALTA_FS_FREQ_50HZ:
-                case PLANALTA_FS_FREQ_20HZ:
-                case PLANALTA_FS_FREQ_10HZ:
-                    SET_PORT_BIT(gconfig.filter_selection_pins[0]);
-                    SET_PORT_BIT(gconfig.filter_selection_pins[1]);
-                    break;
-                default:
-                    report_error("planalta: fs frequency not supported.");
-                    break;
-            }
-            break;
-        default:
-            report_error("planalta: filter config not supported.");
-            break;
-    }
+    stop_dac();*/
 }

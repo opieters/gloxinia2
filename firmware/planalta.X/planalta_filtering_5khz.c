@@ -2,11 +2,16 @@
 #include <fir_common.h>
 #include <dsp.h>
 #include "planalta.h"
+#include "sensor.h"
 #include <utilities.h>
 #include <uart.h>
+#include <adc16.h>
+#include <event_controller.h>
 
-extern planalta_config_t gconfig;
-
+task_t task_adc_rx_callback_5khz;
+task_t task_run_filter2_5khz;
+task_t task_run_filter3_5khz;
+task_t task_run_filter4_5khz;
 
 void init_filters_5khz_lia(void){
     uint16_t i;
@@ -152,18 +157,18 @@ void adc_rx_callback_5khz(void){
         
         if (adc_buffer_selector == 0) {
             copy_uint_to_fract(PLANALTA_5KHZ_F0_OUTPUT_SIZE,
-                    (fractional*) &adc_rx_buffer_a[i],
+                    (__eds__ fractional*) &adc16_rx_buffer_a[i],
                     conversion_buffer,
                     PLANALTA_5KHZ_N_ADC_CHANNELS);
         } else {
             copy_uint_to_fract(PLANALTA_5KHZ_F0_OUTPUT_SIZE,
-                    (fractional*) &adc_rx_buffer_b[i],
+                    (__eds__ fractional*) &adc16_rx_buffer_b[i],
                     conversion_buffer,
                     PLANALTA_5KHZ_N_ADC_CHANNELS);
         }
         
         // FO0
-        fir_compressed(PLANALTA_5KHZ_F0_OUTPUT_SIZE,
+        FIRDecimate(PLANALTA_5KHZ_F0_OUTPUT_SIZE,
             sample_buffer,
             conversion_buffer,
             &planalta_lia_filters_0[i],
@@ -184,12 +189,12 @@ void adc_rx_callback_5khz(void){
         // Finally, the "actual" decimation factor is half of the expected one,
         // thus requiring the decimation factor to always be greater than or 
         // equal to 2.
-        fir_compressed(PLANALTA_5KHZ_F1_OUTPUT_SIZE,
+        FIRDecimate(PLANALTA_5KHZ_F1_OUTPUT_SIZE,
                 fo1_buffer_i_write[i],
                 conversion_buffer,
                 &planalta_lia_filters_1_i[i],
                 PLANALTA_5KHZ_DEC_FACT_F1);
-        fir_compressed(PLANALTA_5KHZ_F1_OUTPUT_SIZE,
+        FIRDecimate(PLANALTA_5KHZ_F1_OUTPUT_SIZE,
                 fo1_buffer_q_write[i],
                 &conversion_buffer[PLANALTA_5KHZ_F1_INPUT_SIZE],
                 &planalta_lia_filters_1_q[i],
@@ -202,7 +207,8 @@ void adc_rx_callback_5khz(void){
     copy_counter += PLANALTA_5KHZ_F1_OUTPUT_SIZE;
     
     if(copy_counter == PLANALTA_5KHZ_F2_INPUT_SIZE){
-        start_filter_block2 = 1;
+        task_init(&task_adc_rx_callback_5khz, run_filter2_5khz, NULL);
+        push_queued_task(&task_adc_rx_callback_5khz);
         
         copy_counter = 0;
         
@@ -227,18 +233,17 @@ void adc_rx_callback_5khz(void){
     adc_buffer_selector ^= 1;
 }
 
-void run_filter2_5khz(void){
+void run_filter2_5khz(void *data){
     uint16_t i;
     static uint16_t block_counter = 0;
-    start_filter_block2 = 0;
 
     for(i = 0; i < PLANALTA_5KHZ_N_ADC_CHANNELS; i++){
-        fir_compressed(PLANALTA_5KHZ_F2_OUTPUT_SIZE,
+        FIRDecimate(PLANALTA_5KHZ_F2_OUTPUT_SIZE,
                 fo2_buffer_i_write[i],
                 fo2_buffer_i_read[i],
                 &planalta_lia_filters_2_i[i],
                 PLANALTA_5KHZ_DEC_FACT_F2);
-        fir_compressed(PLANALTA_5KHZ_F2_OUTPUT_SIZE,
+        FIRDecimate(PLANALTA_5KHZ_F2_OUTPUT_SIZE,
                 fo2_buffer_q_write[i],
                 fo2_buffer_q_read[i],
                 &planalta_lia_filters_2_q[i],
@@ -250,7 +255,8 @@ void run_filter2_5khz(void){
     
     block_counter += PLANALTA_5KHZ_F2_OUTPUT_SIZE;
     if(block_counter == PLANALTA_5KHZ_F3_INPUT_SIZE){
-        start_filter_block3 = 1;
+        task_init(&task_run_filter2_5khz, run_filter3_5khz, NULL);
+        push_queued_task(&task_run_filter2_5khz);
         block_counter = 0;
         
         select_f2_to_f3 ^= 1;
@@ -272,19 +278,18 @@ void run_filter2_5khz(void){
         }
     }
 }
-void run_filter3_5khz(void){
+void run_filter3_5khz(void *data){
     uint16_t i;
     static uint16_t block_counter = 0;
-    start_filter_block3 = 0;
 
     for(i = 0; i < PLANALTA_5KHZ_N_ADC_CHANNELS; i++){
-        fir_compressed(PLANALTA_5KHZ_F3_OUTPUT_SIZE,
+        FIRDecimate(PLANALTA_5KHZ_F3_OUTPUT_SIZE,
                 fo3_buffer_i_write[i],
                 fo3_buffer_i_read[i],
                 &planalta_lia_filters_3_i[i],
                 PLANALTA_5KHZ_DEC_FACT_F3);
 
-        fir_compressed(PLANALTA_5KHZ_F3_OUTPUT_SIZE,
+        FIRDecimate(PLANALTA_5KHZ_F3_OUTPUT_SIZE,
                 fo3_buffer_q_write[i],
                 fo3_buffer_q_read[i],
                 &planalta_lia_filters_3_q[i],
@@ -297,7 +302,8 @@ void run_filter3_5khz(void){
     block_counter += PLANALTA_5KHZ_F3_OUTPUT_SIZE;
     
     if(block_counter == PLANALTA_5KHZ_F4_INPUT_SIZE){
-        start_filter_block4 = 1;
+        task_init(&task_run_filter3_5khz, run_filter4_5khz, NULL);
+        push_queued_task(&task_run_filter3_5khz);
         block_counter = 0;
         
         select_f3_to_f4 ^= 1;
@@ -320,19 +326,18 @@ void run_filter3_5khz(void){
     }
 }
 
-void run_filter4_5khz(void){
+void run_filter4_5khz(void *data){
     uint16_t i;
     static uint16_t block_counter = 0;
-    start_filter_block4 = 0;
 
     for(i = 0; i < PLANALTA_5KHZ_N_ADC_CHANNELS; i++){
-        fir_compressed(PLANALTA_5KHZ_F4_OUTPUT_SIZE,
+        FIRDecimate(PLANALTA_5KHZ_F4_OUTPUT_SIZE,
                 fo4_buffer_i_write[i],
                 fo4_buffer_i_read[i],
                 &planalta_lia_filters_4_i[i],
                 PLANALTA_5KHZ_DEC_FACT_F4);
 
-        fir_compressed(PLANALTA_5KHZ_F4_OUTPUT_SIZE,
+        FIRDecimate(PLANALTA_5KHZ_F4_OUTPUT_SIZE,
                 fo4_buffer_q_write[i],
                 fo4_buffer_q_read[i],
                 &planalta_lia_filters_4_q[i],
@@ -346,7 +351,8 @@ void run_filter4_5khz(void){
     
     if(block_counter == PLANALTA_5KHZ_F5_INPUT_SIZE){
         block_counter = 0;
-        start_filter_block5 = 1;
+        task_init(&task_run_filter4_5khz, run_filter5_5khz, NULL);
+        push_queued_task(&task_run_filter4_5khz);
         
         select_f4_to_f5 ^= 1;
         
@@ -369,131 +375,37 @@ void run_filter4_5khz(void){
 }
 
 
-void run_filter5_5khz(void){
+void run_filter5_5khz(void *data){
     uint16_t i;
-    start_filter_block5 = 0; 
-    
-    if(planalta_lia_obuffer_selector) {
-        for(i = 0; i < PLANALTA_5KHZ_N_ADC_CHANNELS; i++){
-            fir_compressed(PLANALTA_5KHZ_F5_OUTPUT_SIZE,
-                    &planalta_lia_obuffer_a_i[i],
-                    fo5_buffer_i_read[i],
-                    &planalta_lia_filters_5_i[i],
-                    PLANALTA_5KHZ_DEC_FACT_F5);
 
-            fir_compressed(PLANALTA_5KHZ_F5_OUTPUT_SIZE,
-                    &planalta_lia_obuffer_a_q[i],
-                    fo5_buffer_q_read[i],
-                    &planalta_lia_filters_5_q[i],
-                    PLANALTA_5KHZ_DEC_FACT_F5);
-        }
-    } else {
-        for(i = 0; i < PLANALTA_5KHZ_N_ADC_CHANNELS; i++){
-            fir_compressed(PLANALTA_5KHZ_F5_OUTPUT_SIZE,
-                    &planalta_lia_obuffer_b_i[i],
-                    fo5_buffer_i_read[i],
-                    &planalta_lia_filters_5_i[i],
-                    PLANALTA_5KHZ_DEC_FACT_F5);
+    for(i = 0; i < PLANALTA_5KHZ_N_ADC_CHANNELS; i++)
+    {
+        FIRDecimate(PLANALTA_5KHZ_F5_OUTPUT_SIZE,
+                &planalta_lia_obuffer_i[i],
+                fo5_buffer_i_read[i],
+                &planalta_lia_filters_5_i[i],
+                PLANALTA_5KHZ_DEC_FACT_F5);
 
-            fir_compressed(PLANALTA_5KHZ_F5_OUTPUT_SIZE,
-                    &planalta_lia_obuffer_b_q[i],
-                    fo5_buffer_q_read[i],
-                    &planalta_lia_filters_5_q[i],
-                    PLANALTA_5KHZ_DEC_FACT_F5);
-        };
-    }
-    
-    ///_SI2C1IE = 0;
-    planalta_lia_obuffer_selector ^= 1;
-    //_SI2C1IE = 1;
-    
-    CLEAR_PORT_BIT(gconfig.int_pin);    
-}
-
-void planalta_init_i2c_messages(void){
-    planalta_lia_obuffer_selector = 0;
+        FIRDecimate(PLANALTA_5KHZ_F5_OUTPUT_SIZE,
+                &planalta_lia_obuffer_q[i],
+                fo5_buffer_q_read[i],
+                &planalta_lia_filters_5_q[i],
+                PLANALTA_5KHZ_DEC_FACT_F5);
         
-    i2c_init_read_message(
-        &i2c_mr_message,
-        i2c_mr_message_data,
-        0);
-}
-
-void planalta_filter_5khz(void) {
-    size_t i;
-    
-    UART_DEBUG_PRINT("LIA at 5kHz activated.");
-
-    
-    // enable PGA
-    //_RF1 = 1;
-    //_RD11 = 1;
-    
-    gconfig.adc_config.channel_select = ADC_CHANNEL_SELECT_MODE_AUTO;
-    gconfig.adc_config.channel = ADC_CH0;
-    gconfig.adc_config.sample_frequency = 5000UL*4*8;
-    gconfig.adc_config.rx_callback = adc_rx_callback_5khz;
-    gconfig.adc_config.adc_buffer_size = ADC_5KHZ_BUFFER_LENGTH;
-    
-    init_filters_5khz_lia();
-    
-    // update DAC configuration
-    init_dac(&gconfig, false); // also starts DAC
-    
-    init_adc(&gconfig.adc_config);
-    
-    for(i = 0; i < PLANALTA_N_ADC_CHANNELS; i+=2){
-        gconfig.pga_config[i].status = PGA_STATUS_ON;
-        init_pga(&gconfig.pga_config[i]);
-    }
-    
-    planalta_set_filters(&gconfig);
-    
-    adc_start(&gconfig.adc_config);
-    
-    planalta_init_i2c_messages();
-    
-    for(i = 0; i < PLANALTA_N_ADC_CHANNELS; i++){
-        UART_DEBUG_PRINT("Channel %x status: %x", i, gconfig.channel_status[i]);
-        delay_ms(10);
-    }
-    
-    while(gconfig.status == PLANALTA_STATUS_RUNNING){
-        i2c1_detect_stop();
-        
-        // ping-pong buffered data of in & out
-        if(start_filter_block2){
-           run_filter2_5khz();
-        }
-        
-        i2c1_detect_stop();
-        
-        if(start_filter_block5){
-            run_filter5_5khz();
-            continue;
-        }
-        
-
-        i2c1_detect_stop();
-        
-        if(start_filter_block4){
-            run_filter4_5khz();
-            continue;
-        }
-        
-        i2c1_detect_stop();
-        
-        if(start_filter_block3){
-            run_filter3_5khz();
-            continue;
+        // the interface/sensor alloc guarantees that it's always on this location
+        sensor_gconfig_t* gsc = &sensor_interfaces[i / 2]->gsensor_config[0];
+        if(gsc->sensor_type == SENSOR_TYPE_LIA){
+            if((i % 2) == 0) 
+            {
+                gsc->sensor_config.lia.sample_i = planalta_lia_obuffer_i[i];
+                gsc->sensor_config.lia.sample_q = planalta_lia_obuffer_q[i];
+            } else {
+                gsc->sensor_config.lia.source_i = planalta_lia_obuffer_i[i];
+                gsc->sensor_config.lia.source_q = planalta_lia_obuffer_q[i];
+            }
         }
     }
     
-    adc_stop(&gconfig.adc_config);
-    stop_dac();
-    
-    // disable PGA
-    //_RF1 = 0;
-    //_RD11 = 0;
+    UART_DEBUG_PRINT("OUTPUT updated");
 }
 
